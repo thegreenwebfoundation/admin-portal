@@ -14,7 +14,7 @@ class User(AbstractBaseUser):
     expired = models.SmallIntegerField()
     expires_at = models.DateTimeField(null=True)
 
-    # id_ge ???
+    # id_ge Green energy providers. Leave this for now.
     # id_hp hostingprovider
     last_login = models.DateTimeField(null=True)
     locked = models.SmallIntegerField()
@@ -61,4 +61,3 @@ class User(AbstractBaseUser):
         self.username = self.username.lower()
         self.email = self.email.lower()
         super().save(args, **kwargs)
-
