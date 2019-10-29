@@ -1,0 +1,63 @@
+
+stages:
+  - build
+  - test
+  - release
+  # - deploy
+
+variables:
+  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:master
+  CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+  POSTGRES_DB: $POSTGRES_DB
+  POSTGRES_USER: $POSTGRES_USER
+  POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+  DEPLOY_SERVER_URL: thegreenwebfoundation.org
+  DEPLOY_PATH: /app
+
+before_script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+
+build:
+  stage: build
+  tags:
+    - shell
+  variables:
+    PIPENV_CFG: --dev
+  script:
+    - docker build --build-arg PIPENV_CFG=$PIPENV_CFG --cache-from $CONTAINER_TEST_IMAGE -t $CONTAINER_TEST_IMAGE .
+    - docker push $CONTAINER_TEST_IMAGE
+
+codequality:
+  stage: test
+  tags:
+    - shell
+  allow_failure: true
+  script:
+    - docker pull codeclimate/codeclimate
+    - docker run --env CODECLIMATE_CODE="$PWD" --volume "$PWD":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate analyze -f json > codeclimate.json
+  artifacts:
+    paths: [codeclimate.json]
+
+test:
+  stage: test
+  tags:
+    - shell
+  script:
+    - docker pull $CONTAINER_TEST_IMAGE
+    - docker-compose -f docker/compose.ci.yml -p ci up --abort-on-container-exit
+  coverage: '/TOTAL\s+(\d+)\s+(\d+)\s+(\d+%)/'
+
+release:
+  stage: release
+  tags:
+    - shell
+  script:
+    - docker pull $CONTAINER_TEST_IMAGE
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
+    - docker push $CONTAINER_RELEASE_IMAGE
+  only:
+    - master
+
+
