@@ -22,7 +22,7 @@ class Datacenter(models.Model):
     showonwebsite = models.BooleanField()
     temperature = models.IntegerField(null=True)
     temperature_type = models.CharField(max_length=255, choices=TempType.choices)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     virtual = models.BooleanField()
     website = models.CharField(max_length=255)
 
@@ -34,13 +34,17 @@ class Datacenter(models.Model):
 class DatacenterClassification(models.Model):
     # TODO if this is used to some extent, this should be m2m
     classification = models.CharField(max_length=255)
-    datacenter = models.ForeignKey(Datacenter, db_table='id_dc')
+    datacenter = models.ForeignKey(
+        Datacenter, db_table='id_dc', on_delete=models.CASCADE
+    )
 
 
 class DatacenterCooling(models.Model):
     # TODO if this is used to some extent, this should be m2m
     cooling = models.CharField(max_length=255)
-    datacenter = models.ForeignKey(Datacenter, db_tables='id_dc')
+    datacenter = models.ForeignKey(
+        Datacenter, db_tables='id_dc', on_delete=models.CASCADE
+    )
 
 
 class Hostingprovider(models.Model):
@@ -56,6 +60,11 @@ class Hostingprovider(models.Model):
     partner = models.CharField(max_length=255, null=True)
     showonwebsite = models.BooleanField()
     website = models.CharField(max_length=255)
+    datacenter = models.ManyToManyField(
+        'Datacenter',
+        through='HostingproviderDatacenter',
+        through_fields=('hostingprovider', 'datacenter')
+    )
 
     class Meta:
         # managed = False
@@ -66,13 +75,15 @@ class Hostingprovider(models.Model):
         ]
 
 
-class HostingProviderDatacenter(models.Model):
+class HostingproviderDatacenter(models.Model):
     '''Intermediary table between Datacenter and Hostingprovider'''
     approved = models.BooleanField()
     approved_at = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    datacenter = models.ForeignKey(Datacenter, null=True)
-    hostingprovider = models.ForeignKey(Hostingprovider, null=True)
+    datacenter = models.ForeignKey(Datacenter, null=True, on_delete=models.CASCADE)
+    hostingprovider = models.ForeignKey(
+        Hostingprovider, null=True, on_delete=models.CASCADE
+    )
 
     class Meta:
         db_table = 'datacenters_hostingproviders'
@@ -93,7 +104,9 @@ class Certificate(models.Model):
 
 
 class DatacenterCertificate(Certificate):
-    datacenter = models.ForeignKey(Datacenter, db_field='id_dc', null=True)
+    datacenter = models.ForeignKey(
+        Datacenter, db_field='id_dc', null=True, on_delete=models.CASCADE
+    )
 
     class Meta:
         db_table = 'datacenter_certificates'
@@ -101,7 +114,9 @@ class DatacenterCertificate(Certificate):
 
 
 class HostingproviderCertificate(Certificate):
-    hostingprovider = models.ForeignKey(Datacenter, db_field='id_hp', null=True)
+    hostingprovider = models.ForeignKey(
+        Datacenter, db_field='id_hp', null=True, on_delete=models.CASCADE
+    )
 
     class Meta:
         db_table = 'hostingprovider_certificates'
@@ -109,7 +124,7 @@ class HostingproviderCertificate(Certificate):
 
 
 class HostingproviderStats(models.Model):
-    hostingprovider = models.ForeignKey(Hostingprovider)
+    hostingprovider = models.ForeignKey(Hostingprovider, on_delete=models.CASCADE)
     green_domains = models.IntegerField()
     green_checks = models.IntegerField()
 
