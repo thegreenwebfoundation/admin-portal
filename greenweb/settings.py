@@ -24,8 +24,8 @@ env = environ.Env(
     SECRET_KEY=(str, os.getenv('SECRET_KEY')),
     DATABASE_URL=(str, os.getenv('DATABASE_URL')),
 )
-environ.Env.read_env('.env') # Read .env
-print(os.getenv('DATABASE_URL'))
+environ.Env.read_env('.env')  # Read .env
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/dev/howto/deployment/checklist/
 
@@ -53,8 +53,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts.apps.AccountsConfig',
+
+    # 3rd party
     'django_extensions',
+    'django_mysql'
+
+    # project specific
+    'accounts.apps.AccountsConfig',
 ]
 
 if DEBUG:

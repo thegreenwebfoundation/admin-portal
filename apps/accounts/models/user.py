@@ -7,17 +7,17 @@ class User(AbstractBaseUser):
     algorithm = models.CharField(max_length=255)
     confirmation_token = models.CharField(max_length=255)
     credentials_expired_at = models.DateTimeField(null=True)
-    credentials_expired = models.SmallIntegerField()
+    credentials_expired = models.BooleanField()
     email = models.CharField(max_length=255)
     email_canonical = models.CharField(max_length=255)
-    enabled = models.SmallIntegerField()
-    expired = models.SmallIntegerField()
+    enabled = models.BooleanField()
+    expired = models.BooleanField()
     expires_at = models.DateTimeField(null=True)
 
     # id_ge Green energy providers. Leave this for now.
     # id_hp hostingprovider
     last_login = models.DateTimeField(null=True)
-    locked = models.SmallIntegerField()
+    locked = models.BooleanField()
     # password already provided in abstract base user.
     password_requested_at = models.DateTimeField(null=True)
     # contains a php array, needs to be deserialized with something like in this
