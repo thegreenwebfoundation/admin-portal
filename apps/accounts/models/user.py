@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
 from django.utils import timezone
 
+from .hosting import Hostingprovider
+
 
 class User(AbstractBaseUser):
     algorithm = models.CharField(max_length=255)
@@ -15,7 +17,9 @@ class User(AbstractBaseUser):
     expires_at = models.DateTimeField(null=True)
 
     # id_ge Green energy providers. Leave this for now.
-    # id_hp hostingprovider
+    hostingprovider = models.ForeignKey(
+        Hostingprovider, on_delete=models.Cascade, db_field='id_hp'
+    )
     last_login = models.DateTimeField(null=True)
     locked = models.BooleanField()
     # password already provided in abstract base user.

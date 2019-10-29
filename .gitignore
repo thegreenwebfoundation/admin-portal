@@ -122,4 +122,5 @@ dmypy.json
 
 # Project specific
 .env
+notes.md
 

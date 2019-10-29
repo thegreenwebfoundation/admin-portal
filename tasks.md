@@ -18,3 +18,5 @@ hostingproviders.model - transform groeneenergie to green energy
 hostingproviders.model - transform compensatie to compensation
 
 hostingproviders.partner - ideally transform null to empty space
+
+migrate roles of users to groups.
