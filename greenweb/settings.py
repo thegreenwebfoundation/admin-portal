@@ -56,10 +56,10 @@ INSTALLED_APPS = [
 
     # 3rd party
     'django_extensions',
-    'django_mysql'
+    'django_mysql',
 
     # project specific
-    'accounts.apps.AccountsConfig',
+    'apps.accounts',
 ]
 
 if DEBUG:

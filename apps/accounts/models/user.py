@@ -18,7 +18,7 @@ class User(AbstractBaseUser):
 
     # id_ge Green energy providers. Leave this for now.
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.Cascade, db_field='id_hp'
+        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
     )
     last_login = models.DateTimeField(null=True)
     locked = models.BooleanField()
