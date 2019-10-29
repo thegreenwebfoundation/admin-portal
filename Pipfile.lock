@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f1f76d4b31c5e6ff26e29d074533176d6e68e75fe9188e87567059b79f153788"
+            "sha256": "77359892a8a560236e0344de26da51d268d2cd78ff161cfcd52b7fefe02b1a8a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,6 +23,22 @@
             ],
             "index": "pypi",
             "version": "==2.2.6"
+        },
+        "django-choices": {
+            "hashes": [
+                "sha256:3c0f36b96cf7f7b5fd7c06160c72eb97ad1a27365d4425ef5042049a185cffdf",
+                "sha256:6392edc3ca93569aee4372068279599ebbcde1599b5358f644e6c41bc8e099b5"
+            ],
+            "index": "pypi",
+            "version": "==1.7.0"
+        },
+        "django-countries": {
+            "hashes": [
+                "sha256:1cefad9ec804d6a0318b91c5394b5aef00336755928f44d0a6420507719d65c8",
+                "sha256:22e96236101783cfe5222ef5174972242a7e8176336d119a4dc111aedce35897"
+            ],
+            "index": "pypi",
+            "version": "==5.5"
         },
         "django-environ": {
             "hashes": [
@@ -48,6 +64,14 @@
             "index": "pypi",
             "version": "==3.2.0"
         },
+        "django-mysql": {
+            "hashes": [
+                "sha256:5ed13e3c4e4dc1671255bfc5a9f943320079af626a0c4d1a7f8baf276f5b9de2",
+                "sha256:6a6d3b2b4b094418d67cc064b110d8ac31ca98a67b535568cf829bf052c718db"
+            ],
+            "index": "pypi",
+            "version": "==3.2.0"
+        },
         "gunicorn": {
             "hashes": [
                 "sha256:aa8e0b40b4157b36a5df5e599f45c9c76d6af43845ba3b3b0efe2c70473c2471",
@@ -55,6 +79,15 @@
             ],
             "index": "pypi",
             "version": "==19.9.0"
+        },
+        "mysqlclient": {
+            "hashes": [
+                "sha256:79a498ddda955e488f80c82a6392bf6e07c323d48db236033f33825665d8ba5c",
+                "sha256:8c3b61d89f7daaeab6aad6bf4c4bc3ef30bec1a8169f94dc59aea87ba2fabf80",
+                "sha256:9c737cc55a5dc8dd3583a942d5a9b21be58d16f00f5fefca4e575e7d9682e98c"
+            ],
+            "index": "pypi",
+            "version": "==1.4.4"
         },
         "psycopg2-binary": {
             "hashes": [

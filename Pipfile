@@ -15,9 +15,12 @@ django = "<3.0"
 django-environ = "*"
 django-extensions = "*"
 django-model-utils = "*"
+django-countries = "==5.5"
 psycopg2-binary = "*"
 gunicorn = "*"
 mysqlclient = "==1.4.4"
+django-choices = "==1.7.0"
+django-mysql = "==3.2.0"
 
 [requires]
 python_version = "3.6"
