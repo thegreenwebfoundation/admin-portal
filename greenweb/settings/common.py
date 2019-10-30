@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
     # project specific
     'apps.accounts',
+    'apps.greencheck'
 ]
 
 # Auth Mechanism

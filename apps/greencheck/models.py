@@ -2,7 +2,7 @@ from django.db import models
 from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
 
-from apps.accounts.models import HostingProvider
+from apps.accounts.models import Hostingprovider
 from .choices import GreenlistChoice, CheckedOptions, BoolChoice
 
 """
@@ -32,7 +32,7 @@ mysql> show columns from greencheck;
 
 class Greencheck(models.Model):
     hostingprovider = models.ForeignKey(
-        HostingProvider, db_column='id_hp', on_delete=models.CASCADE
+        Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
     )
     # missing id_greencheck. Find out what it is first
     date = UnixDateTimeField(db_column='datum')
@@ -48,7 +48,7 @@ class GreencheckIp(models.Model):
     ip_end = models.IntegerField(db_column='ip_eind')
     ip_start = models.IntegerField()
     hostingprovider = models.ForeignKey(
-        HostingProvider, db_column='id_hp', on_delete=models.CASCADE
+        Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
     )
 
     class Meta:
@@ -64,7 +64,7 @@ class GreencheckIp(models.Model):
 class GreencheckIpApprove(models.Model):
     action = models.TextField()
     hostingprovider = models.ForeignKey(
-        HostingProvider, on_delete=models.CASCADE,
+        Hostingprovider, on_delete=models.CASCADE,
         db_column='id_hp', null=True
     )
     idorig = models.IntegerField()
@@ -87,7 +87,7 @@ class GreenList(models.Model):
         Greencheck, on_delete=models.CASCADE, db_column='id_greencheck'
     )
     hostingprovider = models.ForeignKey(
-        HostingProvider, on_delete=models.CASCADE, db_column='id_hp'
+        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
     )
     last_checked = UnixDateTimeField()
     name = models.CharField(max_length=255, db_column='naam')
