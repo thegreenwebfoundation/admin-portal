@@ -12,7 +12,7 @@ flake8 = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
-django = "<3.0"
+django = {extras = ["bcrypt"],version = "<3.0"}
 django-anymail = {extras = ["mailgun"],version = "==7.0.0"}
 django-choices = "==1.7.0"
 django-countries = "==5.5"
