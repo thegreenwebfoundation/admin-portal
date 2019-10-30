@@ -10,9 +10,9 @@ datacenters.dc12v - use tinyinteger for boolean
 greencheck_ip.active - use tinyinteger for boolean
 
 *in the following order*
-hostingprovider.countrydomain - transform com to relevant country
-hostingprovider.countrydomain - transform net to relevant country
-hostingprovider.countrydomain - change to max_length 2
+hostingproviders.countrydomain - transform com to relevant country
+hostingproviders.countrydomain - transform net to relevant country
+hostingproviders.countrydomain - change to max_length 2
 
 
 *making this transformation, will it break current admin?*
@@ -22,10 +22,10 @@ hostingproviders.model - transform compensatie to compensation
 hostingproviders.partner - ideally transform null to empty space
 
 greencheck.ip - change to integer field
-greencheck_ip.ip_end - change to integer field 
+greencheck_ip.ip_eind - change to integer field 
 greencheck_ip.ip_start - change to integer field
 
-greencheck_ip_approve.ip_end - change to integer field 
+greencheck_ip_approve.ip_eind - change to integer field 
 greencheck_ip_approve.ip_start - change to integer field
 
 greencheck_weekly.year - make it a smallintegerfield instead. 
