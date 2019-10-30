@@ -8,6 +8,7 @@ INTERNAL_IPS += [ip[:-1] + '1' for ip in ips]
 ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
 
 INSTALLED_APPS.append('debug_toolbar')
+INSTALLED_APPS.insert(0, 'whitenoise.runserver_nostatic')
 
 # Insert debug_toolbar middleware as first element
 # Warning at: https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#middleware
