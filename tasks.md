@@ -21,7 +21,7 @@ hostingproviders.model - transform compensatie to compensation
 
 hostingproviders.partner - ideally transform null to empty space
 
-
+greencheck.ip - change to integer field
 greencheck_ip.ip_end - change to integer field 
 greencheck_ip.ip_start - change to integer field
 

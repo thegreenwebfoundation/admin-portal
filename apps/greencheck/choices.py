@@ -17,3 +17,8 @@ class CheckedOptions(DjangoChoices):
     test = ChoiceItem()
     website = ChoiceItem()
 
+
+class BoolChoice(DjangoChoices):
+    yes = ChoiceItem()
+    no = ChoiceItem()
+    old = ChoiceItem()

@@ -3,7 +3,7 @@ from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
 
 from apps.accounts.models import HostingProvider
-from .choices import GreenlistChoice, CheckedOptions
+from .choices import GreenlistChoice, CheckedOptions, BoolChoice
 
 """
 - greencheck_linked - the purpose of the table is not very clear. Contains many entries though.
@@ -31,7 +31,16 @@ mysql> show columns from greencheck;
 
 
 class Greencheck(models.Model):
-    pass
+    hostingprovider = models.ForeignKey(
+        HostingProvider, db_column='id_hp', on_delete=models.CASCADE
+    )
+    # missing id_greencheck. Find out what it is first
+    date = UnixDateTimeField(db_column='datum')
+    green = EnumField(choices=BoolChoice.choices)
+    ip = models.IntegerField()
+    tld = models.CharField(max_length=64)
+    type = EnumField(choices=GreenlistChoice.choices)
+    url = models.CharField(max_length=255)
 
 
 class GreencheckIp(models.Model):
