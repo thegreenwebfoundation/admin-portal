@@ -9,6 +9,7 @@ pylint = "*"
 pylint-django = "*"
 coverage = "*"
 flake8 = "*"
+ipython = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
