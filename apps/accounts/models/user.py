@@ -1,16 +1,12 @@
 from django.contrib.auth.models import (
     AbstractBaseUser,
-    BaseUserManager,
+    UserManager,
     PermissionsMixin,
 )
 from django.db import models
 from django.utils import timezone
 
 from .hosting import Hostingprovider
-
-
-class UserManager(BaseUserManager):
-    pass
 
 
 class User(AbstractBaseUser, PermissionsMixin):
