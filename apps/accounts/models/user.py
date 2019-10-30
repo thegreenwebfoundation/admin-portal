@@ -17,6 +17,7 @@ class User(AbstractBaseUser):
     expires_at = models.DateTimeField(null=True)
 
     # id_ge Green energy providers. Leave this for now.
+    # old table, the idea might be resurrected.
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
     )

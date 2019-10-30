@@ -42,6 +42,9 @@ class Greencheck(models.Model):
     type = EnumField(choices=GreenlistChoice.choices)
     url = models.CharField(max_length=255)
 
+    class Meta:
+        db_table = 'greencheck'
+
 
 class GreencheckIp(models.Model):
     active = models.BooleanField(null=True)
@@ -103,14 +106,14 @@ class GreenList(models.Model):
         ]
 
 
-class Tld(models.Model):
-    # wait for confirmation
-    pass
+# class Tld(models.Model):
+#     # wait for confirmation
+#     pass
 
 
-class MaxmindAsn(models.Model):
-    # wait for confirmation
-    pass
+# class MaxmindAsn(models.Model):
+#     # wait for confirmation
+#     pass
 
 
 # STATS and stuff
