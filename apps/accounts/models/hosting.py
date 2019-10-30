@@ -38,6 +38,10 @@ class DatacenterClassification(models.Model):
         Datacenter, db_column='id_dc', on_delete=models.CASCADE
     )
 
+    class Meta:
+        db_table = 'datacenters_classifications'
+        # managed = False
+
 
 class DatacenterCooling(models.Model):
     # TODO if this is used to some extent, this should be m2m
@@ -45,6 +49,10 @@ class DatacenterCooling(models.Model):
     datacenter = models.ForeignKey(
         Datacenter, db_column='id_dc', on_delete=models.CASCADE
     )
+
+    class Meta:
+        db_table = 'datacenters_coolings'
+        # managed = False
 
 
 class Hostingprovider(models.Model):
@@ -124,7 +132,9 @@ class HostingproviderCertificate(Certificate):
 
 
 class HostingproviderStats(models.Model):
-    hostingprovider = models.ForeignKey(Hostingprovider, on_delete=models.CASCADE)
+    hostingprovider = models.ForeignKey(
+        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
+    )
     green_domains = models.IntegerField()
     green_checks = models.IntegerField()
 
