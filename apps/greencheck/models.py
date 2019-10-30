@@ -58,9 +58,9 @@ class GreencheckIp(models.Model):
         # managed = False
         db_table = 'greencheck_ip'
         indexes = [
-            models.Index(fields=['ip_end']),
-            models.Index(fields=['ip_start']),
-            models.Index(fields=['active']),
+            models.Index(fields=['ip_end'], name='ip_eind'),
+            models.Index(fields=['ip_start'], name='ip_start'),
+            models.Index(fields=['active'], name='active'),
         ]
 
 
@@ -70,7 +70,9 @@ class GreencheckIpApprove(models.Model):
         Hostingprovider, on_delete=models.CASCADE,
         db_column='id_hp', null=True
     )
-    idorig = models.IntegerField()
+    greencheck_ip = models.ForeignKey(
+        GreencheckIp, on_delete=models.CASCADE, db_column='idorig'
+    )
     ip_end = models.IntegerField(db_column='ip_eind')
     ip_start = models.IntegerField()
     status = models.TextField()
@@ -102,8 +104,54 @@ class GreenList(models.Model):
         # managed = False
         db_table = 'greenlist'
         indexes = [
-            models.Index(fields=['url']),
+            models.Index(fields=['url'], name='url'),
         ]
+
+
+class GreencheckTLD(models.Model):
+    checked_domains = models.IntegerField()
+    green_domains = models.IntegerField()
+    # TODO what is hps?
+    hps = models.IntegerField()
+    tld = models.CharField(max_length=50)
+    toplevel = models.CharField(max_length=64)
+
+    class Meta:
+        db_table = 'greencheck_tld'
+        indexes = [
+            models.Index(fields=['tld'], name='tld'),
+        ]
+
+
+class GreencheckASN(models.Model):
+    active = models.BooleanField(null=True)
+    # https://en.wikipedia.org/wiki/Autonomous_system_(Internet)
+    asn = models.IntegerField()
+    hostingprovider = models.ForeignKey(
+        Hostingprovider, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        db_table = 'greencheck_as'
+        indexes = [
+            models.Index(fields=['active'], name='active'),
+            models.Index(fields=['asn'], name='asn'),
+        ]
+
+
+class GreencheckASNapprove(models.Model):
+    action = models.TextField()
+    asn = models.IntegerField()
+    hostingprovider = models.ForeignKey(
+        Hostingprovider, on_delete=models.CASCADE
+    )
+    greencheck_asn = models.ForeignKey(
+        GreencheckASN, on_delete=models.CASCADE, db_column='idorig'
+    )
+    status = models.TextField()
+
+    class Meta:
+        db_table = 'greencheck_as_approve'
 
 
 # class Tld(models.Model):
@@ -126,9 +174,6 @@ class Stats(models.Model):
 
     class Meta:
         abstract = True
-        indexes = [
-            models.Index(fields=['checked_through']),
-        ]
 
 
 class GreencheckStats(Stats):
@@ -136,6 +181,9 @@ class GreencheckStats(Stats):
     class Meta:
         # managed = False
         db_table = 'greencheck_stats'
+        indexes = [
+            models.Index(fields=['checked_through'], name='checked_through'),
+        ]
 
 
 class GreencheckStatsTotal(Stats):
@@ -143,6 +191,9 @@ class GreencheckStatsTotal(Stats):
     class Meta:
         # managed = False
         db_table = 'greencheck_stats_total'
+        indexes = [
+            models.Index(fields=['checked_through'], name='checked_through'),
+        ]
 
 
 class GreencheckWeeklyStats(models.Model):
