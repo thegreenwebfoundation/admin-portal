@@ -1,7 +1,7 @@
 
 from django.db import models
+from django.conf import settings
 from django_countries.fields import CountryField
-from django.contrib.auth.models import User
 from django_mysql.models import EnumField
 
 from .choices import EnergyType, TempType, ModelType
@@ -22,7 +22,7 @@ class Datacenter(models.Model):
     showonwebsite = models.BooleanField()
     temperature = models.IntegerField(null=True)
     temperature_type = models.CharField(max_length=255, choices=TempType.choices)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     virtual = models.BooleanField()
     website = models.CharField(max_length=255)
 
