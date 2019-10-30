@@ -16,8 +16,6 @@ hostingproviders.countrydomain - change to max_length 2
 
 
 *making this transformation, will it break current admin?*
-hostingproviders.model - transform groeneenergie to green energy
-hostingproviders.model - transform compensatie to compensation
 
 hostingproviders.partner - ideally transform null to empty space
 
@@ -30,4 +28,10 @@ greencheck_ip_approve.ip_start - change to integer field
 
 greencheck_weekly.year - make it a smallintegerfield instead. 
 
+
+# Still need to write script for these
+
 migrate roles of users to groups.
+
+hostingproviders.model - transform groeneenergie to green energy
+hostingproviders.model - transform compensatie to compensation

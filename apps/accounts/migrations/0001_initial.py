@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('password', models.CharField(max_length=128, verbose_name='password')),
                 ('algorithm', models.CharField(max_length=255)),
                 ('confirmation_token', models.CharField(max_length=255)),
-                ('credentials_expired_at', models.DateTimeField(null=True)),
+                ('credentials_expire_at', models.DateTimeField(null=True)),
                 ('credentials_expired', models.BooleanField()),
                 ('email', models.CharField(max_length=255)),
                 ('email_canonical', models.CharField(max_length=255)),

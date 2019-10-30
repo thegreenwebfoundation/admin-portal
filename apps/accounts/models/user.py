@@ -1,14 +1,18 @@
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 
 from .hosting import Hostingprovider
 
 
+class UserManager(BaseUserManager):
+    pass
+
+
 class User(AbstractBaseUser):
     algorithm = models.CharField(max_length=255)
     confirmation_token = models.CharField(max_length=255)
-    credentials_expired_at = models.DateTimeField(null=True)
+    credentials_expire_at = models.DateTimeField(null=True)
     credentials_expired = models.BooleanField()
     email = models.CharField(max_length=255)
     email_canonical = models.CharField(max_length=255)
@@ -50,6 +54,7 @@ class User(AbstractBaseUser):
     date_joined = models.DateTimeField('date joined', default=timezone.now)
 
     USERNAME_FIELD = 'username'
+    objects = UserManager()
 
     class Meta:
         # managed = False
