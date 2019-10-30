@@ -13,12 +13,8 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import os
 import environ
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
 # Environ
-root = environ.Path(__file__) - 1
+root = environ.Path(__file__) - 3
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, os.getenv('SECRET_KEY')),
@@ -33,16 +29,9 @@ environ.Env.read_env('.env')  # Read .env
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = False
 
 ALLOWED_HOSTS = ['thegreenwebfoundation.org']
-
-if DEBUG:
-    import socket
-    INTERNAL_IPS = ['127.0.0.1']
-    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-    INTERNAL_IPS += [ip[:-1] + '1' for ip in ips]
-    ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
 
 # Application definition
 
@@ -62,9 +51,6 @@ INSTALLED_APPS = [
     'apps.accounts',
 ]
 
-if DEBUG:
-    INSTALLED_APPS.append('debug_toolbar')
-
 # Auth Mechanism
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -77,17 +63,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-# Insert debug_toolbar middleware as first element
-# Warning at: https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#middleware
-
-if DEBUG:
-    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-
-# Use email console backend for debuging
-
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 ROOT_URLCONF = 'greenweb.urls'
 
@@ -142,23 +117,17 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/dev/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
-
 STATIC_ROOT = root('static')
 STATIC_URL = '/static/'
 
 # Media Files
-
 MEDIA_ROOT = root('media')
 MEDIA_URL = '/media/'
