@@ -111,8 +111,7 @@ class GreenList(models.Model):
 class GreencheckTLD(models.Model):
     checked_domains = models.IntegerField()
     green_domains = models.IntegerField()
-    # TODO what is hps?
-    hps = models.IntegerField()
+    hps = models.IntegerField(verbose_name='Hostingproviders registered in tld')
     tld = models.CharField(max_length=50)
     toplevel = models.CharField(max_length=64)
 
@@ -126,7 +125,7 @@ class GreencheckTLD(models.Model):
 class GreencheckASN(models.Model):
     active = models.BooleanField(null=True)
     # https://en.wikipedia.org/wiki/Autonomous_system_(Internet)
-    asn = models.IntegerField()
+    asn = models.IntegerField(verbose_name='Autonomous system number')
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE
     )
