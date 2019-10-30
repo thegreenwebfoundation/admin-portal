@@ -1,4 +1,8 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
 from django.utils import timezone
 
@@ -9,7 +13,7 @@ class UserManager(BaseUserManager):
     pass
 
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     algorithm = models.CharField(max_length=255)
     confirmation_token = models.CharField(max_length=255)
     credentials_expire_at = models.DateTimeField(null=True)
