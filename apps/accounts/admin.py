@@ -49,6 +49,27 @@ class HostingAdmin(admin.ModelAdmin):
     ]
     ordering = ('name',)
 
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_staff:
+            return ['partner']
+        return self.readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldset = [
+            ('Hostingprovider info', {
+                'fields': (('name', 'website',), 'country'),
+            }),
+            ('Visual', {'fields': (('icon', 'iconurl'),)}),
+            ('Other', {'fields': (('partner', 'model'),)}),
+        ]
+
+        admin_editable = (
+            'Admin only', {'fields': (('archived', 'showonwebsite', 'customer'),)}
+        )
+        if request.user.is_staff:
+            fieldset.append(admin_editable)
+        return fieldset
+
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
         qs = qs.prefetch_related(
