@@ -38,4 +38,11 @@ hostingproviders.model - transform compensatie to compensation
 
 # Passwords
 
-write a migration to amend all password hashes with `legacy_bcrypt$`
+- duplicate password column, which is the column that should be modified
+- write a migration to amend all password hashes with `legacy_bcrypt$`
+
+
+# Admin tasks
+
+- add index to name in hostingprovider
+- add index to name in datacenter

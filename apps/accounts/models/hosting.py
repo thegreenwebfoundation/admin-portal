@@ -40,7 +40,8 @@ class DatacenterClassification(models.Model):
     # TODO if this is used to some extent, this should be m2m
     classification = models.CharField(max_length=255)
     datacenter = models.ForeignKey(
-        Datacenter, db_column='id_dc', on_delete=models.CASCADE
+        Datacenter, db_column='id_dc',
+        on_delete=models.CASCADE, related_name='classifications'
     )
 
     class Meta:
@@ -76,7 +77,8 @@ class Hostingprovider(models.Model):
     datacenter = models.ManyToManyField(
         'Datacenter',
         through='HostingproviderDatacenter',
-        through_fields=('hostingprovider', 'datacenter')
+        through_fields=('hostingprovider', 'datacenter'),
+        related_name='hostingproviders'
     )
 
     def __str__(self):
@@ -121,7 +123,8 @@ class Certificate(models.Model):
 
 class DatacenterCertificate(Certificate):
     datacenter = models.ForeignKey(
-        Datacenter, db_column='id_dc', null=True, on_delete=models.CASCADE
+        Datacenter, db_column='id_dc', null=True,
+        on_delete=models.CASCADE, related_name='datacenter_certificates'
     )
 
     class Meta:
@@ -131,7 +134,8 @@ class DatacenterCertificate(Certificate):
 
 class HostingproviderCertificate(Certificate):
     hostingprovider = models.ForeignKey(
-        Datacenter, db_column='id_hp', null=True, on_delete=models.CASCADE
+        Datacenter, db_column='id_hp', null=True,
+        on_delete=models.CASCADE, related_name='hosting_certificates'
     )
 
     class Meta:
