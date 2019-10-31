@@ -77,7 +77,7 @@ class GreencheckIpApprove(models.Model):
         db_column='id_hp', null=True
     )
     greencheck_ip = models.ForeignKey(
-        GreencheckIp, on_delete=models.CASCADE, db_column='idorig'
+        GreencheckIp, on_delete=models.CASCADE, db_column='idorig', null=True
     )
     ip_end = models.IntegerField(db_column='ip_eind')
     ip_start = models.IntegerField()
@@ -151,7 +151,7 @@ class GreencheckASNapprove(models.Model):
         Hostingprovider, on_delete=models.CASCADE
     )
     greencheck_asn = models.ForeignKey(
-        GreencheckASN, on_delete=models.CASCADE, db_column='idorig'
+        GreencheckASN, on_delete=models.CASCADE, db_column='idorig', null=True
     )
     status = models.TextField(choices=StatusApproval.choices)
 
