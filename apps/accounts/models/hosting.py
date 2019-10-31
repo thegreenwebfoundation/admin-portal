@@ -19,7 +19,7 @@ class Datacenter(models.Model):
     name = models.CharField(max_length=255, db_column='naam')
     pue = models.FloatField(verbose_name='Power usage effectiveness')
     residualheat = models.BooleanField(null=True)
-    showonwebsite = models.BooleanField()
+    showonwebsite = models.BooleanField(verbose_name='Show on website')
     temperature = models.IntegerField(null=True)
     temperature_type = models.CharField(
         max_length=255, choices=TempType.choices, db_column='temperaturetype'
@@ -72,7 +72,7 @@ class Hostingprovider(models.Model):
     )
     name = models.CharField(max_length=255, db_column='naam')
     partner = models.CharField(max_length=255, null=True)
-    showonwebsite = models.BooleanField()
+    showonwebsite = models.BooleanField(verbose_name='Show on website')
     website = models.CharField(max_length=255)
     datacenter = models.ManyToManyField(
         'Datacenter',
