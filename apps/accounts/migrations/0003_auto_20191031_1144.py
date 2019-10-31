@@ -50,4 +50,14 @@ class Migration(migrations.Migration):
             model_name='user',
             index=models.Index(fields=['username'], name='fos_user_usernam_5d00b4_idx'),
         ),
+        migrations.AlterField(
+            model_name='datacenter',
+            name='temperature_type',
+            field=models.CharField(choices=[('C', 'C'), ('F', 'F')], db_column='temperaturetype', max_length=255),
+        ),
+        migrations.AlterField(
+            model_name='hostingprovidercertificate',
+            name='hostingprovider',
+            field=models.ForeignKey(db_column='id_hp', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='hostingprovider_certificates', to='accounts.Hostingprovider'),
+        ),
     ]
