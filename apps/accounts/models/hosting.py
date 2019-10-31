@@ -15,16 +15,21 @@ class Datacenter(models.Model):
         null=True,
         verbose_name='meerjaren plan energie 3'
     )
-    model = models.CharField(max_length=255)
+    model = models.CharField(max_length=255, choices=ModelType.choices)
     name = models.CharField(max_length=255, db_column='naam')
     pue = models.FloatField(verbose_name='Power usage effectiveness')
     residualheat = models.BooleanField(null=True)
     showonwebsite = models.BooleanField()
     temperature = models.IntegerField(null=True)
-    temperature_type = models.CharField(max_length=255, choices=TempType.choices)
+    temperature_type = models.CharField(
+        max_length=255, choices=TempType.choices, db_column='temperaturetype'
+    )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     virtual = models.BooleanField()
     website = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         db_table = 'datacenters'
@@ -73,6 +78,9 @@ class Hostingprovider(models.Model):
         through='HostingproviderDatacenter',
         through_fields=('hostingprovider', 'datacenter')
     )
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         # managed = False
