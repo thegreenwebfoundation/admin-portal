@@ -123,4 +123,5 @@ dmypy.json
 # Project specific
 .env
 notes.md
+sublime.sublime-workspace
 

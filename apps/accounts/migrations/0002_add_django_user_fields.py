@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0001_initial'),
+        ('auth', '0011_update_proxy_permissions')
     ]
 
     operations = [
