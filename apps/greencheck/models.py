@@ -87,6 +87,9 @@ class GreencheckIpApprove(models.Model):
         db_table = 'greencheck_ip_approve'
         # managed = False
 
+    def __str__(self):
+        return f'Status: {self.status} Action: {self.action}'
+
 
 class GreencheckLinked(models.Model):
     # waiting for use case first...
@@ -157,6 +160,9 @@ class GreencheckASNapprove(models.Model):
 
     class Meta:
         db_table = 'greencheck_as_approve'
+
+    def __str__(self):
+        return f'Status: {self.status} Action: {self.action}'
 
 
 # class Tld(models.Model):
