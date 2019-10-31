@@ -35,3 +35,7 @@ migrate roles of users to groups.
 
 hostingproviders.model - transform groeneenergie to green energy
 hostingproviders.model - transform compensatie to compensation
+
+# Passwords
+
+write a migration to amend all password hashes with `legacy_bcrypt$`
