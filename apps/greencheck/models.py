@@ -3,7 +3,13 @@ from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
 
 from apps.accounts.models import Hostingprovider
-from .choices import GreenlistChoice, CheckedOptions, BoolChoice
+from .choices import (
+    ActionChoice,
+    GreenlistChoice,
+    CheckedOptions,
+    BoolChoice,
+    StatusApproval,
+)
 
 """
 - greencheck_linked - the purpose of the table is not very clear. Contains many entries though.
@@ -65,7 +71,7 @@ class GreencheckIp(models.Model):
 
 
 class GreencheckIpApprove(models.Model):
-    action = models.TextField()
+    action = models.TextField(choices=ActionChoice.choices)
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE,
         db_column='id_hp', null=True
@@ -75,7 +81,7 @@ class GreencheckIpApprove(models.Model):
     )
     ip_end = models.IntegerField(db_column='ip_eind')
     ip_start = models.IntegerField()
-    status = models.TextField()
+    status = models.TextField(choices=StatusApproval.choices)
 
     class Meta:
         db_table = 'greencheck_ip_approve'
@@ -139,7 +145,7 @@ class GreencheckASN(models.Model):
 
 
 class GreencheckASNapprove(models.Model):
-    action = models.TextField()
+    action = models.TextField(choices=ActionChoice.choices)
     asn = models.IntegerField()
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE
@@ -147,7 +153,7 @@ class GreencheckASNapprove(models.Model):
     greencheck_asn = models.ForeignKey(
         GreencheckASN, on_delete=models.CASCADE, db_column='idorig'
     )
-    status = models.TextField()
+    status = models.TextField(choices=StatusApproval.choices)
 
     class Meta:
         db_table = 'greencheck_as_approve'

@@ -4,7 +4,11 @@ from django.conf import settings
 from django_countries.fields import CountryField
 from django_mysql.models import EnumField
 
-from .choices import EnergyType, TempType, ModelType
+from .choices import (
+    EnergyType,
+    TempType,
+    ModelType,
+)
 
 
 class Datacenter(models.Model):

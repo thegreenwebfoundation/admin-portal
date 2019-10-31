@@ -22,3 +22,17 @@ class BoolChoice(DjangoChoices):
     yes = ChoiceItem()
     no = ChoiceItem()
     old = ChoiceItem()
+
+
+class StatusApproval(DjangoChoices):
+    approved = ChoiceItem('Approved')
+    deleted = ChoiceItem('Deleted')
+    new = ChoiceItem('New')
+    removed = ChoiceItem('Removed')
+    update = ChoiceItem('Update')
+
+
+class ActionChoice(DjangoChoices):
+    empty = ChoiceItem('')
+    new = ChoiceItem()
+    update = ChoiceItem()
