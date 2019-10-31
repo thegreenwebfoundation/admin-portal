@@ -134,8 +134,8 @@ class DatacenterCertificate(Certificate):
 
 class HostingproviderCertificate(Certificate):
     hostingprovider = models.ForeignKey(
-        Datacenter, db_column='id_hp', null=True,
-        on_delete=models.CASCADE, related_name='hosting_certificates'
+        Hostingprovider, db_column='id_hp', null=True,
+        on_delete=models.CASCADE, related_name='hostingprovider_certificates'
     )
 
     class Meta:

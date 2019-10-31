@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.utils.safestring import mark_safe
 
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import User, Hostingprovider, Datacenter
@@ -39,26 +40,47 @@ class HostingAdmin(admin.ModelAdmin):
     list_display = [
         'name',
         'country_str',
-        'website',
+        'html_website',
         'showonwebsite',
         'partner',
         'model',
-        # 'certificates', needs another table
-        # datacenters, needs another table
-
+        'certificates_amount',
+        'datacenter_amount',
     ]
     ordering = ('name',)
+
+    def get_queryset(self, request, *args, **kwargs):
+        qs = super().get_queryset(request, *args, **kwargs)
+        qs = qs.prefetch_related(
+            'hostingprovider_certificates',
+            'datacenter'
+        )
+        return qs
+
+    @mark_safe
+    def html_website(self, obj):
+        html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
+        return html
+    html_website.short_description = 'website'
 
     def country_str(self, obj):
         return obj.country.code
     country_str.short_description = 'country'
+
+    def certificates_amount(self, obj):
+        return len(obj.hostingprovider_certificates.all())
+    certificates_amount.short_description = 'Certificates'
+
+    def datacenter_amount(self, obj):
+        return len(obj.datacenter.all())
+    datacenter_amount.short_description = 'Datacenters'
 
 
 @admin.register(Datacenter)
 class DatacenterAdmin(admin.ModelAdmin):
     list_display = [
         'name',
-        'website',
+        'html_website',
         'country_str',
         'model',
         'pue',
@@ -78,6 +100,12 @@ class DatacenterAdmin(admin.ModelAdmin):
             'hostingproviders'
         )
         return qs
+
+    @mark_safe
+    def html_website(self, obj):
+        html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
+        return html
+    html_website.short_description = 'website'
 
     def country_str(self, obj):
         return obj.country.code
