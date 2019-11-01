@@ -9,11 +9,13 @@ from .forms import GreecheckIpApprovalForm
 
 
 class GreencheckIpInline(admin.TabularInline):
-    extra = 0
-    model = GreencheckIp
     classes = ['collapse']
+    extra = 0
     form = GreencheckIpForm
+    model = GreencheckIp
     ordering = ('ip_start', 'ip_end',)
+    verbose_name = 'IP'
+    verbose_name_plural = 'IPs'
 
 
 class GreencheckIpApproveInline(admin.TabularInline):
@@ -21,6 +23,8 @@ class GreencheckIpApproveInline(admin.TabularInline):
     form = GreecheckIpApprovalForm
     model = GreencheckIpApprove
     ordering = ('ip_start', 'ip_end',)
+    verbose_name = 'IP approval'
+    verbose_name_plural = 'IP approvals'
     # filter away records that are already approved.
 
     readonly_fields = ('action', 'status')
