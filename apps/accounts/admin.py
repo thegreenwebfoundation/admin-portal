@@ -154,6 +154,7 @@ class DatacenterAdmin(admin.ModelAdmin):
         'hostingproviders_amount'
     ]
     ordering = ('name',)
+    raw_id_fields = ('user',)
 
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
@@ -163,6 +164,27 @@ class DatacenterAdmin(admin.ModelAdmin):
             'hostingproviders'
         )
         return qs
+
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_staff:
+            return ['showonwebsite']
+        return self.readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldset = [
+            ('Datacenter info', {
+                'fields': (
+                    ('name', 'website',),
+                    ('country', 'user'),
+                    ('pue', 'residualheat'),
+                    ('temperature', 'temperature_type',),
+                    ('dc12v', 'virtual', 'greengrid', 'showonwebsite'),
+                    ('mja3', 'model',),
+                ),
+
+            }),
+        ]
+        return fieldset
 
     @mark_safe
     def html_website(self, obj):
