@@ -3,7 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 
 from apps.greencheck.admin import (
-    GreencheckIpInline
+    GreencheckIpApproveInline,
+    GreencheckIpInline,
 )
 
 from .forms import CustomUserChangeForm, CustomUserCreationForm
@@ -53,8 +54,9 @@ class HostingCertificateInline(admin.TabularInline):
 @admin.register(Hostingprovider)
 class HostingAdmin(admin.ModelAdmin):
     inlines = [
-        GreencheckIpInline,
         HostingCertificateInline,
+        GreencheckIpInline,
+        GreencheckIpApproveInline
     ]
 
     list_display = [

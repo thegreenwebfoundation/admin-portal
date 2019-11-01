@@ -5,6 +5,7 @@ from .models import (
     GreencheckIpApprove,
 )
 from .forms import GreencheckIpForm
+from .forms import GreecheckIpApprovalForm
 
 
 class GreencheckIpInline(admin.TabularInline):
@@ -12,18 +13,14 @@ class GreencheckIpInline(admin.TabularInline):
     model = GreencheckIp
     classes = ['collapse']
     form = GreencheckIpForm
+    ordering = ('ip_start', 'ip_end',)
 
 
 class GreencheckIpApproveInline(admin.TabularInline):
+    extra = 0
+    form = GreecheckIpApprovalForm
     model = GreencheckIpApprove
+    ordering = ('ip_start', 'ip_end',)
     # filter away records that are already approved.
 
 
-    def save_model(self, request, obj, form, change):
-        """
-        Given a model instance save it to the database.
-        """
-        # depending on the save signature of the approval record
-        # handle the approval.
-
-        obj.save()

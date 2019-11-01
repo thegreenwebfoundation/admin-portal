@@ -12,20 +12,11 @@ from .models import GreencheckIpApprove
 User = get_user_model()
 
 
-class GreencheckIpForm(ModelForm):
-    '''This form is meant for admin
-
-    If a non staff user fills in the form it would return
-    an unsaved approval record instead of greencheckip record
-    '''
+class StaffFormMixin:
 
     is_staff = forms.BooleanField(
         label='user_is_staff', required=False, widget=forms.HiddenInput()
     )
-
-    class Meta:
-        model = GreencheckIp
-        fields = '__all__'
 
     def clean_is_staff(self):
         try:
@@ -34,6 +25,21 @@ class GreencheckIpForm(ModelForm):
             return self.data['is_staff']
         except KeyError:
             raise ValidationError('Alert staff: a bug has occurred.')
+
+
+class GreencheckIpForm(ModelForm, StaffFormMixin):
+    '''This form is meant for admin
+
+    If a non staff user fills in the form it would return
+    an unsaved approval record instead of greencheckip record
+    '''
+
+    # for some reason field_order does not work with __all__
+    field_order = ('ip_start', 'ip_end')
+
+    class Meta:
+        model = GreencheckIp
+        fields = ('active', 'ip_start', 'ip_end', )
 
     def save(self, commit=True):
         '''
@@ -58,5 +64,30 @@ class GreencheckIpForm(ModelForm):
                 ip_start=self.instance.ip_start,
                 status=status
             )
-        # check initial data for the request user.
+        return super().save(commit=commit)
+
+
+class GreecheckIpApprovalForm(ModelForm, StaffFormMixin):
+
+    field_order = ('ip_start', 'ip_end')
+
+    class Meta:
+        model = GreencheckIpApprove
+        fields = ('action', 'ip_start', 'ip_end', 'status')
+
+    def save(self, commit=True):
+        ip_instance = self.instance.greencheck_ip
+        if commit is True:
+            if ip_instance:
+                ip_instance.ip_end = self.instance.ip_end
+                ip_instance.ip_end = self.instance.ip_start
+                ip_instance.save()
+            else:
+                ip_instance = GreencheckIp.objects.create(
+                    active=True,
+                    ip_end=self.instance.ip_end,
+                    ip_start=self.instance.ip_start,
+                    hostingprovider=self.instance.hostingprovider,
+                )
+        self.instance.greencheck_ip = ip_instance
         return super().save(commit=commit)
