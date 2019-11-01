@@ -3,6 +3,7 @@ import ipaddress
 from django.db import models
 from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
+from django.core import exceptions
 
 from apps.accounts.models import Hostingprovider
 from .choices import (
@@ -38,6 +39,41 @@ mysql> show columns from greencheck;
 """
 
 
+class IpAddressField(models.CharField):
+    default_error_messages = {
+        'invalid': "'%(value)s' value must be a valid IpAddress.",
+    }
+    description = "IpAddress"
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('max_length', None)
+        self.max_length = 39
+        super().__init__(*args, **kwargs, max_length=self.max_length)
+
+    def to_python(self, value):
+        if value is None:
+            return value
+        try:
+            return ipaddress.ip_address(value)
+        except (TypeError, ValueError):
+            raise exceptions.ValidationError(
+                self.error_messages['invalid'],
+                code='invalid',
+                params={'value': value},
+            )
+
+    def from_db_value(self, value, expression, connection):
+        if value is None:
+            return value
+        return str(ipaddress.ip_address(value))
+
+    def get_prep_value(self, value):
+        return int(value)
+
+    def get_internal_type(self):
+        return 'IntegerField'
+
+
 class Greencheck(models.Model):
     hostingprovider = models.ForeignKey(
         Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
@@ -45,7 +81,7 @@ class Greencheck(models.Model):
     # missing id_greencheck. Find out what it is first
     date = UnixDateTimeField(db_column='datum')
     green = EnumField(choices=BoolChoice.choices)
-    ip = models.IntegerField()
+    ip = IpAddressField()
     tld = models.CharField(max_length=64)
     type = EnumField(choices=GreenlistChoice.choices)
     url = models.CharField(max_length=255)
@@ -56,8 +92,8 @@ class Greencheck(models.Model):
 
 class GreencheckIp(models.Model):
     active = models.BooleanField(null=True)
-    ip_end = models.IntegerField(db_column='ip_eind')
-    ip_start = models.IntegerField()
+    ip_end = IpAddressField(db_column='ip_eind')
+    ip_start = IpAddressField()
     hostingprovider = models.ForeignKey(
         Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
     )
@@ -86,8 +122,8 @@ class GreencheckIpApprove(models.Model):
     greencheck_ip = models.ForeignKey(
         GreencheckIp, on_delete=models.CASCADE, db_column='idorig', null=True
     )
-    ip_end = models.IntegerField(db_column='ip_eind')
-    ip_start = models.IntegerField()
+    ip_end = IpAddressField(db_column='ip_eind')
+    ip_start = IpAddressField()
     status = models.TextField(choices=StatusApproval.choices)
 
     def __str__(self):
@@ -98,9 +134,6 @@ class GreencheckIpApprove(models.Model):
     class Meta:
         db_table = 'greencheck_ip_approve'
         # managed = False
-
-    def __str__(self):
-        return f'Status: {self.status} Action: {self.action}'
 
 
 class GreencheckLinked(models.Model):
