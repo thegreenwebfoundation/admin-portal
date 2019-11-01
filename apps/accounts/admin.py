@@ -2,8 +2,17 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 
+from apps.greencheck.admin import (
+    GreencheckIpInline
+)
+
 from .forms import CustomUserChangeForm, CustomUserCreationForm
-from .models import User, Hostingprovider, Datacenter
+from .models import (
+    Datacenter,
+    HostingproviderCertificate,
+    Hostingprovider,
+    User,
+)
 
 
 @admin.register(User)
@@ -35,8 +44,21 @@ class CustomUserAdmin(UserAdmin):
     )
 
 
+
+class HostingCertificateInline(admin.TabularInline):
+    extra = 0
+    model = HostingproviderCertificate
+    classes = ['collapse']
+
+
+
 @admin.register(Hostingprovider)
 class HostingAdmin(admin.ModelAdmin):
+    inlines = [
+        GreencheckIpInline,
+        HostingCertificateInline,
+    ]
+
     list_display = [
         'name',
         'country_str',
@@ -149,5 +171,4 @@ class DatacenterAdmin(admin.ModelAdmin):
     def hostingproviders_amount(self, obj):
         return len(obj.hostingproviders.all())
     hostingproviders_amount.short_description = 'Hosters'
-
 

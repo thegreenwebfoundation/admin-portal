@@ -1,3 +1,5 @@
+import ipaddress
+
 from django.db import models
 from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
@@ -59,6 +61,11 @@ class GreencheckIp(models.Model):
     hostingprovider = models.ForeignKey(
         Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
     )
+
+    def __str__(self):
+        start = ipaddress.ip_address(self.ip_start)
+        end = ipaddress.ip_address(self.ip_end)
+        return f'{start} - {end}'
 
     class Meta:
         # managed = False
