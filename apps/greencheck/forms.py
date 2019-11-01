@@ -53,8 +53,6 @@ class GreencheckIpForm(ModelForm, StaffFormMixin):
         which in turn will get saved a bit later.
         '''
         if not self.cleaned_data['is_staff']:
-            # change the instance.
-            # i need to know if this is a change request.
             action = ActionChoice.update if self.changed else ActionChoice.new
             status = StatusApproval.update if self.changed else StatusApproval.new
             self.instance = GreencheckIpApprove(
