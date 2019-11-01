@@ -8,6 +8,7 @@ from .choices import (
     EnergyType,
     TempType,
     ModelType,
+    PartnerChoice
 )
 
 
@@ -69,13 +70,16 @@ class Hostingprovider(models.Model):
     archived = models.BooleanField()
     country = CountryField(db_column='countrydomain')
     customer = models.BooleanField()
-    icon = models.CharField(max_length=50)
-    iconurl = models.CharField(max_length=255)
+    icon = models.CharField(max_length=50, blank=True)
+    iconurl = models.CharField(max_length=255, blank=True)
     model = EnumField(
         choices=ModelType.choices, default=ModelType.compensation
     )
     name = models.CharField(max_length=255, db_column='naam')
-    partner = models.CharField(max_length=255, null=True)
+    partner = models.CharField(
+        max_length=255, null=True, default=PartnerChoice.none,
+        choices=PartnerChoice.choices, blank=True
+    )
     showonwebsite = models.BooleanField(verbose_name='Show on website')
     website = models.CharField(max_length=255)
     datacenter = models.ManyToManyField(

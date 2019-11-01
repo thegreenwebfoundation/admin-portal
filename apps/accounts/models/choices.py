@@ -16,3 +16,11 @@ class TempType(DjangoChoices):
 class ModelType(DjangoChoices):
     green_energy = ChoiceItem('groeneenergie')
     compensation = ChoiceItem('compensatie')
+
+
+class PartnerChoice(DjangoChoices):
+    none = ChoiceItem('', 'None')
+    partner = ChoiceItem('Partner', 'Partner')
+    dev_partner = ChoiceItem('Dev Partner', 'Dev Partner')
+    certified_gold = ChoiceItem('Certified Gold Partner', 'Certified Gold Partner')
+    gold = ChoiceItem('Gold Partner', 'Gold Partner')
