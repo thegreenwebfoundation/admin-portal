@@ -99,8 +99,8 @@ class GreencheckIp(models.Model):
     )
 
     def __str__(self):
-        start = ipaddress.ip_address(self.ip_start)
-        end = ipaddress.ip_address(self.ip_end)
+        start = self.ip_start
+        end = self.ip_end
         return f'{start} - {end}'
 
     class Meta:
@@ -127,8 +127,8 @@ class GreencheckIpApprove(models.Model):
     status = models.TextField(choices=StatusApproval.choices)
 
     def __str__(self):
-        start = ipaddress.ip_address(self.ip_start)
-        end = ipaddress.ip_address(self.ip_end)
+        start = self.ip_start
+        end = self.ip_end
         return f'{start} - {end}: {self.status}'
 
     class Meta:
