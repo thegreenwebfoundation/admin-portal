@@ -12,22 +12,7 @@ from .models import GreencheckIpApprove
 User = get_user_model()
 
 
-class StaffFormMixin:
-
-    is_staff = forms.BooleanField(
-        label='user_is_staff', required=False, widget=forms.HiddenInput()
-    )
-
-    def clean_is_staff(self):
-        try:
-            # when using this form `is_staff` should always be available
-            # or else something has gone wrong...
-            return self.data['is_staff']
-        except KeyError:
-            raise ValidationError('Alert staff: a bug has occurred.')
-
-
-class GreencheckIpForm(ModelForm, StaffFormMixin):
+class GreencheckIpForm(ModelForm):
     '''This form is meant for admin
 
     If a non staff user fills in the form it would return
@@ -36,10 +21,21 @@ class GreencheckIpForm(ModelForm, StaffFormMixin):
 
     # for some reason field_order does not work with __all__
     field_order = ('ip_start', 'ip_end')
+    is_staff = forms.BooleanField(
+        label='user_is_staff', required=False, widget=forms.HiddenInput()
+    )
 
     class Meta:
         model = GreencheckIp
         fields = ('active', 'ip_start', 'ip_end', )
+
+    def clean_is_staff(self):
+        try:
+            # when using this form `is_staff` should always be available
+            # or else something has gone wrong...
+            return self.data['is_staff']
+        except KeyError:
+            raise ValidationError('Alert staff: a bug has occurred.')
 
     def save(self, commit=True):
         '''
@@ -65,7 +61,7 @@ class GreencheckIpForm(ModelForm, StaffFormMixin):
         return super().save(commit=commit)
 
 
-class GreecheckIpApprovalForm(ModelForm, StaffFormMixin):
+class GreecheckIpApprovalForm(ModelForm):
 
     field_order = ('ip_start', 'ip_end')
 
