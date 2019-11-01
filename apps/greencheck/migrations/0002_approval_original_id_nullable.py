@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('greencheck', '0003_auto_20191031_1333'),
+        ('greencheck', '0001_initial'),
     ]
 
     operations = [

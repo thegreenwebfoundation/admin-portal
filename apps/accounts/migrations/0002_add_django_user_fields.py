@@ -42,6 +42,14 @@ class Migration(migrations.Migration):
             name='user_permissions',
             field=models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions'),
         ),
+        migrations.AddIndex(
+            model_name='user',
+            index=models.Index(fields=['username'], name='username'),
+        ),
+        migrations.AddIndex(
+            model_name='user',
+            index=models.Index(fields=['email'], name='email'),
+        ),
         migrations.AlterModelManagers(
             name='user',
             managers=[

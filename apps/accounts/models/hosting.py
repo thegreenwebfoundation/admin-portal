@@ -92,8 +92,8 @@ class Hostingprovider(models.Model):
         # managed = False
         db_table = 'hostingproviders'
         indexes = [
-            models.Index(fields=['archived']),
-            models.Index(fields=['showonwebsite']),
+            models.Index(fields=['archived'], name='archived'),
+            models.Index(fields=['showonwebsite'], name='showonwebsite'),
         ]
 
 
