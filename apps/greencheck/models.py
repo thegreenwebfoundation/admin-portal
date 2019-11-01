@@ -89,6 +89,9 @@ class Greencheck(models.Model):
     class Meta:
         db_table = 'greencheck'
 
+    def __str__(self):
+        return f'{self.url} - {self.ip}'
+
 
 class GreencheckIp(models.Model):
     active = models.BooleanField(null=True)
@@ -99,9 +102,7 @@ class GreencheckIp(models.Model):
     )
 
     def __str__(self):
-        start = self.ip_start
-        end = self.ip_end
-        return f'{start} - {end}'
+        return f'{self.ip_start} - {self.ip_end}'
 
     class Meta:
         # managed = False
@@ -127,9 +128,7 @@ class GreencheckIpApprove(models.Model):
     status = models.TextField(choices=StatusApproval.choices)
 
     def __str__(self):
-        start = self.ip_start
-        end = self.ip_end
-        return f'{start} - {end}: {self.status}'
+        return f'{self.ip_start} - {self.ip_end}: {self.status}'
 
     class Meta:
         db_table = 'greencheck_ip_approve'
