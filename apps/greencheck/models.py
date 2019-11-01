@@ -90,6 +90,11 @@ class GreencheckIpApprove(models.Model):
     ip_start = models.IntegerField()
     status = models.TextField(choices=StatusApproval.choices)
 
+    def __str__(self):
+        start = ipaddress.ip_address(self.ip_start)
+        end = ipaddress.ip_address(self.ip_end)
+        return f'{start} - {end}: {self.status}'
+
     class Meta:
         db_table = 'greencheck_ip_approve'
         # managed = False

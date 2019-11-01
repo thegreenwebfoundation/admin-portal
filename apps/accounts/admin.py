@@ -44,12 +44,10 @@ class CustomUserAdmin(UserAdmin):
     )
 
 
-
 class HostingCertificateInline(admin.TabularInline):
     extra = 0
     model = HostingproviderCertificate
     classes = ['collapse']
-
 
 
 @admin.register(Hostingprovider)
@@ -71,10 +69,30 @@ class HostingAdmin(admin.ModelAdmin):
     ]
     ordering = ('name',)
 
+    def save_formset(self, request, form, formset, change):
+        """
+        We need to let the form know if this an addition or a change
+        so that approval record is saved correctly in case of a
+        non-staff user.
+        """
+
+        # A bit of a hack, we need to let the form know that it has changed
+        # somehow, this was the easiest way of doing it.
+        formset.form.changed = change
+        formset.save()
+
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_staff:
             return ['partner']
         return self.readonly_fields
+
+    def _changeform_view(self, request, object_id, form_url, extra_context):
+        '''Include whether current user is staff, so it can be picked up by a form'''
+        if request.method == 'POST':
+            post = request.POST.copy()
+            post['is_staff'] = request.user.is_staff
+            request.POST = post
+        return super()._changeform_view(request, object_id, form_url, extra_context)
 
     def get_fieldsets(self, request, obj=None):
         fieldset = [

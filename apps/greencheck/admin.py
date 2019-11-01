@@ -1,27 +1,17 @@
 from django.contrib import admin
 
-
-
 from .models import (
     GreencheckIp,
     GreencheckIpApprove,
 )
+from .forms import GreencheckIpForm
+
 
 class GreencheckIpInline(admin.TabularInline):
     extra = 0
     model = GreencheckIp
     classes = ['collapse']
-
-    # use some kind form for display ip thing...
-
-    def save_model(self, request, obj, form, change):
-        """
-        Given a model instance save it to the database.
-        """
-        # if it is not a staff memeber, create an approval record
-        # instead of an ip address.
-        obj.save()
-
+    form = GreencheckIpForm
 
 
 class GreencheckIpApproveInline(admin.TabularInline):
