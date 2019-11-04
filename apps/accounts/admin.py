@@ -1,12 +1,12 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 from django.utils.safestring import mark_safe
-
 from apps.greencheck.admin import (
     GreencheckIpApproveInline,
     GreencheckIpInline,
 )
 
+from .admin_site import greenweb_admin
 from . import forms
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import (
@@ -20,7 +20,12 @@ from .models import (
 )
 
 
-@admin.register(User)
+@admin.register(Group, site=greenweb_admin)
+class CustomGroupAdmin(GroupAdmin):
+    pass
+
+
+@admin.register(User, site=greenweb_admin)
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
@@ -55,7 +60,7 @@ class HostingCertificateInline(admin.TabularInline):
     classes = ['collapse']
 
 
-@admin.register(Hostingprovider)
+@admin.register(Hostingprovider, site=greenweb_admin)
 class HostingAdmin(admin.ModelAdmin):
     inlines = [
         HostingCertificateInline,
@@ -161,7 +166,7 @@ class DatacenterCoolingInline(admin.TabularInline):
     classes = ['collapse']
 
 
-@admin.register(Datacenter)
+@admin.register(Datacenter, site=greenweb_admin)
 class DatacenterAdmin(admin.ModelAdmin):
     form = forms.DatacenterAdminForm
     inlines = [
