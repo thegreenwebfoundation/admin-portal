@@ -75,9 +75,10 @@ class Command(BaseCommand):
             except Exception:
                 self.stdout.write('You ran the migration twice, skipping adding password column')
 
-            cursor.execute(
-                "UPDATE fos_user SET django_password = CONCAT('legacy_bcrypt$', password);"
-            )
+            cursor.execute("""
+                UPDATE fos_user SET django_password = CONCAT('legacy_bcrypt$', password)
+                WHERE password LIKE '$2%'
+            """)
 
             self.stdout.write(self.style.SUCCESS('Password migration successful'))
 
