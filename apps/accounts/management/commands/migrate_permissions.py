@@ -28,5 +28,8 @@ class Command(BaseCommand):
             for role in roles:
                 group, created = GROUPS[role]
                 user.groups.add(group)
+                if role == 'ROLE_ADMIN':
+                    user.is_staff = True
+                    user.is_superuser = True
                 user.save()
         self.stdout.write(self.style.SUCCESS('Migrating permissions completed!'))
