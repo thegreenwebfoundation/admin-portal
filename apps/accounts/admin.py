@@ -7,9 +7,13 @@ from apps.greencheck.admin import (
     GreencheckIpInline,
 )
 
+from . import forms
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import (
     Datacenter,
+    DatacenterCertificate,
+    DatacenterClassification,
+    DatacenterCooling,
     HostingproviderCertificate,
     Hostingprovider,
     User,
@@ -139,8 +143,33 @@ class HostingAdmin(admin.ModelAdmin):
     datacenter_amount.short_description = 'Datacenters'
 
 
+class DatacenterCertificateInline(admin.TabularInline):
+    extra = 0
+    model = DatacenterCertificate
+    classes = ['collapse']
+
+
+class DatacenterClassificationInline(admin.TabularInline):
+    extra = 0
+    model = DatacenterClassification
+    classes = ['collapse']
+
+
+class DatacenterCoolingInline(admin.TabularInline):
+    extra = 0
+    model = DatacenterCooling
+    classes = ['collapse']
+
+
 @admin.register(Datacenter)
 class DatacenterAdmin(admin.ModelAdmin):
+    form = forms.DatacenterAdminForm
+    inlines = [
+        DatacenterCertificateInline,
+        DatacenterClassificationInline,
+        DatacenterCoolingInline,
+    ]
+
     list_display = [
         'name',
         'html_website',
@@ -183,6 +212,9 @@ class DatacenterAdmin(admin.ModelAdmin):
                 ),
 
             }),
+            (None, {
+                'fields': ('hostingproviders',)
+            })
         ]
         return fieldset
 
