@@ -27,6 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     last_login = models.DateTimeField(null=True)
     locked = models.BooleanField()
+    password = models.CharField('password', max_length=128, db_column='django_password')
     # password already provided in abstract base user.
     password_requested_at = models.DateTimeField(null=True)
     # contains a php array, needs to be deserialized with something like in this

@@ -65,3 +65,19 @@ class Command(BaseCommand):
                 "ALTER TABLE greencheck_weekly MODIFY year SMALLINT(5)"
             )
             self.stdout.write(self.style.SUCCESS('Schema migrations completed!'))
+
+            self.stdout.write('Migration passwords to new column')
+
+            try:
+                cursor.execute(
+                    "ALTER TABLE fos_user ADD COLUMN django_password VARCHAR(128);"
+                )
+            except Exception:
+                self.stdout.write('You ran the migration twice, skipping adding password column')
+
+            cursor.execute(
+                "UPDATE fos_user SET django_password = CONCAT('legacy_bcrypt$', password);"
+            )
+
+            self.stdout.write(self.style.SUCCESS('Password migration successful'))
+

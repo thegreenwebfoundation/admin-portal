@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='User',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
+                ('password', models.CharField(max_length=128, verbose_name='password', db_column='django_password')),
                 ('algorithm', models.CharField(max_length=255)),
                 ('confirmation_token', models.CharField(max_length=255)),
                 ('credentials_expire_at', models.DateTimeField(null=True)),
