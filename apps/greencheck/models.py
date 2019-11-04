@@ -74,25 +74,6 @@ class IpAddressField(models.CharField):
         return 'IntegerField'
 
 
-class Greencheck(models.Model):
-    hostingprovider = models.ForeignKey(
-        Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
-    )
-    # missing id_greencheck. Find out what it is first
-    date = UnixDateTimeField(db_column='datum')
-    green = EnumField(choices=BoolChoice.choices)
-    ip = IpAddressField()
-    tld = models.CharField(max_length=64)
-    type = EnumField(choices=GreenlistChoice.choices)
-    url = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = 'greencheck'
-
-    def __str__(self):
-        return f'{self.url} - {self.ip}'
-
-
 class GreencheckIp(models.Model):
     active = models.BooleanField(null=True)
     ip_end = IpAddressField(db_column='ip_eind')
@@ -112,6 +93,27 @@ class GreencheckIp(models.Model):
             models.Index(fields=['ip_start'], name='ip_start'),
             models.Index(fields=['active'], name='active'),
         ]
+
+
+class Greencheck(models.Model):
+    hostingprovider = models.ForeignKey(
+        Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
+    )
+    greencheck_ip = models.ForeignKey(
+        GreencheckIp, on_delete=models.CASCADE, db_column='id_greencheck'
+    )
+    date = UnixDateTimeField(db_column='datum')
+    green = EnumField(choices=BoolChoice.choices)
+    ip = IpAddressField()
+    tld = models.CharField(max_length=64)
+    type = EnumField(choices=GreenlistChoice.choices)
+    url = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'greencheck'
+
+    def __str__(self):
+        return f'{self.url} - {self.ip}'
 
 
 class GreencheckIpApprove(models.Model):
