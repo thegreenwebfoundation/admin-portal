@@ -132,7 +132,7 @@ class Migration(migrations.Migration):
             name='DatacenterCooling',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('cooling', models.CharField(max_length=255)),
+                ('cooling', models.CharField(max_length=255, choices=[('Direct free', 'Direct free'), ('Compressor', 'Compressor'), ('Indirect free', 'Indirect free'), ('Water', 'Water'), ('Cold Wheel', 'Cold Wheel')])),
                 ('datacenter', models.ForeignKey(db_column='id_dc', on_delete=django.db.models.deletion.CASCADE, to='accounts.Datacenter')),
             ],
             options={

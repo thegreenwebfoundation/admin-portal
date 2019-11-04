@@ -10,6 +10,7 @@ from .choices import (
     ModelType,
     PartnerChoice,
     ClassificationChoice,
+    CoolingChoice,
 )
 
 
@@ -50,17 +51,23 @@ class DatacenterClassification(models.Model):
         on_delete=models.CASCADE, related_name='classifications'
     )
 
+    def __str__(self):
+        return f'{self.classification} - related id: {self.datacenter_id}'
+
     class Meta:
         db_table = 'datacenters_classifications'
         # managed = False
 
 
 class DatacenterCooling(models.Model):
-    # TODO if this is used to some extent, this should be m2m
-    cooling = models.CharField(max_length=255)
+    # TODO if this is used to some extent, this should ideally be m2m
+    cooling = models.CharField(max_length=255, choices=CoolingChoice.choices)
     datacenter = models.ForeignKey(
         Datacenter, db_column='id_dc', on_delete=models.CASCADE
     )
+
+    def __str__(self):
+        return self.cooling
 
     class Meta:
         db_table = 'datacenters_coolings'
