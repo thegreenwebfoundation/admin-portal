@@ -68,7 +68,9 @@ class IpAddressField(models.CharField):
         return str(ipaddress.ip_address(value))
 
     def get_prep_value(self, value):
-        return int(value)
+        if value is not None:
+            return int(value)
+        return None
 
     def get_internal_type(self):
         return 'IntegerField'
