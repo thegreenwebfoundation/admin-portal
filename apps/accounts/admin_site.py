@@ -4,7 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 
 class GreenWebAdmin(AdminSite):
     # This is a standard authentication form that allows non-staff users
-    form = AuthenticationForm
+    login_form = AuthenticationForm
     site_header = 'Green Web Admin'
     index_template = 'admin_index.html'
     site_header = 'Green Web Admin'
