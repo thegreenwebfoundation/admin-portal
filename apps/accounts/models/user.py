@@ -13,7 +13,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     algorithm = models.CharField(max_length=255)
     confirmation_token = models.CharField(max_length=255)
     credentials_expire_at = models.DateTimeField(null=True)
-    credentials_expired = models.BooleanField()
+    credentials_expired = models.BooleanField(default=False)
     email = models.CharField(max_length=255)
     email_canonical = models.CharField(max_length=255)
     enabled = models.BooleanField()
