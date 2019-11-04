@@ -8,7 +8,8 @@ from .choices import (
     EnergyType,
     TempType,
     ModelType,
-    PartnerChoice
+    PartnerChoice,
+    ClassificationChoice,
 )
 
 
@@ -43,7 +44,7 @@ class Datacenter(models.Model):
 
 class DatacenterClassification(models.Model):
     # TODO if this is used to some extent, this should be m2m
-    classification = models.CharField(max_length=255)
+    classification = models.CharField(max_length=255, choices=ClassificationChoice)
     datacenter = models.ForeignKey(
         Datacenter, db_column='id_dc',
         on_delete=models.CASCADE, related_name='classifications'

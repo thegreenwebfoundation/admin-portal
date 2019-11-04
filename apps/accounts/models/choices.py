@@ -24,3 +24,11 @@ class PartnerChoice(DjangoChoices):
     dev_partner = ChoiceItem('Dev Partner', 'Dev Partner')
     certified_gold = ChoiceItem('Certified Gold Partner', 'Certified Gold Partner')
     gold = ChoiceItem('Gold Partner', 'Gold Partner')
+
+
+class ClassificationChoice(DjangoChoices):
+    greengrid = ChoiceItem('GreenGrid', 'GreenGrid')
+    energystart = ChoiceItem('EnergyStart', 'EnergyStart')
+    breeam = ChoiceItem('BREEAM', 'BREEAM')
+    leed = ChoiceItem('LEED', 'LEED')
+    epa = ChoiceItem('EPA', 'EPA')

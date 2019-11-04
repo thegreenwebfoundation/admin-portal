@@ -143,7 +143,7 @@ class Migration(migrations.Migration):
             name='DatacenterClassification',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('classification', models.CharField(max_length=255)),
+                ('classification', models.CharField(max_length=255, choices=[('GreenGrid', 'GreenGrid'), ('EnergyStart', 'EnergyStart'), ('BREEAM', 'BREEAM'), ('LEED', 'LEED'), ('EPA', 'EPA')])),
                 ('datacenter', models.ForeignKey(db_column='id_dc', on_delete=django.db.models.deletion.CASCADE, to='accounts.Datacenter')),
             ],
             options={
