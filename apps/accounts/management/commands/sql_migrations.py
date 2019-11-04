@@ -64,3 +64,4 @@ class Command(BaseCommand):
             cursor.execute(
                 "ALTER TABLE greencheck_weekly MODIFY year SMALLINT(5)"
             )
+            self.stdout.write(self.style.SUCCESS('Schema migrations completed!'))
