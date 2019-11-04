@@ -40,6 +40,9 @@ class Datacenter(models.Model):
 
     class Meta:
         db_table = 'datacenters'
+        indexes = [
+            models.Index(fields=['name'], name='name'),
+        ]
         # managed = False
 
 
@@ -104,6 +107,7 @@ class Hostingprovider(models.Model):
         # managed = False
         db_table = 'hostingproviders'
         indexes = [
+            models.Index(fields=['name'], name='name'),
             models.Index(fields=['archived'], name='archived'),
             models.Index(fields=['showonwebsite'], name='showonwebsite'),
         ]
