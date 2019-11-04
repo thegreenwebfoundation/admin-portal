@@ -16,8 +16,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     credentials_expired = models.BooleanField(default=False)
     email = models.CharField(max_length=255)
     email_canonical = models.CharField(max_length=255)
-    enabled = models.BooleanField()
-    expired = models.BooleanField()
+    enabled = models.BooleanField(default=True)
+    expired = models.BooleanField(default=False)
     expires_at = models.DateTimeField(null=True)
 
     # id_ge Green energy providers. Leave this for now.
@@ -26,7 +26,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
     )
     last_login = models.DateTimeField(null=True)
-    locked = models.BooleanField()
+    locked = models.BooleanField(default=False)
     password = models.CharField('password', max_length=128, db_column='django_password')
     # password already provided in abstract base user.
     password_requested_at = models.DateTimeField(null=True)
