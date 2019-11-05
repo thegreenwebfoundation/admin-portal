@@ -1,11 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 from django.utils.safestring import mark_safe
+from django.shortcuts import redirect
+
 from apps.greencheck.admin import (
     GreencheckIpApproveInline,
     GreencheckIpInline,
 )
 
+from apps.greencheck.models import GreencheckIp
+from apps.greencheck.choices import StatusApproval
+
+from .utils import get_admin_name
 from .admin_site import greenweb_admin
 from . import forms
 from .forms import CustomUserChangeForm, CustomUserCreationForm
@@ -79,6 +85,34 @@ class HostingAdmin(admin.ModelAdmin):
         'datacenter_amount',
     ]
     ordering = ('name',)
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        added = [
+            path('approval_action/', self.approve, name=get_admin_name(self.model, 'approval_action')),
+        ]
+        # order is important !!
+        return added + urls
+
+    def approve(self, request, *args, **kwargs):
+        from apps.greencheck.models import GreencheckIpApprove
+        pk = request.GET.get('approval_id')
+        action = request.GET.get('action')
+
+        obj = GreencheckIpApprove.objects.get(pk=pk)
+        obj.status = action
+        obj.save()
+
+        if action == StatusApproval.approved:
+            GreencheckIp.objects.create(
+                active=True,
+                hostingprovider=obj.hostingprovider,
+                ip_start=obj.ip_start,
+                ip_end=obj.ip_end
+            )
+        name = 'admin:' + get_admin_name(self.model, 'change')
+        return redirect(name, obj.hostingprovider_id)
 
     def save_formset(self, request, form, formset, change):
         """

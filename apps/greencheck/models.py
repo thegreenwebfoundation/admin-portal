@@ -49,6 +49,12 @@ class IpAddressField(models.CharField):
         kwargs.pop('max_length', None)
         self.max_length = 39
         super().__init__(*args, **kwargs, max_length=self.max_length)
+        self.validators = []
+
+    def pre_save(self, model_instance, add):
+        """Return field's value just before saving."""
+        value = getattr(model_instance, self.attname)
+        return ipaddress.ip_address(value)
 
     def to_python(self, value):
         if value is None:

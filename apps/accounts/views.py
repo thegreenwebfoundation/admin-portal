@@ -12,7 +12,7 @@ from django_registration.exceptions import ActivationError
 
 
 class AdminRegistrationView(RegistrationView):
-    form = RegistrationFormCaseInsensitive
+    form_class = RegistrationFormCaseInsensitive
     template_name = 'registration.html'
 
     email_body_template = 'emails/activation.html'

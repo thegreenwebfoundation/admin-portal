@@ -1,10 +1,15 @@
+from django.utils.safestring import mark_safe
 from django.contrib import admin
+
+from apps.accounts.utils import reverse_admin_name
+from apps.accounts.models import Hostingprovider
 from .models import (
     GreencheckIp,
     GreencheckIpApprove,
 )
 from .forms import GreencheckIpForm
 from .forms import GreecheckIpApprovalForm
+from .choices import StatusApproval
 
 
 class GreencheckIpInline(admin.TabularInline):
@@ -24,9 +29,16 @@ class GreencheckIpApproveInline(admin.TabularInline):
     ordering = ('ip_start', 'ip_end',)
     verbose_name = 'IP approval'
     verbose_name_plural = 'IP approvals'
-    # filter away records that are already approved.
 
-    readonly_fields = ('action', 'status')
+    fields = [
+        'ip_start',
+        'ip_end',
+        'action',
+        'status',
+        'approval',
+
+    ]
+    readonly_fields = ('action', 'status', 'approval')
 
     def get_readonly_fields(self, request, obj):
         '''Non staff user should only be able to read the fields'''
@@ -34,3 +46,36 @@ class GreencheckIpApproveInline(admin.TabularInline):
         if not request.user.is_staff:
             read_only = ('ip_start', 'ip_end') + read_only
         return read_only
+
+    @mark_safe
+    def approval(self, obj):
+        approve_url = reverse_admin_name(
+            Hostingprovider,
+            name='approval_action',
+            # args=(obj.hostingprovider.pk,),
+            params={
+                'action': StatusApproval.approved,
+                'approval_id': obj.pk
+            }
+        )
+        reject_url = reverse_admin_name(
+            Hostingprovider,
+            name='approval_action',
+            params={
+                'action': StatusApproval.removed,
+                'approval_id': obj.pk
+            }
+        )
+
+        approve = f'<a href="{approve_url}">Approve</a>'
+        reject = f'<a href="{reject_url}">Reject</a>'
+        link = f'{approve} / {reject}'
+        action_taken = any([
+            obj.status == StatusApproval.deleted,
+            obj.status == StatusApproval.removed,
+            # obj.status == StatusApproval.approved
+        ])
+        if action_taken:
+            return 'Action taken'
+        return link
+    approval.short_description = 'Decide'
