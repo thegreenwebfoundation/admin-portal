@@ -10,8 +10,6 @@ from django_registration.forms import RegistrationFormCaseInsensitive
 from django_registration import signals
 from django_registration.exceptions import ActivationError
 
-from .forms import RegistrationForm
-
 
 class AdminRegistrationView(RegistrationView):
     form = RegistrationFormCaseInsensitive
