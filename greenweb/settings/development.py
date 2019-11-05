@@ -15,3 +15,26 @@ INSTALLED_APPS.insert(0, 'whitenoise.runserver_nostatic')
 MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+LOGGING = {
+    'version': 1,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'loggers': {
+        'django.db.backends': {
+            # uncomment to see all queries
+            # 'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+    }
+}
