@@ -10,9 +10,17 @@ from django_registration.forms import RegistrationFormCaseInsensitive
 from django_registration import signals
 from django_registration.exceptions import ActivationError
 
+from .models import User
+
+
+class RegistrationForm(RegistrationFormCaseInsensitive):
+
+    class Meta(RegistrationFormCaseInsensitive.Meta):
+        model = User
+
 
 class AdminRegistrationView(RegistrationView):
-    form_class = RegistrationFormCaseInsensitive
+    form_class = RegistrationForm
     template_name = 'registration.html'
 
     email_body_template = 'emails/activation.html'
@@ -49,9 +57,8 @@ class AdminActivationView(ActivationView):
         We override the get method here because we only want to use the admin
         page and show the user a message.
         """
-        activation = {'activation_key': self.request.GET.get('activation_key')}
         try:
-            activated_user = self.activate(*args, **activation)
+            activated_user = self.activate(*args, **kwargs)
         except ActivationError as e:
             error_message = e.message
         else:
