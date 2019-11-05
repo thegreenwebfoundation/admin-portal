@@ -9,6 +9,7 @@ class GreenWebAdmin(AdminSite):
     index_template = 'admin_index.html'
     site_header = 'Green Web Admin'
     index_title = ''
+    login_template = 'login.html'
 
     def has_permission(self, request):
         """
