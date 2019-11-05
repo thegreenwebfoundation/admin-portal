@@ -52,7 +52,6 @@ class GreencheckIpApproveInline(admin.TabularInline):
         approve_url = reverse_admin_name(
             Hostingprovider,
             name='approval_action',
-            # args=(obj.hostingprovider.pk,),
             params={
                 'action': StatusApproval.approved,
                 'approval_id': obj.pk
@@ -73,7 +72,7 @@ class GreencheckIpApproveInline(admin.TabularInline):
         action_taken = any([
             obj.status == StatusApproval.deleted,
             obj.status == StatusApproval.removed,
-            # obj.status == StatusApproval.approved
+            obj.status == StatusApproval.approved
         ])
         if action_taken:
             return 'Action taken'
