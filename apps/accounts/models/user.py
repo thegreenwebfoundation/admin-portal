@@ -5,6 +5,7 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.utils import timezone
+from django.core.mail import send_mail
 
 from .hosting import Hostingprovider
 
@@ -53,8 +54,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         ),
     )
     date_joined = models.DateTimeField('date joined', default=timezone.now)
-
+    EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
     objects = UserManager()
 
     class Meta:
@@ -71,5 +73,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         self.username = self.username.lower()
+        self.username_canonical = self.username.lower()
+        self.email_canonical = self.email
         self.email = self.email.lower()
         super().save(args, **kwargs)
+
+    def email_user(self, subject, message, from_email=None, **kwargs):
+        """Send an email to this user."""
+        send_mail(subject, message, from_email, [self.email], **kwargs)
+

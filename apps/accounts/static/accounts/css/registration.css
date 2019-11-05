@@ -1,0 +1,6 @@
+.login .form-row input {
+    clear: both;
+    padding: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}

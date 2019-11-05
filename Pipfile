@@ -22,11 +22,12 @@ django-environ = "==0.4.5"
 django-extensions = "==2.2.5"
 django-model-utils = "==3.2.0"
 django-mysql = "==3.2.0"
-django-registration= "==3.0.1"
 django-unixdatetimefield = "==1.0.3"
 gunicorn = "==19.9.0"
 mysqlclient = "==1.4.4"
 whitenoise = {extras = ["brotli"],version = "==4.1.4"}
+# Currently has this issue https://github.com/ubernostrum/django-registration/issues/187 waiting for a fix to be merged
+django-registration = {editable = true,git = "https://github.com/jonathan-s/django-registration.git"}
 
 [requires]
 python_version = "3.6"

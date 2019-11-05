@@ -33,8 +33,10 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['thegreenwebfoundation.org']
 
-# Application definition
+# Setting for django-registration
+ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
 
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -47,6 +49,7 @@ INSTALLED_APPS = [
     'anymail',
     'django_extensions',
     'django_mysql',
+    'django_registration',
 
     # project specific
     'apps.accounts',
@@ -90,7 +93,6 @@ WSGI_APPLICATION = 'greenweb.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
-
 DATABASES = {
     'default': env.db(),
     # 'extra': env.db('SQLITE_URL'),
@@ -99,7 +101,6 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
-
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
     'apps.accounts.auth.LegacyBCrypt',
@@ -124,13 +125,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/dev/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+# Email settings
+DEFAULT_FROM_EMAIL = 'hello@thegreenwebfoundation.org'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/

@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django_registration.forms import RegistrationFormCaseInsensitive
 from .models import User, Datacenter, Hostingprovider
 
 
