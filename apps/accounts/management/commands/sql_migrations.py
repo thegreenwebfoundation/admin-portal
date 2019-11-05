@@ -5,6 +5,12 @@ from django.db import connection
 class Command(BaseCommand):
     help = "SQL migrations to fit django better."
 
+    def write(self, msg, mode='INFO'):
+        if mode == 'INFO':
+            self.stdout.write(msg)
+        else:
+            self.stdout.write(self.style.SUCCESS(msg))
+
     def handle(self, *args, **options):
         with connection.cursor() as cursor:
             # comply with the countryfield that we introduced
@@ -82,3 +88,35 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('Password migration successful'))
 
+            # make sure that usernames are handled correctly
+            cursor.execute("UPDATE fos_user SET username = LOWER(username);")
+            try:
+                cursor.execute("CREATE UNIQUE INDEX username_unique_index ON fos_user (username);")
+            except Exception:
+                pass  # index already created
+
+            self.write('Dropping unique index for email_canonical')
+            try:
+                cursor.execute("DROP INDEX `UNIQ_957A6479A0D96FBF` ON fos_user;")
+            except Exception:
+                pass  # index already dropped
+
+            self.write('Dropping unique index for username_canonical')
+            try:
+                cursor.execute("DROP INDEX `UNIQ_957A647992FC23A8` ON fos_user;")
+            except Exception:
+                pass  # index already dropped
+
+            # Ignore this for now
+            # self.stdout.write('Migrating foreign key id_greencheck to be nullable')
+            # cursor.execute("""
+            #     ALTER TABLE greencheck
+            #     MODIFY id_greencheck INT(11) NULL;
+            # """)
+
+            # cursor.execute("""
+            #     UPDATE greencheck SET id_greencheck = NULL
+            #     WHERE id_greencheck = 0;
+            # """)
+
+            # self.stdout.write(self.style.SUCCESS('Migrated 0 to be NULL!'))
