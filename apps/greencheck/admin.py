@@ -106,19 +106,6 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
     verbose_name = 'IP approval'
     verbose_name_plural = 'IP approvals'
 
-    fieldsets = (
-        (None, {
-            'fields': (
-                'ip_start',
-                'ip_end',
-                'action',
-                'status',
-                'approval',
-                'email_template',
-                'send_button',
-            ),
-        }),
-    )
     readonly_fields = ('action', 'status', 'approval', 'send_button')
 
     class Media:
@@ -127,6 +114,23 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
             'admin/js/jquery.init.js',
             'greencheck/js/email.js',
         )
+
+    def get_fieldsets(self, request, obj=None):
+        fields = (
+            'ip_start',
+            'ip_end',
+            'action',
+            'status',
+            'approval',
+        )
+
+        if request.user.is_staff:
+            fields = fields + ('email_template', 'send_button',)
+
+        fieldsets = (
+            (None, {'fields': fields}),
+        )
+        return fieldsets
 
     @mark_safe
     def send_button(self, obj):
