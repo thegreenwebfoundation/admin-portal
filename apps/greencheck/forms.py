@@ -7,27 +7,28 @@ from .choices import ActionChoice
 from .choices import StatusApproval
 from .models import GreencheckIp
 from .models import GreencheckIpApprove
-
+from .models import GreencheckASN, GreencheckASNapprove
 
 User = get_user_model()
 
 
-class GreencheckIpForm(ModelForm):
-    '''This form is meant for admin
+class ApprovalMixin:
+    ApprovalModel = None
 
-    If a non staff user fills in the form it would return
-    an unsaved approval record instead of greencheckip record
-    '''
+    def _save_approval(self):
+        if self.ApprovalModel is None:
+            raise NotImplementedError('Approval model missing')
 
-    # for some reason field_order does not work with __all__
-    field_order = ('ip_start', 'ip_end')
-    is_staff = forms.BooleanField(
-        label='user_is_staff', required=False, widget=forms.HiddenInput()
-    )
-
-    class Meta:
-        model = GreencheckIp
-        fields = ('active', 'ip_start', 'ip_end', )
+        if not self.cleaned_data['is_staff']:
+            action = ActionChoice.update if self.changed else ActionChoice.new
+            status = StatusApproval.update if self.changed else StatusApproval.new
+            self.instance = GreencheckIpApprove(
+                action=action,
+                hostingprovider=self.instance.hostingprovider,
+                ip_end=self.instance.ip_end,
+                ip_start=self.instance.ip_start,
+                status=status
+            )
 
     def clean_is_staff(self):
         try:
@@ -36,6 +37,38 @@ class GreencheckIpForm(ModelForm):
             return self.data['is_staff']
         except KeyError:
             raise ValidationError('Alert staff: a bug has occurred.')
+
+
+class GreencheckAsnForm(ModelForm):
+    ApprovalModel = GreencheckASNapprove
+
+    is_staff = forms.BooleanField(
+        label='user_is_staff', required=False, widget=forms.HiddenInput()
+    )
+
+    class Meta:
+        model = GreencheckASN
+        fields = ('active', 'asn',)
+
+    def save(self, commit=True):
+        self._save_approval()
+        return super().save(commit=True)
+
+
+class GreencheckIpForm(ModelForm, ApprovalMixin):
+    '''This form is meant for admin
+
+    If a non staff user fills in the form it would return
+    an unsaved approval record instead of greencheckip record
+    '''
+    ApprovalModel = GreencheckASNapprove
+    is_staff = forms.BooleanField(
+        label='user_is_staff', required=False, widget=forms.HiddenInput()
+    )
+
+    class Meta:
+        model = GreencheckIp
+        fields = ('active', 'ip_start', 'ip_end', )
 
     def save(self, commit=True):
         '''
@@ -48,16 +81,28 @@ class GreencheckIpForm(ModelForm):
         So we return an approval instance instead of Greencheck instance
         which in turn will get saved a bit later.
         '''
-        if not self.cleaned_data['is_staff']:
-            action = ActionChoice.update if self.changed else ActionChoice.new
-            status = StatusApproval.update if self.changed else StatusApproval.new
-            self.instance = GreencheckIpApprove(
-                action=action,
-                hostingprovider=self.instance.hostingprovider,
-                ip_end=self.instance.ip_end,
-                ip_start=self.instance.ip_start,
-                status=status
-            )
+        self._save_approval()
+        return super().save(commit=commit)
+
+
+class GreencheckAsnApprovalForm(ModelForm):
+    class Meta:
+        model = GreencheckASNapprove
+        fields = ('action', 'asn', 'status')
+
+    def save(self, commit=True):
+        instance = self.instance.greencheck_asn
+        if commit is True:
+            if instance:
+                instance.asn = self.instance.asn
+                instance.save()
+            else:
+                instance = GreencheckASN.objects.create(
+                    active=True,
+                    asn=self.instance.asn,
+                    hostingprovider=self.instance.hostingprovider,
+                )
+        self.instance.greencheck_asn = instance
         return super().save(commit=commit)
 
 

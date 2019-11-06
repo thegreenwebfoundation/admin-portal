@@ -6,6 +6,8 @@ from django.shortcuts import redirect
 from apps.greencheck.admin import (
     GreencheckIpApproveInline,
     GreencheckIpInline,
+    GreencheckAsnInline,
+    GreencheckAsnApproveInline
 )
 
 from apps.greencheck.models import GreencheckIp
@@ -70,6 +72,8 @@ class HostingCertificateInline(admin.TabularInline):
 class HostingAdmin(admin.ModelAdmin):
     inlines = [
         HostingCertificateInline,
+        GreencheckAsnInline,
+        GreencheckAsnApproveInline,
         GreencheckIpInline,
         GreencheckIpApproveInline
     ]

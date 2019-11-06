@@ -34,7 +34,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('active', models.BooleanField(null=True)),
-                ('asn', models.IntegerField()),
+                ('asn', models.IntegerField(verbose_name='Autonomous system number')),
+                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'))
             ],
             options={
                 'db_table': 'greencheck_as',
@@ -47,6 +48,8 @@ class Migration(migrations.Migration):
                 ('action', models.TextField()),
                 ('asn', models.IntegerField()),
                 ('status', models.TextField()),
+                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider')),
+                ('greencheck_asn', models.ForeignKey(db_column='idorig', on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckASN'))
             ],
             options={
                 'db_table': 'greencheck_as_approve',
@@ -184,21 +187,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
         ),
         migrations.AddField(
-            model_name='greencheckasnapprove',
-            name='greencheck_asn',
-            field=models.ForeignKey(db_column='idorig', on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckASN'),
-        ),
-        migrations.AddField(
-            model_name='greencheckasnapprove',
-            name='hostingprovider',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
-        ),
-        migrations.AddField(
-            model_name='greencheckasn',
-            name='hostingprovider',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
-        ),
-        migrations.AddField(
             model_name='greencheck',
             name='hostingprovider',
             field=models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
@@ -226,11 +214,6 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name='greencheckasn',
             index=models.Index(fields=['asn'], name='asn'),
-        ),
-        migrations.AlterField(
-            model_name='greencheckasn',
-            name='asn',
-            field=models.IntegerField(verbose_name='Autonomous system number'),
         ),
         migrations.AlterField(
             model_name='greenchecktld',

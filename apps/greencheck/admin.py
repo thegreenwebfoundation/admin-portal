@@ -7,45 +7,14 @@ from .models import (
     GreencheckIp,
     GreencheckIpApprove,
 )
+from . import forms
+from . import models
 from .forms import GreencheckIpForm
 from .forms import GreecheckIpApprovalForm
 from .choices import StatusApproval
 
 
-class GreencheckIpInline(admin.TabularInline):
-    classes = ['collapse']
-    extra = 0
-    form = GreencheckIpForm
-    model = GreencheckIp
-    ordering = ('ip_start', 'ip_end',)
-    verbose_name = 'IP'
-    verbose_name_plural = 'IPs'
-
-
-class GreencheckIpApproveInline(admin.TabularInline):
-    extra = 0
-    form = GreecheckIpApprovalForm
-    model = GreencheckIpApprove
-    ordering = ('ip_start', 'ip_end',)
-    verbose_name = 'IP approval'
-    verbose_name_plural = 'IP approvals'
-
-    fields = [
-        'ip_start',
-        'ip_end',
-        'action',
-        'status',
-        'approval',
-
-    ]
-    readonly_fields = ('action', 'status', 'approval')
-
-    def get_readonly_fields(self, request, obj):
-        '''Non staff user should only be able to read the fields'''
-        read_only = super().get_readonly_fields(request, obj)
-        if not request.user.is_staff:
-            read_only = ('ip_start', 'ip_end') + read_only
-        return read_only
+class ApprovalFieldMixin:
 
     @mark_safe
     def approval(self, obj):
@@ -78,3 +47,73 @@ class GreencheckIpApproveInline(admin.TabularInline):
             return 'Action taken'
         return link
     approval.short_description = 'Decide'
+
+
+class GreencheckAsnInline(admin.TabularInline):
+    extra = 0
+    form = forms.GreencheckAsnForm
+    model = models.GreencheckASN
+    ordering = ('asn',)
+    verbose_name = 'ASN'
+    verbose_name_plural = 'ASN'
+
+
+class GreencheckAsnApproveInline(admin.TabularInline, ApprovalFieldMixin):
+    classes = ['collapse']
+    extra = 0
+    form = forms.GreencheckAsnApprovalForm
+    model = models.GreencheckASNapprove
+    ordering = ('asn',)
+    verbose_name = 'ASN approval'
+    verbose_name_plural = 'ASN approvals'
+
+    fields = [
+        'asn',
+        'action',
+        'status',
+        'approval',
+
+    ]
+    readonly_fields = ('action', 'status', 'approval')
+
+    def get_readonly_fields(self, request, obj):
+        '''Non staff user should only be able to read the fields'''
+        read_only = super().get_readonly_fields(request, obj)
+        if not request.user.is_staff:
+            read_only = ('asn',) + read_only
+        return read_only
+
+
+class GreencheckIpInline(admin.TabularInline):
+    extra = 0
+    form = GreencheckIpForm
+    model = GreencheckIp
+    ordering = ('ip_start', 'ip_end',)
+    verbose_name = 'IP'
+    verbose_name_plural = 'IPs'
+
+
+class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
+    classes = ['collapse']
+    extra = 0
+    form = GreecheckIpApprovalForm
+    model = GreencheckIpApprove
+    ordering = ('ip_start', 'ip_end',)
+    verbose_name = 'IP approval'
+    verbose_name_plural = 'IP approvals'
+
+    fields = [
+        'ip_start',
+        'ip_end',
+        'action',
+        'status',
+        'approval',
+    ]
+    readonly_fields = ('action', 'status', 'approval')
+
+    def get_readonly_fields(self, request, obj):
+        '''Non staff user should only be able to read the fields'''
+        read_only = super().get_readonly_fields(request, obj)
+        if not request.user.is_staff:
+            read_only = ('ip_start', 'ip_end') + read_only
+        return read_only

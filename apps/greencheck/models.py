@@ -190,7 +190,7 @@ class GreencheckASN(models.Model):
     # https://en.wikipedia.org/wiki/Autonomous_system_(Internet)
     asn = models.IntegerField(verbose_name='Autonomous system number')
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE
+        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
     )
 
     class Meta:
@@ -205,7 +205,7 @@ class GreencheckASNapprove(models.Model):
     action = models.TextField(choices=ActionChoice.choices)
     asn = models.IntegerField()
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE
+        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
     )
     greencheck_asn = models.ForeignKey(
         GreencheckASN, on_delete=models.CASCADE, db_column='idorig', null=True
