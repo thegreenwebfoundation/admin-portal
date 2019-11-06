@@ -18,9 +18,14 @@ class ApprovalFieldMixin:
 
     @mark_safe
     def approval(self, obj):
+        if obj._meta.model_name == 'greencheckasnapprove':
+            name = 'approval_asn'
+        else:
+            name = 'approval_ip'
+
         approve_url = reverse_admin_name(
             Hostingprovider,
-            name='approval_action',
+            name=name,
             params={
                 'action': StatusApproval.approved,
                 'approval_id': obj.pk
@@ -28,7 +33,7 @@ class ApprovalFieldMixin:
         )
         reject_url = reverse_admin_name(
             Hostingprovider,
-            name='approval_action',
+            name=name,
             params={
                 'action': StatusApproval.removed,
                 'approval_id': obj.pk

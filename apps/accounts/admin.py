@@ -11,6 +11,7 @@ from apps.greencheck.admin import (
 )
 
 from apps.greencheck.models import GreencheckIp
+from apps.greencheck.models import GreencheckASN
 from apps.greencheck.choices import StatusApproval
 
 from .utils import get_admin_name
@@ -94,12 +95,33 @@ class HostingAdmin(admin.ModelAdmin):
         from django.urls import path
         urls = super().get_urls()
         added = [
-            path('approval_action/', self.approve, name=get_admin_name(self.model, 'approval_action')),
+            path('approval_asn/', self.approve_asn, name=get_admin_name(self.model, 'approval_asn')),
+            path('approval_ip/', self.approve_ip, name=get_admin_name(self.model, 'approval_ip')),
         ]
         # order is important !!
         return added + urls
 
-    def approve(self, request, *args, **kwargs):
+    def approve_asn(self, request, *args, **kwargs):
+        # TODO it would be ideal if this was more re-usable
+        from apps.greencheck.models import GreencheckASNapprove
+        pk = request.GET.get('approval_id')
+        action = request.GET.get('action')
+
+        obj = GreencheckASNapprove.objects.get(pk=pk)
+        obj.status = action
+        obj.save()
+
+        if action == StatusApproval.approved:
+            GreencheckASN.objects.create(
+                active=True,
+                hostingprovider=obj.hostingprovider,
+                asn=obj.asn
+            )
+        name = 'admin:' + get_admin_name(self.model, 'change')
+        return redirect(name, obj.hostingprovider_id)
+
+    def approve_ip(self, request, *args, **kwargs):
+        # TODO it would be ideal if this was more re-usable
         from apps.greencheck.models import GreencheckIpApprove
         pk = request.GET.get('approval_id')
         action = request.GET.get('action')
