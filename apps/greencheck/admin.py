@@ -77,7 +77,6 @@ class GreencheckAsnApproveInline(admin.TabularInline, ApprovalFieldMixin):
         'action',
         'status',
         'approval',
-
     ]
     readonly_fields = ('action', 'status', 'approval')
 
@@ -107,14 +106,38 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
     verbose_name = 'IP approval'
     verbose_name_plural = 'IP approvals'
 
-    fields = [
-        'ip_start',
-        'ip_end',
-        'action',
-        'status',
-        'approval',
-    ]
-    readonly_fields = ('action', 'status', 'approval')
+    fieldsets = (
+        (None, {
+            'fields': (
+                'ip_start',
+                'ip_end',
+                'action',
+                'status',
+                'approval',
+                'email_template',
+                'send_button',
+            ),
+        }),
+    )
+    readonly_fields = ('action', 'status', 'approval', 'send_button')
+
+    class Media:
+        js = (
+            'admin/js/vendor/jquery/jquery.js',
+            'admin/js/jquery.init.js',
+            'greencheck/js/email.js',
+        )
+
+    @mark_safe
+    def send_button(self, obj):
+        url = reverse_admin_name(
+            Hostingprovider,
+            name='send_email',
+            kwargs={'approval_id': obj.pk},
+        )
+        link = f'<a href="{url}" class="sendEmail">Send email</a>'
+        return link
+    send_button.short_description = 'Send email'
 
     def get_readonly_fields(self, request, obj):
         '''Non staff user should only be able to read the fields'''

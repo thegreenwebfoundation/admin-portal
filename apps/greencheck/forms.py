@@ -120,10 +120,15 @@ class GreencheckAsnApprovalForm(ModelForm):
 class GreecheckIpApprovalForm(ModelForm):
 
     field_order = ('ip_start', 'ip_end')
+    email_template = forms.ChoiceField(
+        choices=[('info.txt', 'I need more information'), ('mu', 'mu')],
+        required=False,
+        label='email'
+    )
 
     class Meta:
         model = GreencheckIpApprove
-        fields = ('action', 'ip_start', 'ip_end', 'status')
+        fields = '__all__'
 
     def save(self, commit=True):
         ip_instance = self.instance.greencheck_ip

@@ -1,7 +1,12 @@
+
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib import messages
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 
 from apps.greencheck.admin import (
     GreencheckIpApproveInline,
@@ -10,8 +15,9 @@ from apps.greencheck.admin import (
     GreencheckAsnApproveInline
 )
 
-from apps.greencheck.models import GreencheckIp
 from apps.greencheck.models import GreencheckASN
+from apps.greencheck.models import GreencheckIp
+from apps.greencheck.models import GreencheckIpApprove
 from apps.greencheck.choices import StatusApproval
 
 from .utils import get_admin_name
@@ -95,11 +101,44 @@ class HostingAdmin(admin.ModelAdmin):
         from django.urls import path
         urls = super().get_urls()
         added = [
-            path('approval_asn/', self.approve_asn, name=get_admin_name(self.model, 'approval_asn')),
-            path('approval_ip/', self.approve_ip, name=get_admin_name(self.model, 'approval_ip')),
+            path(
+                'approval_asn/',
+                self.approve_asn,
+                name=get_admin_name(self.model, 'approval_asn')
+            ),
+            path(
+                'approval_ip/',
+                self.approve_ip,
+                name=get_admin_name(self.model, 'approval_ip')
+            ),
+            path(
+                'send_email/<approval_id>/',
+                self.send_email,
+                name=get_admin_name(self.model, 'send_email')
+            ),
         ]
         # order is important !!
         return added + urls
+
+    def send_email(self, request, *args, **kwargs):
+        email_template = request.GET.get('email')
+        email_template = f'emails/{email_template}'
+        obj = GreencheckIpApprove.objects.get(pk=kwargs['approval_id'])
+        message = render_to_string(email_template, context={})
+        send_mail(
+            'Regarding your new entry on Green web admin',
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [u.email for u in obj.hostingprovider.user_set.all()]
+        )
+
+        messages.add_message(
+            request, messages.INFO,
+            'Email sent to user'
+        )
+
+        name = 'admin:' + get_admin_name(self.model, 'change')
+        return redirect(name, obj.hostingprovider_id)
 
     def approve_asn(self, request, *args, **kwargs):
         # TODO it would be ideal if this was more re-usable
@@ -122,7 +161,6 @@ class HostingAdmin(admin.ModelAdmin):
 
     def approve_ip(self, request, *args, **kwargs):
         # TODO it would be ideal if this was more re-usable
-        from apps.greencheck.models import GreencheckIpApprove
         pk = request.GET.get('approval_id')
         action = request.GET.get('action')
 
@@ -212,6 +250,9 @@ class DatacenterCertificateInline(admin.TabularInline):
     extra = 0
     model = DatacenterCertificate
     classes = ['collapse']
+
+    # def get_formset(self, request, obj=None, **kwargs):
+    # give kwargs a dictionary of widgets to change widgets.
 
 
 class DatacenterClassificationInline(admin.TabularInline):
