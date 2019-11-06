@@ -19,16 +19,27 @@ class ApprovalMixin:
         if self.ApprovalModel is None:
             raise NotImplementedError('Approval model missing')
 
+        model_name = self.ApprovalModel._meta.model_name
+
         if not self.cleaned_data['is_staff']:
             action = ActionChoice.update if self.changed else ActionChoice.new
             status = StatusApproval.update if self.changed else StatusApproval.new
-            self.instance = GreencheckIpApprove(
-                action=action,
-                hostingprovider=self.instance.hostingprovider,
-                ip_end=self.instance.ip_end,
-                ip_start=self.instance.ip_start,
-                status=status
-            )
+            kwargs = {
+                'action': action,
+                'status': status,
+                'hostingprovider': self.instance.hostingprovider,
+            }
+            if model_name == 'greencheckasnapprove':
+                self.instance = GreencheckASNapprove(
+                    asn=self.instance.asn,
+                    **kwargs
+                )
+            else:
+                self.instance = GreencheckIpApprove(
+                    ip_end=self.instance.ip_end,
+                    ip_start=self.instance.ip_start,
+                    **kwargs
+                )
 
     def clean_is_staff(self):
         try:
