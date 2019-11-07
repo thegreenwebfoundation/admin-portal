@@ -84,7 +84,7 @@ class HostingAdmin(admin.ModelAdmin):
         GreencheckIpInline,
         GreencheckIpApproveInline
     ]
-
+    search_fields = ('name',)
     list_display = [
         'name',
         'country_str',
@@ -284,6 +284,7 @@ class DatacenterAdmin(admin.ModelAdmin):
         DatacenterClassificationInline,
         DatacenterCoolingInline,
     ]
+    search_fields = ('name',)
 
     list_display = [
         'name',
