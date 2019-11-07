@@ -299,6 +299,10 @@ class DatacenterAdmin(admin.ModelAdmin):
     ordering = ('name',)
     raw_id_fields = ('user',)
 
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        super().save_model(request, obj, form, change)
+
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
         qs = qs.prefetch_related(
@@ -313,7 +317,7 @@ class DatacenterAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_staff:
-            return ['showonwebsite']
+            return ['showonwebsite', 'user']
         return self.readonly_fields
 
     def get_fieldsets(self, request, obj=None):
