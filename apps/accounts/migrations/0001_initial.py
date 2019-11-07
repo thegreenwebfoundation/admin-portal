@@ -29,6 +29,7 @@ class Migration(migrations.Migration):
                 ('expires_at', models.DateTimeField(null=True)),
                 ('last_login', models.DateTimeField(null=True)),
                 ('locked', models.BooleanField()),
+                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider', unique=True)),
                 ('password_requested_at', models.DateTimeField(null=True)),
                 ('roles', models.TextField()),
                 ('salt', models.CharField(max_length=255)),
@@ -164,11 +165,6 @@ class Migration(migrations.Migration):
             options={
                 'db_table': 'datacenter_certificates',
             },
-        ),
-        migrations.AddField(
-            model_name='user',
-            name='hostingprovider',
-            field=models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
         ),
         migrations.AddIndex(
             model_name='hostingprovider',
