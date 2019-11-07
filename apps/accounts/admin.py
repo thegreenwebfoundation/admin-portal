@@ -97,6 +97,12 @@ class HostingAdmin(admin.ModelAdmin):
     ]
     ordering = ('name',)
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        user = request.user
+        user.hostingprovider = obj
+        user.save()
+
     def get_urls(self):
         from django.urls import path
         urls = super().get_urls()
@@ -225,6 +231,8 @@ class HostingAdmin(admin.ModelAdmin):
             'hostingprovider_certificates',
             'datacenter'
         )
+        if not request.user.is_staff:
+            qs = qs.filter(user=request.user)
         return qs
 
     @mark_safe
@@ -298,6 +306,9 @@ class DatacenterAdmin(admin.ModelAdmin):
             'datacenter_certificates',
             'hostingproviders'
         )
+
+        if not request.user.is_staff:
+            qs = qs.filter(user=request.user)
         return qs
 
     def get_readonly_fields(self, request, obj=None):

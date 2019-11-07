@@ -72,7 +72,7 @@ class GreencheckIpForm(ModelForm, ApprovalMixin):
     If a non staff user fills in the form it would return
     an unsaved approval record instead of greencheckip record
     '''
-    ApprovalModel = GreencheckASNapprove
+    ApprovalModel = GreencheckIpApprove
     is_staff = forms.BooleanField(
         label='user_is_staff', required=False, widget=forms.HiddenInput()
     )

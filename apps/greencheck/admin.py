@@ -82,9 +82,9 @@ class GreencheckAsnApproveInline(admin.TabularInline, ApprovalFieldMixin):
 
     def get_readonly_fields(self, request, obj):
         '''Non staff user should only be able to read the fields'''
-        read_only = super().get_readonly_fields(request, obj)
+        fields = ('approval',)
         if not request.user.is_staff:
-            read_only = ('asn',) + read_only
+            read_only = ('asn',) + fields
         return read_only
 
 
@@ -121,11 +121,14 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
             'ip_end',
             'action',
             'status',
-            'approval',
         )
 
         if request.user.is_staff:
-            fields = fields + ('email_template', 'send_button',)
+            fields = fields + (
+                'approval',
+                'email_template',
+                'send_button',
+            )
 
         fieldsets = (
             (None, {'fields': fields}),

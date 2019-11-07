@@ -78,9 +78,9 @@ class DatacenterCooling(models.Model):
 
 
 class Hostingprovider(models.Model):
-    archived = models.BooleanField()
+    archived = models.BooleanField(default=False)
     country = CountryField(db_column='countrydomain')
-    customer = models.BooleanField()
+    customer = models.BooleanField(default=False)
     icon = models.CharField(max_length=50, blank=True)
     iconurl = models.CharField(max_length=255, blank=True)
     model = EnumField(
@@ -91,7 +91,7 @@ class Hostingprovider(models.Model):
         max_length=255, null=True, default=PartnerChoice.none,
         choices=PartnerChoice.choices, blank=True
     )
-    showonwebsite = models.BooleanField(verbose_name='Show on website')
+    showonwebsite = models.BooleanField(verbose_name='Show on website', default=False)
     website = models.CharField(max_length=255)
     datacenter = models.ManyToManyField(
         'Datacenter',
