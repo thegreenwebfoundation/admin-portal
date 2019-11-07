@@ -328,7 +328,7 @@ class DatacenterAdmin(admin.ModelAdmin):
                     ('pue', 'residualheat'),
                     ('temperature', 'temperature_type',),
                     ('dc12v', 'virtual', 'greengrid', 'showonwebsite'),
-                    ('mja3', 'model',),
+                    ('model',),
                 ),
 
             }),
