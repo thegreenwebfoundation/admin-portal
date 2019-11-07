@@ -99,9 +99,10 @@ class HostingAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        user = request.user
-        user.hostingprovider = obj
-        user.save()
+        if not change:
+            user = request.user
+            user.hostingprovider = obj
+            user.save()
 
     def get_urls(self):
         from django.urls import path
@@ -300,7 +301,8 @@ class DatacenterAdmin(admin.ModelAdmin):
     raw_id_fields = ('user',)
 
     def save_model(self, request, obj, form, change):
-        obj.user = request.user
+        if not change:
+            obj.user = request.user
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request, *args, **kwargs):
