@@ -312,9 +312,6 @@ class DatacenterAdmin(admin.ModelAdmin):
             'datacenter_certificates',
             'hostingproviders'
         )
-
-        if not request.user.is_staff:
-            qs = qs.filter(user=request.user)
         return qs
 
     def get_readonly_fields(self, request, obj=None):
