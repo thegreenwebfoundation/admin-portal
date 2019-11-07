@@ -72,13 +72,22 @@ class GreencheckAsnApproveInline(admin.TabularInline, ApprovalFieldMixin):
     verbose_name = 'ASN approval'
     verbose_name_plural = 'ASN approvals'
 
-    fields = [
-        'asn',
-        'action',
-        'status',
-        'approval',
-    ]
     readonly_fields = ('action', 'status', 'approval')
+
+    def get_fieldsets(self, request, obj=None):
+        fields = (
+            'asn',
+            'action',
+            'status',
+        )
+
+        if request.user.is_staff:
+            fields = fields + ('approval',)
+
+        fieldsets = (
+            (None, {'fields': fields}),
+        )
+        return fieldsets
 
     def get_readonly_fields(self, request, obj):
         '''Non staff user should only be able to read the fields'''
@@ -135,6 +144,13 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
         )
         return fieldsets
 
+    def get_readonly_fields(self, request, obj):
+        '''Non staff user should only be able to read the fields'''
+        read_only = super().get_readonly_fields(request, obj)
+        if not request.user.is_staff:
+            read_only = ('ip_start', 'ip_end') + read_only
+        return read_only
+
     @mark_safe
     def send_button(self, obj):
         url = reverse_admin_name(
@@ -145,10 +161,3 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
         link = f'<a href="{url}" class="sendEmail">Send email</a>'
         return link
     send_button.short_description = 'Send email'
-
-    def get_readonly_fields(self, request, obj):
-        '''Non staff user should only be able to read the fields'''
-        read_only = super().get_readonly_fields(request, obj)
-        if not request.user.is_staff:
-            read_only = ('ip_start', 'ip_end') + read_only
-        return read_only
