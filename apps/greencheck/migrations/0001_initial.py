@@ -14,6 +14,19 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name='GreencheckIp',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('active', models.BooleanField(null=True)),
+                ('ip_end', models.IntegerField(db_column='ip_eind')),
+                ('ip_start', models.IntegerField()),
+                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider')),
+            ],
+            options={
+                'db_table': 'greencheck_ip',
+            },
+        ),
+        migrations.CreateModel(
             name='Greencheck',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -53,18 +66,6 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'greencheck_as_approve',
-            },
-        ),
-        migrations.CreateModel(
-            name='GreencheckIp',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('active', models.BooleanField(null=True)),
-                ('ip_end', models.IntegerField(db_column='ip_eind')),
-                ('ip_start', models.IntegerField()),
-            ],
-            options={
-                'db_table': 'greencheck_ip',
             },
         ),
         migrations.CreateModel(
@@ -180,16 +181,6 @@ class Migration(migrations.Migration):
             model_name='greencheckipapprove',
             name='hostingprovider',
             field=models.ForeignKey(db_column='id_hp', null=True, on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
-        ),
-        migrations.AddField(
-            model_name='greencheckip',
-            name='hostingprovider',
-            field=models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
-        ),
-        migrations.AddField(
-            model_name='greencheck',
-            name='hostingprovider',
-            field=models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
         ),
         migrations.AddIndex(
             model_name='greenlist',

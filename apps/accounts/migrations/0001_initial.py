@@ -14,6 +14,25 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name='Hostingprovider',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('archived', models.BooleanField()),
+                ('country', django_countries.fields.CountryField(db_column='countrydomain', max_length=2)),
+                ('customer', models.BooleanField()),
+                ('icon', models.CharField(max_length=50)),
+                ('iconurl', models.CharField(max_length=255)),
+                ('model', django_mysql.models.EnumField(choices=[('groeneenergie', 'green energy'), ('compensatie', 'compensation')], default='compensatie')),
+                ('name', models.CharField(db_column='naam', max_length=255)),
+                ('partner', models.CharField(max_length=255, null=True)),
+                ('showonwebsite', models.BooleanField()),
+                ('website', models.CharField(max_length=255)),
+            ],
+            options={
+                'db_table': 'hostingproviders',
+            },
+        ),
+        migrations.CreateModel(
             name='User',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -22,12 +41,16 @@ class Migration(migrations.Migration):
                 ('confirmation_token', models.CharField(max_length=255)),
                 ('credentials_expire_at', models.DateTimeField(null=True)),
                 ('credentials_expired', models.BooleanField()),
+                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
                 ('email', models.CharField(max_length=255)),
                 ('email_canonical', models.CharField(max_length=255)),
                 ('enabled', models.BooleanField()),
                 ('expired', models.BooleanField()),
                 ('expires_at', models.DateTimeField(null=True)),
                 ('last_login', models.DateTimeField(null=True)),
+                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
+                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
+                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
                 ('locked', models.BooleanField()),
                 ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider', unique=True)),
                 ('password_requested_at', models.DateTimeField(null=True)),
@@ -62,25 +85,6 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'datacenters',
-            },
-        ),
-        migrations.CreateModel(
-            name='Hostingprovider',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('archived', models.BooleanField()),
-                ('country', django_countries.fields.CountryField(db_column='countrydomain', max_length=2)),
-                ('customer', models.BooleanField()),
-                ('icon', models.CharField(max_length=50)),
-                ('iconurl', models.CharField(max_length=255)),
-                ('model', django_mysql.models.EnumField(choices=[('groeneenergie', 'green energy'), ('compensatie', 'compensation')], default='compensatie')),
-                ('name', models.CharField(db_column='naam', max_length=255)),
-                ('partner', models.CharField(max_length=255, null=True)),
-                ('showonwebsite', models.BooleanField()),
-                ('website', models.CharField(max_length=255)),
-            ],
-            options={
-                'db_table': 'hostingproviders',
             },
         ),
         migrations.CreateModel(
@@ -232,5 +236,15 @@ class Migration(migrations.Migration):
             model_name='hostingprovider',
             name='partner',
             field=models.CharField(blank=True, choices=[('', 'None'), ('Partner', 'Partner'), ('Dev Partner', 'Dev Partner'), ('Certified Gold Partner', 'Certified Gold Partner'), ('Gold Partner', 'Gold Partner')], default='', max_length=255, null=True),
+        ),
+        migrations.AddIndex(
+            model_name='user',
+            index=models.Index(fields=['email'], name='email'),
+        ),
+        migrations.AlterModelManagers(
+            name='user',
+            managers=[
+                ('objects', django.contrib.auth.models.UserManager()),
+            ],
         ),
     ]

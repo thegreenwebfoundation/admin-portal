@@ -11,8 +11,57 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS(msg))
 
+    def execute(self, statement):
+        try:
+            self.cursor.execute(statement)
+        except Exception:
+            pass
+
     def handle(self, *args, **options):
         with connection.cursor() as cursor:
+            self.cursor = cursor
+            # User specific migrations, these needs to be added as the initial
+            # migration was faked.
+            self.execute(
+                "ALTER TABLE fos_user ADD COLUMN date_joined DateTime NOT NULL"
+            )
+
+            self.execute(
+                "ALTER TABLE fos_user ADD COLUMN is_active TinyInt(1) NOT NULL;"
+            )
+
+            self.execute(
+                "ALTER TABLE fos_user ADD COLUMN is_staff TinyInt(1) NOT NULL;"
+            )
+
+            self.execute("""
+                CREATE TABLE `fos_user_groups` (
+                    `id` Int( 11 ) AUTO_INCREMENT NOT NULL,
+                    `user_id` Int( 11 ) NOT NULL,
+                    `group_id` Int( 11 ) NOT NULL,
+                    PRIMARY KEY ( `id` ) )
+                CHARACTER SET = utf8
+                COLLATE = utf8_general_ci
+                ENGINE = InnoDB
+                AUTO_INCREMENT = 1;
+            """)
+
+            cursor.execute(
+                "ALTER TABLE `fos_user` ADD COLUMN `is_superuser` TinyInt( 1 ) NOT NULL;"
+            )
+
+            cursor.execute("""
+                CREATE TABLE `fos_user_user_permissions` (
+                    `id` Int( 11 ) AUTO_INCREMENT NOT NULL,
+                    `user_id` Int( 11 ) NOT NULL,
+                    `permission_id` Int( 11 ) NOT NULL,
+                    PRIMARY KEY ( `id` ) )
+                CHARACTER SET = utf8
+                COLLATE = utf8_general_ci
+                ENGINE = InnoDB
+                AUTO_INCREMENT = 1;
+            """)
+
             # comply with the countryfield that we introduced
             cursor.execute(
                 "ALTER TABLE datacenters MODIFY countrydomain VARCHAR(2)"
