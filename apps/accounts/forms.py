@@ -19,6 +19,18 @@ class CustomUserChangeForm(UserChangeForm):
         fields = ('username', 'email')
 
 
+class HostingAdminForm(forms.ModelForm):
+    email_template = forms.ChoiceField(
+        choices=[('info.txt', 'I need more information'), ('mu', 'mu')],
+        required=False,
+        label='email'
+    )
+
+    class Meta:
+        model = Hostingprovider
+        fields = '__all__'
+
+
 class DatacenterAdminForm(forms.ModelForm):
     hostingproviders = forms.ModelMultipleChoiceField(
         queryset=Hostingprovider.objects.all(),

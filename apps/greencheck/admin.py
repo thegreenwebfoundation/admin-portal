@@ -115,7 +115,7 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
     verbose_name = 'IP approval'
     verbose_name_plural = 'IP approvals'
 
-    readonly_fields = ('action', 'status', 'approval', 'send_button')
+    readonly_fields = ('action', 'status', 'approval')
 
     class Media:
         js = (
@@ -135,8 +135,6 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
         if request.user.is_staff:
             fields = fields + (
                 'approval',
-                'email_template',
-                'send_button',
             )
 
         fieldsets = (
@@ -150,14 +148,3 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
         if not request.user.is_staff:
             read_only = ('ip_start', 'ip_end') + read_only
         return read_only
-
-    @mark_safe
-    def send_button(self, obj):
-        url = reverse_admin_name(
-            Hostingprovider,
-            name='send_email',
-            kwargs={'approval_id': obj.pk},
-        )
-        link = f'<a href="{url}" class="sendEmail">Send email</a>'
-        return link
-    send_button.short_description = 'Send email'

@@ -20,7 +20,7 @@ from apps.greencheck.models import GreencheckIp
 from apps.greencheck.models import GreencheckIpApprove
 from apps.greencheck.choices import StatusApproval
 
-from .utils import get_admin_name
+from .utils import get_admin_name, reverse_admin_name
 from .admin_site import greenweb_admin
 from . import forms
 from .forms import CustomUserChangeForm, CustomUserCreationForm
@@ -77,6 +77,7 @@ class HostingCertificateInline(admin.TabularInline):
 
 @admin.register(Hostingprovider, site=greenweb_admin)
 class HostingAdmin(admin.ModelAdmin):
+    form = forms.HostingAdminForm
     inlines = [
         HostingCertificateInline,
         GreencheckAsnInline,
@@ -95,7 +96,27 @@ class HostingAdmin(admin.ModelAdmin):
         'certificates_amount',
         'datacenter_amount',
     ]
+    readonly_fields = ['send_button']
     ordering = ('name',)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldset = [
+            ('Hostingprovider info', {
+                'fields': (('name', 'website',), 'country'),
+            }),
+            ('Visual', {'fields': (('icon', 'iconurl'),)}),
+            ('Other', {'fields': (('partner', 'model'),)}),
+        ]
+
+        admin_editable = (
+            'Admin only', {'fields': (
+                ('archived', 'showonwebsite', 'customer',),
+                ('email_template', 'send_button'),
+            )}
+        )
+        if request.user.is_staff:
+            fieldset.append(admin_editable)
+        return fieldset
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -119,7 +140,7 @@ class HostingAdmin(admin.ModelAdmin):
                 name=get_admin_name(self.model, 'approval_ip')
             ),
             path(
-                'send_email/<approval_id>/',
+                'send_email/<provider>/',
                 self.send_email,
                 name=get_admin_name(self.model, 'send_email')
             ),
@@ -127,16 +148,27 @@ class HostingAdmin(admin.ModelAdmin):
         # order is important !!
         return added + urls
 
+    @mark_safe
+    def send_button(self, obj):
+        url = reverse_admin_name(
+            Hostingprovider,
+            name='send_email',
+            kwargs={'provider': obj.pk},
+        )
+        link = f'<a href="{url}" class="sendEmail">Send email</a>'
+        return link
+    send_button.short_description = 'Send email'
+
     def send_email(self, request, *args, **kwargs):
         email_template = request.GET.get('email')
         email_template = f'emails/{email_template}'
-        obj = GreencheckIpApprove.objects.get(pk=kwargs['approval_id'])
+        obj = Hostingprovider.objects.get(pk=kwargs['provider'])
         message = render_to_string(email_template, context={})
         send_mail(
             'Regarding your new entry on Green web admin',
             message,
             settings.DEFAULT_FROM_EMAIL,
-            [u.email for u in obj.hostingprovider.user_set.all()]
+            [u.email for u in obj.user_set.all()]
         )
 
         messages.add_message(
@@ -145,7 +177,7 @@ class HostingAdmin(admin.ModelAdmin):
         )
 
         name = 'admin:' + get_admin_name(self.model, 'change')
-        return redirect(name, obj.hostingprovider_id)
+        return redirect(name, obj.pk)
 
     def approve_asn(self, request, *args, **kwargs):
         # TODO it would be ideal if this was more re-usable
@@ -198,9 +230,10 @@ class HostingAdmin(admin.ModelAdmin):
         formset.save()
 
     def get_readonly_fields(self, request, obj=None):
+        read_only = super().get_readonly_fields(request, obj)
         if not request.user.is_staff:
-            return ['partner']
-        return self.readonly_fields
+            return read_only + ['partner']
+        return read_only
 
     def _changeform_view(self, request, object_id, form_url, extra_context):
         '''Include whether current user is staff, so it can be picked up by a form'''
@@ -209,22 +242,6 @@ class HostingAdmin(admin.ModelAdmin):
             post['is_staff'] = request.user.is_staff
             request.POST = post
         return super()._changeform_view(request, object_id, form_url, extra_context)
-
-    def get_fieldsets(self, request, obj=None):
-        fieldset = [
-            ('Hostingprovider info', {
-                'fields': (('name', 'website',), 'country'),
-            }),
-            ('Visual', {'fields': (('icon', 'iconurl'),)}),
-            ('Other', {'fields': (('partner', 'model'),)}),
-        ]
-
-        admin_editable = (
-            'Admin only', {'fields': (('archived', 'showonwebsite', 'customer'),)}
-        )
-        if request.user.is_staff:
-            fieldset.append(admin_editable)
-        return fieldset
 
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
