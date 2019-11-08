@@ -46,7 +46,7 @@ class DatacenterAdminForm(forms.ModelForm):
             datacenter.save()
 
         if datacenter.pk:
-            datacenter.hostingproviders = self.cleaned_data['pizzas']
+            datacenter.hostingproviders.set(self.cleaned_data['hostingproviders'])
             self.save_m2m()
 
         return datacenter
