@@ -26,8 +26,7 @@ django-unixdatetimefield = "==1.0.3"
 gunicorn = "==19.9.0"
 mysqlclient = "==1.4.4"
 whitenoise = {extras = ["brotli"],version = "==4.1.4"}
-# Currently has this issue https://github.com/ubernostrum/django-registration/issues/187 waiting for a fix to be merged
-django-registration = {editable = true,git = "https://github.com/jonathan-s/django-registration.git"}
+django-registration = "==3.0.1"
 
 [requires]
 python_version = "3.6"
