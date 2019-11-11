@@ -1,0 +1,48 @@
+---
+- name: Deploy the TGWF django admin on prod
+  hosts:
+    - prod
+  remote_user: "deploy"
+  become: no
+
+  vars:
+    project_root: "/var/www/newadmin.thegreenwebfoundation.org"
+    project_git_repo: "git@github.com:thegreenwebfoundation/greenwebfoundation-admin.git"
+    project_deploy_strategy: git
+    project_version: "master"
+    project_local_path: "../"
+    project_has_npm: false
+    project_has_bower: false
+    project_npm_modules_path: node_modules
+    project_copy_previous_composer_vendors: false
+    project_copy_previous_npm_modules: false
+    project_copy_previous_bower_components: false
+    restart_supervisor: false
+
+    project_environment:
+      APP_ENV: "prod"
+      APP_DEBUG: 0
+      MAILGUN_API_KEY: ""
+      DATABASE_URL: ""
+      SECRET_KEY: ""
+
+    project_shared_children:
+      - path: "apps/newadmin/var/log"
+        src: "apps/newadmin/var/log"
+
+    project_unwanted_items:
+      - .git
+
+    project_has_composer: no
+
+    # project_post_build_commands:
+    # - trigger a restart for gunicorn
+
+    project_finalize: true
+
+  roles:
+    - f500.project_deploy
+
+  post_tasks:
+    # run in pipenv install
+    # set up gunicorn
