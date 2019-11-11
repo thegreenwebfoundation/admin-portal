@@ -11,7 +11,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS(msg))
 
-    def execute(self, statement):
+    def execute_sql(self, statement):
         try:
             self.cursor.execute(statement)
         except Exception:
@@ -22,19 +22,19 @@ class Command(BaseCommand):
             self.cursor = cursor
             # User specific migrations, these needs to be added as the initial
             # migration was faked.
-            self.execute(
+            self.execute_sql(
                 "ALTER TABLE fos_user ADD COLUMN date_joined DateTime NOT NULL"
             )
 
-            self.execute(
+            self.execute_sql(
                 "ALTER TABLE fos_user ADD COLUMN is_active TinyInt(1) NOT NULL;"
             )
 
-            self.execute(
+            self.execute_sql(
                 "ALTER TABLE fos_user ADD COLUMN is_staff TinyInt(1) NOT NULL;"
             )
 
-            self.execute("""
+            self.execute_sql("""
                 CREATE TABLE `fos_user_groups` (
                     `id` Int( 11 ) AUTO_INCREMENT NOT NULL,
                     `user_id` Int( 11 ) NOT NULL,
@@ -92,27 +92,6 @@ class Command(BaseCommand):
             # Using null in charfield is annoying, an empty string is better
             cursor.execute(
                 "UPDATE hostingproviders SET partner = '' WHERE partner IS NULL"
-            )
-
-            # change ip fields to integer instead
-            cursor.execute(
-                "ALTER TABLE greencheck MODIFY ip INT(11)"
-            )
-
-            cursor.execute(
-                "ALTER TABLE greencheck_ip MODIFY ip_eind INT(11)"
-            )
-
-            cursor.execute(
-                "ALTER TABLE greencheck_ip MODIFY ip_start INT(11)"
-            )
-
-            cursor.execute(
-                "ALTER TABLE greencheck_ip_approve MODIFY ip_start INT(11)"
-            )
-
-            cursor.execute(
-                "ALTER TABLE greencheck_ip_approve MODIFY ip_eind INT(11)"
             )
 
             # There is no type for year with django, use integer for better compatibility

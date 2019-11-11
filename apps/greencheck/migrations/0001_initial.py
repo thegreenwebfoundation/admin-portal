@@ -4,6 +4,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django_mysql.models
 import django_unixdatetimefield.fields
+from apps.greencheck.models import IpAddressField
 
 
 class Migration(migrations.Migration):
@@ -18,8 +19,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('active', models.BooleanField(null=True)),
-                ('ip_end', models.IntegerField(db_column='ip_eind')),
-                ('ip_start', models.IntegerField()),
+                ('ip_end', IpAddressField(db_column='ip_eind')),
+                ('ip_start', IpAddressField()),
                 ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider')),
             ],
             options={
@@ -32,7 +33,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', django_unixdatetimefield.fields.UnixDateTimeField(db_column='datum')),
                 ('green', django_mysql.models.EnumField(choices=[('yes', 'yes'), ('no', 'no'), ('old', 'old')])),
-                ('ip', models.IntegerField()),
+                ('ip', IpAddressField()),
                 ('tld', models.CharField(max_length=64)),
                 ('type', django_mysql.models.EnumField(choices=[('as', 'asn'), ('ip', 'ip'), ('none', 'none'), ('url', 'url'), ('whois', 'whois')])),
                 ('url', models.CharField(max_length=255)),
@@ -73,8 +74,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('action', models.TextField()),
-                ('ip_end', models.IntegerField(db_column='ip_eind')),
-                ('ip_start', models.IntegerField()),
+                ('ip_end', IpAddressField(db_column='ip_eind')),
+                ('ip_start', IpAddressField()),
                 ('status', models.TextField()),
             ],
             options={
