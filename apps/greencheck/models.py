@@ -1,5 +1,8 @@
+import decimal
 import ipaddress
 
+from django.utils.text import capfirst
+from django import forms
 from django.db import models
 from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
@@ -22,44 +25,30 @@ from .choices import (
 - greenenergy - also an old table
 """
 
-"""
-mysql> show columns from greencheck;
-+---------------+--------------------------------------+------+-----+-------------------+----------------+
-| Field         | Type                                 | Null | Key | Default           | Extra          |
-+---------------+--------------------------------------+------+-----+-------------------+----------------+
-| id            | bigint(20)                           | NO   | PRI | NULL              | auto_increment |
-| id_hp         | int(11)                              | NO   | MUL | NULL              |                |
-| id_greencheck | int(11)                              | NO   |     | 0                 |                |
-| type          | enum('url','whois','ip','none','as') | NO   |     | none              |                |
-| url           | varchar(255)                         | NO   | MUL | NULL              |                |
-| ip            | decimal(39,0)                        | NO   |     | NULL              |                |
-| datum         | timestamp                            | NO   | MUL | CURRENT_TIMESTAMP |                |
-| green         | enum('yes','no','old')               | NO   | MUL | no                |                |
-| tld           | varchar(64)                          | NO   | MUL | NULL              |                |
-"""
 
-
-class IpAddressField(models.CharField):
+class IpAddressField(models.DecimalField):
     default_error_messages = {
         'invalid': "'%(value)s' value must be a valid IpAddress.",
     }
     description = "IpAddress"
 
     def __init__(self, *args, **kwargs):
-        kwargs.pop('max_length', None)
-        self.max_length = 39
-        super().__init__(*args, **kwargs, max_length=self.max_length)
+        kwargs.pop('max_digits', None)
+        kwargs.pop('decimal_places', None)
+        self.max_digits = 39
+        self.decimal_places = 0
+        super().__init__(
+            *args, **kwargs,
+            max_digits=self.max_digits, decimal_places=self.decimal_places
+        )
         self.validators = []
-
-    def pre_save(self, model_instance, add):
-        """Return field's value just before saving."""
-        value = getattr(model_instance, self.attname)
-        return ipaddress.ip_address(value)
 
     def to_python(self, value):
         if value is None:
             return value
         try:
+            if hasattr(value, 'quantize'):
+                return ipaddress.ip_address(int(value))
             return ipaddress.ip_address(value)
         except (TypeError, ValueError):
             raise exceptions.ValidationError(
@@ -68,18 +57,37 @@ class IpAddressField(models.CharField):
                 params={'value': value},
             )
 
+    def get_db_prep_save(self, value, connection):
+        value = self.get_prep_value(value)
+        return connection.ops.adapt_decimalfield_value(value, self.max_digits, self.decimal_places)
+
     def from_db_value(self, value, expression, connection):
         if value is None:
             return value
-        return str(ipaddress.ip_address(value))
+        return str(ipaddress.ip_address(int(value)))
 
     def get_prep_value(self, value):
         if value is not None:
-            return int(value)
+            return decimal.Decimal(int(value))
         return None
 
-    def get_internal_type(self):
-        return 'IntegerField'
+    def formfield(self, form_class=None, choices_form_class=None, **kwargs):
+        """Return a django.forms.Field instance for this field."""
+        defaults = {
+            'required': not self.blank,
+            'label': capfirst(self.verbose_name),
+            'help_text': self.help_text,
+        }
+        if self.has_default():
+            if callable(self.default):
+                defaults['initial'] = self.default
+                defaults['show_hidden_initial'] = True
+            else:
+                defaults['initial'] = self.get_default()
+        defaults.update(kwargs)
+        if form_class is None:
+            form_class = forms.CharField
+        return form_class(**defaults)
 
 
 class GreencheckIp(models.Model):
