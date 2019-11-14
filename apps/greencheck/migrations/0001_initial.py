@@ -37,7 +37,8 @@ class Migration(migrations.Migration):
                 ('tld', models.CharField(max_length=64)),
                 ('type', django_mysql.models.EnumField(choices=[('as', 'asn'), ('ip', 'ip'), ('none', 'none'), ('url', 'url'), ('whois', 'whois')])),
                 ('url', models.CharField(max_length=255)),
-                ('greencheck_ip', models.ForeignKey(db_column='id_greencheck', default=0, on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckIp'))
+                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider')),
+                ('greencheck_ip', models.ForeignKey(db_column='id_greencheck', on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckIp')),
             ],
             options={
                 'db_table': 'greencheck',

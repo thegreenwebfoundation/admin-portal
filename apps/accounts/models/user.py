@@ -63,7 +63,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         # managed = False
         db_table = 'fos_user'
         indexes = [
-            models.Index(fields=['username'], name='username'),
             models.Index(fields=['email'], name='email'),
             models.Index(fields=['email_canonical'], name='email_canonical'),
         ]
