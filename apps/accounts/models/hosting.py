@@ -4,6 +4,8 @@ from django.conf import settings
 from django_countries.fields import CountryField
 from django_mysql.models import EnumField
 
+from model_utils.models import TimeStampedModel
+
 from .choices import (
     EnergyType,
     TempType,
@@ -111,6 +113,13 @@ class Hostingprovider(models.Model):
             models.Index(fields=['archived'], name='archived'),
             models.Index(fields=['showonwebsite'], name='showonwebsite'),
         ]
+
+
+class HostingCommunication(TimeStampedModel):
+    template = models.CharField(max_length=128)
+    hostingprovider = models.ForeignKey(
+        Hostingprovider, null=True, on_delete=models.SET_NULL
+    )
 
 
 class HostingproviderDatacenter(models.Model):

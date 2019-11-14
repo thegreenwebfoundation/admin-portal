@@ -29,6 +29,7 @@ from .models import (
     DatacenterCertificate,
     DatacenterClassification,
     DatacenterCooling,
+    HostingCommunication,
     HostingproviderCertificate,
     Hostingprovider,
     User,
@@ -174,6 +175,10 @@ class HostingAdmin(admin.ModelAdmin):
         messages.add_message(
             request, messages.INFO,
             'Email sent to user'
+        )
+        HostingCommunication.objects.create(
+            template=email_template,
+            hostingprovider=obj
         )
 
         name = 'admin:' + get_admin_name(self.model, 'change')
