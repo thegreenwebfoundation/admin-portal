@@ -204,19 +204,37 @@ class HostingAdmin(admin.ModelAdmin):
     def send_email(self, request, *args, **kwargs):
         email_template = request.GET.get('email')
         email_template = f'emails/{email_template}'
+        redirect_name = 'admin:' + get_admin_name(self.model, 'change')
+
         obj = Hostingprovider.objects.get(pk=kwargs['provider'])
-        message = render_to_string(email_template, context={})
+        subject = {
+            'additional-info.txt': 'Additional information needed to approve your listing in the Green Web Directory.',
+            'pending-removal.txt': 'Pending removal from the Green Web Directory due to questions around the green hosting of {}'.format(obj.name)
+        }
+        user = obj.user_set.all().first()
+        if not user:
+            messages.add_message(
+                request, messages.WARNING,
+                'No user exists for this host, so no email was sent'
+            )
+            return redirect(redirect_name, obj.pk)
+        context = {
+            'host': obj,
+            'user': user,
+        }
+        message = render_to_string(email_template, context=context)
         send_mail(
-            'Regarding your new entry on Green web admin',
+            subject[email_template],
             message,
             settings.DEFAULT_FROM_EMAIL,
-            [u.email for u in obj.user_set.all()]
+            [user.email]
         )
 
         messages.add_message(
             request, messages.INFO,
             'Email sent to user'
         )
+
         HostingCommunication.objects.create(
             template=email_template,
             hostingprovider=obj

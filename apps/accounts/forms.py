@@ -21,7 +21,10 @@ class CustomUserChangeForm(UserChangeForm):
 
 class HostingAdminForm(forms.ModelForm):
     email_template = forms.ChoiceField(
-        choices=[('info.txt', 'I need more information'), ('mu', 'mu')],
+        choices=[
+            ('additional-info.txt', 'I need more information'),
+            ('pending-removal.txt', 'Pending removal')
+        ],
         required=False,
         label='email'
     )
