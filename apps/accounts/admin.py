@@ -1,13 +1,13 @@
-
+from django.db import models
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
-
 from apps.greencheck.admin import (
     GreencheckIpApproveInline,
     GreencheckIpInline,
@@ -76,9 +76,36 @@ class HostingCertificateInline(admin.TabularInline):
     classes = ['collapse']
 
 
+class ShowWebsiteFilter(SimpleListFilter):
+    title = 'shown on website'
+    parameter_name = 'showwebsite'
+
+    def lookups(self, request, model_admin):
+        return (
+            (True, 'Shown on website'),
+            (False, 'Not shown on website'),
+        )
+
+    def choices(self, cl):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': cl.get_query_string({
+                    self.parameter_name: lookup,
+                }, []),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return queryset.filter(showonwebsite=self.value())
+
+
 @admin.register(Hostingprovider, site=greenweb_admin)
 class HostingAdmin(admin.ModelAdmin):
     form = forms.HostingAdminForm
+    list_filter = [ShowWebsiteFilter]
     inlines = [
         HostingCertificateInline,
         GreencheckAsnInline,
@@ -96,9 +123,23 @@ class HostingAdmin(admin.ModelAdmin):
         'model',
         'certificates_amount',
         'datacenter_amount',
+        'ip_addresses',
     ]
     readonly_fields = ['send_button']
     ordering = ('name',)
+
+    def get_queryset(self, request, *args, **kwargs):
+        qs = super().get_queryset(request, *args, **kwargs)
+        qs = qs.prefetch_related(
+            'hostingprovider_certificates',
+            'datacenter',
+            'greencheckip_set'
+        ).annotate(
+            models.Count('greencheckip')
+        )
+        if not request.user.is_staff:
+            qs = qs.filter(user=request.user)
+        return qs
 
     def get_fieldsets(self, request, obj=None):
         fieldset = [
@@ -248,21 +289,16 @@ class HostingAdmin(admin.ModelAdmin):
             request.POST = post
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
-    def get_queryset(self, request, *args, **kwargs):
-        qs = super().get_queryset(request, *args, **kwargs)
-        qs = qs.prefetch_related(
-            'hostingprovider_certificates',
-            'datacenter'
-        )
-        if not request.user.is_staff:
-            qs = qs.filter(user=request.user)
-        return qs
-
     @mark_safe
     def html_website(self, obj):
         html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
         return html
     html_website.short_description = 'website'
+
+    def ip_addresses(self, obj):
+        return len(obj.greencheckip_set.all())
+    ip_addresses.short_description = 'Number of IP ranges'
+    ip_addresses.admin_order_field = 'greencheckip__count'
 
     def country_str(self, obj):
         return obj.country.code
