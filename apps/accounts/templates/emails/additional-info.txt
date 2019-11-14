@@ -1,0 +1,14 @@
+Dear hoster,
+
+On {{ user.date_joined }} you registered {{ host.name }} at the Green Web Directory [1]. Since it is not directly clear to us why and how you are green hosted, we kindly ask you to provide us with the following additional information:
+
+Could you refer us to your corporate social responsibility page, or a comparable page where you explain how you have approached to become a green hoster or website?
+
+Is it possible to refer us to a valid certificate awarded to yourself or the company that provides your digital infrastructure to you?
+
+Thanks for your help in keeping the Green Web Directory up-to-date! We’re experiencing significant growth in the number of checks against the database, currently over 7 million per day and counting, so it does make sense!
+
+With best regards,
+The Green Web Foundation Support Team
+
+[1] https://www.thegreenwebfoundation.org/

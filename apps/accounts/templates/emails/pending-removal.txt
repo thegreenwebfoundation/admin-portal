@@ -1,0 +1,13 @@
+Dear hoster,
+
+On {{ user.date_joined }} you registered {{ host.name }} at the Green Web Directory [1]. A recent check discovered that your website ({{ host.website }}) no longer turns up as green when checked against the green credentials available in our system for your company.
+
+For now, we have placed {{ host.name }} on the list of green hosters that need to update their ASN or ip-ranges in the admin system [2]. After approval, the website will be visible in the Green Web Directory again.
+
+Thanks for your help in keeping the Green Web Directory up-to-date! We’re experiencing significant growth in the number of checks against the database, currently over 7 million per day and counting, so it does make sense!
+
+With best regards,
+The Green Web Foundation Support Team
+
+[1] https://www.thegreenwebfoundation.org/
+[2] https://admin.thegreenwebfoundation.org/
