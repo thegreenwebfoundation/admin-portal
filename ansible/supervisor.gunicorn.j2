@@ -1,0 +1,7 @@
+[program:admin-gunicorn]
+command=/usr/local/bin/pipenv run gunicorn greenweb.wsgi -b 0.0.0.0:9002
+process_name=%(program_name)s
+autostart=true
+autorestart=true
+stopsignal=QUIT
+user=www-data

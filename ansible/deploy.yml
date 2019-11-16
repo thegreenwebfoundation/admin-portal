@@ -27,8 +27,8 @@
       SECRET_KEY: ""
 
     project_shared_children:
-      - path: "apps/newadmin/var/log"
-        src: "apps/newadmin/var/log"
+      - path: "/log"
+        src: "logs"
 
     project_unwanted_items:
       - .git
@@ -44,5 +44,9 @@
     - f500.project_deploy
 
   post_tasks:
-    # run in pipenv install
-    # set up gunicorn
+    - name: install pipenv libraries
+      command: /usr/local/bin/pipenv install
+    # copy nginx setting
+    # copy supervisor
+    # reload supervisor
+    # run gunicorn
