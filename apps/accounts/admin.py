@@ -76,36 +76,9 @@ class HostingCertificateInline(admin.TabularInline):
     classes = ['collapse']
 
 
-class ShowWebsiteFilter(SimpleListFilter):
-    title = 'shown on website'
-    parameter_name = 'showwebsite'
-
-    def lookups(self, request, model_admin):
-        return (
-            (True, 'Shown on website'),
-            (False, 'Not shown on website'),
-        )
-
-    def choices(self, cl):
-        for lookup, title in self.lookup_choices:
-            yield {
-                'selected': self.value() == lookup,
-                'query_string': cl.get_query_string({
-                    self.parameter_name: lookup,
-                }, []),
-                'display': title,
-            }
-
-    def queryset(self, request, queryset):
-        if self.value() is None:
-            return queryset
-        return queryset.filter(showonwebsite=self.value())
-
-
 @admin.register(Hostingprovider, site=greenweb_admin)
 class HostingAdmin(admin.ModelAdmin):
     form = forms.HostingAdminForm
-    list_filter = [ShowWebsiteFilter]
     inlines = [
         HostingCertificateInline,
         GreencheckAsnInline,
@@ -202,8 +175,8 @@ class HostingAdmin(admin.ModelAdmin):
     send_button.short_description = 'Send email'
 
     def send_email(self, request, *args, **kwargs):
-        email_template = request.GET.get('email')
-        email_template = f'emails/{email_template}'
+        email_name = request.GET.get('email')
+        email_template = f'emails/{email_name}'
         redirect_name = 'admin:' + get_admin_name(self.model, 'change')
 
         obj = Hostingprovider.objects.get(pk=kwargs['provider'])
@@ -224,7 +197,7 @@ class HostingAdmin(admin.ModelAdmin):
         }
         message = render_to_string(email_template, context=context)
         send_mail(
-            subject[email_template],
+            subject[email_name],
             message,
             settings.DEFAULT_FROM_EMAIL,
             [user.email]
