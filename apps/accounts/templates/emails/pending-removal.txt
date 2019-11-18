@@ -1,6 +1,6 @@
 Dear hoster,
 
-On {{ user.date_joined }} you registered {{ host.name }} at the Green Web Directory [1]. A recent check discovered that your website ({{ host.website }}) no longer turns up as green when checked against the green credentials available in our system for your company.
+{% if user.date_joined %}On {{ user.date_joined }}{% else %}Some time in the past{% endif %} you registered {{ host.name }} at the Green Web Directory [1]. A recent check discovered that your website ({{ host.website }}) no longer turns up as green when checked against the green credentials available in our system for your company.
 
 For now, we have placed {{ host.name }} on the list of green hosters that need to update their ASN or ip-ranges in the admin system [2]. After approval, the website will be visible in the Green Web Directory again.
 

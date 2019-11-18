@@ -1,6 +1,6 @@
 Dear hoster,
 
-On {{ user.date_joined }} you registered {{ host.name }} at the Green Web Directory [1]. Since it is not directly clear to us why and how you are green hosted, we kindly ask you to provide us with the following additional information:
+{% if user.date_joined %}On {{ user.date_joined }}{% else %}Some time in the past{% endif %} you registered {{ host.name }} at the Green Web Directory [1]. Since it is not directly clear to us why and how you are green hosted, we kindly ask you to provide us with the following additional information:
 
 Could you refer us to your corporate social responsibility page, or a comparable page where you explain how you have approached to become a green hoster or website?
 
