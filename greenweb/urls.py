@@ -27,6 +27,6 @@ if settings.DEBUG:
     ]
 
 urlpatterns += [
-    path('admin/', admin.urls),
-    path('admin/', include(accounts_urls))
+    path('', admin.urls),
+    path('', include(accounts_urls))
 ]
