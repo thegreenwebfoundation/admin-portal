@@ -31,5 +31,6 @@ class Command(BaseCommand):
                 if role == 'ROLE_ADMIN':
                     user.is_staff = True
                     user.is_superuser = True
+                user.is_active = True
                 user.save()
         self.stdout.write(self.style.SUCCESS('Migrating permissions completed!'))
