@@ -1,0 +1,17 @@
+upstream gunicorn {
+    server localhost:8002;
+}
+
+server {
+    listen 80;
+    server_name newadmin.thegreenwebfoundation.org;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root "{{ project_root }}/current/static";
+    }
+
+    location / {
+        proxy_pass http://gunicorn/
+    }
+}
