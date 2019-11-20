@@ -22,6 +22,7 @@ from apps.greencheck.choices import StatusApproval
 
 from .utils import get_admin_name, reverse_admin_name
 from .admin_site import greenweb_admin
+from . import filters
 from . import forms
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import (
@@ -79,6 +80,11 @@ class HostingCertificateInline(admin.TabularInline):
 @admin.register(Hostingprovider, site=greenweb_admin)
 class HostingAdmin(admin.ModelAdmin):
     form = forms.HostingAdminForm
+    list_filter = [
+        filters.ShowWebsiteFilter,
+        filters.PartnerFilter,
+        filters.CountryFilter
+    ]
     inlines = [
         HostingCertificateInline,
         GreencheckAsnInline,
