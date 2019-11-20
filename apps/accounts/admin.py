@@ -316,7 +316,6 @@ class DatacenterAdmin(admin.ModelAdmin):
         'pue',
         'classification_names',
         'show_website',
-        'mja3',
         'certificates_amount',
         'hostingproviders_amount'
     ]
