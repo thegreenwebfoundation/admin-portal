@@ -68,6 +68,9 @@ class IpAddressField(models.DecimalField):
 
     def get_prep_value(self, value):
         if value is not None:
+            if isinstance(value, str):
+                value = ipaddress.ip_address(value)
+
             return decimal.Decimal(int(value))
         return None
 
