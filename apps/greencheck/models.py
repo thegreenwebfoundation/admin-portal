@@ -7,6 +7,7 @@ from django.db import models
 from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
 from django.core import exceptions
+from model_utils.models import TimeStampedModel
 
 from apps.accounts.models import Hostingprovider
 from .choices import (
@@ -93,7 +94,7 @@ class IpAddressField(models.DecimalField):
         return form_class(**defaults)
 
 
-class GreencheckIp(models.Model):
+class GreencheckIp(TimeStampedModel):
     active = models.BooleanField(null=True)
     ip_end = IpAddressField(db_column='ip_eind')
     ip_start = IpAddressField()
@@ -135,7 +136,7 @@ class Greencheck(models.Model):
         return f'{self.url} - {self.ip}'
 
 
-class GreencheckIpApprove(models.Model):
+class GreencheckIpApprove(TimeStampedModel):
     action = models.TextField(choices=ActionChoice.choices)
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE,
@@ -196,7 +197,7 @@ class GreencheckTLD(models.Model):
         ]
 
 
-class GreencheckASN(models.Model):
+class GreencheckASN(TimeStampedModel):
     active = models.BooleanField(null=True)
     # https://en.wikipedia.org/wiki/Autonomous_system_(Internet)
     asn = models.IntegerField(verbose_name='Autonomous system number')
@@ -212,7 +213,7 @@ class GreencheckASN(models.Model):
         ]
 
 
-class GreencheckASNapprove(models.Model):
+class GreencheckASNapprove(TimeStampedModel):
     action = models.TextField(choices=ActionChoice.choices)
     asn = models.IntegerField()
     hostingprovider = models.ForeignKey(
