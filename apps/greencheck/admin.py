@@ -7,6 +7,8 @@ from .models import (
     GreencheckIp,
     GreencheckIpApprove,
 )
+from apps.accounts.admin_site import greenweb_admin
+from apps.accounts.utils import reverse_admin_name
 from . import forms
 from . import models
 from .forms import GreencheckIpForm
@@ -148,3 +150,83 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
         if not request.user.is_staff:
             read_only = ('ip_start', 'ip_end') + read_only
         return read_only
+
+
+class StatusIpFilter(admin.SimpleListFilter):
+    title = 'status'
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        qs = GreencheckIpApprove.objects.all().distinct().values_list('status', flat=True)
+        status = [(s, s) for s in qs]
+        return status
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return queryset.filter(status=self.value())
+
+
+class StatusAsFilter(admin.SimpleListFilter):
+    title = 'status'
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        qs = GreencheckIpApprove.objects.all().distinct().values_list('status', flat=True)
+        status = [(s, s) for s in qs]
+        return status
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return queryset.filter(status=self.value())
+
+
+@admin.register(GreencheckIpApprove, site=greenweb_admin)
+class GreencheckIpApproveAdmin(admin.ModelAdmin):
+    list_display = [
+        '__str__',
+        'link',
+        'status',
+    ]
+    list_display_links = None
+    list_filter = [StatusIpFilter]
+    readonly_fields = ['link']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related('hostingprovider')
+        return qs
+
+    @mark_safe
+    def link(self, obj):
+        url = reverse_admin_name(
+            Hostingprovider, 'change', kwargs={'object_id': obj.hostingprovider_id}
+        )
+        return '<a href="{}">Link to {}</a>'.format(url, obj.hostingprovider.name)
+    link.short_description = 'Link to Hostingprovider'
+
+
+@admin.register(models.GreencheckASNapprove, site=greenweb_admin)
+class GreencheckASNApprove(admin.ModelAdmin):
+    list_display = [
+        '__str__',
+        'link',
+        'status',
+    ]
+    list_filter = [StatusAsFilter]
+    list_display_links = None
+    readonly_fields = ['link']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related('hostingprovider')
+        return qs
+
+    @mark_safe
+    def link(self, obj):
+        url = reverse_admin_name(
+            Hostingprovider, 'change', kwargs={'object_id': obj.hostingprovider_id}
+        )
+        return '<a href="{}">Link to {}</a>'.format(url, obj.hostingprovider.name)
+    link.short_description = 'Link to Hostingprovider'
