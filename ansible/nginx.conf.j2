@@ -2,7 +2,7 @@
 # Last run: {{ template_run_date }}
 
 
-upstream gunicorn-admin {
+upstream {{ tgwf_domain_name }} {
     server localhost:{{ gunicorn_port }};
 }
 
@@ -52,7 +52,7 @@ server {
 		#                          we don't want nginx trying to do something clever with
 		#                          redirects, we set the Host: header above already.
 		proxy_redirect             off;
-        proxy_pass http://gunicorn-admin;
+        proxy_pass http://{{ tgwf_domain_name }};
     }
 
     location / {
