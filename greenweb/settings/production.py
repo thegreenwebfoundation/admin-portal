@@ -6,4 +6,4 @@ ANYMAIL = {
 }
 EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 
-ALLOWED_HOSTS = ['thegreenwebfoundation.org', 'newadmin.thegreenwebfoundation.org']
+ALLOWED_HOSTS = ['thegreenwebfoundation.org', 'newadmin.thegreenwebfoundation.org', 'staging-newadmin.thegreenwebfoundation.org']
