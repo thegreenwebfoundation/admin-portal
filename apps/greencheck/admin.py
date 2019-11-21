@@ -74,10 +74,11 @@ class GreencheckAsnApproveInline(admin.TabularInline, ApprovalFieldMixin):
     verbose_name = 'ASN approval'
     verbose_name_plural = 'ASN approvals'
 
-    readonly_fields = ('action', 'status', 'approval')
+    readonly_fields = ('action', 'status', 'approval', 'created')
 
     def get_fieldsets(self, request, obj=None):
         fields = (
+            'created',
             'asn',
             'action',
             'status',
@@ -117,7 +118,7 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
     verbose_name = 'IP approval'
     verbose_name_plural = 'IP approvals'
 
-    readonly_fields = ('action', 'status', 'approval')
+    readonly_fields = ('action', 'status', 'approval', 'created')
 
     class Media:
         js = (
@@ -128,6 +129,7 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
 
     def get_fieldsets(self, request, obj=None):
         fields = (
+            'created',
             'ip_start',
             'ip_end',
             'action',
