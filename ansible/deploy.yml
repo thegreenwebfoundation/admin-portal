@@ -23,7 +23,8 @@
     database_url: "{{ lookup('env','DATABASE_URL') }}"
     django_settings_module: "{{ lookup('env','DJANGO_SETTINGS_MODULE') }}"
     supervisor_user: "deploy"
-    gunicorn_app: "{{ tgwf_domain_name }}"
+    gunicorn_app: "gunicorn_{{ tgwf_domain_name }}"
+    # supervisor_app_name: "gunicorn_{{ tgwf_domain_name }}"
 
     project_environment:
       MAILGUN_API_KEY: "{{ mailgun_api_key }}"

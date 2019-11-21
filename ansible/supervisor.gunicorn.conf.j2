@@ -4,9 +4,9 @@
 [supervisord]
 environment=LC_ALL='en_US.UTF-8',LANG='en_US.UTF-8'
 
-[program:gunicorn:{{ gunicorn_app }}]
+[program:{{ gunicorn_app }}]
 directory=/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/current/
-command=./run_gunicorn.sh
+command=bash ./run_gunicorn.sh
 process_name=%(program_name)s
 autostart=true
 autorestart=true
