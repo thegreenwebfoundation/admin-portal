@@ -1,7 +1,14 @@
-[program:admin-gunicorn]
-command=/usr/local/bin/pipenv run gunicorn greenweb.wsgi -b 0.0.0.0:9002
+# {{ ansible_managed }}
+# Last run: {{ template_run_date }}
+
+[supervisord]
+environment=LC_ALL='en_US.UTF-8',LANG='en_US.UTF-8'
+
+[program:admin-{{ gunicorn_app }}]
+directory=/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/current/
+command=./run_gunicorn.sh
 process_name=%(program_name)s
 autostart=true
 autorestart=true
 stopsignal=QUIT
-user=www-data
+user={{ supervisor_user }}

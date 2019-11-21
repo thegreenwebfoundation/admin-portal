@@ -1,5 +1,4 @@
 ---
-
 ### Initialize
 - name: Include initialize hook
   include_tasks: "{{ project_deploy_hook_on_initialize }}"
@@ -7,7 +6,6 @@
 
 - name: Initialize
   deploy_helper: "path={{ project_root }} release={{ project_release|default(omit) }} state=present shared_path={{ project_shared_path }}"
-
 
 ### Update source
 - name: Include update_source hook
@@ -18,17 +16,8 @@
   git: "repo={{ project_git_repo }} dest={{ project_source_path }} version={{ project_version }}"
   when: project_deploy_strategy == 'git'
 
-- name: Rsync project files
-  synchronize: "src={{ project_local_path }} dest={{ project_source_path }} rsync_timeout={{ project_deploy_synchronize_timeout }} delete={{ project_deploy_synchronize_delete }} recursive=yes "
-  when: project_deploy_strategy == 'synchronize'
-
-- name: s3 download project files
-  s3: "bucket={{ project_s3_bucket }} mode=get object='{{ project_s3_path }}/{{ project_s3_filename }}' dest='{{ project_source_path }}/{{ project_final_filename|default(project_s3_filename) }}' aws_access_key={{ aws_access_key }} aws_secret_key={{ aws_secret_key }} region={{ project_s3_region }}"
-  when: project_deploy_strategy == 's3'
-
 - name: write unfinished file
   file: "path={{ project_source_path }}/{{ deploy_helper.unfinished_filename }} state=touch"
-
 
 ### Create build dir
 - name: Include create_build_dir hook
@@ -49,7 +38,6 @@
 - name: Copy project templates
   template: src={{ item.src }} dest={{ deploy_helper.new_release_path }}/{{ item.dest }} mode={{ item.mode|default('0644') }}
   with_items: "{{ project_templates }}"
-
 
 ### Perform build
 - name: Include perform_build hook
@@ -117,7 +105,6 @@
   environment: "{{ project_environment }}"
   when: project_has_yarn
 
-
 ### Make shared resources
 - name: Include make_shared_resources hook
   include_tasks: "{{ project_deploy_hook_on_make_shared_resources }}"
@@ -138,7 +125,6 @@
 - name: Create shared symlinks
   file: "path='{{ deploy_helper.new_release_path }}/{{ item.path }}' src='{{ deploy_helper.shared_path }}/{{ item.src }}' state=link"
   with_items: "{{ project_shared_children }}"
-
 
 ### Finalize
 - name: Include finalize hook

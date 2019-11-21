@@ -1,2 +1,3 @@
 [prod]
-thegreenwebfoundation.org project_root="/var/www/newadmin.thegreenwebfoundation.org"
+thegreenwebfoundation.org project_root="/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"newadmin.thegreenwebfoundation.org" tgwf_stage="prod" tgwf_domain_name=newadmin
+

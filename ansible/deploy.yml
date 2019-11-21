@@ -22,6 +22,8 @@
     secret_key: "{{ lookup('env','SECRET_KEY') }}"
     database_url: "{{ lookup('env','DATABASE_URL') }}"
     django_settings_module: "{{ lookup('env','DJANGO_SETTINGS_MODULE') }}"
+    supervisor_user: "deploy"
+    gunicorn_app: "admin-{{ tgwf_domain_name }}"
 
     project_environment:
       MAILGUN_API_KEY: "{{ mailgun_api_key }}"
@@ -44,36 +46,52 @@
     - f500.project_deploy
 
   tasks:
-    - name: install deps
-      shell: "pipenv install"
-      args:
-        chdir: "{{ project_root }}/current"
-    - name: Template a file to /etc/files.conf
+    - name: Template the .env file to latest release directory
       template:
         src: dotenv.j2
         dest: "{{ project_root }}/current/.env"
         owner: deploy
         group: deploy
         mode: "0755"
-    - name: collect static files for django
-      shell: "pipenv run ./manage.py collectstatic"
+    - name: install python dependencies with pipenv
+      shell: "pipenv install"
       args:
         chdir: "{{ project_root }}/current"
-    - name: set up nginx server
+    - name: collect static files for django
+      shell: "pipenv run ./manage.py collectstatic --no-input"
+      args:
+        chdir: "{{ project_root }}/current"
+    - name: set up nginx server entry
       template:
         src: "nginx.conf.j2"
+        dest: "/etc/nginx/sites-available/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+      become: yes
+
+    - name: Create a symbolic to make nginx file appear in sites-enabled
+      file:
+        src: "/etc/nginx/sites-available/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
         dest: "/etc/nginx/sites-enabled/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        owner: deploy
-        group: deploy
-        mode: "0755"
-        become: yes
+        state: link
+      become: yes
+    - name: set up script for running gunicorn, via supervisor
+      template:
+        src: "run_gunicorn.sh.j2"
+        dest: "{{ project_root }}/current/run_gunicorn.sh"
+      become: yes
     - name: set up supervisor entry
       template:
         src: "supervisor.gunicorn.conf.j2"
         dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}.conf"
-        owner: deploy
-        group: deploy
-        mode: "0755"
-        become: yes
-    # - name: trigger reload for supervisor
-    # - name: trigger reload for nginx
+      become: yes
+
+    - name: trigger restart for app with supervisor
+      supervisorctl:
+        name: "{{ gunicorn_app }}"
+        state: restarted
+      become: yes
+
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded
+      become: yes
