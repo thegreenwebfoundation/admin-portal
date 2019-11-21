@@ -1,17 +1,27 @@
-upstream gunicorn {
-    server localhost:8002;
+# {{ ansible_managed }}
+# Last run: {{ template_run_date }}
+
+
+upstream gunicorn-admin {
+    server localhost:{{ gunicorn_port }};
 }
 
 server {
     listen 80;
-    server_name newadmin.thegreenwebfoundation.org;
+    client_max_body_size 4G;
+    keepalive_timeout 5;
+
+    server_name {{ tgwf_domain_name }}.thegreenwebfoundation.org;
+
+    access_log /var/log/nginx/{{ tgwf_domain_name }}.thegreenwebfoundation.org-access.log;
+    error_log /var/log/nginx/{{ tgwf_domain_name }}.thegreenwebfoundation.org-error.log;
 
     location = /favicon.ico { access_log off; log_not_found off; }
     location /static/ {
-        root "{{ project_root }}/current/static";
+        root "{{ project_root }}/current/";
     }
 
     location / {
-        proxy_pass http://gunicorn/
+        proxy_pass http://gunicorn-admin/
     }
 }
