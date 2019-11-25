@@ -1,0 +1,25 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+
+{% block pretitle %}
+<h1>Try out the greencheck with a URL of your choice</h1>
+{% endblock %}
+
+{% block content %}
+<form action="{{ form_url }}" method="post">
+    {% csrf_token %}
+    {{ form.subject.errors }}
+    <label for="{{ form.url.id_for_label }}">Url: </label>
+    {{ form.url }}
+    <input type="submit" value="Submit"
+        style="margin-top: 0px; padding: 6px 15px">
+</form>
+
+{% if green_status %}
+<div>
+    <p>The url you checked is considered {{ green_status }} </p>
+</div>
+{% endif %}
+
+{% endblock content %}
