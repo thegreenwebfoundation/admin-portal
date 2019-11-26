@@ -124,6 +124,7 @@ dmypy.json
 .env
 notes.md
 sublime.sublime-workspace
+static/*.*
 
 # do not track ansible cruft
 deploy.retry
