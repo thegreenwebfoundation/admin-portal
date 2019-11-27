@@ -132,7 +132,7 @@ USE_L10N = True
 USE_TZ = True
 
 # Email settings
-DEFAULT_FROM_EMAIL = 'hello@thegreenwebfoundation.org'
+DEFAULT_FROM_EMAIL = 'support@thegreenwebfoundation.org'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
