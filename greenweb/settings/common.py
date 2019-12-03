@@ -14,7 +14,7 @@ import os
 import environ
 
 # Environ
-root = environ.Path(__file__) - 3
+ROOT = environ.Path(__file__) - 3
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, os.getenv('SECRET_KEY')),
@@ -137,11 +137,11 @@ DEFAULT_FROM_EMAIL = 'support@thegreenwebfoundation.org'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATIC_ROOT = root('static')
+STATIC_ROOT = ROOT('static')
 STATIC_URL = '/static/'
 
 # Media Files
-MEDIA_ROOT = root('media')
+MEDIA_ROOT = ROOT('media')
 MEDIA_URL = '/media/'
 
 LOGGING = {
