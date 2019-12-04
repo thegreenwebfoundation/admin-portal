@@ -15,3 +15,5 @@ class Command(BaseCommand):
             cursor.execute(presenting_table)
             cursor.execute(insert_urls)
             cursor.execute(backfill)
+
+
