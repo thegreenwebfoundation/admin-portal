@@ -1,24 +1,17 @@
-from pathlib import Path
-
 from django.core.management.base import BaseCommand
 from django.db import connection
-
-from django.conf import settings
-
-BASE_PATH = Path(settings.ROOT)
+from django.template.loader import render_to_string
 
 
 class Command(BaseCommand):
     help = "Insert procedures."
 
-    def read(self, filename):
-        PATH = BASE_PATH / 'apps' / 'greencheck' / 'templates' / filename
-        return PATH.open().read()
-
     def handle(self, *args, **options):
         with connection.cursor() as cursor:
-            insert_urls = self.read('insert_url_procedure.sql')
-            backfill = self.read('backfill_procedure.sql')
+            insert_urls = render_to_string('insert_url_procedure.sql')
+            backfill = render_to_string('backfill_procedure.sql')
+            presenting_table = render_to_string('presenting.sql')
 
+            cursor.execute(presenting_table)
             cursor.execute(insert_urls)
             cursor.execute(backfill)
