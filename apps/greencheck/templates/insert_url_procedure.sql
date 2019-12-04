@@ -9,7 +9,7 @@ BEGIN
     IF (green = 0) THEN
         DELETE FROM green_presenting WHERE url = url;
     ELSE
-        SELECT name, partner, website INTO hostname, hostpartner, hostwebsite
+        SELECT naam, partner, website INTO hostname, hostpartner, hostwebsite
         FROM hostingproviders WHERE id = id_hp;
 
         INSERT INTO green_presenting
