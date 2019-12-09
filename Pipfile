@@ -28,6 +28,9 @@ gunicorn = "==19.9.0"
 mysqlclient = "==1.4.4"
 requests = "==2.22.0"
 whitenoise = {extras = ["brotli"],version = "==4.1.4"}
+db-to-sqlite = "==1.0.2"
+sqlite-utils = "==1.12.1"
+google-cloud-storage = "==1.23.0"
 
 [requires]
 python_version = "3.6"
