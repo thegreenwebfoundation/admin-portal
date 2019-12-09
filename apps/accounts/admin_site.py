@@ -13,6 +13,8 @@ from requests.exceptions import HTTPError
 from django.views.generic.edit import FormView
 from django import forms
 
+from apps.greencheck.views import GreenUrlsView
+
 
 URL_RE = re.compile(r'https?:\/\/(.*)')
 BASE_URL = 'https://api.thegreenwebfoundation.org/greencheck'
@@ -72,6 +74,7 @@ class GreenWebAdmin(AdminSite):
         urls = super().get_urls()
         patterns = [
             path('try_out/', CheckUrlView.as_view(), name='check_url'),
+            path('green-urls', GreenUrlsView.as_view(), name='green_urls'),
         ]
         return patterns + urls
 
@@ -87,6 +90,19 @@ class GreenWebAdmin(AdminSite):
                         "name": "Try out a url",
                         "object_name": "greencheck_url",
                         "admin_url": reverse('admin:check_url'),
+                        "view_only": True,
+                    }
+                ],
+            },
+            {
+                "name": "Download data dump",
+                "app_label": "greencheck",
+                "app_url": reverse('admin:check_url'),
+                "models": [
+                    {
+                        "name": "Download data dump",
+                        "object_name": "greencheck_url",
+                        "admin_url": reverse('admin:green_urls'),
                         "view_only": True,
                     }
                 ],

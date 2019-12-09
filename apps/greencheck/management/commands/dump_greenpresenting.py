@@ -17,7 +17,6 @@ class Command(BaseCommand):
         database_url = os.environ.get('DATABASE_URL')
         today = date.today()
         db_name = f'green_urls_{today}.db'
-        bucket_name = settings.PRESENTING_BUCKET
 
         subprocess.run([
             'db-to-sqlite',
@@ -32,8 +31,7 @@ class Command(BaseCommand):
         presenting_table.create_index(['hosted_by'])
 
         client = storage.Client()
-
-        bucket_name = 'presenting_bucket_staging'
+        bucket_name = settings.PRESENTING_BUCKET
         bucket = client.get_bucket(bucket_name)
         blob = bucket.blob(db_name)
         blob.upload_from_filename(str(root / db_name))

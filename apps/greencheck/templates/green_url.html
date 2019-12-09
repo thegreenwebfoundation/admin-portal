@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+
+{% block pretitle %}
+<h1>Download a data dump of urls that are hosted at hostingproviders using renewable energy</h1>
+{% endblock %}
+
+{% block content %}
+    <ul>
+    {% for name, url in urls %}
+        <li><a href="{{ url }}">{{ name }}</a></li>
+    {% endfor %}
+    </ul>
+{% endblock content %}
