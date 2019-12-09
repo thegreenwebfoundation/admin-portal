@@ -31,3 +31,12 @@ DATABASE_URL=mysql://root@localhost:33060/greencheck
 pipenv shell
 ansible-playbook ansible/deploy.yml -i ansible/inventories/staging
 ```
+
+
+# Google authentication
+
+If you work with google cloud storage you need to set environment variable to where it can find the authentication json.
+
+```
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/json/cloud-auth.json"
+```

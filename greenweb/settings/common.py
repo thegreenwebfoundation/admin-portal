@@ -144,6 +144,10 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = ROOT('media')
 MEDIA_URL = '/media/'
 
+# GCP BUCKET
+PRESENTING_BUCKET = 'presenting_bucket_staging'
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
