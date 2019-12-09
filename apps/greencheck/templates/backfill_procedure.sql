@@ -8,7 +8,7 @@ BEGIN
   DECLARE ggreen TINYINT(2);
   DECLARE gid_hp INT(11);
   DECLARE gurl VARCHAR(255);
-  DECLARE cur CURSOR FOR SELECT datum, green, id_hp, url FROM greencheck where id_hp > 0 AND datum > date_begin;
+  DECLARE cur CURSOR FOR SELECT datum, green, id_hp, url FROM greencheck WHERE id_hp > 0 AND datum > date_begin;
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
   OPEN cur;
