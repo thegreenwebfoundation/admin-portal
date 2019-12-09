@@ -12,7 +12,3 @@ CREATE TABLE IF NOT EXISTS `green_presenting` (
 CHARACTER SET = utf8
 COLLATE = utf8_general_ci
 ENGINE = InnoDB;
-
--- CREATE INDEX "unique_url" -----------------------------------
-CREATE UNIQUE INDEX `unique_url` USING BTREE ON `green_presenting`( `url` );
--- -------------------------------------------------------------
