@@ -1,3 +1,4 @@
-# make sure any new modules are installed
-# then run
-pipenv run gunicorn greenweb.wsgi -b localhost:{{ gunicorn_port }}
+# supervisor can only control proceses it started it self
+# so we need to use exec to replace the parent shell script process
+# that starts pipenv
+exec pipenv run gunicorn greenweb.wsgi -b localhost:{{ gunicorn_port }}
