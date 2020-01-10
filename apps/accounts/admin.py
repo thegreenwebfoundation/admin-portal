@@ -70,6 +70,12 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
+    def get_queryset(self, request, *args, **kwargs):
+        qs = super().get_queryset(request, *args, **kwargs)
+        if not request.user.is_staff:
+            qs = qs.filter(pk=request.user.pk)
+        return qs
+
 
 class HostingCertificateInline(admin.TabularInline):
     extra = 0
