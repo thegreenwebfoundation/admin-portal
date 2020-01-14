@@ -50,6 +50,7 @@ BEGIN
     -- check
     IF g_green = 'yes' THEN
 
+      START TRANSACTION;
       -- SELECT concat('** GREEN: ', purl) AS '** DEBUG:';
       INSERT INTO green_presenting
       (
@@ -73,5 +74,8 @@ BEGIN
         `hosted_by_id` = g_id_hp,
         `hosted_by_website` = h_hostwebsite,
         `partner` = h_hostpartner;
+
+      COMMIT;
+
     END IF;
 END
