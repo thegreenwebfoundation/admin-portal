@@ -22,6 +22,17 @@ BEGIN
   DECLARE h_hostpartner     VARCHAR(255);
   DECLARE h_hostwebsite     VARCHAR(255);
 
+
+  -- SELECT concat('** checking for: ', purl) AS '** DEBUG:';
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND
+    BEGIN
+      -- SELECT concat('** NO RESULT FOR: ', purl) AS '** DEBUG:';
+      -- SELECT concat('** BUT WE SHOULD NOT BUBBLE THE EXCEPTION UP: ', '') AS '** DEBUG:';
+    END;
+
+
+
   -- fetch the latest result for this url, using the index
   SELECT id, id_hp, id_greencheck, type, url, ip, datum, green, tld
   FROM greencheck
@@ -38,6 +49,8 @@ BEGIN
 
     -- check
     IF g_green = 'yes' THEN
+
+      -- SELECT concat('** GREEN: ', purl) AS '** DEBUG:';
       INSERT INTO green_presenting
       (
         `id`,
