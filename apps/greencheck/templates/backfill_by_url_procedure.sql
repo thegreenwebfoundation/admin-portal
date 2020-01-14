@@ -31,12 +31,13 @@ BEGIN
 
     CALL add_latest_check_for_url(fetched_url);
 
+
     SET counter = counter + 1;
 
     -- counter added to show progress
-    -- IF mod(counter, 100) = 0 THEN
-    --   SELECT concat('** progress ', counter) AS '** DEBUG:';
-    -- END IF;
+    IF mod(counter, 100000) = 0 THEN
+      SELECT concat('** progress ', counter) AS '** DEBUG:';
+    END IF;
 
 
     IF DONE THEN
