@@ -1,10 +1,10 @@
 import csv
 import re
 
-
-# these files are large, and we need to read from one file,
-# and only write the lines that count as real hostnames
-# we can check the host
+# this module exists for working with some files are very large.
+# To clean the data instead, it we needed to read from one file,
+# and only write the lines that counted as real hostnames, so we had a white
+# list of valid urls
 
 
 def lazy_messy_url_list(path_to_infile):
@@ -12,7 +12,7 @@ def lazy_messy_url_list(path_to_infile):
     Accept a text file at `path`, with one url per line,
     and return an generator to iterate through each line
     """
-    with open(path, "r") as messy_list_of_urls:
+    with open(path_to_infile, "r") as messy_list_of_urls:
         for line in messy_list_of_urls.readlines():
             yield line
 
@@ -40,6 +40,11 @@ def is_valid_hostname(hostname):
     allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
     return all(allowed.match(x) for x in hostname.split("."))
 
-# Usage
-# urls = lazy_messy_url_list("path/to/file")
-# write_clean_urls(urls)
+def create_clean_url_list(path_to_infile, path_to_outfile):
+    """
+    Accepts an path to an CSV file to read, and path to an outfile
+    to write to, then writes the cleaned urls to the file.
+    """
+    urls = lazy_messy_url_list("path/to/file")
+    write_clean_urls(urls)
+
