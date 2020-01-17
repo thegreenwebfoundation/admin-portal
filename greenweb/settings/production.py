@@ -9,9 +9,11 @@ ANYMAIL = {
 EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 
 ALLOWED_HOSTS = [
+    'localhost',
     'thegreenwebfoundation.org',
+    'admin.thegreenwebfoundation.org',
     'newadmin.thegreenwebfoundation.org',
-    'staging-newadmin.thegreenwebfoundation.org',
+    'staging-admin.thegreenwebfoundation.org',
 ]
 
 # bucket name in GCP
