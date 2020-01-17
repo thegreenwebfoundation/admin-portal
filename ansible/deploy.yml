@@ -32,10 +32,7 @@
       DATABASE_URL: "{{ database_url }}"
       SECRET_KEY: "{{ secret_key }}"
       DJANGO_SETTINGS_MODULE: "{{ django_settings_module }}"
-
-    project_shared_children:
-      - path: "/log"
-        src: "logs"
+      GOOGLE_APPLICATION_CREDENTIALS: "{{ google_application_credentials }}"
 
     project_unwanted_items:
       - .git

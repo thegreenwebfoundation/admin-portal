@@ -1,2 +1,2 @@
 [staging]
-thegreenwebfoundation.org tgwf_stage="staging" tgwf_domain_name=staging-newadmin project_root="/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org" gunicorn_port=9003
+thegreenwebfoundation.org tgwf_stage="staging" tgwf_domain_name=staging-admin project_root="/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org" gunicorn_port=9003
