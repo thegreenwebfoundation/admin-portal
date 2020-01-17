@@ -13,7 +13,7 @@ class Command(BaseCommand):
             presenting_table = render_to_string('presenting.sql')
 
             # add stored procedures to work by url, working backwards from
-            # latest checks, rather than working forwards the earliest checks
+            # latest checks, rather than working forwards from the earliest checks
             add_latest_check_for_url = render_to_string('add_latest_check_for_url_procedure.sql')
             backfill_by_url = render_to_string('backfill_by_url_procedure.sql')
 
