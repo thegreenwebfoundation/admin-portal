@@ -11,6 +11,7 @@ coverage = "*"
 flake8 = "*"
 ipython = "*"
 ipdb = "*"
+mycli = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
