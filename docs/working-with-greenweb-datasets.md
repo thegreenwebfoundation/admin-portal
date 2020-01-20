@@ -10,14 +10,16 @@ Every check of a website is recorded in a table called greenchecks. As of Januar
 
 For this reason, the dataset we publish contains a smaller table, `green_presenting`, listing the urls, and their status, with the columns below.
 
-- _id_ - the idea of the last check
-- _url_ - the url checked
-- _hosted_by_ - the organisation hosting this site
-- _hosted_by_website_ - the website of the company providing the hosting for this site
-- _partner_ - does this url belong to one of the web green web partner organisations
-- _green_ - is this a green domain? 1 for yes, 0 for no.
-- _hosted_by_id_
-- _modified_ - the time and date of the last check of this url
+| Column              |                              Description                               |
+| ------------------- | :--------------------------------------------------------------------: |
+| _id_                |                        the id of the last check                        |
+| _url_               |                            the url checked                             |
+| _hosted_by_         |                   the organisation hosting this site                   |
+| _hosted_by_website_ |     the website of the company providing the hosting for this site     |
+| _partner_           | does this url belong to one of the web green web partner organisations |
+| _green_             |              is this a green domain? 1 for yes, 0 for no.              |
+| _hosted_by_id_      |                     the id of the hosting company                      |
+| _modified_          |            the time and date of the last check of this url             |
 
 ## Example uses of this dataset
 
