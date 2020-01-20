@@ -37,7 +37,7 @@ BEGIN
   SELECT id, id_hp, id_greencheck, type, url, ip, datum, green, tld
   FROM greencheck
   WHERE url = purl
-  ORDER BY datum
+  ORDER BY datum DESC
   LIMIT 1
   INTO g_id, g_id_hp, g_id_greencheck, g_type, g_url, g_ip, g_datum, g_green, g_tld;
 
