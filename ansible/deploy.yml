@@ -25,14 +25,6 @@
     google_application_credentials: "{{ lookup('env','GOOGLE_APPLICATION_CREDENTIALS') }}"
     supervisor_user: "deploy"
     gunicorn_app: "gunicorn_{{ tgwf_domain_name }}"
-    # supervisor_app_name: "gunicorn_{{ tgwf_domain_name }}"
-
-    project_environment:
-      MAILGUN_API_KEY: "{{ mailgun_api_key }}"
-      DATABASE_URL: "{{ database_url }}"
-      SECRET_KEY: "{{ secret_key }}"
-      DJANGO_SETTINGS_MODULE: "{{ django_settings_module }}"
-      GOOGLE_APPLICATION_CREDENTIALS: "{{ google_application_credentials }}"
 
     project_unwanted_items:
       - .git
@@ -45,13 +37,28 @@
     - f500.project_deploy
 
   tasks:
-    - name: Template the .env file to latest release directory
-      template:
-        src: dotenv.j2
+    - name: move .env file to shared directory
+      copy:
+        src: ".env.{{ tgwf_stage }}"
+        dest: "{{ project_root }}/shared/.env"
+
+    - name: move .env file to shared directory
+      copy:
+        src: "cloud-auth.{{ tgwf_stage }}.json"
+        dest: "{{ project_root }}/shared/cloud-auth.json"
+
+    - name: Link .env to shared directory
+      file:
+        src: "{{ project_root }}/shared/.env"
         dest: "{{ project_root }}/current/.env"
-        owner: deploy
-        group: deploy
-        mode: "0755"
+        state: link
+
+    - name: Link google cloud json to shared directory
+      file:
+        src: "{{ project_root }}/shared/cloud-auth.json"
+        dest: "{{ project_root }}/current/cloud-auth.json"
+        state: link
+
     - name: install python dependencies with pipenv
       shell: "pipenv install"
       args:
