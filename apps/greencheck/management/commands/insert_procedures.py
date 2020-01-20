@@ -19,6 +19,11 @@ class Command(BaseCommand):
 
             cursor.execute(presenting_table)
             cursor.execute(insert_urls)
+
+            cursor.execute(add_latest_check_for_url)
+            cursor.execute(backfill_by_url)
+
+
             cursor.execute(backfill)
 
 
