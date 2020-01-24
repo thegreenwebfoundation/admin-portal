@@ -1,8 +1,8 @@
-
-
+from django.contrib.auth.models import Group
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils.encoding import force_text
+from django.urls import reverse
 
 from django_registration.backends.activation.views import RegistrationView
 from django_registration.backends.activation.views import ActivationView
@@ -31,11 +31,22 @@ class AdminRegistrationView(RegistrationView):
         context['site_header'] = 'Register a new user'
         return context
 
+    def create_inactive_user(self, form):
+        new_user = super().create_inactive_user(form)
+        groups = Group.objects.filter(
+            name__in=['hostingprovider', 'datacenter']
+        )
+
+        for group in groups:
+            new_user.groups.add(group)
+        new_user.save()
+        return new_user
+
     def get_success_url(self, user=None):
         """
         Return the URL to redirect to after successful redirection.
         """
-        return '/admin/'
+        return reverse('admin:index')
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -50,7 +61,7 @@ class AdminRegistrationView(RegistrationView):
 class AdminActivationView(ActivationView):
 
     def get_success_url(self, user=None):
-        return '/admin/'
+        return reverse('admin:index')
 
     def get(self, *args, **kwargs):
         """
