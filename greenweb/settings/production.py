@@ -1,4 +1,6 @@
 from .common import * # noqa
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 
 ANYMAIL = {
@@ -18,3 +20,16 @@ ALLOWED_HOSTS = [
 
 # bucket name in GCP
 PRESENTING_BUCKET = 'presenting_bucket_production'
+
+# report when things asplode
+sentry_dsn = os.environ.get("SENTRY_DSN", False)
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        integrations=[DjangoIntegration()],
+
+        # We assume that is a user is logged in, we want to be able
+        # to see who is having a bad day, so we can contact them and
+        # at least apologise about the broken site
+        send_default_pii=True
+    )
