@@ -1,12 +1,16 @@
 import decimal
 import ipaddress
 
-from django.utils.text import capfirst
 from django import forms
 from django.db import models
+from django.db.models.fields import Field
 from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
 from django.core import exceptions
+from django.core import validators
+from django.utils.text import capfirst
+from django.utils.functional import cached_property
+
 from model_utils.models import TimeStampedModel
 
 from apps.accounts.models import Hostingprovider
@@ -27,22 +31,42 @@ from .choices import (
 """
 
 
-class IpAddressField(models.DecimalField):
+class IpAddressField(Field):
     default_error_messages = {
         'invalid': "'%(value)s' value must be a valid IpAddress.",
     }
     description = "IpAddress"
+    empty_strings_allowed = False
 
     def __init__(self, *args, **kwargs):
         kwargs.pop('max_digits', None)
         kwargs.pop('decimal_places', None)
         self.max_digits = 39
         self.decimal_places = 0
-        super().__init__(
-            *args, **kwargs,
-            max_digits=self.max_digits, decimal_places=self.decimal_places
-        )
+        super().__init__(*args, **kwargs)
         self.validators = []
+
+    def check(self, **kwargs):
+        errors = super().check(**kwargs)
+        return errors
+
+    @cached_property
+    def validators(self):
+        return super().validators + [
+            validators.DecimalValidator(self.max_digits, self.decimal_places)
+        ]
+
+    @cached_property
+    def context(self):
+        return decimal.Context(prec=self.max_digits)
+
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        if self.max_digits is not None:
+            kwargs['max_digits'] = self.max_digits
+        if self.decimal_places is not None:
+            kwargs['decimal_places'] = self.decimal_places
+        return name, path, args, kwargs
 
     def to_python(self, value):
         if value is None:
@@ -62,11 +86,6 @@ class IpAddressField(models.DecimalField):
         value = self.get_prep_value(value)
         return connection.ops.adapt_decimalfield_value(value, self.max_digits, self.decimal_places)
 
-    def from_db_value(self, value, expression, connection):
-        if value is None:
-            return value
-        return str(ipaddress.ip_address(int(value)))
-
     def get_prep_value(self, value):
         if value is not None:
             if isinstance(value, str):
@@ -74,6 +93,11 @@ class IpAddressField(models.DecimalField):
 
             return decimal.Decimal(int(value))
         return None
+
+    def from_db_value(self, value, expression, connection):
+        if value is None:
+            return value
+        return str(ipaddress.ip_address(int(value)))
 
     def formfield(self, form_class=None, choices_form_class=None, **kwargs):
         """Return a django.forms.Field instance for this field."""
