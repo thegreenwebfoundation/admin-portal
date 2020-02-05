@@ -56,10 +56,9 @@ class CheckUrlView(FormView):
 class GreenWebAdmin(AdminSite):
     # This is a standard authentication form that allows non-staff users
     login_form = AuthenticationForm
-    site_header = 'Green Web Admin'
     index_template = 'admin_index.html'
-    site_header = 'Green Web Admin'
-    index_title = ''
+    site_header = 'The Green Web Foundation Administration Site'
+    index_title = 'The Green Web Foundation Administration Site'
     login_template = 'login.html'
     logout_template = 'logout.html'
 
