@@ -220,11 +220,10 @@ class HostingAdmin(admin.ModelAdmin):
             'Email sent to user'
         )
 
-        # This table is unusable right now.
-        # HostingCommunication.objects.create(
-        #     template=email_template,
-        #     hostingprovider=obj
-        # )
+        HostingCommunication.objects.create(
+            template=email_template,
+            hostingprovider=obj
+        )
 
         name = 'admin:' + get_admin_name(self.model, 'change')
         return redirect(name, obj.pk)
