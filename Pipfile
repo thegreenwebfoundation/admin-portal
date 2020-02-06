@@ -12,6 +12,7 @@ flake8 = "*"
 ipython = "*"
 ipdb = "*"
 mycli = "*"
+werkzeug = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
