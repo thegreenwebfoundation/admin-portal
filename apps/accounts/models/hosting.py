@@ -125,7 +125,7 @@ class HostingCommunication(TimeStampedModel):
 
 class HostingproviderDatacenter(models.Model):
     '''Intermediary table between Datacenter and Hostingprovider'''
-    approved = models.BooleanField()
+    approved = models.BooleanField(default=False)
     approved_at = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     datacenter = models.ForeignKey(Datacenter, null=True, on_delete=models.CASCADE)

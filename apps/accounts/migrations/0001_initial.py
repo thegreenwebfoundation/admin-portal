@@ -30,6 +30,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'hostingproviders',
+                'verbose_name': 'Hosting Provider'
             },
         ),
         migrations.CreateModel(
@@ -103,7 +104,7 @@ class Migration(migrations.Migration):
             name='HostingproviderDatacenter',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('approved', models.BooleanField()),
+                ('approved', models.BooleanField(default=False)),
                 ('approved_at', models.DateTimeField(null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('datacenter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='accounts.Datacenter')),
