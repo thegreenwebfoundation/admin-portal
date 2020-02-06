@@ -107,6 +107,7 @@ class Hostingprovider(models.Model):
 
     class Meta:
         # managed = False
+        verbose_name = "Hosting Provider"
         db_table = 'hostingproviders'
         indexes = [
             models.Index(fields=['name'], name='name'),
