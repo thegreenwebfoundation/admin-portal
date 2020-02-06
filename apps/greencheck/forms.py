@@ -50,7 +50,7 @@ class ApprovalMixin:
             raise ValidationError('Alert staff: a bug has occurred.')
 
 
-class GreencheckAsnForm(ModelForm):
+class GreencheckAsnForm(ModelForm, ApprovalMixin):
     ApprovalModel = GreencheckASNapprove
 
     is_staff = forms.BooleanField(
