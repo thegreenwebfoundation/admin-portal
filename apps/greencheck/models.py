@@ -178,6 +178,7 @@ class GreencheckIpApprove(TimeStampedModel):
 
     class Meta:
         db_table = 'greencheck_ip_approve'
+        verbose_name = "Greencheck IP Range Submission"
         # managed = False
 
 
@@ -250,6 +251,7 @@ class GreencheckASNapprove(TimeStampedModel):
 
     class Meta:
         db_table = 'greencheck_as_approve'
+        verbose_name = "Greencheck ASN Submissions"
 
     def __str__(self):
         return f'Status: {self.status} Action: {self.action}'
