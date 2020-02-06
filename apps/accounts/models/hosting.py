@@ -28,7 +28,7 @@ class Datacenter(models.Model):
     name = models.CharField(max_length=255, db_column='naam')
     pue = models.FloatField(verbose_name='Power usage effectiveness')
     residualheat = models.BooleanField(null=True)
-    showonwebsite = models.BooleanField(verbose_name='Show on website')
+    showonwebsite = models.BooleanField(verbose_name='Show on website', default=False)
     temperature = models.IntegerField(null=True)
     temperature_type = models.CharField(
         max_length=255, choices=TempType.choices, db_column='temperaturetype'

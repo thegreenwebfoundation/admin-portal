@@ -56,11 +56,6 @@ class DatacenterAdminForm(forms.ModelForm):
 
     def save(self, commit=True):
 
-        # Because this is a read-only field for non-staff users
-        # when creating a datacentre, this is submitted as 'null'.
-        # We need to cast it to a true/false for the database
-        self.instance.showonwebsite = bool(self.instance.showonwebsite)
-
         datacenter = super().save(commit=False)
 
         if commit:
