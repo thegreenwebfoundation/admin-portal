@@ -55,14 +55,6 @@ class CustomUserAdmin(UserAdmin):
         'is_staff'
     ]
 
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('email',)}),
-        ('Permissions', {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
-        }),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
@@ -75,6 +67,26 @@ class CustomUserAdmin(UserAdmin):
         if not request.user.is_staff:
             qs = qs.filter(pk=request.user.pk)
         return qs
+
+    def get_fieldsets(self, request, *args, **kwargs):
+
+        if request.user.is_superuser:
+            return (
+                (None, {'fields': ('username', 'password')}),
+                ('Personal info', {'fields': ('email',)}),
+                ('Permissions', {
+                    'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+                }),
+                ('Important dates', {'fields': ('last_login', 'date_joined')}),
+            )
+        # TODO DRY this up, once the security hole is plugged
+
+        return (
+        (None, {'fields': ('username', 'password')}),
+        ('Personal info', {'fields': ('email',)}),
+
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
 
 
 class HostingCertificateInline(admin.TabularInline):
