@@ -175,7 +175,11 @@ class HostingproviderCertificate(Certificate):
 
 class HostingproviderStats(models.Model):
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
+        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp',
+        # this column is the foreigh key for hosting providers
+        # AND considered the primary key. Without this extra keyword,
+        # we get crashes when deleting hosting providers
+        primary_key=True
     )
     green_domains = models.IntegerField()
     green_checks = models.IntegerField()
