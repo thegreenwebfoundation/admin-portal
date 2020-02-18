@@ -23,6 +23,7 @@ class PartnerChoice(DjangoChoices):
     partner = ChoiceItem('Partner', 'Partner')
     dev_partner = ChoiceItem('Dev Partner', 'Dev Partner')
     certified_gold = ChoiceItem('Certified Gold Partner', 'Certified Gold Partner')
+    certified_partner = ChoiceItem('Certified Partner', 'Certified Partner')
     gold = ChoiceItem('Gold Partner', 'Gold Partner')
 
 
