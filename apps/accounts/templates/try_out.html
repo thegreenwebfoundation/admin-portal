@@ -9,7 +9,7 @@
 {% block content %}
 <form action="{{ form_url }}" method="post">
     {% csrf_token %}
-    {{ form.subject.errors }}
+    {{ form.url.errors }}
     <label for="{{ form.url.id_for_label }}">Url: </label>
     {{ form.url }}
     <input type="submit" value="Submit"
