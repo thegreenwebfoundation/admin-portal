@@ -41,8 +41,8 @@ class CheckUrlView(FormView):
     form_class = CheckUrlForm
     success_url = '/not/used'
 
-    def get_context_data(self):
-        context = super().get_context_data()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         context['form_url'] = reverse('admin:check_url')
         return context
 
