@@ -13,6 +13,9 @@ ipython = "*"
 ipdb = "*"
 mycli = "*"
 werkzeug = "*"
+pytest = "*"
+pytest-django = "*"
+pytest-watch = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
@@ -23,16 +26,16 @@ django-countries = "==5.5"
 django-environ = "==0.4.5"
 django-extensions = "==2.2.5"
 django-model-utils = "==3.2.0"
-django-mysql = "==3.2.0"
+django-mysql = "*"
 django-registration = "==3.0.1"
 django-unixdatetimefield = "==1.0.3"
 gunicorn = "==19.9.0"
 mysqlclient = "==1.4.4"
 requests = "==2.22.0"
 whitenoise = {extras = ["brotli"],version = "==4.1.4"}
-db-to-sqlite = "==1.0.2"
-sqlite-utils = "==1.12.1"
-google-cloud-storage = "==1.23.0"
+db-to-sqlite = "*"
+sqlite-utils = "*"
+google-cloud-storage = "*"
 sentry-sdk = "*"
 
 [requires]
