@@ -1,11 +1,12 @@
 language: python
 python:
-  - "3.6"      # current default Python on Travis CI
+  - "3.6"
 
-# command to install dependencies
 install:
   - pip install pipenv --upgrade-strategy=only-if-needed
   - pipenv install --dev
 # command to run tests
 script:
   - pytest
+services:
+    - mysql
