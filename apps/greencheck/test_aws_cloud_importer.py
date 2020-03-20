@@ -1,7 +1,10 @@
 import pytest
 
+import ipaddress
+
 from apps.greencheck.management.commands import update_aws_ip_ranges
 from apps.accounts.models import Hostingprovider
+from apps.greencheck.models import GreencheckIp
 
 @pytest.fixture
 def hosting_provider():
@@ -37,4 +40,32 @@ class TestAWSCLoudImporter:
 
         assert(len(res.keys()) == 4 )
 
-    
+
+    @pytest.mark.django_db
+    def test_pullout_green_ips(self, hosting_provider, aws_cloud_provider):
+        res = aws_cloud_provider.fetch_ip_ranges()
+
+        _, region, host_id = aws_cloud_provider.green_regions[0]
+
+        iprs = aws_cloud_provider.pullout_green_ips(res, region)
+
+        ip_ranges = aws_cloud_provider.ip_ranges_for_hoster(iprs)
+
+        assert(isinstance(ip_ranges[0], ipaddress.IPv4Network))
+
+    @pytest.mark.django_db
+    def test_update_hoster(self, hosting_provider, aws_cloud_provider):
+
+        res = aws_cloud_provider.fetch_ip_ranges()
+        _, region, host_id = aws_cloud_provider.green_regions[0]
+        iprs = aws_cloud_provider.pullout_green_ips(res, region)
+        ip_ranges = aws_cloud_provider.ip_ranges_for_hoster(iprs)
+
+        ip_start, ip_end = ip_ranges[0][0], ip_ranges[0][-1]
+        assert(GreencheckIp.objects.all().count() == 0)
+
+        hosting_provider.save()
+
+        aws_cloud_provider.update_hoster(hosting_provider, ip_start, ip_end)
+
+        assert(GreencheckIp.objects.all().count() > 0)

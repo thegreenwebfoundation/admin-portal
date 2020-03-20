@@ -1,6 +1,6 @@
 import json
 import requests
-from ipaddress import IPv4Address, IPv6Address
+import ipaddress
 from apps.greencheck.models import GreencheckIp
 from apps.accounts.models import Hostingprovider
 
@@ -54,7 +54,7 @@ class AmazonCloudProvider:
     def pullout_green_ips(self, ip_ranges, region, ip_version=None):
 
         if ip_version == "ipv6":
-            prefix = ['ipv6_prefixes']
+            prefix = 'ipv6_prefixes'
         else:
             prefix = "prefixes"
 
@@ -68,19 +68,19 @@ class AmazonCloudProvider:
         if ip_version == "ipv6":
             ip_addy = ipaddress.IPv6Network
         else:
-            ip_addy = ipaddress.IPv6Network
+            ip_addy = ipaddress.IPv4Network
 
         ips_for_hoster = []
 
         for ipr in ip_ranges:
             network = ip_addy(ipr)
-            # first, last = network[0], network[-1]
-            ips.append(network)
+
+            ips_for_hoster.append(network)
 
         return ips_for_hoster
 
 
-    def update_hoster(self, hoster: Hostingprovider, first: IPv4Address, last: IPv4Address):
+    def update_hoster(self, hoster: Hostingprovider, first: ipaddress.IPv4Address, last: ipaddress.IPv4Address):
         # use the ORM to update the deets for the corresponding hoster
         gcip = GreencheckIp(
             active=True,
@@ -107,7 +107,7 @@ def ip_ranges_for_hoster(ip_ranges, ip_version="ipv4"):
         return ips_for_hoster
 
 
-def update_hoster(self, hoster: Hostingprovider, ip_range: IPv4Address):
+def update_hoster(self, hoster: Hostingprovider, ip_range: ipaddress.IPv4Address):
         first, last = ip_range[0], ip_range[-1]
         # use the ORM to update the deets for the corresponding hoster
         return GreencheckIp.update_or_create(
