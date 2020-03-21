@@ -10,26 +10,20 @@ from django.db import connection
 
 logger = logging.getLogger(__name__)
 
-class Command(BaseCommand):
-    help = "Update IP ranges for cloud providers that publish them"
-
-    def handle(self, *args, **options):
-        pass
-
-
+GREEN_REGIONS = (
+    ('Amazon US West', 'us-west-2', 696),
+    ('Amazon EU (Frankfurt)', 'eu-central-1', 697),
+    ('Amazon EU (Ireland)', 'eu-west-1', 698),
+    ('Amazon AWS GovCloud (USA)','us-gov-west-1', 699),
+    ('Amazon Montreal', 'ca-central-1', 700),
+)
 class AmazonCloudProvider:
 
     def __init__(self, *args, **kwargs):
         if kwargs.get('green_regions'):
             self.green_regions = kwargs.get('green_regions')
         else:
-            self.green_regions = (
-            ('Amazon US West', 'us-west-2', 696),
-            ('Amazon EU (Frankfurt)', 'eu-central-1', 697),
-            ('Amazon EU (Ireland)', 'eu-west-1', 698),
-            ('Amazon AWS GovCloud (USA)','us-gov-west-1', 699),
-            ('Amazon Montreal', 'ca-central-1', 700),
-        )
+            self.green_regions = GREEN_REGIONS
 
     def update_ranges(self, ip_ranges):
 
@@ -42,7 +36,11 @@ class AmazonCloudProvider:
             green_ipv4s = self.pullout_green_regions(ip_ranges, aws_code)
             green_ipv6s = self.pullout_green_regions(ip_ranges, aws_code, ip_version="ipv6")
 
-            hoster = Hostingprovider.objects.get(pk=host_id)
+            try:
+                hoster = Hostingprovider.objects.get(pk=host_id)
+            except Hostingprovider.DoesNotExist:
+                continue
+
 
             # then convert them to ip networks
             green_ipv4_ranges = self.ip_ranges_for_hoster(green_ipv4s)
@@ -119,3 +117,20 @@ class AmazonCloudProvider:
         if created:
             logger.debug(gcip)
             return gcip
+
+class Command(BaseCommand):
+    help = "Update IP ranges for cloud providers that publish them"
+
+    def handle(self, *args, **options):
+        aws = AmazonCloudProvider()
+        ip_ranges = aws.fetch_ip_ranges()
+        logger.info("Adding ranges")
+        res = aws.update_ranges(ip_ranges)
+        green_ipv4s, green_ipv6s = res.get('ipv4'), res.get('ipv6')
+        self.stdout.write(
+            f"Import Complete: Added {len(green_ipv4s)} new IPV4 addresses, "
+            f"and {len(green_ipv6s) } IPV6 addresses"
+        )
+
+
+
