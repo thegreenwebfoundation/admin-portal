@@ -2,22 +2,32 @@ import pytest
 import pathlib
 import ipaddress
 import json
+from io import StringIO
 
+from django.core.management import call_command
 from apps.greencheck.management.commands import update_aws_ip_ranges
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.models import GreencheckIp
+from apps.greencheck.management.commands.update_aws_ip_ranges import GREEN_REGIONS
+
 
 @pytest.fixture
 def hosting_provider():
 
+    oregon, *rest = [
+        region for region in GREEN_REGIONS
+        if region[1] == "us-west-2"
+    ]
+    name, region, host_id = oregon
     return Hostingprovider(
         archived= False,
         country= 'US',
         customer= False,
         icon= '',
         iconurl= '',
+        id = host_id,
         model= 'groeneenergie',
-        name= 'Amazon US West',
+        name= name,
         partner= '',
         showonwebsite= True,
         website= 'http://aws.amazon.com'
@@ -39,9 +49,9 @@ def aws_json_ip_ranges():
         return ip_ranges
 
 
+@pytest.mark.django_db
 class TestAWSCLoudImporter:
 
-    @pytest.mark.django_db
     def test_fetch_ip(self, hosting_provider, aws_cloud_provider):
         """
         Do we fetch the data from AWS?
@@ -51,8 +61,6 @@ class TestAWSCLoudImporter:
 
         assert(len(res.keys()) == 4 )
 
-
-    @pytest.mark.django_db
     def pullout_green_regions(self, hosting_provider, aws_cloud_provider):
         res = aws_cloud_provider.fetch_ip_ranges()
 
@@ -64,7 +72,6 @@ class TestAWSCLoudImporter:
 
         assert(isinstance(ip_ranges[0], ipaddress.IPv4Network))
 
-    @pytest.mark.django_db
     def test_update_hoster(self, hosting_provider, aws_cloud_provider):
 
         res = aws_cloud_provider.fetch_ip_ranges()
@@ -82,7 +89,6 @@ class TestAWSCLoudImporter:
 
         assert(GreencheckIp.objects.all().count() == 1)
 
-    @pytest.mark.django_db
     def test_range(self, hosting_provider, aws_cloud_provider, aws_json_ip_ranges):
         assert(GreencheckIp.objects.all().count() == 0)
         hosting_provider.save()
@@ -96,3 +102,13 @@ class TestAWSCLoudImporter:
         assert(len(ipv6s) == 20)
         # we should have 124 ranges in total
         assert(GreencheckIp.objects.all().count() == len(ipv4s) + len(ipv6s))
+
+
+@pytest.mark.django_db
+class TestAWSImportCommand:
+
+    def test_handle(self, aws_cloud_provider):
+        out = StringIO()
+        call_command('update_aws_ip_ranges', stdout=out)
+        assert('Import Complete:' in out.getvalue())
+
