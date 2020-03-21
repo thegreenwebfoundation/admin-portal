@@ -42,12 +42,12 @@ class TestAWSCLoudImporter:
 
 
     @pytest.mark.django_db
-    def test_pullout_green_ips(self, hosting_provider, aws_cloud_provider):
+    def pullout_green_regions(self, hosting_provider, aws_cloud_provider):
         res = aws_cloud_provider.fetch_ip_ranges()
 
         _, region, host_id = aws_cloud_provider.green_regions[0]
 
-        iprs = aws_cloud_provider.pullout_green_ips(res, region)
+        iprs = aws_cloud_provider.pullout_green_regions(res, region)
 
         ip_ranges = aws_cloud_provider.ip_ranges_for_hoster(iprs)
 
@@ -58,7 +58,7 @@ class TestAWSCLoudImporter:
 
         res = aws_cloud_provider.fetch_ip_ranges()
         _, region, host_id = aws_cloud_provider.green_regions[0]
-        iprs = aws_cloud_provider.pullout_green_ips(res, region)
+        iprs = aws_cloud_provider.pullout_green_regions(res, region)
         ip_ranges = aws_cloud_provider.ip_ranges_for_hoster(iprs)
 
         ip_start, ip_end = ip_ranges[0][0], ip_ranges[0][-1]
