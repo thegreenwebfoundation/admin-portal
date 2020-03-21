@@ -1,6 +1,7 @@
 import pytest
-
+import pathlib
 import ipaddress
+import json
 
 from apps.greencheck.management.commands import update_aws_ip_ranges
 from apps.accounts.models import Hostingprovider
@@ -28,6 +29,15 @@ def aws_cloud_provider(hosting_provider):
     return update_aws_ip_ranges.AmazonCloudProvider(green_regions=(
         ('Amazon US West', 'us-west-2', hosting_provider.id),
     ))
+
+@pytest.fixture
+def aws_json_ip_ranges():
+    this_file = pathlib.Path(__file__)
+    json_path = this_file.parent.joinpath('fixtures', "ip_ranges.json")
+    with open(json_path) as ipr:
+        ip_ranges = json.loads(ipr.read())
+        return ip_ranges
+
 
 class TestAWSCLoudImporter:
 
@@ -73,7 +83,7 @@ class TestAWSCLoudImporter:
         assert(GreencheckIp.objects.all().count() == 1)
 
     @pytest.mark.django_db
-    def test_range(self, hosting_provider, aws_cloud_provider):
+    def test_range(self, hosting_provider, aws_cloud_provider, aws_json_ip_ranges):
         assert(GreencheckIp.objects.all().count() == 0)
         hosting_provider.save()
 
