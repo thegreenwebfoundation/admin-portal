@@ -34,24 +34,27 @@ class AmazonCloudProvider:
 
         for region in self.green_regions:
             _, aws_code, host_id = region
+
+            # pull out the ip ranges as strings
             green_ipv4s = self.pullout_green_regions(iprs, region)
             hoster = Hostingprovider.objects.get(pk=host_id)
 
-            self.add_ip_ranges_to_hoster(hoster, green_ipv4s)
+            # then convert them to ip networks
+            green_ip_ranges = self.ip_ranges_for_hoster(green_ipv4s)
 
-        # for region in green_regions:
-        #     hoster = self.find_hoster_by_region(region)
-        #     self.add_ip_ranges_to_hoster(hoster)
+            # finally, pass the networks in, with the hoster
+            self.add_ip_ranges_to_hoster(hoster, green_ip_ranges)
 
-        # we need to do this for ipv4, and then ipv6
-
-        pass
+            # we need to do this for ipv4, and then ipv6
 
     def fetch_ip_ranges(self):
         aws_endpoint = "https://ip-ranges.amazonaws.com/ip-ranges.json"
         return requests.get(aws_endpoint).json()
 
-    def pullout_green_ips(self, ip_ranges, region, ip_version=None):
+    def pullout_green_regions(self, ip_ranges, region, ip_version=None):
+        """
+        Returns a list of IP ranges for a given region
+        """
 
         if ip_version == "ipv6":
             prefix = 'ipv6_prefixes'
@@ -79,41 +82,20 @@ class AmazonCloudProvider:
 
         return ips_for_hoster
 
+    def add_ip_ranges_to_hoster(self, hoster, ip_networks):
+        results = []
+        for network in ip_networks:
+            res = self.update_hoster(hoster, network[0], network[-1])
+            results.push(res)
+
+        return results
 
     def update_hoster(self, hoster: Hostingprovider, first: ipaddress.IPv4Address, last: ipaddress.IPv4Address):
         # use the ORM to update the deets for the corresponding hoster
-        gcip = GreencheckIp(
+        gcip, created = GreencheckIp.objects.update_or_create(
             active=True,
             ip_start=first,
             ip_end=last,
             hostingprovider=hoster
         )
         gcip.save()
-
-
-def ip_ranges_for_hoster(ip_ranges, ip_version="ipv4"):
-        if ip_version == "ipv6":
-            ip_addy = ipaddress.IPv6Network
-        else:
-            ip_addy = ipaddress.IPv4Network
-
-        ips_for_hoster = []
-
-        for ipr in ip_ranges:
-            network = ip_addy(ipr)
-
-            ips_for_hoster.append(network)
-
-        return ips_for_hoster
-
-
-def update_hoster(self, hoster: Hostingprovider, ip_range: ipaddress.IPv4Address):
-        first, last = ip_range[0], ip_range[-1]
-        # use the ORM to update the deets for the corresponding hoster
-        return GreencheckIp.update_or_create(
-            active=True,
-            ip_start=first,
-            ip_end=last,
-            hostingprovider=hoster
-        )
-
