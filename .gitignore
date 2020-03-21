@@ -129,3 +129,10 @@ static
 
 # do not track ansible cruft
 deploy.retry
+data
+
+*.prod
+*.prod.json
+.DS_Store
+cloud-auth.json
+.vscode/settings.json
