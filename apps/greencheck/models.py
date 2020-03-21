@@ -99,6 +99,16 @@ class IpAddressField(Field):
             return value
         return str(ipaddress.ip_address(int(value)))
 
+    def db_type(self, connection):
+        if connection.settings_dict['ENGINE'] == 'django.db.backends.mysql':
+            # the current type in the mysql database is DECIMAL
+            # use that for compatiability
+            return "DECIMAL"
+        else:
+            # TODO check what the postgres equiv is 
+            return "DECIMAL"
+
+
     def formfield(self, form_class=None, choices_form_class=None, **kwargs):
         """Return a django.forms.Field instance for this field."""
         defaults = {
@@ -130,7 +140,6 @@ class GreencheckIp(TimeStampedModel):
         return f'{self.ip_start} - {self.ip_end}'
 
     class Meta:
-        # managed = False
         db_table = 'greencheck_ip'
         indexes = [
             models.Index(fields=['ip_end'], name='ip_eind'),
