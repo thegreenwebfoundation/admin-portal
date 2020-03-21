@@ -1,11 +1,14 @@
 import json
 import requests
 import ipaddress
+import logging
 from apps.greencheck.models import GreencheckIp
 from apps.accounts.models import Hostingprovider
 
 from django.core.management.base import BaseCommand
 from django.db import connection
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = "Update IP ranges for cloud providers that publish them"
@@ -31,19 +34,22 @@ class AmazonCloudProvider:
     def update_ranges(self):
 
         iprs = self.fetch_ip_ranges()
+        res = []
 
         for region in self.green_regions:
             _, aws_code, host_id = region
 
             # pull out the ip ranges as strings
-            green_ipv4s = self.pullout_green_regions(iprs, region)
+            green_ipv4s = self.pullout_green_regions(iprs, aws_code)
             hoster = Hostingprovider.objects.get(pk=host_id)
 
             # then convert them to ip networks
             green_ip_ranges = self.ip_ranges_for_hoster(green_ipv4s)
 
+            assert(len(green_ip_ranges) > 0)
             # finally, pass the networks in, with the hoster
-            self.add_ip_ranges_to_hoster(hoster, green_ip_ranges)
+
+            res.append(self.add_ip_ranges_to_hoster(hoster, green_ip_ranges))
 
             # we need to do this for ipv4, and then ipv6
 
@@ -84,9 +90,11 @@ class AmazonCloudProvider:
 
     def add_ip_ranges_to_hoster(self, hoster, ip_networks):
         results = []
+        logger.debug(hoster)
+        logger.debug(f"ipnetworks length: {len(ip_networks)}")
         for network in ip_networks:
             res = self.update_hoster(hoster, network[0], network[-1])
-            results.push(res)
+            results.append(res)
 
         return results
 
@@ -99,3 +107,5 @@ class AmazonCloudProvider:
             hostingprovider=hoster
         )
         gcip.save()
+        logger.debug(gcip)
+        return gcip.id
