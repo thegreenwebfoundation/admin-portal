@@ -30,15 +30,17 @@ class AmazonCloudProvider:
         res = []
 
         for region in self.green_regions:
-            _, aws_code, host_id = region
+            region_name, aws_code, host_id = region
 
             # pull out the ip ranges as strings
             green_ipv4s = self.pullout_green_regions(ip_ranges, aws_code)
             green_ipv6s = self.pullout_green_regions(ip_ranges, aws_code, ip_version="ipv6")
 
             try:
+                logger.info(f"Looking IPs for {region_name}")
                 hoster = Hostingprovider.objects.get(pk=host_id)
             except Hostingprovider.DoesNotExist:
+                logger.warning(f"Hoster {region_name} not found")
                 continue
 
 
@@ -46,15 +48,18 @@ class AmazonCloudProvider:
             green_ipv4_ranges = self.ip_ranges_for_hoster(green_ipv4s)
             green_ipv6_ranges = self.ip_ranges_for_hoster(green_ipv6s, ip_version="ipv6")
 
+            logger.info(f"Found {len(green_ipv4_ranges)} ipv4 and {len(green_ipv6_ranges)} ipv6 network ranges for {region_name}. Adding new ones to database")
+
             assert(len(green_ipv4_ranges) > 0)
             assert(len(green_ipv6_ranges) > 0)
 
             # we need to do this for ipv4, and then ipv6
-            return {
+            res.append({
             'ipv4' : self.add_ip_ranges_to_hoster(hoster, green_ipv4_ranges),
             'ipv6' : self.add_ip_ranges_to_hoster(hoster, green_ipv6_ranges),
-            }
+            })
 
+        return res
 
     def fetch_ip_ranges(self):
         aws_endpoint = "https://ip-ranges.amazonaws.com/ip-ranges.json"
@@ -125,12 +130,13 @@ class Command(BaseCommand):
         aws = AmazonCloudProvider()
         ip_ranges = aws.fetch_ip_ranges()
         logger.info("Adding ranges")
-        res = aws.update_ranges(ip_ranges)
-        green_ipv4s, green_ipv6s = res.get('ipv4'), res.get('ipv6')
-        self.stdout.write(
-            f"Import Complete: Added {len(green_ipv4s)} new IPV4 addresses, "
-            f"and {len(green_ipv6s) } IPV6 addresses"
-        )
+        update_result = aws.update_ranges(ip_ranges)
+        for region in update_result:
+            green_ipv4s, green_ipv6s = region.get('ipv4'), region.get('ipv6')
+            self.stdout.write(
+                f"Import Complete: Added {len(green_ipv4s)} new IPV4 addresses, "
+                f"and {len(green_ipv6s) } IPV6 addresses"
+            )
 
 
 

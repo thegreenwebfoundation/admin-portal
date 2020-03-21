@@ -89,11 +89,11 @@ class TestAWSCLoudImporter:
 
         assert(GreencheckIp.objects.all().count() == 1)
 
-    def test_range(self, hosting_provider, aws_cloud_provider, aws_json_ip_ranges):
+    def test_update_range(self, hosting_provider, aws_cloud_provider, aws_json_ip_ranges):
         assert(GreencheckIp.objects.all().count() == 0)
         hosting_provider.save()
 
-        res = aws_cloud_provider.update_ranges(aws_cloud_provider.fetch_ip_ranges())
+        res, *rest = aws_cloud_provider.update_ranges(aws_cloud_provider.fetch_ip_ranges())
         ipv4s = res['ipv4']
         ipv6s = res['ipv6']
 
