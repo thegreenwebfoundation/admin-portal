@@ -77,13 +77,12 @@ class TestAWSCLoudImporter:
         assert(GreencheckIp.objects.all().count() == 0)
         hosting_provider.save()
 
-        res = aws_cloud_provider.update_ranges()
+        res = aws_cloud_provider.update_ranges(aws_cloud_provider.fetch_ip_ranges())
         ipv4s = res['ipv4']
         ipv6s = res['ipv6']
 
 
-
         assert(len(ipv4s) == 104)
         assert(len(ipv6s) == 20)
-        # we should have 124 ipv4 ranges added
+        # we should have 124 ranges in total
         assert(GreencheckIp.objects.all().count() == len(ipv4s) + len(ipv6s))
