@@ -93,7 +93,7 @@ class TestAWSCLoudImporter:
         assert(GreencheckIp.objects.all().count() == 0)
         hosting_provider.save()
 
-        res, *rest = aws_cloud_provider.update_ranges(aws_cloud_provider.fetch_ip_ranges())
+        res, *rest = aws_cloud_provider.update_ranges(aws_json_ip_ranges)
         ipv4s = res['ipv4']
         ipv6s = res['ipv6']
 
@@ -106,6 +106,10 @@ class TestAWSCLoudImporter:
 
 @pytest.mark.django_db
 class TestAWSImportCommand:
+    """
+    This just tests that we have a management command that can run.
+    We _could_ mock the call to fetch ip ranges, if this turns out to be a slow test.
+    """
 
     def test_handle(self, aws_cloud_provider):
         out = StringIO()

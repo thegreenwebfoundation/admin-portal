@@ -25,6 +25,8 @@ class AmazonCloudProvider:
         else:
             self.green_regions = GREEN_REGIONS
 
+        logger.info(f"Instantiated with {len(self.green_regions)} region(s) to update")
+
     def update_ranges(self, ip_ranges):
 
         res = []
