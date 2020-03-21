@@ -41,17 +41,23 @@ class AmazonCloudProvider:
 
             # pull out the ip ranges as strings
             green_ipv4s = self.pullout_green_regions(iprs, aws_code)
+            green_ipv6s = self.pullout_green_regions(iprs, aws_code, ip_version="ipv6")
+
             hoster = Hostingprovider.objects.get(pk=host_id)
 
             # then convert them to ip networks
-            green_ip_ranges = self.ip_ranges_for_hoster(green_ipv4s)
+            green_ipv4_ranges = self.ip_ranges_for_hoster(green_ipv4s)
+            green_ipv6_ranges = self.ip_ranges_for_hoster(green_ipv6s, ip_version="ipv6")
 
-            assert(len(green_ip_ranges) > 0)
-            # finally, pass the networks in, with the hoster
-
-            res.append(self.add_ip_ranges_to_hoster(hoster, green_ip_ranges))
+            assert(len(green_ipv4_ranges) > 0)
+            assert(len(green_ipv6_ranges) > 0)
 
             # we need to do this for ipv4, and then ipv6
+            return {
+            'ipv4' : self.add_ip_ranges_to_hoster(hoster, green_ipv4_ranges),
+            'ipv6' : self.add_ip_ranges_to_hoster(hoster, green_ipv6_ranges),
+            }
+
 
     def fetch_ip_ranges(self):
         aws_endpoint = "https://ip-ranges.amazonaws.com/ip-ranges.json"
@@ -64,11 +70,13 @@ class AmazonCloudProvider:
 
         if ip_version == "ipv6":
             prefix = 'ipv6_prefixes'
+            aws_lookup_key = "ipv6_prefix"
         else:
             prefix = "prefixes"
+            aws_lookup_key = "ip_prefix"
 
         return [
-            aws_ip['ip_prefix'] for aws_ip in ip_ranges[prefix]
+            aws_ip[aws_lookup_key] for aws_ip in ip_ranges[prefix]
             if aws_ip['region'] == region
         ]
 
@@ -94,7 +102,8 @@ class AmazonCloudProvider:
         logger.debug(f"ipnetworks length: {len(ip_networks)}")
         for network in ip_networks:
             res = self.update_hoster(hoster, network[0], network[-1])
-            results.append(res)
+            if res:
+                results.append(res)
 
         return results
 
@@ -107,5 +116,7 @@ class AmazonCloudProvider:
             hostingprovider=hoster
         )
         gcip.save()
-        logger.debug(gcip)
-        return gcip.id
+
+        if created:
+            logger.debug(gcip)
+            return gcip
