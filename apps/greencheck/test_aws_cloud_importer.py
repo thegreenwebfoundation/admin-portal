@@ -24,7 +24,8 @@ def hosting_provider():
 
 @pytest.fixture
 def aws_cloud_provider(hosting_provider):
-    return update_aws_ip_ranges.AmazonCloudProvider((
+    hosting_provider.save()
+    return update_aws_ip_ranges.AmazonCloudProvider(green_regions=(
         ('Amazon US West', 'us-west-2', hosting_provider.id),
     ))
 
@@ -66,6 +67,16 @@ class TestAWSCLoudImporter:
 
         hosting_provider.save()
 
+        # create one new green IP range
         aws_cloud_provider.update_hoster(hosting_provider, ip_start, ip_end)
+
+        assert(GreencheckIp.objects.all().count() == 1)
+
+    @pytest.mark.django_db
+    def test_range(self, hosting_provider, aws_cloud_provider):
+        assert(GreencheckIp.objects.all().count() == 0)
+        hosting_provider.save()
+
+        res = aws_cloud_provider.update_ranges()
 
         assert(GreencheckIp.objects.all().count() > 0)
