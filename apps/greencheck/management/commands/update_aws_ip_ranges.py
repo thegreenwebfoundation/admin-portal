@@ -31,17 +31,16 @@ class AmazonCloudProvider:
             ('Amazon Montreal', 'ca-central-1', 700),
         )
 
-    def update_ranges(self):
+    def update_ranges(self, ip_ranges):
 
-        iprs = self.fetch_ip_ranges()
         res = []
 
         for region in self.green_regions:
             _, aws_code, host_id = region
 
             # pull out the ip ranges as strings
-            green_ipv4s = self.pullout_green_regions(iprs, aws_code)
-            green_ipv6s = self.pullout_green_regions(iprs, aws_code, ip_version="ipv6")
+            green_ipv4s = self.pullout_green_regions(ip_ranges, aws_code)
+            green_ipv6s = self.pullout_green_regions(ip_ranges, aws_code, ip_version="ipv6")
 
             hoster = Hostingprovider.objects.get(pk=host_id)
 
