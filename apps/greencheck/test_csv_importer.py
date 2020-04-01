@@ -13,9 +13,8 @@ from apps.greencheck.models import GreencheckIp
 
 @pytest.mark.django_db
 class TestImporterCSV:
-    @pytest.mark.only
     def test_add_green_ipv4_for_hoster(self, hosting_provider, csv_file):
-        # so we have an id we can use when associated new IPs with it
+        # so we have an id we can use when associating new IPs with the hoster
         hosting_provider.save()
         bulk_importer = ImporterCSV(hosting_provider, csv_file)
 
@@ -28,22 +27,18 @@ class TestImporterCSV:
         for ip_addy in bulk_importer.ips:
             assert str(ip_addy) in green_ips
 
-    @pytest.mark.only
     def test_needs_a_path_for_the_csv(self, hosting_provider):
         with pytest.raises(Exception):
             assert ImporterCSV(hosting_provider)
 
-    @pytest.mark.only
     def test_needs_a_hosting_provider(self, csv_file):
         with pytest.raises(MissingHoster):
             assert ImporterCSV("2", csv_file)
 
-    @pytest.mark.only
     def test_needs_a_path_for_the_csv(self, hosting_provider):
         with pytest.raises(MissingPath):
             assert ImporterCSV(hosting_provider, None)
 
-    @pytest.mark.only
     def test_needs_a_hosting_provider(self, csv_file):
         with pytest.raises(MissingHoster):
             assert ImporterCSV("2", csv_file)
@@ -56,7 +51,6 @@ class TestCSVImportCommand:
     for existence of the necessary command line args.
     """
 
-    @pytest.mark.only
     def test_handle(self, hosting_provider, csv_file):
         out = StringIO()
         hosting_provider.save()
