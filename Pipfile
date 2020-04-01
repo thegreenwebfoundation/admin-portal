@@ -37,6 +37,7 @@ db-to-sqlite = "*"
 sqlite-utils = "*"
 google-cloud-storage = "*"
 sentry-sdk = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.6"
