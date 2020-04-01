@@ -4,6 +4,24 @@ import pytest
 
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.models import GreencheckIp
+from apps.accounts.models import User
+
+
+@pytest.fixture
+def hosting_user(hosting_provider):
+
+    hosting_provider.save()
+
+    user = User(
+        username='joe_bloggs',
+        email='joe.bloggs@greening.digital',
+        # for tests to pass, we NEED a hosting provider
+        # this can't be right.
+        hostingprovider=hosting_provider
+    )
+    user.save()
+
+    return user
 
 
 @pytest.fixture
