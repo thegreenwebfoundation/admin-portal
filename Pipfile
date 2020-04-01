@@ -8,6 +8,7 @@ django-debug-toolbar = "*"
 pylint = "*"
 pylint-django = "*"
 coverage = "*"
+codecov = "*"
 flake8 = "*"
 ipython = "*"
 ipdb = "*"
@@ -16,6 +17,7 @@ werkzeug = "*"
 pytest = "*"
 pytest-django = "*"
 pytest-watch = "*"
+pytest-cov = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
@@ -37,7 +39,6 @@ db-to-sqlite = "*"
 sqlite-utils = "*"
 google-cloud-storage = "*"
 sentry-sdk = "*"
-pytest-cov = "*"
 
 [requires]
 python_version = "3.6"
