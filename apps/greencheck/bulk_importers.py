@@ -1,20 +1,23 @@
+import csv
 import ipaddress
 import json
-from io import StringIO
-import csv
 import logging
-
-logger = logging.getLogger(__name__)
-
+from io import StringIO
 
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.models import GreencheckIp
 
-class MissingHoster(Exception): pass
-class MissingPath(Exception): pass
+logger = logging.getLogger(__name__)
+
+class MissingHoster(Exception):
+    pass
+
+
+class MissingPath(Exception):
+    pass
+
 
 class ImporterCSV:
-
     def __init__(self, hoster: Hostingprovider, path):
         self.ips = []
 
@@ -41,7 +44,9 @@ class ImporterCSV:
                 logger.exception(f"Couldn't load ipaddress for row: {row}")
             except Exception:
                 logger.exception(f"New error, dropping to debug")
-                import ipdb ; ipdb.set_trace()
+                import ipdb
+
+                ipdb.set_trace()
 
     def run(self):
 
@@ -53,4 +58,4 @@ class ImporterCSV:
             gcip.save()
             green_ips.append(gcip)
 
-        return {"ipv4": green_ips }
+        return {"ipv4": green_ips}
