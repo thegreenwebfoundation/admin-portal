@@ -1,18 +1,18 @@
-import pytest
-import pathlib
 import ipaddress
 import json
+import pathlib
 from io import StringIO
 
+import pytest
 from django.core.management import call_command
 
 from apps.accounts.models import Hostingprovider
-from apps.greencheck.models import GreencheckIp
 from apps.greencheck.bulk_importers import ImporterCSV, MissingHoster, MissingPath
+from apps.greencheck.models import GreencheckIp
+
 
 @pytest.mark.django_db
 class TestImporterCSV:
-
     @pytest.mark.only
     def test_add_green_ipv4_for_hoster(self, hosting_provider, csv_file):
         # so we have an id we can use when associated new IPs with it
@@ -24,7 +24,7 @@ class TestImporterCSV:
         res = bulk_importer.run()
         green_ips = [gcip.ip_start for gcip in GreencheckIp.objects.all()]
 
-        assert len(res['ipv4']) == 10
+        assert len(res["ipv4"]) == 10
         for ip_addy in bulk_importer.ips:
             assert str(ip_addy) in green_ips
 
@@ -42,7 +42,6 @@ class TestImporterCSV:
     def test_needs_a_path_for_the_csv(self, hosting_provider):
         with pytest.raises(MissingPath):
             assert ImporterCSV(hosting_provider, None)
-
 
     @pytest.mark.only
     def test_needs_a_hosting_provider(self, csv_file):
