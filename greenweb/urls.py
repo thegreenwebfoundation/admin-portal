@@ -27,15 +27,7 @@ if settings.DEBUG:
         path('__debug__/', include(debug_toolbar.urls))
     ]
 
-# this is a hack, to silence the stream of requests
-# from the graphite instance
-
-def do_nothing(request):
-    return HttpResponse("ok")
-
 urlpatterns += [
     path('', admin.urls),
     path('', include(accounts_urls)),
-    # added to make logs quiet in production
-    path("tags/tagMultiSeries", do_nothing)
 ]
