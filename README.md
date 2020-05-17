@@ -1,4 +1,4 @@
-# Green Web Foundation
+# Green Web Foundation Admin Portal
 
 Welcome to the administration system for the Green Web Foundation.
 
@@ -10,7 +10,7 @@ Just here for the datasets? See the [datasets](https://github.com/thegreenwebfou
 
 ## Installling the project
 
-This is a 2.2 Django project, runnign on MySQL, and is tested on OS X and linux systems.
+This is a 2.2 Django project, running on MySQL, and is tested on OS X and linux systems.
 
 To install it, create a virtual environment, and install the required librarys
 
