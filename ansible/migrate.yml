@@ -1,0 +1,12 @@
+---
+  - name: Deploy the TGWF django admin
+    hosts:
+      - all
+    remote_user: "deploy"
+    become: no
+
+    tasks:
+      - name: run migration
+        shell: "pipenv run ./manage.py migrate"
+        args:
+          chdir: "{{ project_root }}/current"
