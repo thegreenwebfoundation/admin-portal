@@ -16,6 +16,7 @@ class TempType(DjangoChoices):
 class ModelType(DjangoChoices):
     green_energy = ChoiceItem('groeneenergie')
     compensation = ChoiceItem('compensatie')
+    mixed = ChoiceItem('mixed')
 
 
 class PartnerChoice(DjangoChoices):
