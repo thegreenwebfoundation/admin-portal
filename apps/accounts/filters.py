@@ -26,7 +26,7 @@ class YearFilterMixin():
 
         return (start_at, end_at)
 
-class YearDCFilter(SimpleListFilter, YearFilterMixin):
+class YearDCFilter(YearFilterMixin, SimpleListFilter):
     title = 'Last approved datacentre'
     parameter_name = 'last_created_dc'
 
@@ -39,7 +39,7 @@ class YearDCFilter(SimpleListFilter, YearFilterMixin):
             hostingproviderdatacenter__created_at__range=(start_at, end_at)
         )
 
-class YearIPFilter(SimpleListFilter, YearFilterMixin):
+class YearIPFilter(YearFilterMixin, SimpleListFilter):
     title = 'Last approved IP Range (sloooowww)'
     parameter_name = 'last_approved_ip'
 
@@ -52,7 +52,7 @@ class YearIPFilter(SimpleListFilter, YearFilterMixin):
                 greencheckipapprove__created__range=(start_at, end_at)
         )
 
-class YearASNFilter(SimpleListFilter, YearFilterMixin):
+class YearASNFilter(YearFilterMixin, SimpleListFilter):
     title = 'Last approved ASN submission'
     parameter_name = 'last_approved_asn'
 
