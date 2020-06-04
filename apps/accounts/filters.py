@@ -3,9 +3,7 @@ from django_countries.data import COUNTRIES
 from datetime import datetime
 from django.utils import timezone
 
-class YearDCFilter(SimpleListFilter):
-    title = 'Last updated datacentre'
-    parameter_name = 'last_evidence'
+class YearFilterMixin():
 
     def last_15_years(self):
         current_year = datetime.now().year
@@ -15,81 +13,57 @@ class YearDCFilter(SimpleListFilter):
     def lookups(self, request, model_admin):
         return self.last_15_years()
 
+    def year_to_range(self, year: str= None):
+        """
+        Pass in a string for a year, and return two timezone aware
+        datetimes to use for things like range queries by date.
+        """
+
+        year = int(year)
+        tz = timezone.get_current_timezone()
+        start_at = datetime(year=year, month=1, day=1, tzinfo=tz)
+        end_at = datetime(year=year+1, month=1, day=1, tzinfo=tz)
+
+        return (start_at, end_at)
+
+class YearDCFilter(SimpleListFilter, YearFilterMixin):
+    title = 'Last approved datacentre'
+    parameter_name = 'last_created_dc'
+
     def queryset(self, request, queryset):
         if self.value() is None:
             return queryset
 
-        year = int(self.value())
-        start_at = datetime(year=year, month=1, day=1)
-        end_at = datetime(year=year+1, month=1, day=1)
-
-        for dt in [start_at, end_at]:
-            if timezone.is_naive(dt):
-                timezone.make_aware(dt)
-
+        start_at, end_at = self.year_to_range(self.value())
         return queryset.filter(
-                hostingproviderdatacenter__created_at__gt=start_at
-            ).filter(
-                hostingproviderdatacenter__created_at__lt=end_at
-            )
+            hostingproviderdatacenter__created_at__range=(start_at, end_at)
+        )
 
-class YearIPFilter(SimpleListFilter):
+class YearIPFilter(SimpleListFilter, YearFilterMixin):
     title = 'Last approved IP Range (sloooowww)'
     parameter_name = 'last_approved_ip'
 
-    def last_15_years(self):
-        current_year = datetime.now().year
-        return ((f"{current_year - x}", f"{current_year - x}") for x in range(15))
-
-    def lookups(self, request, model_admin):
-        return self.last_15_years()
-
     def queryset(self, request, queryset):
         if self.value() is None:
             return queryset
 
-        year = int(self.value())
-        start_at = datetime(year=year, month=1, day=1)
-        end_at = datetime(year=year+1, month=1, day=1)
-
-        for dt in [start_at, end_at]:
-            if timezone.is_naive(dt):
-                timezone.make_aware(dt)
-
+        start_at, end_at = self.year_to_range(self.value())
         return queryset.filter(
-                greencheckipapprove__created__gt=start_at
-            ).filter(
-                greencheckipapprove__created__lt=end_at
-            )
+                greencheckipapprove__created__range=(start_at, end_at)
+        )
 
-class YearASNFilter(SimpleListFilter):
+class YearASNFilter(SimpleListFilter, YearFilterMixin):
     title = 'Last approved ASN submission'
     parameter_name = 'last_approved_asn'
 
-    def last_15_years(self):
-        current_year = datetime.now().year
-        return ((f"{current_year - x}", f"{current_year - x}") for x in range(15))
-
-    def lookups(self, request, model_admin):
-        return self.last_15_years()
-
     def queryset(self, request, queryset):
         if self.value() is None:
             return queryset
 
-        year = int(self.value())
-        start_at = datetime(year=year, month=1, day=1)
-        end_at = datetime(year=year+1, month=1, day=1)
-
-        for dt in [start_at, end_at]:
-            if timezone.is_naive(dt):
-                timezone.make_aware(dt)
-
+        start_at, end_at = self.year_to_range(self.value())
         return queryset.filter(
-                greencheckasnapprove__created__gt=start_at
-            ).filter(
-                greencheckasnapprove__created__lt=end_at
-            )
+            greencheckasnapprove__created__range=(start_at, end_at)
+        )
 
 class ShowWebsiteFilter(SimpleListFilter):
     title = 'shown on website'
