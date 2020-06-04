@@ -99,6 +99,9 @@ class HostingCertificateInline(admin.TabularInline):
 class HostingAdmin(admin.ModelAdmin):
     form = forms.HostingAdminForm
     list_filter = [
+        filters.YearDCFilter,
+        filters.YearASNFilter,
+        filters.YearIPFilter,
         filters.ShowWebsiteFilter,
         filters.PartnerFilter,
         filters.CountryFilter
