@@ -1,35 +1,11 @@
 {% extends "admin/change_form.html" %}
 
-{% load i18n admin_urls static admin_modify %}
-
-{% block content %}<div id="content-main">
-
-<form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
-<div>
-
 {% block field_sets %}
-{% for fieldset in adminform %}
-  {% if fieldset.name == "Hostingprovider info" %}
-    {% include "admin/accounts/hostingprovider/hosting_provider_fieldset.html" %}
-  {% else %}
-    {% include "admin/includes/fieldset.html" %}
-  {% endif %}
-{% endfor %}
-{% endblock %}
-
-{% block after_field_sets %}{% endblock %}
-
-{% block inline_field_sets %}
-{% for inline_admin_formset in inline_admin_formsets %}
-    {% include inline_admin_formset.opts.template %}
-{% endfor %}
-{% endblock %}
-
-{% block after_related_objects %}{% endblock %}
-
-{# JavaScript for prepopulated fields #}
-{% prepopulated_fields_js %}
-
-</div>
-</form></div>
+  {% for fieldset in adminform %}
+    {% if fieldset.name == "Hostingprovider info" %}
+      {% include "admin/accounts/hostingprovider/hosting_provider_fieldset.html" %}
+    {% else %}
+      {% include "admin/includes/fieldset.html" %}
+    {% endif %}
+  {% endfor %}
 {% endblock %}
