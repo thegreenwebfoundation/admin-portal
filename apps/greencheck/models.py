@@ -156,7 +156,7 @@ class Greencheck(models.Model):
     url = models.CharField(max_length=255)
 
     class Meta:
-        db_table = 'greencheck'
+        db_table = 'greencheck_2020'
 
     def __str__(self):
         return f'{self.url} - {self.ip}'
@@ -317,3 +317,23 @@ class GreencheckWeeklyStats(models.Model):
     class Meta:
         # managed = False
         db_table = 'greencheck_weekly'
+
+class TopUrl(models.Model):
+    url = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'top_1m_urls'
+
+
+class GreenPresenting(models.Model):
+
+    url = models.CharField(max_length=255)
+    hosted_by = models.CharField(max_length=255)
+    hosted_by_website = models.CharField(max_length=255)
+    partner = models.CharField(max_length=255)
+    green = models.BooleanField()
+    hosted_by_id = models.IntegerField()
+    modified = models.DateTimeField()
+
+    class Meta:
+        db_table = "green_presenting"
