@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+
+{% block field_sets %}
+  {% for fieldset in adminform %}
+    {% if fieldset.name == "Personal info" %}
+      {% include "admin/accounts/user/user_fieldset.html" %}
+    {% else %}
+      {% include "admin/includes/fieldset.html" %}
+    {% endif %}
+  {% endfor %}
+{% endblock %}
+
+
