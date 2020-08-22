@@ -1,0 +1,69 @@
+<fieldset class="module aligned {{ fieldset.classes }}">
+    {% if fieldset.name %}<h2>{{ fieldset.name }}</h2>{% endif %}
+    {% if fieldset.description %}
+        <div class="description">{{ fieldset.description|safe }}</div>
+    {% endif %}
+    {% for line in fieldset %}
+        <div class="form-row{% if line.fields|length_is:'1' and line.errors %} errors{% endif %}{% if not line.has_visible_field %} hidden{% endif %}{% for field in line %}{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% endfor %}">
+            {% if line.fields|length_is:'1' %}{{ line.errors }}{% endif %}
+            {% for field in line %}
+                <div{% if not line.fields|length_is:'1' %} class="fieldBox{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% if not field.is_readonly and field.errors %} errors{% endif %}{% if field.field.is_hidden %} hidden{% endif %}"{% elif field.is_checkbox %} class="checkbox-row"{% endif %}>
+                    {% if not line.fields|length_is:'1' and not field.is_readonly %}{{ field.errors }}{% endif %}
+                    {% if field.is_checkbox %}
+                        {{ field.field }}{{ field.label_tag }}
+                    {% else %}
+                        {{ field.label_tag }}
+                        {% if field.is_readonly %}
+                            <div class="readonly">{{ field.contents }}</div>
+                        {% else %}
+                            {{ field.field }}
+                        {% endif %}
+                    {% endif %}
+                    {% if field.field.help_text %}
+                        <div class="help">{{ field.field.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+
+              {% with original.hostingprovider as hosting_provider %}
+                {% if hosting_provider %}
+                  {# these styles added largely copy and pasted from django admin for visual consistency #}
+                  <style>
+
+                    div.hosting_provider_addition {
+                      clear:both;
+                    }
+
+                    div.hosting_provider_addition label {
+                      display: block;
+                      padding: 4px 10px 0 0;
+                      float: left;
+                      width: 160px;
+                      word-wrap: break-word;
+                      line-height: 1;
+                      font-weight:bold;
+                      color:#333;
+                    }
+                    .hosting_provider_label:after {
+                      content: '';
+                      display: inline-block;
+                      vertical-align: middle;
+                      height: 26px;
+                    }
+                    </style>
+
+                  <div class="hosting_provider_addition">
+                      <label>
+                        Hosting Provider:
+                      </label>
+                      <div class="readonly">
+                        <a href="{% url 'greenweb_admin:accounts_hostingprovider_change' hosting_provider.id %}">
+                      {{ hosting_provider }}
+                      </a>
+                      </div>
+                  </div>
+                {% endif %}
+              {% endwith %}
+            {% endfor %}
+          {% endfor %}
+        </div>
+</fieldset>
