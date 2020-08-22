@@ -57,4 +57,27 @@
 
 
     {% endwith %}
+
+
+    <h2>Associated datacenters</h2>
+    {% with original.datacenter.all as datacenters %}
+
+    {% if datacenters %}
+      <div class="form-row">
+      <p>This hoster uses the following datacentres:</p>
+      </div>
+      {% for dc in datacenters %}
+        <div class="form-row">
+          <a href="{% url 'greenweb_admin:accounts_datacenter_change' dc.id %}">
+            {{ dc }}
+          </a>
+        </div>
+      {% endfor%}
+    {% else %}
+      <div class="form-row">
+        <p>These no datacentres associated with this hosting provider.</p>
+      </div>
+    {% endif %}
+
+    {% endwith %}
 </fieldset>
