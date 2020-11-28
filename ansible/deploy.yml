@@ -6,30 +6,15 @@
   become: no
 
   vars:
-    project_git_repo: "git@github.com:thegreenwebfoundation/greenwebfoundation-admin.git"
+    project_git_repo: "git@github.com:thegreenwebfoundation/admin-portal.git"
     project_deploy_strategy: git
     project_version: "master"
     project_local_path: "../"
-    project_has_npm: false
-    project_has_bower: false
-    project_npm_modules_path: node_modules
-    # TODO can we get rid of these? check
-    project_copy_previous_composer_vendors: false
-    project_copy_previous_npm_modules: false
-    project_copy_previous_bower_components: false
     restart_supervisor: false
-    mailgun_api_key: "{{ lookup('env','MAILGUN_API_KEY') }}"
-    secret_key: "{{ lookup('env','SECRET_KEY') }}"
-    database_url: "{{ lookup('env','DATABASE_URL') }}"
-    django_settings_module: "{{ lookup('env','DJANGO_SETTINGS_MODULE') }}"
-    google_application_credentials: "{{ lookup('env','GOOGLE_APPLICATION_CREDENTIALS') }}"
     supervisor_user: "deploy"
     gunicorn_app: "gunicorn_{{ tgwf_domain_name }}"
-
     project_unwanted_items:
       - .git
-
-    project_has_composer: no
 
     project_finalize: true
 
@@ -37,12 +22,22 @@
     - f500.project_deploy
 
   tasks:
-    - name: move .env file to shared directory
-      copy:
-        src: ".env.{{ tgwf_stage }}"
-        dest: "{{ project_root }}/shared/.env"
+    - name: set up directory for deploying django app
+      file:
+        path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+        state: directory
+        mode: '0755'
+        owner: deploy
+        group: deploy
+      become: yes
 
     - name: move .env file to shared directory
+      template:
+        src: "templates/dotenv.j2"
+        dest: "{{ project_root }}/shared/.env"
+      become: yes
+
+    - name: move cloud-auth
       copy:
         src: "cloud-auth.{{ tgwf_stage }}.json"
         dest: "{{ project_root }}/shared/cloud-auth.json"
@@ -59,14 +54,27 @@
         dest: "{{ project_root }}/current/cloud-auth.json"
         state: link
 
+    - name: install pipenv and mariadb libraries for python
+      apt:
+        pkg:
+          - python3-venv
+          - python3-dev
+          - build-essential
+          - libmariadb3
+          - libmariadb-dev
+        state: present
+      become: yes
+
     - name: install python dependencies with pipenv
-      shell: "pipenv install"
+      shell: "pipenv sync"
       args:
         chdir: "{{ project_root }}/current"
+
     - name: collect static files for django
       shell: "pipenv run ./manage.py collectstatic --no-input"
       args:
         chdir: "{{ project_root }}/current"
+
     - name: set up nginx server entry
       template:
         src: "nginx.conf.j2"
@@ -79,11 +87,13 @@
         dest: "/etc/nginx/sites-enabled/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
         state: link
       become: yes
+
     - name: set up script for running gunicorn, via supervisor
       template:
         src: "run_gunicorn.sh.j2"
         dest: "{{ project_root }}/current/run_gunicorn.sh"
       become: yes
+
     - name: set up supervisor entry
       template:
         src: "supervisor.gunicorn.conf.j2"
