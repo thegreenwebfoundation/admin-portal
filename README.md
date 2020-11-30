@@ -8,11 +8,11 @@ It lets staff working for hosting companies update information about how they po
 
 Just here for the datasets? See the [datasets](https://github.com/thegreenwebfoundation/greenwebfoundation-admin/blob/master/docs/working-with-greenweb-datasets.md)
 
-## Installling the project
+## Installing the project
 
 This is a 2.2 Django project, running on MySQL, and is tested on OS X and linux systems.
 
-To install it, create a virtual environment, and install the required librarys
+To install it, create a virtual environment, and install the required libraries
 
 ```
 python -m venv venv
@@ -22,7 +22,7 @@ source venv/bin/activate
 pipenv install
 ```
 
-### Credentials
+### Credentials
 
 Create a `.env` file where you can store your local secrets or specific settings.
 
