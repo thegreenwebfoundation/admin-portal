@@ -29,6 +29,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField(null=True)
     locked = models.BooleanField(default=False)
     password = models.CharField('password', max_length=128, db_column='django_password')
+    legacy_password = models.CharField('legacy_password', max_length=128, db_column='password')
     # password already provided in abstract base user.
     password_requested_at = models.DateTimeField(null=True)
     # contains a php array, needs to be deserialized with something like in this
@@ -75,6 +76,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.username_canonical = self.username.lower()
         self.email_canonical = self.email
         self.email = self.email.lower()
+
+        # we need this to maintain capatibility with the legacy admin
+        # system, which still looks for the `password` column on the
+        # fos_user table
+        self.legacy_password = self.password
         super().save(args, **kwargs)
 
     def email_user(self, subject, message, from_email=None, **kwargs):
