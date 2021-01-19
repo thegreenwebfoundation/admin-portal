@@ -7,11 +7,8 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(console)
 
 from apps.greencheck.legacy_workers import LegacySiteCheckLogger, SiteCheck
-# 1. make the logger:
-# 2. parse the message
-# 3. fetch further info from db
-# 4. write to green presenting db
-# 5. write to logger
+from apps.greencheck.models import Greencheck, GreenPresenting
+from apps.accounts.models import Hostingprovider
 
 @pytest.fixture
 def serialised_php():
@@ -20,8 +17,6 @@ def serialised_php():
 @pytest.fixture
 def sitecheck_logger():
     return LegacySiteCheckLogger()
-
-
 
 @pytest.mark.only
 class TestSiteCheckConsumerParsePHP:
@@ -43,6 +38,7 @@ class TestSiteCheckConsumerParsePHP:
             assert result.ip == "172.217.21.238"
             assert result.url == "google.com"
             assert result.data == True
+            assert result.green == True
             assert result.hosting_provider_id == 595
             assert result.match_type == "as"
             assert result.match_ip_range == 198
@@ -64,3 +60,30 @@ class TestSiteCheckConsumerParsePHP:
             result = sitecheck_logger.parse_serialised_php(serialised_php)
             fetched_val = sitecheck_logger.prefixed_attr(key)
             assert fetched_val == val
+
+    def test_logging_database(self, db, sitecheck_logger, serialised_php):
+
+        Hostingprovider.objects.create(
+            id=595,
+            archived=False,
+            country="US",
+            customer=False,
+            icon="",
+            iconurl="",
+            model="groeneenergie",
+            name="Google",
+            partner="",
+            showonwebsite=True,
+            website="http://google.com",
+        )
+
+        assert Greencheck.objects.count() == 0
+        assert GreenPresenting.objects.count() == 0
+
+        sitecheck_logger.log_sitecheck_to_database(serialised_php)
+
+        assert Greencheck.objects.count() == 1
+        assert GreenPresenting.objects.count() == 1
+
+
+
