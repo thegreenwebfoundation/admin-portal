@@ -4,6 +4,7 @@ from django.utils import dateparse
 from apps.greencheck.models import Greencheck, GreenPresenting, GreencheckIp
 from apps.accounts.models import Hostingprovider
 
+import tld
 import logging
 
 console = logging.StreamHandler()
@@ -152,17 +153,32 @@ class LegacySiteCheckLogger:
 
         return formatted_date
 
-    def log_sitecheck_to_database(self, serialised_php):
+    def parse_and_log_to_database(self, serialised_php):
         """
         Accept a message, like the kind sent over rabbitmq, and
         write it to the greencheck logging tables, as well as updating
         the green domain table if the checked site is green.
         """
-
-        # fetch sitecheck
+        # fetch parse out our sitecheck
         sitecheck = self.sitecheck_from_php_dict(serialised_php)
 
-        hosting_provider = Hostingprovider.objects.get(pk=sitecheck.hosting_provider_id)
+        # log it our database and caches
+        try:
+            self.log_sitecheck_to_database(sitecheck)
+        except Exception as error:
+            logger.exception(f"Problem logging to our database: {error}")
+            import ipdb ; ipdb.set_trace()
+
+
+    def log_sitecheck_to_database(self, sitecheck: SiteCheck):
+        """
+        Accept a sitecheck and log to the greencheck logging table,
+        along with the green domains table (green_presenting).
+
+        """
+        hosting_provider = Hostingprovider.objects.get(
+            pk=sitecheck.hosting_provider_id
+        )
 
         # update green_presenting if green
         if sitecheck.green:
@@ -179,26 +195,44 @@ class LegacySiteCheckLogger:
             green_domain.green = sitecheck.green
             green_domain.save()
 
-            # green_domain.save()
 
-        try:
-            maybe_greencheck_ip_range = GreencheckIp.objects.get(
-                pk=sitecheck.match_ip_range
-            )
-            maybe_greencheck_ip_range_id = maybe_greencheck_ip_range.id
-        except GreencheckIp.DoesNotExist:
-            maybe_greencheck_ip_range_id = None
+        # maybe_ip_range_id = self.maybe_greencheck_ip_range(
+        #     sitecheck.match_ip_range
+        # )
+        fixed_tld, *_ = tld.get_tld(sitecheck.url, fix_protocol=True),
 
-        # write it to the log
+        # finally write to the greencheck table
         # import ipdb ; ipdb.set_trace()
+
         Greencheck.objects.create(
             hostingprovider=hosting_provider,
-            greencheck_ip_id=maybe_greencheck_ip_range_id,
+            greencheck_ip=sitecheck.match_ip_range,
             date=dateparse.parse_datetime(sitecheck.checked_at),
-            green=1,
+            green="yes",
             ip=sitecheck.ip,
-            tld=".com",
+            tld=fixed_tld,
             type=sitecheck.match_type,
             url=sitecheck.url,
         )
+
+
+    def maybe_greencheck_ip_range(self, ip_range_id: int = None):
+        """
+        Check for a matching Greencheck IP range with the id
+        `ip_range_id`, and either return it, or `None`.
+
+        We do this because when the original ip range with
+        that id is no longer in existence, we get an an
+        integrity error - id no longer points to
+        a matching row. So we pass in None, which is acceptable.
+        """
+        try:
+            maybe_greencheck_ip_range = GreencheckIp.objects.get(
+                pk=ip_range_id
+                #
+            )
+            return maybe_greencheck_ip_range.id
+
+        except GreencheckIp.DoesNotExist:
+            return None
 

@@ -4,7 +4,6 @@ import ipaddress
 from django import forms
 from django.db import models
 from django.db.models.fields import Field
-from django_unixdatetimefield import UnixDateTimeField
 from django_mysql.models import EnumField
 from django.core import exceptions
 from django.core import validators
@@ -145,10 +144,16 @@ class Greencheck(models.Model):
     hostingprovider = models.ForeignKey(
         Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
     )
-    greencheck_ip = models.ForeignKey(
-        GreencheckIp, on_delete=models.CASCADE, db_column='id_greencheck', blank=True, null=True
-    )
-    date = UnixDateTimeField(db_column='datum')
+    # NOTE: ideally we would have this as a Foreign key to the greencheck
+    # table as that's where the recorded ip ranges we check against are.
+    # However, some `Greencheckip` ip range objects have been deleted over
+    # the years. We might be better off with a speical 'DELETED' Greencheck IP
+    # to at least track this properly.
+    greencheck_ip = models.IntegerField(db_column='id_greencheck')
+    # greencheck_ip = models.ForeignKey(
+    #     GreencheckIp, on_delete=models.CASCADE, db_column='id_greencheck', blank=True, null=True
+    # )
+    date = models.DateTimeField(db_column='datum')
     green = EnumField(choices=BoolChoice.choices)
     ip = IpAddressField()
     tld = models.CharField(max_length=64)
@@ -196,7 +201,7 @@ class GreenList(models.Model):
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
     )
-    last_checked = UnixDateTimeField()
+    last_checked = models.DateTimeField()
     name = models.CharField(max_length=255, db_column='naam')
     type = EnumField(choices=GreenlistChoice.choices)
     url = models.CharField(max_length=255)
