@@ -92,6 +92,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'greenweb.wsgi.application'
 
 
+# Because our greencheck tables use TIMESTAMP, we can't use timezone aware dates
+# https://docs.djangoproject.com/en/3.1/ref/databases/#timestamp-columns
+USE_TZ = False
+
 # Database
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
@@ -130,7 +134,6 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
-USE_TZ = True
 
 # Email settings
 DEFAULT_FROM_EMAIL = 'support@thegreenwebfoundation.org'

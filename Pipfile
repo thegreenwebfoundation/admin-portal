@@ -44,3 +44,4 @@ sentry-sdk = "*"
 dramatiq = {extras = ["rabbitmq"], version = "*"}
 django-dramatiq = "*"
 phpserialize = "*"
+tld = "*"

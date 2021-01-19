@@ -80,7 +80,7 @@ class TestSiteCheckConsumerParsePHP:
         assert Greencheck.objects.count() == 0
         assert GreenPresenting.objects.count() == 0
 
-        sitecheck_logger.log_sitecheck_to_database(serialised_php)
+        sitecheck_logger.parse_and_log_to_database(serialised_php)
 
         assert Greencheck.objects.count() == 1
         assert GreenPresenting.objects.count() == 1
