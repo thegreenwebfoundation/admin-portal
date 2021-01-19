@@ -12,6 +12,8 @@ codecov = "*"
 flake8 = "*"
 ipython = "*"
 ipdb = "*"
+# needed because 0.18 breaks tab completion
+jedi = "==0.17.2"
 mycli = "*"
 werkzeug = "*"
 pytest = "*"
@@ -39,6 +41,6 @@ db-to-sqlite = "*"
 sqlite-utils = "*"
 google-cloud-storage = "*"
 sentry-sdk = "*"
-
-[requires]
-python_version = "3"
+dramatiq = {extras = ["rabbitmq"], version = "*"}
+django-dramatiq = "*"
+phpserialize = "*"
