@@ -38,6 +38,7 @@ ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
 
 # Application definition
 INSTALLED_APPS = [
+    "django_dramatiq",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -146,6 +147,22 @@ MEDIA_URL = '/media/'
 
 # GCP BUCKET
 PRESENTING_BUCKET = 'presenting_bucket_staging'
+
+DRAMATIQ_BROKER = {
+    "BROKER": "dramatiq.brokers.rabbitmq.RabbitmqBroker",
+    "OPTIONS": {
+        "url": "amqp://localhost:5672",
+    },
+    "MIDDLEWARE": [
+        "dramatiq.middleware.Prometheus",
+        "dramatiq.middleware.AgeLimit",
+        "dramatiq.middleware.TimeLimit",
+        "dramatiq.middleware.Callbacks",
+        "dramatiq.middleware.Retries",
+        "django_dramatiq.middleware.DbConnectionsMiddleware",
+        "django_dramatiq.middleware.AdminMiddleware",
+    ]
+}
 
 
 LOGGING = {
