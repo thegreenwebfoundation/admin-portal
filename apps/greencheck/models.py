@@ -146,7 +146,7 @@ class Greencheck(models.Model):
         Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
     )
     greencheck_ip = models.ForeignKey(
-        GreencheckIp, on_delete=models.CASCADE, db_column='id_greencheck'
+        GreencheckIp, on_delete=models.CASCADE, db_column='id_greencheck', blank=True, null=True
     )
     date = UnixDateTimeField(db_column='datum')
     green = EnumField(choices=BoolChoice.choices)
