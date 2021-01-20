@@ -10,7 +10,7 @@ import logging
 
 console = logging.StreamHandler()
 logger = logging.getLogger(__name__)
-# logger.setLevel(logging.INFO)
+# logger.setLevel(logging.WARN)
 # logger.addHandler(console)
 
 
@@ -168,7 +168,6 @@ class LegacySiteCheckLogger:
             self.log_sitecheck_to_database(sitecheck)
         except Exception as err:
             logger.exception(f"Problem logging to our database: {err}")
-            # import ipdb ; ipdb.set_trace()
 
     def log_sitecheck_to_database(self, sitecheck: SiteCheck):
         """
@@ -214,7 +213,7 @@ class LegacySiteCheckLogger:
                 type=sitecheck.match_type,
                 url=sitecheck.url,
             )
-            logger.info(f"Greencheck logged: {res}")
+            logger.debug(f"Greencheck logged: {res}")
         else:
 
             res = Greencheck.objects.create(

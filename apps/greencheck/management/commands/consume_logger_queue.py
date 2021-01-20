@@ -41,7 +41,6 @@ class Command(BaseCommand):
             channel.stop_consuming()
         except Exception as err:
             logger.exception(err)
-            import ipdb ; ipdb.set_trace()
             channel.stop_consuming()
 
         mq_connection.close()
