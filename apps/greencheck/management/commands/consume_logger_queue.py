@@ -3,6 +3,7 @@ from django.db import connection
 from apps.greencheck.legacy_workers import LegacySiteCheckLogger
 import pika
 import logging
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 console = logging.StreamHandler()
@@ -21,12 +22,11 @@ class Command(BaseCommand):
             logger.debug(method_frame)
             logger.debug(body)
             logger.debug(method_frame.delivery_tag)
-            # import ipdb ; ipdb.set_trace()
 
             sitecheck_logger.parse_and_log_to_database(body)
             channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
-        parameters = pika.URLParameters('amqp://greencheck_worker:consult-pottage-pamper-managua-pemmican@localhost:5672/')
+        parameters = pika.URLParameters(settings.RABBITMQ_URL)
 
         mq_connection = pika.BlockingConnection(parameters)
         channel = mq_connection.channel()
@@ -36,8 +36,8 @@ class Command(BaseCommand):
             channel.start_consuming()
         except KeyboardInterrupt:
             channel.stop_consuming()
-        except Exception as error:
-            logger.exception(error)
+        except Exception as err:
+            logger.exception(err)
             import ipdb ; ipdb.set_trace()
             channel.stop_consuming()
 
