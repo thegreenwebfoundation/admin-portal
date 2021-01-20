@@ -165,10 +165,9 @@ class LegacySiteCheckLogger:
         # log it our database and caches
         try:
             self.log_sitecheck_to_database(sitecheck)
-        except Exception as error:
-            logger.exception(f"Problem logging to our database: {error}")
-            import ipdb ; ipdb.set_trace()
-
+        except Exception as err:
+            logger.exception(f"Problem logging to our database: {err}")
+            # import ipdb ; ipdb.set_trace()
 
     def log_sitecheck_to_database(self, sitecheck: SiteCheck):
         """
@@ -176,63 +175,62 @@ class LegacySiteCheckLogger:
         along with the green domains table (green_presenting).
 
         """
-        hosting_provider = Hostingprovider.objects.get(
-            pk=sitecheck.hosting_provider_id
-        )
+        logger.debug(sitecheck)
 
-        # update green_presenting if green
-        if sitecheck.green:
-            try:
-                green_domain = GreenPresenting.objects.get(url=sitecheck.url)
-            except GreenPresenting.DoesNotExist:
-                green_domain = GreenPresenting(url=sitecheck.url)
+        try:
+            hosting_provider = Hostingprovider.objects.get(
+                pk=sitecheck.hosting_provider_id
+            )
+        except Hostingprovider.DoesNotExist:
+            # if we have no hosting provider we leave it out
+            hosting_provider = None
 
-            green_domain.hosted_by = hosting_provider.name
-            green_domain.hosted_by_id = sitecheck.hosting_provider_id
-            green_domain.hosted_by_website = hosting_provider.website
-            green_domain.partner = hosting_provider.partner
-            green_domain.modified = sitecheck.checked_at
-            green_domain.green = sitecheck.green
-            green_domain.save()
+        if sitecheck.green and hosting_provider:
+            self.update_green_domain_caches(sitecheck, hosting_provider)
 
-
-        # maybe_ip_range_id = self.maybe_greencheck_ip_range(
-        #     sitecheck.match_ip_range
-        # )
-        fixed_tld, *_ = tld.get_tld(sitecheck.url, fix_protocol=True),
+        fixed_tld, *_ = (tld.get_tld(sitecheck.url, fix_protocol=True),)
 
         # finally write to the greencheck table
-        # import ipdb ; ipdb.set_trace()
+        logger.debug(f"hosting_provider: {hosting_provider}")
 
-        Greencheck.objects.create(
-            hostingprovider=hosting_provider,
-            greencheck_ip=sitecheck.match_ip_range,
-            date=dateparse.parse_datetime(sitecheck.checked_at),
-            green="yes",
-            ip=sitecheck.ip,
-            tld=fixed_tld,
-            type=sitecheck.match_type,
-            url=sitecheck.url,
-        )
-
-
-    def maybe_greencheck_ip_range(self, ip_range_id: int = None):
-        """
-        Check for a matching Greencheck IP range with the id
-        `ip_range_id`, and either return it, or `None`.
-
-        We do this because when the original ip range with
-        that id is no longer in existence, we get an an
-        integrity error - id no longer points to
-        a matching row. So we pass in None, which is acceptable.
-        """
-        try:
-            maybe_greencheck_ip_range = GreencheckIp.objects.get(
-                pk=ip_range_id
-                #
+        if hosting_provider:
+            # import ipdb ; ipdb.set_trace()
+            Greencheck.objects.create(
+                hostingprovider=hosting_provider.id,
+                greencheck_ip=sitecheck.match_ip_range,
+                date=dateparse.parse_datetime(sitecheck.checked_at),
+                green="yes",
+                ip=sitecheck.ip,
+                tld=fixed_tld,
+                type=sitecheck.match_type,
+                url=sitecheck.url,
             )
-            return maybe_greencheck_ip_range.id
+        else:
 
-        except GreencheckIp.DoesNotExist:
-            return None
+            Greencheck.objects.create(
+                date=dateparse.parse_datetime(sitecheck.checked_at),
+                green="no",
+                ip=sitecheck.ip,
+                tld=fixed_tld,
+                url=sitecheck.url,
+            )
 
+    def update_green_domain_caches(
+        self, sitecheck: SiteCheck, hosting_provider: Hostingprovider
+    ):
+        """
+        Update the caches - namely the green domains table, and if running Redis
+        """
+
+        try:
+            green_domain = GreenPresenting.objects.get(url=sitecheck.url)
+        except GreenPresenting.DoesNotExist:
+            green_domain = GreenPresenting(url=sitecheck.url)
+
+        green_domain.hosted_by = hosting_provider.name
+        green_domain.hosted_by_id = sitecheck.hosting_provider_id
+        green_domain.hosted_by_website = hosting_provider.website
+        green_domain.partner = hosting_provider.partner
+        green_domain.modified = sitecheck.checked_at
+        green_domain.green = sitecheck.green
+        green_domain.save()
