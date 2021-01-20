@@ -5,6 +5,7 @@ from apps.greencheck.models import Greencheck, GreenPresenting, GreencheckIp
 from apps.accounts.models import Hostingprovider
 
 import tld
+import ipaddress
 import logging
 
 console = logging.StreamHandler()
@@ -188,7 +189,17 @@ class LegacySiteCheckLogger:
         if sitecheck.green and hosting_provider:
             self.update_green_domain_caches(sitecheck, hosting_provider)
 
-        fixed_tld, *_ = (tld.get_tld(sitecheck.url, fix_protocol=True),)
+        try:
+            fixed_tld, *_ = (tld.get_tld(sitecheck.url, fix_protocol=True),)
+        except tld.exceptions.TldDomainNotFound:
+
+            try:
+                ipaddress.ip_address(sitecheck.url)
+                fixed_tld = ""
+            except Exception:
+                logger.exception("not a domain, or an IP address")
+        except Exception:
+            logger.exception("not a domain, or an IP address")
 
         # finally write to the greencheck table
 
