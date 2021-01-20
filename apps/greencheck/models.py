@@ -141,15 +141,18 @@ class GreencheckIp(TimeStampedModel):
 
 
 class Greencheck(models.Model):
-    hostingprovider = models.ForeignKey(
-        Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
-    )
-    # NOTE: ideally we would have this as a Foreign key to the greencheck
-    # table as that's where the recorded ip ranges we check against are.
-    # However, some `Greencheckip` ip range objects have been deleted over
-    # the years. We might be better off with a speical 'DELETED' Greencheck IP
+    # NOTE: ideally we would have these two as Foreign keys, as the greencheck
+    # table links back to where the recorded ip ranges we checked against are.
+    # However, some `GreencheckIP` ip range objects have been deleted over
+    # the years.
+    # Also,
+    # We might be better off with a special 'DELETED' Greencheck IP
     # to at least track this properly.
-    greencheck_ip = models.IntegerField(db_column='id_greencheck')
+    hostingprovider = models.IntegerField(db_column='id_hp', default=0)
+    # hostingprovider = models.ForeignKey(
+    #     Hostingprovider, db_column='id_hp', on_delete=models.CASCADE, blank=True, null=True
+    # )
+    greencheck_ip = models.IntegerField(db_column='id_greencheck', default=0)
     # greencheck_ip = models.ForeignKey(
     #     GreencheckIp, on_delete=models.CASCADE, db_column='id_greencheck', blank=True, null=True
     # )
@@ -157,7 +160,7 @@ class Greencheck(models.Model):
     green = EnumField(choices=BoolChoice.choices)
     ip = IpAddressField()
     tld = models.CharField(max_length=64)
-    type = EnumField(choices=GreenlistChoice.choices)
+    type = EnumField(choices=GreenlistChoice.choices, default=GreenlistChoice.none)
     url = models.CharField(max_length=255)
 
     class Meta:
