@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.6"
+  - "3.8"
 
 install:
   - pip install pipenv --upgrade-strategy=only-if-needed
@@ -10,5 +10,6 @@ script:
   - pytest
 services:
     - mysql
+    - rabbitmq
 after_success:
     - codecov
