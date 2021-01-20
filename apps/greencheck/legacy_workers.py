@@ -191,11 +191,9 @@ class LegacySiteCheckLogger:
         fixed_tld, *_ = (tld.get_tld(sitecheck.url, fix_protocol=True),)
 
         # finally write to the greencheck table
-        logger.debug(f"hosting_provider: {hosting_provider}")
 
         if hosting_provider:
-            # import ipdb ; ipdb.set_trace()
-            Greencheck.objects.create(
+            res = Greencheck.objects.create(
                 hostingprovider=hosting_provider.id,
                 greencheck_ip=sitecheck.match_ip_range,
                 date=dateparse.parse_datetime(sitecheck.checked_at),
@@ -205,15 +203,17 @@ class LegacySiteCheckLogger:
                 type=sitecheck.match_type,
                 url=sitecheck.url,
             )
+            logger.info(f"Greencheck logged: {res}")
         else:
 
-            Greencheck.objects.create(
+            res = Greencheck.objects.create(
                 date=dateparse.parse_datetime(sitecheck.checked_at),
                 green="no",
                 ip=sitecheck.ip,
                 tld=fixed_tld,
                 url=sitecheck.url,
             )
+            logger.debug(f"Greencheck logged: {res}")
 
     def update_green_domain_caches(
         self, sitecheck: SiteCheck, hosting_provider: Hostingprovider
