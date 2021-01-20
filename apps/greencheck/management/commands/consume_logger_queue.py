@@ -6,9 +6,9 @@ import logging
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
-console = logging.StreamHandler()
-logger.addHandler(console)
-logger.setLevel(logging.WARN)
+# console = logging.StreamHandler()
+# logger.addHandler(console)
+# logger.setLevel(logging.DEBUG)
 
 class Command(BaseCommand):
     help = "Start a worker consuming from legacy app queue"
@@ -19,18 +19,21 @@ class Command(BaseCommand):
 
         def on_message(channel, method_frame, header_frame, body):
             logger.debug(f"message received for {channel}")
-            logger.debug(method_frame)
-            logger.debug(body)
-            logger.debug(method_frame.delivery_tag)
+            logger.debug(f"method_frame: {method_frame}")
+            logger.debug(f"header_frame: {header_frame}")
+            # logger.debug(body)
+            logger.debug(f"delivery_tag: {method_frame.delivery_tag}")
 
             sitecheck_logger.parse_and_log_to_database(body)
-            channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+
 
         parameters = pika.URLParameters(settings.RABBITMQ_URL)
-
         mq_connection = pika.BlockingConnection(parameters)
         channel = mq_connection.channel()
-        channel.basic_consume('enqueue.app.default', on_message)
+
+        queue_args = {'x-max-priority': 4}
+        channel.queue_declare('enqueue.app.default', durable=True, arguments=queue_args)
+        channel.basic_consume('enqueue.app.default', on_message, auto_ack=True)
 
         try:
             channel.start_consuming()
