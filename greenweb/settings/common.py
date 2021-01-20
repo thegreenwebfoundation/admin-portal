@@ -20,6 +20,7 @@ env = environ.Env(
     SECRET_KEY=(str, os.getenv('SECRET_KEY')),
     DATABASE_URL=(str, os.getenv('DATABASE_URL')),
 )
+
 environ.Env.read_env('.env')  # Read .env
 
 # Quick-start development settings - unsuitable for production
@@ -151,10 +152,13 @@ MEDIA_URL = '/media/'
 # GCP BUCKET
 PRESENTING_BUCKET = 'presenting_bucket_staging'
 
+RABBITMQ_URL = env('RABBITMQ_URL')
+
+
 DRAMATIQ_BROKER = {
     "BROKER": "dramatiq.brokers.rabbitmq.RabbitmqBroker",
     "OPTIONS": {
-        "url": "amqp://localhost:5672",
+        "url": RABBITMQ_URL,
     },
     "MIDDLEWARE": [
         "dramatiq.middleware.Prometheus",
