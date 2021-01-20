@@ -48,7 +48,7 @@ class TopUrlUpdater:
                 if gc:
 
                     try:
-                        hp = gc.hostingprovider
+                        hp = Hostingprovider.objects.get(pk=gc.hostingprovider)
 
                     except Hostingprovider.DoesNotExist:
                         logger.error(f"Missing hosting provider for greencheck {gc}")
@@ -81,7 +81,7 @@ class TopUrlUpdater:
                 if gc:
 
                     try:
-                        hp = gc.hostingprovider
+                        hp = Hostingprovider.objects.get(pk=gc.hostingprovider)
                     except Hostingprovider.DoesNotExist:
 
                         logger.error(f"Missing hosting provider for greencheck {gc}")
