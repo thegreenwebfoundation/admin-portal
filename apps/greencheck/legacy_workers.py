@@ -196,9 +196,18 @@ class LegacySiteCheckLogger:
                 ipaddress.ip_address(sitecheck.url)
                 fixed_tld = ""
             except Exception:
-                logger.exception("not a domain, or an IP address")
+                logger.exception("not a domain, or an IP address, not logging. Sitecheck results: {sitecheck}")
+                return {
+                    "status": "Error",
+                    "sitecheck": sitecheck
+                }
+
         except Exception:
-            logger.exception("not a domain, or an IP address")
+            logger.exception("Unexpected error. Not logging the result. Sitecheck results: {sitecheck}")
+            return {
+                "status": "Error",
+                "sitecheck": sitecheck
+            }
 
         # finally write to the greencheck table
 
@@ -224,6 +233,13 @@ class LegacySiteCheckLogger:
                 url=sitecheck.url,
             )
             logger.debug(f"Greencheck logged: {res}")
+
+        # return result so we can inspect if need be
+        return {
+            "status": "OK",
+            "sitecheck": sitecheck,
+            "res": res
+        }
 
     def update_green_domain_caches(
         self, sitecheck: SiteCheck, hosting_provider: Hostingprovider
