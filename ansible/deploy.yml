@@ -94,10 +94,22 @@
         dest: "{{ project_root }}/current/run_gunicorn.sh"
       become: yes
 
+    - name: set up script for running workers, via supervisor
+      template:
+        src: "run_worker.sh.j2"
+        dest: "{{ project_root }}/current/run_worker.sh"
+      become: yes
+
     - name: set up supervisor entry
       template:
         src: "supervisor.gunicorn.conf.j2"
         dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}.conf"
+      become: yes
+
+    - name: set up supervisor entry
+      template:
+        src: "supervisor.gunicorn.conf.j2"
+        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf"
       become: yes
 
     - name: trigger restart for app with supervisor
