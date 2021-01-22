@@ -1,6 +1,5 @@
 import pytest
 
-from django.utils import timezone
 from datetime import datetime
 from apps.greencheck.models import GreenPresenting, Greencheck, TopUrl, Hostingprovider, GreencheckIp
 from apps.greencheck.management.commands.update_top_url_list import TopUrlUpdater

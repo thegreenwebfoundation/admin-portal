@@ -1,7 +1,6 @@
 from django.contrib.admin import SimpleListFilter
 from django_countries.data import COUNTRIES
 from datetime import datetime
-from django.utils import timezone
 
 class YearFilterMixin():
 
@@ -20,9 +19,12 @@ class YearFilterMixin():
         """
 
         year = int(year)
-        tz = timezone.get_current_timezone()
-        start_at = datetime(year=year, month=1, day=1, tzinfo=tz)
-        end_at = datetime(year=year+1, month=1, day=1, tzinfo=tz)
+        # TODO: while we use MySQL and the TIMESTAMP column we
+        # can't use timezone aware dates. Put this back in when
+        # we switch to columns or database tech
+        # tz = timezone.get_current_timezone()
+        start_at = datetime(year=year, month=1, day=1)
+        end_at = datetime(year=year+1, month=1, day=1)
 
         return (start_at, end_at)
 
