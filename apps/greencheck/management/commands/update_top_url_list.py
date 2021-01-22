@@ -3,7 +3,7 @@ from apps.greencheck.models import Greencheck, GreenPresenting, TopUrl, Hostingp
 
 from django.core.management.base import BaseCommand
 from django.db import connection
-from django.utils import timezone
+import datetime
 import warnings
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class TopUrlUpdater:
 
             # every 10000 domains processed, log the progress
             if count % 10_000 == 0:
-                now = timezone.now().strftime("%Y-%m-%d - %H-%M-%S")
+                now = datetime.datetime.now().strftime("%Y-%m-%d - %H-%M-%S")
                 logger.info(f"Processed: {count} domains so far. Time: {now}")
 
             try:
