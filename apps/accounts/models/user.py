@@ -1,10 +1,11 @@
+import datetime
+
 from django.contrib.auth.models import (
     AbstractBaseUser,
     UserManager,
     PermissionsMixin,
 )
 from django.db import models
-from django.utils import timezone
 from django.core.mail import send_mail
 
 from .hosting import Hostingprovider
@@ -54,7 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             'Unselect this instead of deleting accounts.'
         ),
     )
-    date_joined = models.DateTimeField('date joined')
+    date_joined = models.DateTimeField('date joined', default= datetime.datetime.now)
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
