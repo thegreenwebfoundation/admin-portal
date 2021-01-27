@@ -20,6 +20,7 @@ pytest = "*"
 pytest-django = "*"
 pytest-watch = "*"
 pytest-cov = "*"
+pytest-xdist = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
@@ -45,3 +46,5 @@ dramatiq = {extras = ["rabbitmq"], version = "*"}
 django-dramatiq = "*"
 phpserialize = "*"
 tld = "*"
+djangorestframework = "*"
+hypothesis = "*"

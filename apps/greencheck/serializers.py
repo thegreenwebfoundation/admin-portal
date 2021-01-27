@@ -29,10 +29,22 @@ class IpDecimalField(serializers.DecimalField):
         return addr
 
 
-class GreenIPRange(serializers.ModelSerializer):
+class GreenIPRangeSerializer(serializers.ModelSerializer):
 
     ip_start = IpDecimalField(max_digits=39, decimal_places=0)
     ip_end = IpDecimalField(max_digits=39, decimal_places=0)
+
+    def validate(self, data):
+        """
+        Check that start is before finish.
+        """
+
+        start = data['ip_start']
+        end = data['ip_end']
+        # import ipdb ; ipdb.set_trace()
+        if start > end:
+            raise serializers.ValidationError("The IP range must start with a lower IP than the end IP")
+        return data
 
     class Meta:
         model = GreencheckIp
