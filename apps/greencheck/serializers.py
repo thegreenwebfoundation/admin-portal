@@ -3,7 +3,7 @@ from .models import GreencheckIp
 
 import ipaddress
 
-class IpDecimalField(serializers.DecimalField):
+class IPDecimalField(serializers.DecimalField):
     """
     A TGWF specific decimal field to account for the fact that
     we represent an IP address internall wth MySQL as a Decimal
@@ -31,8 +31,8 @@ class IpDecimalField(serializers.DecimalField):
 
 class GreenIPRangeSerializer(serializers.ModelSerializer):
 
-    ip_start = IpDecimalField(max_digits=39, decimal_places=0)
-    ip_end = IpDecimalField(max_digits=39, decimal_places=0)
+    ip_start = IPDecimalField(max_digits=39, decimal_places=0)
+    ip_end = IPDecimalField(max_digits=39, decimal_places=0)
 
     def validate(self, data):
         """
@@ -41,14 +41,13 @@ class GreenIPRangeSerializer(serializers.ModelSerializer):
 
         start = data['ip_start']
         end = data['ip_end']
-        # import ipdb ; ipdb.set_trace()
         if start > end:
             raise serializers.ValidationError("The IP range must start with a lower IP than the end IP")
         return data
 
     class Meta:
         model = GreencheckIp
-        fields = ['active', "ip_start", "ip_end", "hostingprovider"]
+        fields = ['active', "ip_start", "ip_end", "hostingprovider", "id"]
 
 
 

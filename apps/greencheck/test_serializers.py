@@ -11,15 +11,27 @@ from apps.greencheck.serializers import GreenIPRangeSerializer
 
 logger = logging.getLogger(__name__)
 
+SAMPLE_IPS = [
+    # ipv4
+    ("240.0.0.1", "240.0.0.245"),
+    # ipv6
+    (
+        "3e5c:a68a:9dbe:c49a:6884:943f:7c71:21dd",
+        "3e5c:a68a:9dbe:c49a:6884:943f:7c71:27dd",
+    ),
+]
 
+
+@pytest.mark.only
 class TestGreenIpRangeSerialiser:
-    @given(
-        ip_addy_start=strategies.ip_addresses(), ip_addy_end=strategies.ip_addresses()
-    )
-    def test_green_ip_range_serialises(
-        self, hosting_provider, ip_addy_start, ip_addy_end
+    # @given(
+    #     ip_addy_start=strategies.ip_addresses(), ip_addy_end=strategies.ip_addresses()
+    # )
+    # @pytest.mark.skip(reason="Our serialiser needs to this the database, but ")
+    @pytest.mark.parametrize("ip_addy_start,ip_addy_end", SAMPLE_IPS)
+    def test_deserialising_green_ip_range(
+        self, hosting_provider, ip_addy_start, ip_addy_end, settings
     ):
-        hosting_provider
 
         # uncomment this to check ip ranges we're generating and testing
         # logger.info(f"start_ip:  {ip_addy_start}, end_ip: {ip_addy_end}")
@@ -42,18 +54,7 @@ class TestGreenIpRangeSerialiser:
         assert data["ip_end"] == str(ip_addy_end)
         assert data["hostingprovider"] == hosting_provider.id
 
-    @pytest.mark.parametrize(
-        "ip_addy_start,ip_addy_end",
-        [
-            # ipv4
-            ("240.0.0.1", "240.0.0.245"),
-            # ipv6
-            (
-                "3e5c:a68a:9dbe:c49a:6884:943f:7c71:21dd",
-                "3e5c:a68a:9dbe:c49a:6884:943f:7c71:27dd",
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("ip_addy_start,ip_addy_end", SAMPLE_IPS)
     def test_green_iprange_serializes_from_database(
         self, hosting_provider, ip_addy_start, ip_addy_end, db
     ):
@@ -81,18 +82,7 @@ class TestGreenIpRangeSerialiser:
         assert data["ip_end"] == str(ip_addy_end)
         assert data["hostingprovider"] == hosting_provider.id
 
-    @pytest.mark.parametrize(
-        "ip_addy_start,ip_addy_end",
-        [
-            # ipv4
-            ("240.0.0.1", "240.0.0.245"),
-            # ipv6
-            (
-                "3e5c:a68a:9dbe:c49a:6884:943f:7c71:21dd",
-                "3e5c:a68a:9dbe:c49a:6884:943f:7c71:27dd",
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("ip_addy_start,ip_addy_end", SAMPLE_IPS)
     def test_green_ip_range_parses_and_saves(
         self, hosting_provider, db, ip_addy_start, ip_addy_end
     ):
@@ -116,7 +106,6 @@ class TestGreenIpRangeSerialiser:
         assert data.ip_end == ipaddress.ip_address(ip_addy_end)
         assert data.hostingprovider == hosting_provider
 
-    @pytest.mark.only
     @pytest.mark.parametrize(
         "ip_addy_start,ip_addy_end",
         [
