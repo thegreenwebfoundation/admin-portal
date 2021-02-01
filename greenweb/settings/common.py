@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_mysql',
     'django_registration',
+    'rest_framework',
 
     # project specific
     'apps.accounts',
