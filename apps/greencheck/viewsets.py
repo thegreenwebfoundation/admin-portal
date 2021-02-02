@@ -4,6 +4,9 @@ from rest_framework import viewsets
 from .serializers import GreenIPRangeSerializer
 from .models import GreencheckIp, Hostingprovider
 from rest_framework import response
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 
 logger = logging.getLogger(__name__)
 
@@ -14,28 +17,26 @@ class IPRangeViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = GreenIPRangeSerializer
+    queryset = GreencheckIp.objects.all()
 
-    def list(self, request):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def filter_queryset(self, queryset):
         """
-        Show the IP ranges already registered for this user's organisation
+        Because our viewset takes care of pagination and the rest
+        all we change is what is returned when we filter the queryset
+        for a given user.
+
+        http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html#list
         """
 
-        queryset = self.get_queryset(request)
-        serializer = self.serializer_class(queryset, many=True)
-        return response.Response(serializer.data)
+        user = self.request.user
 
-    def get_queryset(self, request=None):
-        provider = request.user.hostingprovider
+        if user is not None:
+            provider = self.request.user.hostingprovider
 
-        if provider is not None:
-            return provider.greencheckip_set.all()
-        # otherwise fall back to return an empty list
+            if provider is not None:
+                return provider.greencheckip_set.all()
+
         return []
-
-    def update(self, request, *args, **kwargs):
-        """
-        """
-        import ipdb
-
-        ipdb.set_trace()
-        return super().update(request, *args, **kwargs)
