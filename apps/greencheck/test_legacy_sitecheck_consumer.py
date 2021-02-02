@@ -37,8 +37,6 @@ def sample_sitecheck():
 def sitecheck_logger():
     return LegacySiteCheckLogger()
 
-
-@pytest.mark.only
 class TestSiteCheckConsumerParsePHP:
     def test_parse_serialsed_php_from_bytes(self, sitecheck_logger, serialised_php):
         """
