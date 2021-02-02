@@ -94,14 +94,12 @@ class TestGreenIpRangeSerialiser:
             "hostingprovider": hosting_provider.id,
             "ip_start": str(ip_addy_start),
             "ip_end": str(ip_addy_end),
-            "active": True,
         }
 
         gipr = GreenIPRangeSerializer(data=sample_json)
         gipr.is_valid()
         data = gipr.save()
 
-        assert data.active == True
         assert data.ip_start == ipaddress.ip_address(ip_addy_start)
         assert data.ip_end == ipaddress.ip_address(ip_addy_end)
         assert data.hostingprovider == hosting_provider
@@ -132,7 +130,6 @@ class TestGreenIpRangeSerialiser:
             "hostingprovider": hosting_provider.id,
             "ip_start": str(ip_addy_start),
             "ip_end": str(ip_addy_end),
-            "active": True,
         }
 
         gipr = GreenIPRangeSerializer(data=sample_json)

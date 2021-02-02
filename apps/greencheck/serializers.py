@@ -1,7 +1,10 @@
-from rest_framework import serializers
-from .models import GreencheckIp
-
 import ipaddress
+
+from rest_framework import serializers
+
+from apps.accounts.models import Hostingprovider
+
+from .models import GreencheckIp
 
 
 class IPDecimalField(serializers.DecimalField):
@@ -30,10 +33,22 @@ class IPDecimalField(serializers.DecimalField):
         return addr
 
 
+class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    def get_queryset(self):
+        request = self.context.get("request", None)
+        queryset = super(UserFilteredPrimaryKeyRelatedField, self).get_queryset()
+        if not request or not queryset:
+            return None
+        return queryset.filter(user=request.user)
+
+
 class GreenIPRangeSerializer(serializers.ModelSerializer):
 
     ip_start = IPDecimalField(max_digits=39, decimal_places=0)
     ip_end = IPDecimalField(max_digits=39, decimal_places=0)
+    hostingprovider = UserFilteredPrimaryKeyRelatedField(
+        queryset=Hostingprovider.objects.all()
+    )
 
     def validate(self, data):
         """
@@ -50,4 +65,4 @@ class GreenIPRangeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GreencheckIp
-        fields = ["active", "ip_start", "ip_end", "hostingprovider", "id"]
+        fields = ["ip_start", "ip_end", "hostingprovider", "id"]
