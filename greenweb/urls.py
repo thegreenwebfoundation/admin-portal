@@ -21,6 +21,7 @@ from apps.greencheck.viewsets import IPRangeViewSet
 
 from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts import urls as accounts_urls
+from rest_framework.authtoken import views
 
 urlpatterns = []
 
@@ -37,4 +38,5 @@ urlpatterns += [
     path("", admin.urls),
     path("", include(accounts_urls)),
     path("api/v2/", include(router.urls)),
+    path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
 ]

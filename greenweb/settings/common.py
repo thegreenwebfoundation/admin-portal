@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'django_registration',
     'rest_framework',
 
+    "rest_framework",
+    "rest_framework.authtoken",
     # project specific
     'apps.accounts',
     'apps.greencheck'
@@ -155,6 +157,13 @@ PRESENTING_BUCKET = 'presenting_bucket_staging'
 
 RABBITMQ_URL = env('RABBITMQ_URL')
 
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated",],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+}
 
 DRAMATIQ_BROKER = {
     "BROKER": "dramatiq.brokers.rabbitmq.RabbitmqBroker",
