@@ -4,14 +4,20 @@ from django.db import models
 
 types = {
     # 'TGWF\AdminBundle\Entity\Hostingprovider': ('accounts', 'hostingprovider'),
-    'TGWF\\AdminBundle\\Entity\\GreencheckAs': ('greencheck', 'greencheckasn'),
+    "TGWF\\AdminBundle\\Entity\\GreencheckAs": ("greencheck", "greencheckasn"),
     # 'TGWF\\AdminBundle\\Entity\\HostingproviderCertificate':
     # 'TGWF\\AdminBundle\\Entity\\DatacenterCertificate'
     # 'TGWF\\AdminBundle\\Entity\\Datacenter'
     # 'TGWF\\AdminBundle\\Entity\\DatacenterHostingprovider'
-    'TGWF\\HostingProviderBundle\\Entity\\GreencheckIp': ('greencheck', 'greencheckipapprove'),
-    'TGWF\\AdminBundle\\Entity\\GreencheckIp': ('greencheck', 'greencheckip'),
-    'TGWF\\HostingProviderBundle\\Entity\\GreencheckAs': ('greencheck', 'greencheckasnapprove')
+    "TGWF\\HostingProviderBundle\\Entity\\GreencheckIp": (
+        "greencheck",
+        "greencheckipapprove",
+    ),
+    "TGWF\\AdminBundle\\Entity\\GreencheckIp": ("greencheck", "greencheckip"),
+    "TGWF\\HostingProviderBundle\\Entity\\GreencheckAs": (
+        "greencheck",
+        "greencheckasnapprove",
+    ),
 }
 
 
@@ -22,14 +28,15 @@ class ExtLog(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'ext_log_entries'
+        db_table = "ext_log_entries"
 
 
 class Command(BaseCommand):
     help = "My shiny new management command."
 
     def handle(self, *args, **options):
-        entries = ExtLog.objects.raw('''
+        entries = ExtLog.objects.raw(
+            """
             select ext1.id, ext1.object_id, ext1.object_class, logged_at, max_logged
             from `ext_log_entries` ext1
             join (
@@ -37,7 +44,8 @@ class Command(BaseCommand):
                 FROM ext_log_entries
                 GROUP BY object_id, object_class
             ) ext2 on ext1.id = ext2.id
-        ''')
+        """
+        )
 
         for entry in entries:
             app, model_name = types.get(entry.object_class, (None, None))

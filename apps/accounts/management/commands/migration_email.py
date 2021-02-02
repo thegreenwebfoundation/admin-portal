@@ -10,13 +10,15 @@ class Command(BaseCommand):
     help = "Send out migration email to all users."
 
     def handle(self, *args, **options):
-        emails = User.objects.all().values_list('email', flat=True)
+        emails = User.objects.all().values_list("email", flat=True)
 
-        email_message = render_to_string('emails/migration_email.txt', context={})
+        email_message = render_to_string("emails/migration_email.txt", context={})
         messages = [
             (
-                'Please reset your password at Green web foundation',
-                email_message, settings.DEFAULT_FROM_EMAIL, [email]
+                "Please reset your password at Green web foundation",
+                email_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
             )
             for email in emails
         ]

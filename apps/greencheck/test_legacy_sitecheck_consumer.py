@@ -37,6 +37,7 @@ def sample_sitecheck():
 def sitecheck_logger():
     return LegacySiteCheckLogger()
 
+
 class TestSiteCheckConsumerParsePHP:
     def test_parse_serialsed_php_from_bytes(self, sitecheck_logger, serialised_php):
         """
@@ -150,4 +151,3 @@ class TestSiteCheckConsumerParsePHP:
 
         assert Greencheck.objects.count() == 1
         assert GreenPresenting.objects.count() == green_domain_count
-

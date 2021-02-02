@@ -14,28 +14,25 @@ from .models import User
 
 
 class RegistrationForm(RegistrationFormCaseInsensitive):
-
     class Meta(RegistrationFormCaseInsensitive.Meta):
         model = User
 
 
 class AdminRegistrationView(RegistrationView):
     form_class = RegistrationForm
-    template_name = 'registration.html'
+    template_name = "registration.html"
 
-    email_body_template = 'emails/activation.html'
-    email_subject_template = 'emails/activation_subject.txt'
+    email_body_template = "emails/activation.html"
+    email_subject_template = "emails/activation_subject.txt"
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['site_header'] = 'Register a new user'
+        context["site_header"] = "Register a new user"
         return context
 
     def create_inactive_user(self, form):
         new_user = super().create_inactive_user(form)
-        groups = Group.objects.filter(
-            name__in=['hostingprovider', 'datacenter']
-        )
+        groups = Group.objects.filter(name__in=["hostingprovider", "datacenter"])
 
         for group in groups:
             new_user.groups.add(group)
@@ -46,22 +43,20 @@ class AdminRegistrationView(RegistrationView):
         """
         Return the URL to redirect to after successful redirection.
         """
-        return reverse('admin:index')
+        return reverse("admin:index")
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         if form.is_valid():
             messages.add_message(
-                request, messages.INFO,
-                'Check your email to activate the user'
+                request, messages.INFO, "Check your email to activate the user"
             )
         return super().post(request, *args, **kwargs)
 
 
 class AdminActivationView(ActivationView):
-
     def get_success_url(self, user=None):
-        return reverse('admin:index')
+        return reverse("admin:index")
 
     def get(self, *args, **kwargs):
         """
@@ -74,17 +69,13 @@ class AdminActivationView(ActivationView):
             error_message = e.message
         else:
             signals.user_activated.send(
-                sender=self.__class__,
-                user=activated_user,
-                request=self.request
+                sender=self.__class__, user=activated_user, request=self.request
             )
-            message = 'Your user is activated, you can now login'
+            message = "Your user is activated, you can now login"
             messages.add_message(self.request, messages.SUCCESS, message)
-            return HttpResponseRedirect(force_text(
-                self.get_success_url(activated_user)
-            ))
+            return HttpResponseRedirect(
+                force_text(self.get_success_url(activated_user))
+            )
 
         messages.add_message(self.request, messages.ERROR, error_message)
-        return HttpResponseRedirect(force_text(
-            self.get_success_url()
-        ))
+        return HttpResponseRedirect(force_text(self.get_success_url()))

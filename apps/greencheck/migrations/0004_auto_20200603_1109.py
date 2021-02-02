@@ -6,16 +6,16 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('greencheck', '0003_timestamped_ranges_approvals'),
+        ("greencheck", "0003_timestamped_ranges_approvals"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='greencheckasnapprove',
-            options={'verbose_name': 'Greencheck ASN Submissions'},
+            name="greencheckasnapprove",
+            options={"verbose_name": "Greencheck ASN Submissions"},
         ),
         migrations.AlterModelOptions(
-            name='greencheckipapprove',
-            options={'verbose_name': 'Greencheck IP Range Submission'},
+            name="greencheckipapprove",
+            options={"verbose_name": "Greencheck IP Range Submission"},
         ),
     ]

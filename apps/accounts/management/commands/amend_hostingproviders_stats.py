@@ -8,7 +8,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         with connection.cursor() as cursor:
             self.cursor = cursor
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 START TRANSACTION;
                 CREATE TABLE `hostingproviders_stats_copy` (
                     `id` INT(11) primary key Not null auto_increment,
@@ -28,4 +29,5 @@ class Command(BaseCommand):
 
                 ALTER table hostingproviders_stats_copy rename to hostingproviders_stats;
                 COMMIT;
-            ''')
+            """
+            )

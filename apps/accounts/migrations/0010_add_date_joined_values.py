@@ -7,14 +7,14 @@ from django.utils import timezone
 # choose a specific date, so it's easy to find in future
 FIRST_MONDAY_OF_2021 = timezone.make_aware(datetime.datetime(2021, 1, 7))
 
+
 def add_date_joined_value(apps, schema_editor):
     """
     Add a joined value to users with no usable `date_joined` value. Used to avoid
     integrity errors, when updating the admin
     """
 
-
-    User = apps.get_model('accounts', 'User')
+    User = apps.get_model("accounts", "User")
 
     # users with null dates are causing the integrity errors
     users_with_unusable_join_dates = User.objects.filter(
@@ -26,13 +26,10 @@ def add_date_joined_value(apps, schema_editor):
         user.save()
 
 
-
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0009_auto_20200603_1109'),
+        ("accounts", "0009_auto_20200603_1109"),
     ]
 
-    operations = [
-        migrations.RunPython(add_date_joined_value)
-    ]
+    operations = [migrations.RunPython(add_date_joined_value)]

@@ -10,15 +10,13 @@ logger = logging.getLogger(__name__)
 # logger.addHandler(console)
 # logger.setLevel(logging.DEBUG)
 
+
 class Command(BaseCommand):
     help = "Start a worker consuming from legacy app queue"
 
     def handle(self, *args, **options):
 
         sitecheck_logger = LegacySiteCheckLogger()
-
-
-
 
         def on_message(channel, method_frame, header_frame, body):
             logger.debug(f"message received for {channel}")
@@ -29,7 +27,6 @@ class Command(BaseCommand):
 
             sitecheck_logger.parse_and_log_to_database(body)
 
-
         parameters = pika.URLParameters(settings.RABBITMQ_URL)
         mq_connection = pika.BlockingConnection(parameters)
         channel = mq_connection.channel()
@@ -37,13 +34,11 @@ class Command(BaseCommand):
         while True:
 
             try:
-                queue_args = {'x-max-priority': 4}
+                queue_args = {"x-max-priority": 4}
                 channel.queue_declare(
-                    'enqueue.app.default',
-                    durable=True,
-                    arguments=queue_args
+                    "enqueue.app.default", durable=True, arguments=queue_args
                 )
-                channel.basic_consume('enqueue.app.default', on_message, auto_ack=True)
+                channel.basic_consume("enqueue.app.default", on_message, auto_ack=True)
                 channel.start_consuming()
 
             # Don't recover if connection was closed by broker
@@ -62,7 +57,4 @@ class Command(BaseCommand):
                 logger.exception(err)
                 channel.stop_consuming()
 
-
         mq_connection.close()
-
-

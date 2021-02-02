@@ -2,7 +2,7 @@ from djchoices import DjangoChoices, ChoiceItem
 
 
 class GreenlistChoice(DjangoChoices):
-    asn = ChoiceItem('as')
+    asn = ChoiceItem("as")
     ip = ChoiceItem()
     none = ChoiceItem()
     url = ChoiceItem()
@@ -25,14 +25,14 @@ class BoolChoice(DjangoChoices):
 
 
 class StatusApproval(DjangoChoices):
-    approved = ChoiceItem('Approved')
-    deleted = ChoiceItem('Deleted')
-    new = ChoiceItem('New')
-    removed = ChoiceItem('Removed')
-    update = ChoiceItem('Update')
+    approved = ChoiceItem("Approved")
+    deleted = ChoiceItem("Deleted")
+    new = ChoiceItem("New")
+    removed = ChoiceItem("Removed")
+    update = ChoiceItem("Update")
 
 
 class ActionChoice(DjangoChoices):
-    empty = ChoiceItem('')
+    empty = ChoiceItem("")
     new = ChoiceItem()
     update = ChoiceItem()

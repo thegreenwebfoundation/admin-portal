@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 import datetime
 import warnings
+
 logger = logging.getLogger(__name__)
 
 # Silence the runtime warnings about naive datetimes. Because we're using two systems,
@@ -13,8 +14,8 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 GREEN = 1
 
-class TopUrlUpdater:
 
+class TopUrlUpdater:
     def update_green_domains(self, queryset):
         """
         Accepts a queryset of objects with a 'url' property, and iterates through the
@@ -39,11 +40,13 @@ class TopUrlUpdater:
 
                 # find green checks that have happened since the last listed date
                 # for the given domain
-                gc = Greencheck.objects.filter(
-                    url=domain.url,
-                    green='yes',
-                    date__gt=gp.modified
-                ).order_by('-date').first()
+                gc = (
+                    Greencheck.objects.filter(
+                        url=domain.url, green="yes", date__gt=gp.modified
+                    )
+                    .order_by("-date")
+                    .first()
+                )
 
                 if gc:
 
@@ -54,14 +57,13 @@ class TopUrlUpdater:
                         logger.error(f"Missing hosting provider for greencheck {gc}")
                         continue
 
-                    gp.green=GREEN
-                    gp.modified=gc.date
+                    gp.green = GREEN
+                    gp.modified = gc.date
 
-                    gp.hosted_by_id=hp.id
-                    gp.hosted_by=hp.name
-                    gp.hosted_by_website=hp.website
-                    partner=hp.partner
-
+                    gp.hosted_by_id = hp.id
+                    gp.hosted_by = hp.name
+                    gp.hosted_by_website = hp.website
+                    partner = hp.partner
 
                     try:
                         gp.save()
@@ -73,10 +75,12 @@ class TopUrlUpdater:
                         logger.error(f"greencheck: {gc.__dict__}, gp: {gp.__dict__}")
                         # import ipdb ; ipdb.set_trace()
 
-
             except GreenPresenting.DoesNotExist:
-                gc = Greencheck.objects.filter(
-                    url=domain.url, green='yes').order_by('-date').first()
+                gc = (
+                    Greencheck.objects.filter(url=domain.url, green="yes")
+                    .order_by("-date")
+                    .first()
+                )
 
                 if gc:
 
@@ -93,18 +97,17 @@ class TopUrlUpdater:
                         logger.exception(err)
                         logger.error(f"greencheck: {gc.__dict__}, gp: {gp.__dict__}")
 
-
                     try:
                         gp = GreenPresenting()
 
-                        gp.green=1
-                        gp.modified=gc.date
-                        gp.url=gc.url
+                        gp.green = 1
+                        gp.modified = gc.date
+                        gp.url = gc.url
 
-                        gp.hosted_by_id=hp.id
-                        gp.hosted_by=hp.name
-                        gp.hosted_by_website=hp.website
-                        gp.partner=hp.partner
+                        gp.hosted_by_id = hp.id
+                        gp.hosted_by = hp.name
+                        gp.hosted_by_website = hp.website
+                        gp.partner = hp.partner
 
                         gp.save()
                         new_domains += 1
@@ -122,7 +125,9 @@ class TopUrlUpdater:
                 logger.error(f"greencheck: {gc.__dict__}, gp: {gp.__dict__}")
                 # import ipdb ; ipdb.set_trace()
 
-        logger.info(f"Finished updating. Total processed domains: {count}. Newly added domains: {new_domains}. Updated domains: {updated_domains}")
+        logger.info(
+            f"Finished updating. Total processed domains: {count}. Newly added domains: {new_domains}. Updated domains: {updated_domains}"
+        )
 
 
 class Command(BaseCommand):

@@ -7,18 +7,32 @@ import django_mysql.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0008_auto_20200206_1737'),
+        ("accounts", "0008_auto_20200206_1737"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='datacenter',
-            name='model',
-            field=models.CharField(choices=[('groeneenergie', 'green energy'), ('compensatie', 'compensation'), ('mixed', 'mixed')], max_length=255),
+            model_name="datacenter",
+            name="model",
+            field=models.CharField(
+                choices=[
+                    ("groeneenergie", "green energy"),
+                    ("compensatie", "compensation"),
+                    ("mixed", "mixed"),
+                ],
+                max_length=255,
+            ),
         ),
         migrations.AlterField(
-            model_name='hostingprovider',
-            name='model',
-            field=django_mysql.models.EnumField(choices=[('groeneenergie', 'green energy'), ('compensatie', 'compensation'), ('mixed', 'mixed')], default='compensatie'),
+            model_name="hostingprovider",
+            name="model",
+            field=django_mysql.models.EnumField(
+                choices=[
+                    ("groeneenergie", "green energy"),
+                    ("compensatie", "compensation"),
+                    ("mixed", "mixed"),
+                ],
+                default="compensatie",
+            ),
         ),
     ]

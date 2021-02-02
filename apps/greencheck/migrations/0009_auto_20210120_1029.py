@@ -6,14 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('greencheck', '0008_auto_20210120_0916'),
+        ("greencheck", "0008_auto_20210120_0916"),
     ]
 
     operations = [
-        
         migrations.AlterField(
-            model_name='greencheck',
-            name='date',
-            field=models.DateTimeField(db_column='datum'),
+            model_name="greencheck",
+            name="date",
+            field=models.DateTimeField(db_column="datum"),
         ),
     ]

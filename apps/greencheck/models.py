@@ -32,14 +32,14 @@ from .choices import (
 
 class IpAddressField(Field):
     default_error_messages = {
-        'invalid': "'%(value)s' value must be a valid IpAddress.",
+        "invalid": "'%(value)s' value must be a valid IpAddress.",
     }
     description = "IpAddress"
     empty_strings_allowed = False
 
     def __init__(self, *args, **kwargs):
-        kwargs.pop('max_digits', None)
-        kwargs.pop('decimal_places', None)
+        kwargs.pop("max_digits", None)
+        kwargs.pop("decimal_places", None)
         self.max_digits = 39
         self.decimal_places = 0
         super().__init__(*args, **kwargs)
@@ -62,28 +62,28 @@ class IpAddressField(Field):
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
         if self.max_digits is not None:
-            kwargs['max_digits'] = self.max_digits
+            kwargs["max_digits"] = self.max_digits
         if self.decimal_places is not None:
-            kwargs['decimal_places'] = self.decimal_places
+            kwargs["decimal_places"] = self.decimal_places
         return name, path, args, kwargs
 
     def to_python(self, value):
         if value is None:
             return value
         try:
-            if hasattr(value, 'quantize'):
+            if hasattr(value, "quantize"):
                 return ipaddress.ip_address(int(value))
             return ipaddress.ip_address(value)
         except (TypeError, ValueError):
             raise exceptions.ValidationError(
-                self.error_messages['invalid'],
-                code='invalid',
-                params={'value': value},
+                self.error_messages["invalid"], code="invalid", params={"value": value},
             )
 
     def get_db_prep_save(self, value, connection):
         value = self.get_prep_value(value)
-        return connection.ops.adapt_decimalfield_value(value, self.max_digits, self.decimal_places)
+        return connection.ops.adapt_decimalfield_value(
+            value, self.max_digits, self.decimal_places
+        )
 
     def get_prep_value(self, value):
         if value is not None:
@@ -104,16 +104,16 @@ class IpAddressField(Field):
     def formfield(self, form_class=None, choices_form_class=None, **kwargs):
         """Return a django.forms.Field instance for this field."""
         defaults = {
-            'required': not self.blank,
-            'label': capfirst(self.verbose_name),
-            'help_text': self.help_text,
+            "required": not self.blank,
+            "label": capfirst(self.verbose_name),
+            "help_text": self.help_text,
         }
         if self.has_default():
             if callable(self.default):
-                defaults['initial'] = self.default
-                defaults['show_hidden_initial'] = True
+                defaults["initial"] = self.default
+                defaults["show_hidden_initial"] = True
             else:
-                defaults['initial'] = self.get_default()
+                defaults["initial"] = self.get_default()
         defaults.update(kwargs)
         if form_class is None:
             form_class = forms.CharField
@@ -122,21 +122,21 @@ class IpAddressField(Field):
 
 class GreencheckIp(TimeStampedModel):
     active = models.BooleanField(null=True)
-    ip_end = IpAddressField(db_column='ip_eind')
+    ip_end = IpAddressField(db_column="ip_eind")
     ip_start = IpAddressField()
     hostingprovider = models.ForeignKey(
-        Hostingprovider, db_column='id_hp', on_delete=models.CASCADE
+        Hostingprovider, db_column="id_hp", on_delete=models.CASCADE
     )
 
     def __str__(self):
-        return f'{self.ip_start} - {self.ip_end}'
+        return f"{self.ip_start} - {self.ip_end}"
 
     class Meta:
-        db_table = 'greencheck_ip'
+        db_table = "greencheck_ip"
         indexes = [
-            models.Index(fields=['ip_end'], name='ip_eind'),
-            models.Index(fields=['ip_start'], name='ip_start'),
-            models.Index(fields=['active'], name='active'),
+            models.Index(fields=["ip_end"], name="ip_eind"),
+            models.Index(fields=["ip_start"], name="ip_start"),
+            models.Index(fields=["active"], name="active"),
         ]
 
 
@@ -148,15 +148,15 @@ class Greencheck(models.Model):
     # Also,
     # We might be better off with a special 'DELETED' Greencheck IP
     # to at least track this properly.
-    hostingprovider = models.IntegerField(db_column='id_hp', default=0)
+    hostingprovider = models.IntegerField(db_column="id_hp", default=0)
     # hostingprovider = models.ForeignKey(
     #     Hostingprovider, db_column='id_hp', on_delete=models.CASCADE, blank=True, null=True
     # )
-    greencheck_ip = models.IntegerField(db_column='id_greencheck', default=0)
+    greencheck_ip = models.IntegerField(db_column="id_greencheck", default=0)
     # greencheck_ip = models.ForeignKey(
     #     GreencheckIp, on_delete=models.CASCADE, db_column='id_greencheck', blank=True, null=True
     # )
-    date = models.DateTimeField(db_column='datum')
+    date = models.DateTimeField(db_column="datum")
     green = EnumField(choices=BoolChoice.choices)
     ip = IpAddressField()
     tld = models.CharField(max_length=64)
@@ -164,30 +164,29 @@ class Greencheck(models.Model):
     url = models.CharField(max_length=255)
 
     class Meta:
-        db_table = 'greencheck_2020'
+        db_table = "greencheck_2020"
 
     def __str__(self):
-        return f'{self.url} - {self.ip}'
+        return f"{self.url} - {self.ip}"
 
 
 class GreencheckIpApprove(TimeStampedModel):
     action = models.TextField(choices=ActionChoice.choices)
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE,
-        db_column='id_hp', null=True
+        Hostingprovider, on_delete=models.CASCADE, db_column="id_hp", null=True
     )
     greencheck_ip = models.ForeignKey(
-        GreencheckIp, on_delete=models.CASCADE, db_column='idorig', null=True
+        GreencheckIp, on_delete=models.CASCADE, db_column="idorig", null=True
     )
-    ip_end = IpAddressField(db_column='ip_eind')
+    ip_end = IpAddressField(db_column="ip_eind")
     ip_start = IpAddressField()
     status = models.TextField(choices=StatusApproval.choices)
 
     def __str__(self):
-        return f'{self.ip_start} - {self.ip_end}: {self.status}'
+        return f"{self.ip_start} - {self.ip_end}: {self.status}"
 
     class Meta:
-        db_table = 'greencheck_ip_approve'
+        db_table = "greencheck_ip_approve"
         verbose_name = "Greencheck IP Range Submission"
         # managed = False
 
@@ -199,52 +198,52 @@ class GreencheckLinked(models.Model):
 
 class GreenList(models.Model):
     greencheck = models.ForeignKey(
-        Greencheck, on_delete=models.CASCADE, db_column='id_greencheck'
+        Greencheck, on_delete=models.CASCADE, db_column="id_greencheck"
     )
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
+        Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
     last_checked = models.DateTimeField()
-    name = models.CharField(max_length=255, db_column='naam')
+    name = models.CharField(max_length=255, db_column="naam")
     type = EnumField(choices=GreenlistChoice.choices)
     url = models.CharField(max_length=255)
     website = models.CharField(max_length=255)
 
     class Meta:
         # managed = False
-        db_table = 'greenlist'
+        db_table = "greenlist"
         indexes = [
-            models.Index(fields=['url'], name='url'),
+            models.Index(fields=["url"], name="url"),
         ]
 
 
 class GreencheckTLD(models.Model):
     checked_domains = models.IntegerField()
     green_domains = models.IntegerField()
-    hps = models.IntegerField(verbose_name='Hostingproviders registered in tld')
+    hps = models.IntegerField(verbose_name="Hostingproviders registered in tld")
     tld = models.CharField(max_length=50)
     toplevel = models.CharField(max_length=64)
 
     class Meta:
-        db_table = 'greencheck_tld'
+        db_table = "greencheck_tld"
         indexes = [
-            models.Index(fields=['tld'], name='tld'),
+            models.Index(fields=["tld"], name="tld"),
         ]
 
 
 class GreencheckASN(TimeStampedModel):
     active = models.BooleanField(null=True)
     # https://en.wikipedia.org/wiki/Autonomous_system_(Internet)
-    asn = models.IntegerField(verbose_name='Autonomous system number')
+    asn = models.IntegerField(verbose_name="Autonomous system number")
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
+        Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
 
     class Meta:
-        db_table = 'greencheck_as'
+        db_table = "greencheck_as"
         indexes = [
-            models.Index(fields=['active'], name='active'),
-            models.Index(fields=['asn'], name='asn'),
+            models.Index(fields=["active"], name="active"),
+            models.Index(fields=["asn"], name="asn"),
         ]
 
 
@@ -252,19 +251,19 @@ class GreencheckASNapprove(TimeStampedModel):
     action = models.TextField(choices=ActionChoice.choices)
     asn = models.IntegerField()
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp'
+        Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
     greencheck_asn = models.ForeignKey(
-        GreencheckASN, on_delete=models.CASCADE, db_column='idorig', null=True
+        GreencheckASN, on_delete=models.CASCADE, db_column="idorig", null=True
     )
     status = models.TextField(choices=StatusApproval.choices)
 
     class Meta:
-        db_table = 'greencheck_as_approve'
+        db_table = "greencheck_as_approve"
         verbose_name = "Greencheck ASN Submissions"
 
     def __str__(self):
-        return f'Status: {self.status} Action: {self.action}'
+        return f"Status: {self.status} Action: {self.action}"
 
 
 # class Tld(models.Model):
@@ -290,22 +289,20 @@ class Stats(models.Model):
 
 
 class GreencheckStats(Stats):
-
     class Meta:
         # managed = False
-        db_table = 'greencheck_stats'
+        db_table = "greencheck_stats"
         indexes = [
-            models.Index(fields=['checked_through'], name='checked_through'),
+            models.Index(fields=["checked_through"], name="checked_through"),
         ]
 
 
 class GreencheckStatsTotal(Stats):
-
     class Meta:
         # managed = False
-        db_table = 'greencheck_stats_total'
+        db_table = "greencheck_stats_total"
         indexes = [
-            models.Index(fields=['checked_through'], name='checked_through'),
+            models.Index(fields=["checked_through"], name="checked_through"),
         ]
 
 
@@ -315,7 +312,7 @@ class GreencheckWeeklyStats(models.Model):
     checks_perc = models.FloatField()
     checks_total = models.IntegerField()
 
-    monday = models.DateField(db_column='maandag')
+    monday = models.DateField(db_column="maandag")
     url_green = models.IntegerField()
     url_grey = models.IntegerField()
     url_perc = models.FloatField()
@@ -324,13 +321,14 @@ class GreencheckWeeklyStats(models.Model):
 
     class Meta:
         # managed = False
-        db_table = 'greencheck_weekly'
+        db_table = "greencheck_weekly"
+
 
 class TopUrl(models.Model):
     url = models.CharField(max_length=255)
 
     class Meta:
-        db_table = 'top_1m_urls'
+        db_table = "top_1m_urls"
 
 
 class GreenPresenting(models.Model):
