@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 rf = APIRequestFactory()
 
 
-@pytest.mark.only
 class TestUsingAuthToken:
     def test_fetching_auth_token(
         self, hosting_provider: Hostingprovider, sample_hoster_user: User,
@@ -188,7 +187,6 @@ class TestIpRangeViewSetRetrieve:
         assert response.data["active"] == green_ip.active
 
 
-@pytest.mark.only
 class TestIpRangeViewSetCreate:
     def test_create_new_ip_range(
         self,
@@ -238,3 +236,42 @@ class TestIpRangeViewSetCreate:
         class, we should make sure a sensible API error message is returned
         """
         pass
+
+
+class TestIpRangeViewSetDelete:
+    def test_delete_existing_ip_range(
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
+        green_ip: GreencheckIp,
+    ):
+        """
+        If a user deletes an IP Range, that has been referenced when marking
+        sites as green, an actual delete will mean that all those greenchecks
+        are now pointing to a non-existent range.
+        We do not delete with the API - we hide them.
+        """
+
+        # arrange
+        hosting_provider.save()
+        sample_hoster_user.hostingprovider = hosting_provider
+        sample_hoster_user.save()
+
+        # check that we have what we expect first
+        assert GreencheckIp.objects.filter(active=True).count() == 1
+        assert GreencheckIp.objects.count() == 1
+
+        rf = APIRequestFactory()
+        url_path = reverse("ip-range-detail", kwargs={"pk": green_ip.id})
+
+        # act
+        request = rf.delete(url_path, pk=green_ip.id)
+        request.user = sample_hoster_user
+        view = IPRangeViewSet.as_view({"delete": "destroy"})
+        response = view(request, pk=green_ip.id)
+
+        # assert
+        assert response.status_code == 204
+        assert GreencheckIp.objects.filter(active=True).count() == 0
+        assert GreencheckIp.objects.filter(active=False).count() == 1
+        assert GreencheckIp.objects.count() == 1

@@ -40,3 +40,12 @@ class IPRangeViewSet(viewsets.ModelViewSet):
                 return provider.greencheckip_set.all()
 
         return []
+
+    def perform_destroy(self, instance):
+        """
+        Overriding this one function means that the rest of
+        our destroy method works as expected.
+        """
+        instance.active = False
+        instance.save()
+
