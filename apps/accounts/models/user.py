@@ -25,12 +25,18 @@ class User(AbstractBaseUser, PermissionsMixin):
     # id_ge Green energy providers. Leave this for now.
     # old table, the idea might be resurrected.
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column='id_hp', unique=True
+        Hostingprovider,
+        on_delete=models.SET_NULL,
+        db_column="id_hp",
+        unique=True,
+        null=True,
     )
     last_login = models.DateTimeField(null=True)
     locked = models.BooleanField(default=False)
-    password = models.CharField('password', max_length=128, db_column='django_password')
-    legacy_password = models.CharField('legacy_password', max_length=128, db_column='password')
+    password = models.CharField("password", max_length=128, db_column="django_password")
+    legacy_password = models.CharField(
+        "legacy_password", max_length=128, db_column="password"
+    )
     # password already provided in abstract base user.
     password_requested_at = models.DateTimeField(null=True)
     # contains a php array, needs to be deserialized with something like in this
@@ -43,30 +49,30 @@ class User(AbstractBaseUser, PermissionsMixin):
     username_canonical = models.CharField(max_length=255)
 
     is_staff = models.BooleanField(
-        'staff status',
+        "staff status",
         default=False,
-        help_text='Designates whether the user can log into this admin site.',
+        help_text="Designates whether the user can log into this admin site.",
     )
     is_active = models.BooleanField(
-        'active',
+        "active",
         default=True,
         help_text=(
-            'Designates whether this user should be treated as active. '
-            'Unselect this instead of deleting accounts.'
+            "Designates whether this user should be treated as active. "
+            "Unselect this instead of deleting accounts."
         ),
     )
-    date_joined = models.DateTimeField('date joined', default= datetime.datetime.now)
-    EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
+    date_joined = models.DateTimeField("date joined", default=datetime.datetime.now)
+    EMAIL_FIELD = "email"
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["email"]
     objects = UserManager()
 
     class Meta:
         # managed = False
-        db_table = 'fos_user'
+        db_table = "fos_user"
         indexes = [
-            models.Index(fields=['email'], name='email'),
-            models.Index(fields=['email_canonical'], name='email_canonical'),
+            models.Index(fields=["email"], name="email"),
+            models.Index(fields=["email_canonical"], name="email_canonical"),
         ]
 
     def __str__(self):

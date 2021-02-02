@@ -1,10 +1,17 @@
 import pytest
 
 from datetime import datetime
-from apps.greencheck.models import GreenPresenting, Greencheck, TopUrl, Hostingprovider, GreencheckIp
+from apps.greencheck.models import (
+    GreenPresenting,
+    Greencheck,
+    TopUrl,
+    Hostingprovider,
+    GreencheckIp,
+)
 from apps.greencheck.management.commands.update_top_url_list import TopUrlUpdater
 
 tu_updater = TopUrlUpdater()
+
 
 @pytest.fixture
 def hosting_provider():
@@ -30,13 +37,14 @@ def greencheck(hosting_provider, green_ip):
     return Greencheck(
         hostingprovider=hosting_provider.id,
         date=datetime(now.year, now.month, now.day, now.hour, now.second),
-        green='yes',
+        green="yes",
         greencheck_ip=green_ip.id,
         ip=12345,
-        tld='com',
-        type='as',
-        url='google.com'
+        tld="com",
+        type="as",
+        url="google.com",
     )
+
 
 @pytest.fixture
 def top_url():
@@ -44,7 +52,6 @@ def top_url():
 
 
 class TestUpdateList:
-
     def test_update_green_list(self, db, greencheck, top_url):
 
         assert GreenPresenting.objects.count() == 0
@@ -57,12 +64,14 @@ class TestUpdateList:
         tu_updater.update_green_domains(top_urls)
 
         # check we have the value
-        gp_google = GreenPresenting.objects.filter(url='google.com').first()
+        gp_google = GreenPresenting.objects.filter(url="google.com").first()
         assert gp_google.url == "google.com"
 
         assert gp_google.modified == greencheck.date
 
-    def test_update_green_list_with_existing_green_domain(self, db, greencheck, top_url):
+    def test_update_green_list_with_existing_green_domain(
+        self, db, greencheck, top_url
+    ):
 
         # set up fixture
         top_url.save()
@@ -76,7 +85,7 @@ class TestUpdateList:
             hosted_by_website=hostingprovider.website,
             url=greencheck.url,
             partner=hostingprovider.partner,
-            modified=greencheck.date
+            modified=greencheck.date,
         )
         gp.save()
 
@@ -84,11 +93,9 @@ class TestUpdateList:
         tu_updater.update_green_domains(top_urls)
 
         # check we have the value
-        gp_google = GreenPresenting.objects.filter(url='google.com').first()
+        gp_google = GreenPresenting.objects.filter(url="google.com").first()
         assert gp_google.url == "google.com"
 
         assert gp_google.modified == greencheck.date
-        assert GreenPresenting.objects.filter(url='google.com').count() == 1
-
-
+        assert GreenPresenting.objects.filter(url="google.com").count() == 1
 
