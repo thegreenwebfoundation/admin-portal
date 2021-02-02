@@ -100,13 +100,13 @@
         dest: "{{ project_root }}/current/run_worker.sh"
       become: yes
 
-    - name: set up supervisor entry
+    - name: set up supervisor entry for web
       template:
         src: "supervisor.gunicorn.conf.j2"
-        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}.conf"
+        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf"
       become: yes
 
-    - name: set up supervisor entry
+    - name: set up supervisor entry for worker
       template:
         src: "supervisor.gunicorn.conf.j2"
         dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf"
