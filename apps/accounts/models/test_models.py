@@ -9,14 +9,14 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class TestDatacenter:
 
-    @pytest.mark.parametrize("accounting_model", ("groeneenergie","mixed","compensatie",))
+class TestDatacenter:
+    @pytest.mark.parametrize(
+        "accounting_model", ("groeneenergie", "mixed", "compensatie",)
+    )
     def test_accepted_ways_to_model(self, hosting_provider, db, accounting_model):
         val, *_ = [
-            choice for choice in
-            ModelType.choices
-            if choice[0] == accounting_model
+            choice for choice in ModelType.choices if choice[0] == accounting_model
         ]
 
         # if we don't have an allowed value this should throw an error
@@ -25,20 +25,21 @@ class TestDatacenter:
 
         assert hosting_provider.model == accounting_model
 
-class TestHostingProvider:
 
-    @pytest.mark.parametrize("accounting_model", ("groeneenergie","mixed","compensatie",))
-    def test_accepted_ways_to_model(self, datacenter, db, sample_hoster_user, accounting_model, hosting_provider):
+class TestHostingProvider:
+    @pytest.mark.parametrize(
+        "accounting_model", ("groeneenergie", "mixed", "compensatie",)
+    )
+    def test_accepted_ways_to_model(
+        self, datacenter, db, sample_hoster_user, accounting_model, hosting_provider
+    ):
 
         hosting_provider.save()
         sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.save()
 
-
         val, *_ = [
-            choice for choice in
-            ModelType.choices
-            if choice[0] == accounting_model
+            choice for choice in ModelType.choices if choice[0] == accounting_model
         ]
 
         # if we don't have an allowed value this should throw an error
@@ -48,10 +49,12 @@ class TestHostingProvider:
 
         assert datacenter.model == accounting_model
 
-class TestUser:
 
+class TestUser:
     @pytest.mark.only
-    def test_create_user_has_password_and_legacy_password_set(self, db, hosting_provider):
+    def test_create_user_has_password_and_legacy_password_set(
+        self, db, hosting_provider
+    ):
         """
         Test that when we create a user, we set both passwords, so we
         don't cause an unfortunate integrity error.
@@ -64,7 +67,7 @@ class TestUser:
             username="keen_user",
             password="topSekrit",
             email="email@example.com",
-            hostingprovider=hosting_provider
+            hostingprovider=hosting_provider,
         )
 
         new_user.save()
@@ -75,6 +78,3 @@ class TestUser:
         # and is it the same as the actual password we use
         # for logging in via django?
         assert new_user.legacy_password == new_user.password
-
-
-

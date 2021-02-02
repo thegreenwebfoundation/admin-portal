@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('greencheck', '0005_auto_20200604_1037'),
+        ("greencheck", "0005_auto_20200604_1037"),
     ]
 
     operations = [
@@ -42,9 +42,15 @@ class Migration(migrations.Migration):
         #     name='greencheck__created_23c8a1_idx',
         # ),
         migrations.AlterField(
-            model_name='greencheck',
-            name='greencheck_ip',
-            field=models.ForeignKey(blank=True, db_column='id_greencheck', null=True, on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckIp'),
+            model_name="greencheck",
+            name="greencheck_ip",
+            field=models.ForeignKey(
+                blank=True,
+                db_column="id_greencheck",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="greencheck.GreencheckIp",
+            ),
         ),
         # migrations.AlterModelTable(
         #     name='greencheck',

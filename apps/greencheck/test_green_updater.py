@@ -98,4 +98,3 @@ class TestUpdateList:
 
         assert gp_google.modified == greencheck.date
         assert GreenPresenting.objects.filter(url="google.com").count() == 1
-

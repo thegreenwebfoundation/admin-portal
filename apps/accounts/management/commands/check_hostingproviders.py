@@ -5,8 +5,9 @@ from django.core.management.base import BaseCommand
 import requests
 
 from apps.accounts.models import Hostingprovider
-URL = re.compile('^(https?:\/\/)?(.*)')
-GREENCHECK_URL = 'http://api.thegreenwebfoundation.org/greencheck/{}'
+
+URL = re.compile("^(https?:\/\/)?(.*)")
+GREENCHECK_URL = "http://api.thegreenwebfoundation.org/greencheck/{}"
 
 
 class Command(BaseCommand):
@@ -20,7 +21,6 @@ class Command(BaseCommand):
                 url = match.group(2)
                 resp = requests.get(GREENCHECK_URL.format(url)).json()
                 time.sleep(1)
-                if resp.get('green') is False:
+                if resp.get("green") is False:
                     host.showonwebsite = False
                     host.save()
-

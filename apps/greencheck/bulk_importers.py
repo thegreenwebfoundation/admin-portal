@@ -9,6 +9,7 @@ from apps.greencheck.models import GreencheckIp
 
 logger = logging.getLogger(__name__)
 
+
 class MissingHoster(Exception):
     pass
 

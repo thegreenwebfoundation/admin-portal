@@ -16,51 +16,51 @@ from django import forms
 from apps.greencheck.views import GreenUrlsView
 
 
-URL_RE = re.compile(r'https?:\/\/(.*)')
-BASE_URL = 'https://api.thegreenwebfoundation.org/greencheck'
+URL_RE = re.compile(r"https?:\/\/(.*)")
+BASE_URL = "https://api.thegreenwebfoundation.org/greencheck"
 
 
 class CheckUrlForm(forms.Form):
     url = forms.URLField()
 
     def clean_url(self):
-        url = self.cleaned_data['url']
+        url = self.cleaned_data["url"]
         cleaned_url = URL_RE.match(url).group(1)
-        resp = requests.get(f'{BASE_URL}/{cleaned_url}')
+        resp = requests.get(f"{BASE_URL}/{cleaned_url}")
         try:
             resp.raise_for_status()
-            self.green_status = resp.json().get('green', False)
+            self.green_status = resp.json().get("green", False)
             return url
         except HTTPError:
-            msg = 'The request couldn\'t be completed, please try again later'
+            msg = "The request couldn't be completed, please try again later"
             raise ValidationError(msg)
 
 
 class CheckUrlView(FormView):
-    template_name = 'try_out.html'
+    template_name = "try_out.html"
     form_class = CheckUrlForm
-    success_url = '/not/used'
+    success_url = "/not/used"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form_url'] = reverse('admin:check_url')
+        context["form_url"] = reverse("admin:check_url")
         return context
 
     def form_valid(self, form):
         green_status = form.green_status
         context = self.get_context_data()
-        context['green_status'] = 'green' if green_status else 'gray'
+        context["green_status"] = "green" if green_status else "gray"
         return render(self.request, self.template_name, context)
 
 
 class GreenWebAdmin(AdminSite):
     # This is a standard authentication form that allows non-staff users
     login_form = AuthenticationForm
-    index_template = 'admin_index.html'
-    site_header = 'The Green Web Foundation Administration Site'
-    index_title = 'The Green Web Foundation Administration Site'
-    login_template = 'login.html'
-    logout_template = 'logout.html'
+    index_template = "admin_index.html"
+    site_header = "The Green Web Foundation Administration Site"
+    index_title = "The Green Web Foundation Administration Site"
+    login_template = "login.html"
+    logout_template = "logout.html"
 
     def has_permission(self, request):
         """
@@ -72,8 +72,8 @@ class GreenWebAdmin(AdminSite):
     def get_urls(self):
         urls = super().get_urls()
         patterns = [
-            path('try_out/', CheckUrlView.as_view(), name='check_url'),
-            path('green-urls', GreenUrlsView.as_view(), name='green_urls'),
+            path("try_out/", CheckUrlView.as_view(), name="check_url"),
+            path("green-urls", GreenUrlsView.as_view(), name="green_urls"),
         ]
         return patterns + urls
 
@@ -83,12 +83,12 @@ class GreenWebAdmin(AdminSite):
             {
                 "name": "Try out greencheck",
                 "app_label": "greencheck",
-                "app_url": reverse('admin:check_url'),
+                "app_url": reverse("admin:check_url"),
                 "models": [
                     {
                         "name": "Try out a url",
                         "object_name": "greencheck_url",
-                        "admin_url": reverse('admin:check_url'),
+                        "admin_url": reverse("admin:check_url"),
                         "view_only": True,
                     }
                 ],
@@ -96,18 +96,18 @@ class GreenWebAdmin(AdminSite):
             {
                 "name": "Download data dump",
                 "app_label": "greencheck",
-                "app_url": reverse('admin:check_url'),
+                "app_url": reverse("admin:check_url"),
                 "models": [
                     {
                         "name": "Download data dump",
                         "object_name": "greencheck_url",
-                        "admin_url": reverse('admin:green_urls'),
+                        "admin_url": reverse("admin:green_urls"),
                         "view_only": True,
                     }
                 ],
-            }
+            },
         ]
         return app_list
 
 
-greenweb_admin = GreenWebAdmin(name='greenweb_admin')
+greenweb_admin = GreenWebAdmin(name="greenweb_admin")

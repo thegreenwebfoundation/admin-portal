@@ -7,18 +7,28 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('greencheck', '0001_initial'),
+        ("greencheck", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='greencheckasnapprove',
-            name='greencheck_asn',
-            field=models.ForeignKey(db_column='idorig', null=True, on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckASN'),
+            model_name="greencheckasnapprove",
+            name="greencheck_asn",
+            field=models.ForeignKey(
+                db_column="idorig",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="greencheck.GreencheckASN",
+            ),
         ),
         migrations.AlterField(
-            model_name='greencheckipapprove',
-            name='greencheck_ip',
-            field=models.ForeignKey(db_column='idorig', null=True, on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckIp'),
+            model_name="greencheckipapprove",
+            name="greencheck_ip",
+            field=models.ForeignKey(
+                db_column="idorig",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="greencheck.GreencheckIp",
+            ),
         ),
     ]

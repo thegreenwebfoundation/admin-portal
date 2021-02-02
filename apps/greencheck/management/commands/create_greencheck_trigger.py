@@ -7,11 +7,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with connection.cursor() as cursor:
-            cursor.execute('''
+            cursor.execute(
+                """
                 -- CREATE TRIGGER "after_greencheck_insert" ---------------
                 CREATE TRIGGER after_greencheck_insert
                     AFTER INSERT ON greencheck
                     FOR EACH ROW
                 CALL insert_urls(NEW.url, NEW.green, NEW.id_hp, NEW.datum);
                 -- --------------------------------------------------------
-            ''')
+            """
+            )

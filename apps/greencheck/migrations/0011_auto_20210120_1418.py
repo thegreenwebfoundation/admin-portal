@@ -7,13 +7,19 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('greencheck', '0010_auto_20210120_1107'),
+        ("greencheck", "0010_auto_20210120_1107"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='greencheck',
-            name='hostingprovider',
-            field=models.ForeignKey(blank=True, db_column='id_hp', null=True, on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
+            model_name="greencheck",
+            name="hostingprovider",
+            field=models.ForeignKey(
+                blank=True,
+                db_column="id_hp",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="accounts.Hostingprovider",
+            ),
         )
     ]

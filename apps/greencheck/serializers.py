@@ -3,6 +3,7 @@ from .models import GreencheckIp
 
 import ipaddress
 
+
 class IPDecimalField(serializers.DecimalField):
     """
     A TGWF specific decimal field to account for the fact that
@@ -39,15 +40,14 @@ class GreenIPRangeSerializer(serializers.ModelSerializer):
         Check that start is before finish.
         """
 
-        start = data['ip_start']
-        end = data['ip_end']
+        start = data["ip_start"]
+        end = data["ip_end"]
         if start > end:
-            raise serializers.ValidationError("The IP range must start with a lower IP than the end IP")
+            raise serializers.ValidationError(
+                "The IP range must start with a lower IP than the end IP"
+            )
         return data
 
     class Meta:
         model = GreencheckIp
-        fields = ['active', "ip_start", "ip_end", "hostingprovider", "id"]
-
-
-
+        fields = ["active", "ip_start", "ip_end", "hostingprovider", "id"]

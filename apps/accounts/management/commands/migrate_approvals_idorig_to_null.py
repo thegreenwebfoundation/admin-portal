@@ -7,16 +7,20 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with connection.cursor() as cursor:
-            cursor.execute('''
+            cursor.execute(
+                """
                 UPDATE greencheck_ip_approve
                 SET idorig = NULL
                 WHERE idorig = 0
-            ''')
+            """
+            )
 
-            cursor.execute('''
+            cursor.execute(
+                """
                 UPDATE greencheck_as_approve
                 SET idorig = NULL
                 WHERE idorig = 0
-            ''')
+            """
+            )
 
-        self.stdout.write(self.style.SUCCESS('Migrated 0 to be NULL!'))
+        self.stdout.write(self.style.SUCCESS("Migrated 0 to be NULL!"))

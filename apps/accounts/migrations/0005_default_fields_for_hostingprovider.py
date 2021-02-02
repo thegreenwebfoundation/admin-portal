@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0004_default_values_for_boolean_fields'),
+        ("accounts", "0004_default_values_for_boolean_fields"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='hostingprovider',
-            name='archived',
+            model_name="hostingprovider",
+            name="archived",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='hostingprovider',
-            name='customer',
+            model_name="hostingprovider",
+            name="customer",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='hostingprovider',
-            name='showonwebsite',
-            field=models.BooleanField(default=False, verbose_name='Show on website'),
+            model_name="hostingprovider",
+            name="showonwebsite",
+            field=models.BooleanField(default=False, verbose_name="Show on website"),
         ),
     ]

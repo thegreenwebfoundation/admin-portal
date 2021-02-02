@@ -12,7 +12,7 @@ from apps.greencheck.admin import (
     GreencheckIpApproveInline,
     GreencheckIpInline,
     GreencheckAsnInline,
-    GreencheckAsnApproveInline
+    GreencheckAsnApproveInline,
 )
 
 from apps.greencheck.models import GreencheckASN
@@ -47,19 +47,14 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
-    search_fields = ('username', 'email')
-    list_display = [
-        'username',
-        'email',
-        'last_login',
-        'is_staff'
-    ]
+    search_fields = ("username", "email")
+    list_display = ["username", "email", "last_login", "is_staff"]
 
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'password1', 'password2'),
-        }),
+        (
+            None,
+            {"classes": ("wide",), "fields": ("username", "password1", "password2"),},
+        ),
     )
 
     def get_queryset(self, request, *args, **kwargs):
@@ -72,27 +67,35 @@ class CustomUserAdmin(UserAdmin):
 
         if request.user.is_superuser:
             return (
-                (None, {'fields': ('username', 'password')}),
-                ('Personal info', {'fields': ('email',)}),
-                ('Permissions', {
-                    'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
-                }),
-                ('Important dates', {'fields': ('last_login', 'date_joined')}),
+                (None, {"fields": ("username", "password")}),
+                ("Personal info", {"fields": ("email",)}),
+                (
+                    "Permissions",
+                    {
+                        "fields": (
+                            "is_active",
+                            "is_staff",
+                            "is_superuser",
+                            "groups",
+                            "user_permissions",
+                        ),
+                    },
+                ),
+                ("Important dates", {"fields": ("last_login", "date_joined")}),
             )
         # TODO DRY this up, once the security hole is plugged
 
         return (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('email',)}),
-
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
+            (None, {"fields": ("username", "password")}),
+            ("Personal info", {"fields": ("email",)}),
+            ("Important dates", {"fields": ("last_login", "date_joined")}),
+        )
 
 
 class HostingCertificateInline(admin.TabularInline):
     extra = 0
     model = HostingproviderCertificate
-    classes = ['collapse']
+    classes = ["collapse"]
 
 
 @admin.register(Hostingprovider, site=greenweb_admin)
@@ -104,57 +107,54 @@ class HostingAdmin(admin.ModelAdmin):
         filters.YearIPFilter,
         filters.ShowWebsiteFilter,
         filters.PartnerFilter,
-        filters.CountryFilter
+        filters.CountryFilter,
     ]
     inlines = [
         HostingCertificateInline,
         GreencheckAsnInline,
         GreencheckAsnApproveInline,
         GreencheckIpInline,
-        GreencheckIpApproveInline
+        GreencheckIpApproveInline,
     ]
-    search_fields = ('name',)
+    search_fields = ("name",)
     list_display = [
-        'name',
-        'country_str',
-        'html_website',
-        'showonwebsite',
-        'partner',
-        'model',
-        'certificates_amount',
-        'datacenter_amount',
-        'ip_addresses',
+        "name",
+        "country_str",
+        "html_website",
+        "showonwebsite",
+        "partner",
+        "model",
+        "certificates_amount",
+        "datacenter_amount",
+        "ip_addresses",
     ]
-    readonly_fields = ['send_button']
-    ordering = ('name',)
+    readonly_fields = ["send_button"]
+    ordering = ("name",)
 
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
         qs = qs.prefetch_related(
-            'hostingprovider_certificates',
-            'datacenter',
-            'greencheckip_set'
-        ).annotate(
-            models.Count('greencheckip')
-        )
+            "hostingprovider_certificates", "datacenter", "greencheckip_set"
+        ).annotate(models.Count("greencheckip"))
         if not request.user.is_staff:
             qs = qs.filter(user=request.user)
         return qs
 
     def get_fieldsets(self, request, obj=None):
         fieldset = [
-            ('Hostingprovider info', {
-                'fields': (('name', 'website',), 'country'),
-            }),
-            ('Visual', {'fields': (('icon', 'iconurl'),)}),
-            ('Other', {'fields': (('partner', 'model'),)}),
+            ("Hostingprovider info", {"fields": (("name", "website",), "country"),}),
+            ("Visual", {"fields": (("icon", "iconurl"),)}),
+            ("Other", {"fields": (("partner", "model"),)}),
         ]
 
         admin_editable = (
-            'Admin only', {'fields': (
-                ('archived', 'showonwebsite', 'customer',),
-                ('email_template', 'send_button'),
-            )}
+            "Admin only",
+            {
+                "fields": (
+                    ("archived", "showonwebsite", "customer",),
+                    ("email_template", "send_button"),
+                )
+            },
         )
         if request.user.is_staff:
             fieldset.append(admin_editable)
@@ -169,22 +169,23 @@ class HostingAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         from django.urls import path
+
         urls = super().get_urls()
         added = [
             path(
-                'approval_asn/',
+                "approval_asn/",
                 self.approve_asn,
-                name=get_admin_name(self.model, 'approval_asn')
+                name=get_admin_name(self.model, "approval_asn"),
             ),
             path(
-                'approval_ip/',
+                "approval_ip/",
                 self.approve_ip,
-                name=get_admin_name(self.model, 'approval_ip')
+                name=get_admin_name(self.model, "approval_ip"),
             ),
             path(
-                'send_email/<provider>/',
+                "send_email/<provider>/",
                 self.send_email,
-                name=get_admin_name(self.model, 'send_email')
+                name=get_admin_name(self.model, "send_email"),
             ),
         ]
         # order is important !!
@@ -193,61 +194,57 @@ class HostingAdmin(admin.ModelAdmin):
     @mark_safe
     def send_button(self, obj):
         url = reverse_admin_name(
-            Hostingprovider,
-            name='send_email',
-            kwargs={'provider': obj.pk},
+            Hostingprovider, name="send_email", kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="sendEmail">Send email</a>'
         return link
-    send_button.short_description = 'Send email'
+
+    send_button.short_description = "Send email"
 
     def send_email(self, request, *args, **kwargs):
-        email_name = request.GET.get('email')
-        email_template = f'emails/{email_name}'
-        redirect_name = 'admin:' + get_admin_name(self.model, 'change')
+        email_name = request.GET.get("email")
+        email_template = f"emails/{email_name}"
+        redirect_name = "admin:" + get_admin_name(self.model, "change")
 
-        obj = Hostingprovider.objects.get(pk=kwargs['provider'])
+        obj = Hostingprovider.objects.get(pk=kwargs["provider"])
         subject = {
-            'additional-info.txt': 'Additional information needed to approve your listing in the Green Web Directory.',
-            'pending-removal.txt': 'Pending removal from the Green Web Directory due to questions around the green hosting of {}'.format(obj.name)
+            "additional-info.txt": "Additional information needed to approve your listing in the Green Web Directory.",
+            "pending-removal.txt": "Pending removal from the Green Web Directory due to questions around the green hosting of {}".format(
+                obj.name
+            ),
         }
         user = obj.user_set.all().first()
         if not user:
             messages.add_message(
-                request, messages.WARNING,
-                'No user exists for this host, so no email was sent'
+                request,
+                messages.WARNING,
+                "No user exists for this host, so no email was sent",
             )
             return redirect(redirect_name, obj.pk)
         context = {
-            'host': obj,
-            'user': user,
+            "host": obj,
+            "user": user,
         }
         message = render_to_string(email_template, context=context)
         send_mail(
-            subject[email_name],
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email]
+            subject[email_name], message, settings.DEFAULT_FROM_EMAIL, [user.email]
         )
 
-        messages.add_message(
-            request, messages.INFO,
-            'Email sent to user'
-        )
+        messages.add_message(request, messages.INFO, "Email sent to user")
 
         HostingCommunication.objects.create(
-            template=email_template,
-            hostingprovider=obj
+            template=email_template, hostingprovider=obj
         )
 
-        name = 'admin:' + get_admin_name(self.model, 'change')
+        name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.pk)
 
     def approve_asn(self, request, *args, **kwargs):
         # TODO it would be ideal if this was more re-usable
         from apps.greencheck.models import GreencheckASNapprove
-        pk = request.GET.get('approval_id')
-        action = request.GET.get('action')
+
+        pk = request.GET.get("approval_id")
+        action = request.GET.get("action")
 
         obj = GreencheckASNapprove.objects.get(pk=pk)
         obj.status = action
@@ -255,17 +252,15 @@ class HostingAdmin(admin.ModelAdmin):
 
         if action == StatusApproval.approved:
             GreencheckASN.objects.create(
-                active=True,
-                hostingprovider=obj.hostingprovider,
-                asn=obj.asn
+                active=True, hostingprovider=obj.hostingprovider, asn=obj.asn
             )
-        name = 'admin:' + get_admin_name(self.model, 'change')
+        name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.hostingprovider_id)
 
     def approve_ip(self, request, *args, **kwargs):
         # TODO it would be ideal if this was more re-usable
-        pk = request.GET.get('approval_id')
-        action = request.GET.get('action')
+        pk = request.GET.get("approval_id")
+        action = request.GET.get("action")
 
         obj = GreencheckIpApprove.objects.get(pk=pk)
         obj.status = action
@@ -276,9 +271,9 @@ class HostingAdmin(admin.ModelAdmin):
                 active=True,
                 hostingprovider=obj.hostingprovider,
                 ip_start=obj.ip_start,
-                ip_end=obj.ip_end
+                ip_end=obj.ip_end,
             )
-        name = 'admin:' + get_admin_name(self.model, 'change')
+        name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.hostingprovider_id)
 
     def save_formset(self, request, form, formset, change):
@@ -296,14 +291,14 @@ class HostingAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         read_only = super().get_readonly_fields(request, obj)
         if not request.user.is_staff:
-            return read_only + ['partner']
+            return read_only + ["partner"]
         return read_only
 
     def _changeform_view(self, request, object_id, form_url, extra_context):
-        '''Include whether current user is staff, so it can be picked up by a form'''
-        if request.method == 'POST':
+        """Include whether current user is staff, so it can be picked up by a form"""
+        if request.method == "POST":
             post = request.POST.copy()
-            post['is_staff'] = request.user.is_staff
+            post["is_staff"] = request.user.is_staff
             request.POST = post
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
@@ -311,30 +306,35 @@ class HostingAdmin(admin.ModelAdmin):
     def html_website(self, obj):
         html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
         return html
-    html_website.short_description = 'website'
+
+    html_website.short_description = "website"
 
     def ip_addresses(self, obj):
         return len(obj.greencheckip_set.all())
-    ip_addresses.short_description = 'Number of IP ranges'
-    ip_addresses.admin_order_field = 'greencheckip__count'
+
+    ip_addresses.short_description = "Number of IP ranges"
+    ip_addresses.admin_order_field = "greencheckip__count"
 
     def country_str(self, obj):
         return obj.country.code
-    country_str.short_description = 'country'
+
+    country_str.short_description = "country"
 
     def certificates_amount(self, obj):
         return len(obj.hostingprovider_certificates.all())
-    certificates_amount.short_description = 'Certificates'
+
+    certificates_amount.short_description = "Certificates"
 
     def datacenter_amount(self, obj):
         return len(obj.datacenter.all())
-    datacenter_amount.short_description = 'Datacenters'
+
+    datacenter_amount.short_description = "Datacenters"
 
 
 class DatacenterCertificateInline(admin.TabularInline):
     extra = 0
     model = DatacenterCertificate
-    classes = ['collapse']
+    classes = ["collapse"]
 
     # def get_formset(self, request, obj=None, **kwargs):
     # give kwargs a dictionary of widgets to change widgets.
@@ -343,13 +343,13 @@ class DatacenterCertificateInline(admin.TabularInline):
 class DatacenterClassificationInline(admin.TabularInline):
     extra = 0
     model = DatacenterClassification
-    classes = ['collapse']
+    classes = ["collapse"]
 
 
 class DatacenterCoolingInline(admin.TabularInline):
     extra = 0
     model = DatacenterCooling
-    classes = ['collapse']
+    classes = ["collapse"]
 
 
 @admin.register(Datacenter, site=greenweb_admin)
@@ -360,21 +360,21 @@ class DatacenterAdmin(admin.ModelAdmin):
         DatacenterClassificationInline,
         DatacenterCoolingInline,
     ]
-    search_fields = ('name',)
+    search_fields = ("name",)
 
     list_display = [
-        'name',
-        'html_website',
-        'country_str',
-        'model',
-        'pue',
-        'classification_names',
-        'show_website',
-        'certificates_amount',
-        'hostingproviders_amount'
+        "name",
+        "html_website",
+        "country_str",
+        "model",
+        "pue",
+        "classification_names",
+        "show_website",
+        "certificates_amount",
+        "hostingproviders_amount",
     ]
-    ordering = ('name',)
-    raw_id_fields = ('user',)
+    ordering = ("name",)
+    raw_id_fields = ("user",)
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -384,33 +384,31 @@ class DatacenterAdmin(admin.ModelAdmin):
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
         qs = qs.prefetch_related(
-            'classifications',
-            'datacenter_certificates',
-            'hostingproviders'
+            "classifications", "datacenter_certificates", "hostingproviders"
         )
         return qs
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_staff:
-            return ['showonwebsite', 'user']
+            return ["showonwebsite", "user"]
         return self.readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldset = [
-            ('Datacenter info', {
-                'fields': (
-                    ('name', 'website',),
-                    ('country', 'user'),
-                    ('pue', 'residualheat'),
-                    ('temperature', 'temperature_type',),
-                    ('dc12v', 'virtual', 'greengrid', 'showonwebsite'),
-                    ('model',),
-                ),
-
-            }),
-            (None, {
-                'fields': ('hostingproviders',)
-            })
+            (
+                "Datacenter info",
+                {
+                    "fields": (
+                        ("name", "website",),
+                        ("country", "user"),
+                        ("pue", "residualheat"),
+                        ("temperature", "temperature_type",),
+                        ("dc12v", "virtual", "greengrid", "showonwebsite"),
+                        ("model",),
+                    ),
+                },
+            ),
+            (None, {"fields": ("hostingproviders",)}),
         ]
         return fieldset
 
@@ -418,27 +416,32 @@ class DatacenterAdmin(admin.ModelAdmin):
     def html_website(self, obj):
         html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
         return html
-    html_website.short_description = 'website'
+
+    html_website.short_description = "website"
 
     def country_str(self, obj):
         return obj.country.code
-    country_str.short_description = 'country'
+
+    country_str.short_description = "country"
 
     def show_website(self, obj):
         return obj.showonwebsite
-    show_website.short_description = 'Show on website'
+
+    show_website.short_description = "Show on website"
     show_website.boolean = True
 
     def classification_names(self, obj):
         classifications = [c.classification for c in obj.classifications.all()]
-        return ', '.join(classifications)
-    classification_names.short_description = 'Classifications'
+        return ", ".join(classifications)
+
+    classification_names.short_description = "Classifications"
 
     def certificates_amount(self, obj):
         return len(obj.datacenter_certificates.all())
-    certificates_amount.short_description = 'Certificates'
+
+    certificates_amount.short_description = "Certificates"
 
     def hostingproviders_amount(self, obj):
         return len(obj.hostingproviders.all())
-    hostingproviders_amount.short_description = 'Hosters'
 
+    hostingproviders_amount.short_description = "Hosters"

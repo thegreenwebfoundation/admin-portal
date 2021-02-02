@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0010_add_date_joined_values'),
+        ("accounts", "0010_add_date_joined_values"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='legacy_password',
-            field=models.CharField(db_column='password', default='', max_length=128, verbose_name='legacy_password'),
+            model_name="user",
+            name="legacy_password",
+            field=models.CharField(
+                db_column="password",
+                default="",
+                max_length=128,
+                verbose_name="legacy_password",
+            ),
         ),
     ]

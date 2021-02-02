@@ -10,227 +10,435 @@ from apps.greencheck.models import IpAddressField
 class Migration(migrations.Migration):
     initial = True
     dependencies = [
-        ('accounts', '0002_add_django_user_fields'),
+        ("accounts", "0002_add_django_user_fields"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='GreencheckIp',
+            name="GreencheckIp",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('active', models.BooleanField(null=True)),
-                ('ip_end', IpAddressField(db_column='ip_eind')),
-                ('ip_start', IpAddressField()),
-                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("active", models.BooleanField(null=True)),
+                ("ip_end", IpAddressField(db_column="ip_eind")),
+                ("ip_start", IpAddressField()),
+                (
+                    "hostingprovider",
+                    models.ForeignKey(
+                        db_column="id_hp",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.Hostingprovider",
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'greencheck_ip',
-            },
+            options={"db_table": "greencheck_ip",},
         ),
         migrations.CreateModel(
-            name='Greencheck',
+            name="Greencheck",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', django_unixdatetimefield.fields.UnixDateTimeField(db_column='datum')),
-                ('green', django_mysql.models.EnumField(choices=[('yes', 'yes'), ('no', 'no'), ('old', 'old')])),
-                ('ip', IpAddressField()),
-                ('tld', models.CharField(max_length=64)),
-                ('type', django_mysql.models.EnumField(choices=[('as', 'asn'), ('ip', 'ip'), ('none', 'none'), ('url', 'url'), ('whois', 'whois')])),
-                ('url', models.CharField(max_length=255)),
-                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider')),
-                ('greencheck_ip', models.ForeignKey(db_column='id_greencheck', on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckIp')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "date",
+                    django_unixdatetimefield.fields.UnixDateTimeField(
+                        db_column="datum"
+                    ),
+                ),
+                (
+                    "green",
+                    django_mysql.models.EnumField(
+                        choices=[("yes", "yes"), ("no", "no"), ("old", "old")]
+                    ),
+                ),
+                ("ip", IpAddressField()),
+                ("tld", models.CharField(max_length=64)),
+                (
+                    "type",
+                    django_mysql.models.EnumField(
+                        choices=[
+                            ("as", "asn"),
+                            ("ip", "ip"),
+                            ("none", "none"),
+                            ("url", "url"),
+                            ("whois", "whois"),
+                        ]
+                    ),
+                ),
+                ("url", models.CharField(max_length=255)),
+                (
+                    "hostingprovider",
+                    models.ForeignKey(
+                        db_column="id_hp",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.Hostingprovider",
+                    ),
+                ),
+                (
+                    "greencheck_ip",
+                    models.ForeignKey(
+                        db_column="id_greencheck",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="greencheck.GreencheckIp",
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'greencheck',
-            },
+            options={"db_table": "greencheck",},
         ),
         migrations.CreateModel(
-            name='GreencheckASN',
+            name="GreencheckASN",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('active', models.BooleanField(null=True)),
-                ('asn', models.IntegerField(verbose_name='Autonomous system number')),
-                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'))
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("active", models.BooleanField(null=True)),
+                ("asn", models.IntegerField(verbose_name="Autonomous system number")),
+                (
+                    "hostingprovider",
+                    models.ForeignKey(
+                        db_column="id_hp",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.Hostingprovider",
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'greencheck_as',
-            },
+            options={"db_table": "greencheck_as",},
         ),
         migrations.CreateModel(
-            name='GreencheckASNapprove',
+            name="GreencheckASNapprove",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.TextField()),
-                ('asn', models.IntegerField()),
-                ('status', models.TextField()),
-                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider')),
-                ('greencheck_asn', models.ForeignKey(db_column='idorig', on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckASN'))
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("action", models.TextField()),
+                ("asn", models.IntegerField()),
+                ("status", models.TextField()),
+                (
+                    "hostingprovider",
+                    models.ForeignKey(
+                        db_column="id_hp",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.Hostingprovider",
+                    ),
+                ),
+                (
+                    "greencheck_asn",
+                    models.ForeignKey(
+                        db_column="idorig",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="greencheck.GreencheckASN",
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'greencheck_as_approve',
-            },
+            options={"db_table": "greencheck_as_approve",},
         ),
         migrations.CreateModel(
-            name='GreencheckIpApprove',
+            name="GreencheckIpApprove",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.TextField()),
-                ('ip_end', IpAddressField(db_column='ip_eind')),
-                ('ip_start', IpAddressField()),
-                ('status', models.TextField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("action", models.TextField()),
+                ("ip_end", IpAddressField(db_column="ip_eind")),
+                ("ip_start", IpAddressField()),
+                ("status", models.TextField()),
             ],
-            options={
-                'db_table': 'greencheck_ip_approve',
-            },
+            options={"db_table": "greencheck_ip_approve",},
         ),
         migrations.CreateModel(
-            name='GreencheckLinked',
+            name="GreencheckLinked",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='GreencheckStats',
+            name="GreencheckStats",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('checked_through', django_mysql.models.EnumField(choices=[('admin', 'admin'), ('api', 'api'), ('apisearch', 'apisearch'), ('bots', 'bots'), ('test', 'test'), ('website', 'website')])),
-                ('count', models.IntegerField()),
-                ('ips', models.IntegerField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "checked_through",
+                    django_mysql.models.EnumField(
+                        choices=[
+                            ("admin", "admin"),
+                            ("api", "api"),
+                            ("apisearch", "apisearch"),
+                            ("bots", "bots"),
+                            ("test", "test"),
+                            ("website", "website"),
+                        ]
+                    ),
+                ),
+                ("count", models.IntegerField()),
+                ("ips", models.IntegerField()),
             ],
-            options={
-                'db_table': 'greencheck_stats',
-            },
+            options={"db_table": "greencheck_stats",},
         ),
         migrations.CreateModel(
-            name='GreencheckStatsTotal',
+            name="GreencheckStatsTotal",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('checked_through', django_mysql.models.EnumField(choices=[('admin', 'admin'), ('api', 'api'), ('apisearch', 'apisearch'), ('bots', 'bots'), ('test', 'test'), ('website', 'website')])),
-                ('count', models.IntegerField()),
-                ('ips', models.IntegerField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "checked_through",
+                    django_mysql.models.EnumField(
+                        choices=[
+                            ("admin", "admin"),
+                            ("api", "api"),
+                            ("apisearch", "apisearch"),
+                            ("bots", "bots"),
+                            ("test", "test"),
+                            ("website", "website"),
+                        ]
+                    ),
+                ),
+                ("count", models.IntegerField()),
+                ("ips", models.IntegerField()),
             ],
-            options={
-                'db_table': 'greencheck_stats_total',
-            },
+            options={"db_table": "greencheck_stats_total",},
         ),
         migrations.CreateModel(
-            name='GreencheckTLD',
+            name="GreencheckTLD",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('checked_domains', models.IntegerField()),
-                ('green_domains', models.IntegerField()),
-                ('hps', models.IntegerField()),
-                ('tld', models.CharField(max_length=50)),
-                ('toplevel', models.CharField(max_length=64)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("checked_domains", models.IntegerField()),
+                ("green_domains", models.IntegerField()),
+                ("hps", models.IntegerField()),
+                ("tld", models.CharField(max_length=50)),
+                ("toplevel", models.CharField(max_length=64)),
             ],
-            options={
-                'db_table': 'greencheck_tld',
-            },
+            options={"db_table": "greencheck_tld",},
         ),
         migrations.CreateModel(
-            name='GreencheckWeeklyStats',
+            name="GreencheckWeeklyStats",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('checks_green', models.IntegerField()),
-                ('checks_grey', models.IntegerField()),
-                ('checks_perc', models.FloatField()),
-                ('checks_total', models.IntegerField()),
-                ('monday', models.DateField(db_column='maandag')),
-                ('url_green', models.IntegerField()),
-                ('url_grey', models.IntegerField()),
-                ('url_perc', models.FloatField()),
-                ('week', models.IntegerField()),
-                ('year', models.PositiveSmallIntegerField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("checks_green", models.IntegerField()),
+                ("checks_grey", models.IntegerField()),
+                ("checks_perc", models.FloatField()),
+                ("checks_total", models.IntegerField()),
+                ("monday", models.DateField(db_column="maandag")),
+                ("url_green", models.IntegerField()),
+                ("url_grey", models.IntegerField()),
+                ("url_perc", models.FloatField()),
+                ("week", models.IntegerField()),
+                ("year", models.PositiveSmallIntegerField()),
             ],
-            options={
-                'db_table': 'greencheck_weekly',
-            },
+            options={"db_table": "greencheck_weekly",},
         ),
         migrations.CreateModel(
-            name='GreenList',
+            name="GreenList",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('last_checked', django_unixdatetimefield.fields.UnixDateTimeField()),
-                ('name', models.CharField(db_column='naam', max_length=255)),
-                ('type', django_mysql.models.EnumField(choices=[('as', 'asn'), ('ip', 'ip'), ('none', 'none'), ('url', 'url'), ('whois', 'whois')])),
-                ('url', models.CharField(max_length=255)),
-                ('website', models.CharField(max_length=255)),
-                ('greencheck', models.ForeignKey(db_column='id_greencheck', on_delete=django.db.models.deletion.CASCADE, to='greencheck.Greencheck')),
-                ('hostingprovider', models.ForeignKey(db_column='id_hp', on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("last_checked", django_unixdatetimefield.fields.UnixDateTimeField()),
+                ("name", models.CharField(db_column="naam", max_length=255)),
+                (
+                    "type",
+                    django_mysql.models.EnumField(
+                        choices=[
+                            ("as", "asn"),
+                            ("ip", "ip"),
+                            ("none", "none"),
+                            ("url", "url"),
+                            ("whois", "whois"),
+                        ]
+                    ),
+                ),
+                ("url", models.CharField(max_length=255)),
+                ("website", models.CharField(max_length=255)),
+                (
+                    "greencheck",
+                    models.ForeignKey(
+                        db_column="id_greencheck",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="greencheck.Greencheck",
+                    ),
+                ),
+                (
+                    "hostingprovider",
+                    models.ForeignKey(
+                        db_column="id_hp",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.Hostingprovider",
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'greenlist',
-            },
+            options={"db_table": "greenlist",},
         ),
         migrations.AddIndex(
-            model_name='greenchecktld',
-            index=models.Index(fields=['tld'], name='tld'),
+            model_name="greenchecktld", index=models.Index(fields=["tld"], name="tld"),
         ),
         migrations.AddIndex(
-            model_name='greencheckstatstotal',
-            index=models.Index(fields=['checked_through'], name='checked_through'),
+            model_name="greencheckstatstotal",
+            index=models.Index(fields=["checked_through"], name="checked_through"),
         ),
         migrations.AddIndex(
-            model_name='greencheckstats',
-            index=models.Index(fields=['checked_through'], name='checked_through'),
+            model_name="greencheckstats",
+            index=models.Index(fields=["checked_through"], name="checked_through"),
         ),
         migrations.AddField(
-            model_name='greencheckipapprove',
-            name='greencheck_ip',
-            field=models.ForeignKey(db_column='idorig', on_delete=django.db.models.deletion.CASCADE, to='greencheck.GreencheckIp'),
+            model_name="greencheckipapprove",
+            name="greencheck_ip",
+            field=models.ForeignKey(
+                db_column="idorig",
+                on_delete=django.db.models.deletion.CASCADE,
+                to="greencheck.GreencheckIp",
+            ),
         ),
         migrations.AddField(
-            model_name='greencheckipapprove',
-            name='hostingprovider',
-            field=models.ForeignKey(db_column='id_hp', null=True, on_delete=django.db.models.deletion.CASCADE, to='accounts.Hostingprovider'),
+            model_name="greencheckipapprove",
+            name="hostingprovider",
+            field=models.ForeignKey(
+                db_column="id_hp",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="accounts.Hostingprovider",
+            ),
         ),
         migrations.AddIndex(
-            model_name='greenlist',
-            index=models.Index(fields=['url'], name='url'),
+            model_name="greenlist", index=models.Index(fields=["url"], name="url"),
         ),
         migrations.AddIndex(
-            model_name='greencheckip',
-            index=models.Index(fields=['ip_end'], name='ip_eind'),
+            model_name="greencheckip",
+            index=models.Index(fields=["ip_end"], name="ip_eind"),
         ),
         migrations.AddIndex(
-            model_name='greencheckip',
-            index=models.Index(fields=['ip_start'], name='ip_start'),
+            model_name="greencheckip",
+            index=models.Index(fields=["ip_start"], name="ip_start"),
         ),
         migrations.AddIndex(
-            model_name='greencheckip',
-            index=models.Index(fields=['active'], name='active'),
+            model_name="greencheckip",
+            index=models.Index(fields=["active"], name="active"),
         ),
         migrations.AddIndex(
-            model_name='greencheckasn',
-            index=models.Index(fields=['active'], name='active'),
+            model_name="greencheckasn",
+            index=models.Index(fields=["active"], name="active"),
         ),
         migrations.AddIndex(
-            model_name='greencheckasn',
-            index=models.Index(fields=['asn'], name='asn'),
+            model_name="greencheckasn", index=models.Index(fields=["asn"], name="asn"),
         ),
         migrations.AlterField(
-            model_name='greenchecktld',
-            name='hps',
-            field=models.IntegerField(verbose_name='Hostingproviders registered in tld'),
+            model_name="greenchecktld",
+            name="hps",
+            field=models.IntegerField(
+                verbose_name="Hostingproviders registered in tld"
+            ),
         ),
         migrations.AlterField(
-            model_name='greencheckasnapprove',
-            name='action',
-            field=models.TextField(choices=[('', 'empty'), ('new', 'new'), ('update', 'update')]),
+            model_name="greencheckasnapprove",
+            name="action",
+            field=models.TextField(
+                choices=[("", "empty"), ("new", "new"), ("update", "update")]
+            ),
         ),
         migrations.AlterField(
-            model_name='greencheckipapprove',
-            name='action',
-            field=models.TextField(choices=[('', 'empty'), ('new', 'new'), ('update', 'update')]),
+            model_name="greencheckipapprove",
+            name="action",
+            field=models.TextField(
+                choices=[("", "empty"), ("new", "new"), ("update", "update")]
+            ),
         ),
         migrations.AlterField(
-            model_name='greencheckasnapprove',
-            name='status',
-            field=models.TextField(choices=[('Approved', 'approved'), ('Deleted', 'deleted'), ('New', 'new'), ('Removed', 'removed'), ('Update', 'update')]),
+            model_name="greencheckasnapprove",
+            name="status",
+            field=models.TextField(
+                choices=[
+                    ("Approved", "approved"),
+                    ("Deleted", "deleted"),
+                    ("New", "new"),
+                    ("Removed", "removed"),
+                    ("Update", "update"),
+                ]
+            ),
         ),
         migrations.AlterField(
-            model_name='greencheckipapprove',
-            name='status',
-            field=models.TextField(choices=[('Approved', 'approved'), ('Deleted', 'deleted'), ('New', 'new'), ('Removed', 'removed'), ('Update', 'update')]),
+            model_name="greencheckipapprove",
+            name="status",
+            field=models.TextField(
+                choices=[
+                    ("Approved", "approved"),
+                    ("Deleted", "deleted"),
+                    ("New", "new"),
+                    ("Removed", "removed"),
+                    ("Update", "update"),
+                ]
+            ),
         ),
     ]

@@ -18,11 +18,11 @@ class GreenUrlsView(TemplateView):
 
     @property
     def urls(self):
-        '''
+        """
         Setting the date two weeks in the future. Two weeks from now on
         it will prefetch the urls again
-        '''
-        accessed_date = getattr(self, '_date', None)
+        """
+        accessed_date = getattr(self, "_date", None)
         if not accessed_date or self._date < date.today():
             self._date = date.today() + timedelta(weeks=2)
             self._urls = self.fetch_urls()
@@ -31,7 +31,5 @@ class GreenUrlsView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['urls'] = self.urls
+        context["urls"] = self.urls
         return context
-
-
