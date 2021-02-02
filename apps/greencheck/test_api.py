@@ -108,6 +108,30 @@ class TestIpRangeViewSetList:
         assert ip_range["hostingprovider"] == green_ip.hostingprovider.id
         assert ip_range["active"] == green_ip.active
 
+    def test_get_ip_ranges_for_hostingprovider_with_no_active_ones(
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
+        green_ip: GreencheckIp,
+    ):
+        hosting_provider.save()
+        sample_hoster_user.hostingprovider = hosting_provider
+        sample_hoster_user.save()
+
+        green_ip.active = False
+        green_ip.save()
+
+        rf = APIRequestFactory()
+        url_path = reverse("ip-range-list")
+        request = rf.get(url_path)
+        request.user = sample_hoster_user
+
+        # GET end point for IP Ranges
+        view = IPRangeViewSet.as_view({"get": "list"})
+        response = view(request)
+        assert response.status_code == 200
+        assert len(response.data) == 0
+
     def test_get_ip_ranges_without_auth(
         self, hosting_provider: Hostingprovider, sample_hoster_user: User,
     ):

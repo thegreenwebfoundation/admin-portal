@@ -37,7 +37,7 @@ class IPRangeViewSet(viewsets.ModelViewSet):
             provider = self.request.user.hostingprovider
 
             if provider is not None:
-                return provider.greencheckip_set.all()
+                return provider.greencheckip_set.filter(active=True)
 
         return []
 
