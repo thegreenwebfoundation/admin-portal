@@ -13,7 +13,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import serializers
 
 from django.contrib.auth import get_user_model
-from apps.greencheck.models import Hostingprovider
+from apps.greencheck.models import Hostingprovider, GreencheckIp
 from apps.greencheck.viewsets import IPRangeViewSet
 
 User = get_user_model()
@@ -52,9 +52,35 @@ class TestIpRangeViewSetList:
         assert response.status_code == 200
         assert len(response.data) == 0
 
-    @pytest.mark.skip
-    def test_get_ip_ranges_for_hosting_with_ranges(self):
-        pass
+    def test_get_ip_ranges_for_hostingprovider_with_active_range(
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
+        green_ip: GreencheckIp,
+    ):
+
+        hosting_provider.save()
+        sample_hoster_user.hostingprovider = hosting_provider
+        sample_hoster_user.save()
+
+        rf = APIRequestFactory()
+        url_path = reverse("ip-range-list")
+        request = rf.get(url_path)
+        request.user = sample_hoster_user
+
+        # GET end point for IP Ranges
+        view = IPRangeViewSet.as_view({"get": "list"})
+
+        response = view(request)
+        ip_range, *_ = response.data
+
+        assert response.status_code == 200
+        assert len(response.data) == 1
+
+        assert ip_range["ip_start"] == green_ip.ip_start
+        assert ip_range["ip_end"] == green_ip.ip_end
+        assert ip_range["hostingprovider"] == green_ip.hostingprovider.id
+        assert ip_range["active"] == green_ip.active
 
     def test_get_ip_ranges_without_auth(
         self, hosting_provider: Hostingprovider, sample_hoster_user: User,

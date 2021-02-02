@@ -50,6 +50,18 @@ def datacenter():
         website='http://www.xs4all.nl/zakelijk/colocation/datacenters/dc2.php'
     )
 
+
+@pytest.fixture
+def green_ip(hosting_provider):
+    hosting_provider.save()
+    return GreencheckIp.objects.create(
+        active=True,
+        ip_start="172.217.168.238",
+        ip_end="172.217.168.239",
+        hostingprovider=hosting_provider,
+    )
+
+
 @pytest.fixture
 def aws_cloud_provider(hosting_provider):
     return update_aws_ip_ranges.AmazonCloudProvider(

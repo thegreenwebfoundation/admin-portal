@@ -22,15 +22,6 @@ def hosting_provider():
         website="http://google.com",
     )
 
-@pytest.fixture
-def green_ip(hosting_provider):
-    hosting_provider.save()
-    return GreencheckIp.objects.create(
-        active=True,
-        ip_start='172.217.168.238',
-        ip_end='172.217.168.238',
-        hostingprovider=hosting_provider
-    )
 
 @pytest.fixture
 def greencheck(hosting_provider, green_ip):
