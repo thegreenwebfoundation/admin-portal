@@ -46,10 +46,9 @@ class TestGreenIpRangeSerialiser:
         data = gipr.data
         keys = data.keys()
 
-        for key in ["active", "ip_start", "ip_end", "hostingprovider"]:
+        for key in ["ip_start", "ip_end", "hostingprovider"]:
             assert key in keys
 
-        assert data["active"] == True
         assert data["ip_start"] == str(ip_addy_start)
         assert data["ip_end"] == str(ip_addy_end)
         assert data["hostingprovider"] == hosting_provider.id
@@ -74,10 +73,9 @@ class TestGreenIpRangeSerialiser:
         data = gipr.data
         keys = data.keys()
 
-        for key in ["active", "ip_start", "ip_end", "hostingprovider"]:
+        for key in ["ip_start", "ip_end", "hostingprovider"]:
             assert key in keys
 
-        assert data["active"] == True
         assert data["ip_start"] == str(ip_addy_start)
         assert data["ip_end"] == str(ip_addy_end)
         assert data["hostingprovider"] == hosting_provider.id

@@ -106,7 +106,6 @@ class TestIpRangeViewSetList:
         assert ip_range["ip_start"] == green_ip.ip_start
         assert ip_range["ip_end"] == green_ip.ip_end
         assert ip_range["hostingprovider"] == green_ip.hostingprovider.id
-        assert ip_range["active"] == green_ip.active
 
     def test_get_ip_ranges_for_hostingprovider_with_no_active_ones(
         self,
@@ -208,7 +207,6 @@ class TestIpRangeViewSetRetrieve:
         assert response.data["ip_start"] == green_ip.ip_start
         assert response.data["ip_end"] == green_ip.ip_end
         assert response.data["hostingprovider"] == green_ip.hostingprovider.id
-        assert response.data["active"] == green_ip.active
 
 
 class TestIpRangeViewSetCreate:
