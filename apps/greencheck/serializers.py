@@ -34,11 +34,23 @@ class IPDecimalField(serializers.DecimalField):
 
 
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    """
+    A subclass of the normal PrimaryKeyRelatedField, that restricts choices to
+    entities that have a relation back to the authenticated user.
+    """
+
     def get_queryset(self):
+        """
+        This override restricts the possible options we show in an API
+        documentation to just the hostingproviders that are related
+        to the user. We want every IP range to correspond to a hosting
+        provider, but we also want an authenticated user to only be able
+        to update their own provider via the API.
+        """
         request = self.context.get("request", None)
         queryset = super(UserFilteredPrimaryKeyRelatedField, self).get_queryset()
-        if not request or not queryset:
-            return None
+        if not request:
+            return queryset
         return queryset.filter(user=request.user)
 
 
