@@ -167,7 +167,7 @@ class GreenDomainBatchView(CreateAPIView):
             gp.hosted_by = None
             gp.hosted_by_id = None
             gp.hosted_by_website = None
-            gp.partner = False
+            gp.partner = None
             gp.modified = timezone.now()
             grey_domains.append(gp)
 
@@ -175,7 +175,7 @@ class GreenDomainBatchView(CreateAPIView):
 
         return evaluated_green_queryset + grey_domains
 
-    def grey_urls_only(self, urls_list, queryset) -> list[str]:
+    def grey_urls_only(self, urls_list, queryset) -> list:
         """
         Accept a list of domain names, and a queryset of checked green
         domain objects, and return a list of only the grey domains.
