@@ -1,7 +1,8 @@
+import csv
+import io
 import ipaddress
 import logging
 import pathlib
-import io
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -14,13 +15,13 @@ from rest_framework.authtoken import models, views
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APIRequestFactory, RequestsClient
 
+from apps.greencheck.legacy_workers import LegacySiteCheckLogger, SiteCheck
 from apps.greencheck.models import GreencheckIp, Hostingprovider
 from apps.greencheck.viewsets import (
-    IPRangeViewSet,
-    GreenDomainViewset,
     GreenDomainBatchView,
+    GreenDomainViewset,
+    IPRangeViewSet,
 )
-from apps.greencheck.legacy_workers import LegacySiteCheckLogger, SiteCheck
 
 User = get_user_model()
 
@@ -469,6 +470,50 @@ class TestGreenDomaBatchView:
 
         assert response.status_code == 200
         assert len(response.data) == 3
+
+        domains = green_domains + grey_domains
+        for domain in domains:
+            assert domain in returned_domains
+
+    @pytest.mark.only
+    def test_check_green_and_grey_urls_csv(
+        self,
+        hosting_provider_with_user: Hostingprovider,
+        green_ip: GreencheckIp,
+        client,
+    ):
+        green_domains = ["google.com", "anothergreendomain.com"]
+        grey_domains = ["fossilfuels4ever.com"]
+
+        fake_csv_file = io.StringIO()
+        for domain in green_domains:
+            fake_csv_file.write(f"{domain}\n")
+
+        for domain in grey_domains:
+            fake_csv_file.write(f"{domain}\n")
+
+        fake_csv_file.seek(0)
+
+        setup_domains(green_domains, hosting_provider_with_user, green_ip)
+
+        url_path = reverse("green-domain-batch")
+        response = client.post(
+            url_path, {"urls": fake_csv_file}, HTTP_ACCEPT="text/csv"
+        )
+
+        assert response.accepted_media_type == "text/csv"
+
+        file_from_string = io.StringIO(response.content.decode("utf-8"))
+        parsed_domains = []
+        rdr = csv.DictReader(file_from_string)
+
+        for row in rdr:
+            logger.debug(row)
+            parsed_domains.append(row)
+        returned_domains = [data.get("url") for data in parsed_domains]
+
+        assert response.status_code == 200
+        assert len(returned_domains) == 3
 
         domains = green_domains + grey_domains
         for domain in domains:

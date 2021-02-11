@@ -1,28 +1,29 @@
-import logging
 import csv
-from rest_framework import viewsets
-from rest_framework import generics
-from rest_framework import status
-from rest_framework import pagination
-from rest_framework import parsers
-from rest_framework import request
-from django.core import validators
-from django.utils import timezone
+import logging
+from io import TextIOWrapper
 
 import tld
 from django.shortcuts import get_object_or_404
-from .serializers import (
-    GreenIPRangeSerializer,
-    GreenDomainSerializer,
-    GreenDomainBatchSerializer,
+from django.utils import timezone
+from rest_framework import (
+    pagination,
+    parsers,
+    request,
+    response,
+    viewsets,
 )
-from io import TextIOWrapper
-from .models import GreencheckIp, Hostingprovider, GreenPresenting
-from .utils import extract_valid_domain
-from rest_framework import response
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.settings import api_settings
+from rest_framework_csv import renderers as drf_csv_rndr
+
+from .models import GreencheckIp, GreenPresenting
+from .serializers import (
+    GreenDomainBatchSerializer,
+    GreenDomainSerializer,
+    GreenIPRangeSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +129,9 @@ class GreenDomainBatchView(CreateAPIView):
     permission_classes = [AllowAny]
     pagination_class = pagination.PageNumberPagination
     parser_classes = [parsers.FormParser, parsers.MultiPartParser]
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES + [
+        drf_csv_rndr.CSVRenderer
+    ]
 
     def collect_urls(self, request: request.Request) -> list:
         """
