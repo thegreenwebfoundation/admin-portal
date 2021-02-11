@@ -5,6 +5,11 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework import pagination
 from rest_framework import parsers
+from rest_framework import request
+from django.core import validators
+from django.utils import timezone
+
+import tld
 from django.shortcuts import get_object_or_404
 from .serializers import (
     GreenIPRangeSerializer,
@@ -13,6 +18,7 @@ from .serializers import (
 )
 from io import TextIOWrapper
 from .models import GreencheckIp, Hostingprovider, GreenPresenting
+from .utils import extract_valid_domain
 from rest_framework import response
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -123,26 +129,65 @@ class GreenDomainBatchView(CreateAPIView):
     pagination_class = pagination.PageNumberPagination
     parser_classes = [parsers.FormParser, parsers.MultiPartParser]
 
-    def create(self, request, *args, **kwargs):
+    def collect_urls(self, request: request.Request) -> list:
         """
+        Accept a request object, parse any attached CSV file, and
+        return a list of the valid domains in the file,
         """
         url_file = self.request.data.get("urls")
-        f = TextIOWrapper(url_file, encoding="utf-8")
+        # attachments are by default binary, so we need to
+        # convert them to a format the CSV reader expects
+        encoded_file = TextIOWrapper(url_file, encoding="utf-8")
+        csv_file = csv.reader(encoded_file)
 
-        csv_file = csv.reader(f)
         urls_list = []
 
         for row in csv_file:
-            logger.info(row)
-            if row:
+            if row is not None:
                 url, *_ = row
-                urls_list.append(url)
+                domain = tld.get_fld(url, fix_protocol=True)
+                urls_list.append(domain)
+
+        return urls_list
+
+    def build_green_greylist(self, grey_list: list, green_list) -> list:
+        """
+        Create a list of geeen and grey domains, to serialise and deliver.
+
+
+        """
+        grey_domains = []
+
+        for domain in grey_list:
+            gp = GreenPresenting(url=domain)
+            gp.hosted_by = None
+            gp.hosted_by_id = None
+            gp.hosted_by_website = None
+            gp.partner = False
+            gp.modified = timezone.now()
+            grey_domains.append(gp)
+
+        evaluated_green_queryset = green_list[::1]
+
+        return evaluated_green_queryset + grey_domains
+
+    def create(self, request, *args, **kwargs):
+        """
+        """
+
+        urls_list = self.collect_urls(request)
+
+        logger.debug(f"urls_list: {urls_list}")
 
         if urls_list:
             queryset = GreenPresenting.objects.filter(url__in=urls_list)
 
-        serializer = GreenDomainSerializer
-        srs = serializer(queryset, many=True)
-        headers = self.get_success_headers(srs.data)
+        combined_batch_check_results = self.build_green_greylist(
+            ["fossilfuels4ever.com"], queryset
+        )
 
-        return response.Response(srs.data, headers=headers)
+        serialized = GreenDomainSerializer(combined_batch_check_results, many=True)
+
+        headers = self.get_success_headers(serialized.data)
+
+        return response.Response(serialized.data, headers=headers)

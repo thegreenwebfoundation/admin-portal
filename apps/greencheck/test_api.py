@@ -31,6 +31,22 @@ logger = logging.getLogger(__name__)
 rf = APIRequestFactory()
 
 
+@pytest.fixture
+def hosting_provider_with_user(hosting_provider, sample_hoster_user):
+    hosting_provider.save()
+    sample_hoster_user.hostingprovider = hosting_provider
+    sample_hoster_user.save()
+    return hosting_provider
+
+
+def setup_domains(domains, hosting_provider, green_ip):
+    sitecheck_logger = LegacySiteCheckLogger()
+
+    for domain in domains:
+        sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+
+
 def greencheck_sitecheck(
     domain, hosting_provider: Hostingprovider, green_ip: GreencheckIp
 ):
@@ -397,43 +413,64 @@ class TestGreenDomainViewset:
         assert len(response.data) == 2
 
 
-@pytest.mark.only
 class TestGreenDomaBatchView:
     def test_check_multple_urls_via_post(
         self,
-        hosting_provider: Hostingprovider,
-        sample_hoster_user: User,
+        hosting_provider_with_user: Hostingprovider,
         green_ip: GreencheckIp,
         client,
     ):
         """
         Check multiple URLs, sent as a batch request
         """
-
-        hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
-        sitecheck_logger = LegacySiteCheckLogger()
-
         domains = ["google.com", "anothergreendomain.com"]
 
         fake_csv_file = io.StringIO()
-
         for domain in domains:
-            # add line for our sample csv file
             fake_csv_file.write(f"{domain}\n")
-            sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-            sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
-
-        url_path = reverse("green-domain-batch")
         fake_csv_file.seek(0)
 
+        setup_domains(domains, hosting_provider_with_user, green_ip)
+
+        url_path = reverse("green-domain-batch")
         response = client.post(url_path, {"urls": fake_csv_file})
         returned_domains = [data.get("url") for data in response.data]
 
         assert response.status_code == 200
         assert len(response.data) == 2
 
+        for domain in domains:
+            assert domain in returned_domains
+
+    @pytest.mark.only
+    def test_check_green_and_grey_urls(
+        self,
+        hosting_provider_with_user: Hostingprovider,
+        green_ip: GreencheckIp,
+        client,
+    ):
+        green_domains = ["google.com", "anothergreendomain.com"]
+        grey_domains = ["fossilfuels4ever.com"]
+
+        fake_csv_file = io.StringIO()
+        for domain in green_domains:
+            fake_csv_file.write(f"{domain}\n")
+
+        for domain in grey_domains:
+            fake_csv_file.write(f"{domain}\n")
+
+        fake_csv_file.seek(0)
+
+        setup_domains(green_domains, hosting_provider_with_user, green_ip)
+
+        url_path = reverse("green-domain-batch")
+        response = client.post(url_path, {"urls": fake_csv_file})
+        returned_domains = [data.get("url") for data in response.data]
+
+        assert response.status_code == 200
+        assert len(response.data) == 3
+
+        domains = green_domains + grey_domains
         for domain in domains:
             assert domain in returned_domains
 
