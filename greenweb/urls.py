@@ -17,7 +17,11 @@ from django.conf import settings
 from django.urls import path, include
 from django.http import HttpResponse
 from rest_framework.routers import DefaultRouter
-from apps.greencheck.viewsets import IPRangeViewSet
+from apps.greencheck.viewsets import (
+    IPRangeViewSet,
+    GreenDomainViewset,
+    GreenDomainBatchView,
+)
 
 from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts import urls as accounts_urls
@@ -27,6 +31,7 @@ urlpatterns = []
 
 router = DefaultRouter()
 router.register(r"ip-ranges", IPRangeViewSet, basename="ip-range")
+# router.register(r"greencheck", GreenDomainViewset, basename="green-domain")
 
 
 if settings.DEBUG:
@@ -38,5 +43,21 @@ urlpatterns += [
     path("", admin.urls),
     path("", include(accounts_urls)),
     path("api/v2/", include(router.urls)),
+    path(
+        "api/v2/greencheck/",
+        GreenDomainViewset.as_view({"get": "list"}),
+        name="green-domain-list",
+    ),
+    path(
+        "api/v2/greencheck/<url>",
+        GreenDomainViewset.as_view({"get": "retrieve"}),
+        name="green-domain-detail",
+    ),
+    path(
+        "api/v2/batch/greencheck",
+        GreenDomainBatchView.as_view(),
+        name="green-domain-batch",
+    ),
+    # user_detail = UserViewSet.as_view({'get': 'retrieve'})
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
 ]
