@@ -341,5 +341,8 @@ class GreenPresenting(models.Model):
     hosted_by_id = models.IntegerField()
     modified = models.DateTimeField()
 
+    def __str__(self):
+        return f"{self.url} - {self.modified}"
+
     class Meta:
         db_table = "green_presenting"
