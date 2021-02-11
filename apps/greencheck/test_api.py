@@ -1,6 +1,7 @@
 import ipaddress
 import logging
 import pathlib
+import io
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -328,8 +329,7 @@ class TestGreenDomainViewset:
     """
     """
 
-    # @pytest.mark.skip(reason="pending")
-    def test_check_url(
+    def test_check_single_url(
         self,
         hosting_provider: Hostingprovider,
         sample_hoster_user: User,
@@ -382,7 +382,6 @@ class TestGreenDomainViewset:
 
         for domain in domains:
             sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-
             sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
 
         rf = APIRequestFactory()
@@ -393,6 +392,8 @@ class TestGreenDomainViewset:
 
         response = view(request)
         assert response.status_code == 200
+        logger.debug("response.data")
+        logger.debug(response.data)
         assert len(response.data) == 2
 
 
@@ -406,8 +407,8 @@ class TestGreenDomaBatchView:
         client,
     ):
         """
-            Check multiple URLs, sent as a batch request
-            """
+        Check multiple URLs, sent as a batch request
+        """
 
         hosting_provider.save()
         sample_hoster_user.hostingprovider = hosting_provider
@@ -416,25 +417,23 @@ class TestGreenDomaBatchView:
 
         domains = ["google.com", "anothergreendomain.com"]
 
-        for domain in domains:
-            sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+        fake_csv_file = io.StringIO()
 
+        for domain in domains:
+            # add line for our sample csv file
+            fake_csv_file.write(f"{domain}\n")
+            sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
             sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
 
-        # rf = APIRequestFactory()
         url_path = reverse("green-domain-batch")
-        # request = rf.post(url_path, data={"urls": domains}, format="json")
+        fake_csv_file.seek(0)
 
-        csv_path = pathlib.Path().cwd() / "apps/greencheck/sample.csv"
+        response = client.post(url_path, {"urls": fake_csv_file})
+        returned_domains = [data.get("url") for data in response.data]
 
-        # files = {"file": open(csv_path, "rb")}
-        # import ipdb
-
-        # ipdb.set_trace()
-        response = client.post(url_path, {"urls": open(csv_path, "rb")})
-
-        # view = GreenDomainBatchView.as_view()
-        # response = view(request)
         assert response.status_code == 200
-        assert len(response.data) == 1
+        assert len(response.data) == 2
+
+        for domain in domains:
+            assert domain in returned_domains
 
