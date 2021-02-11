@@ -171,6 +171,15 @@ class GreenDomainBatchView(CreateAPIView):
 
         return evaluated_green_queryset + grey_domains
 
+    def grey_urls_only(self, urls_list, queryset) -> list[str]:
+        """
+        Accept a list of domain names, and a queryset of checked green
+        domain objects, and return a list of only the grey domains.
+        """
+        green_list = [domain_object.url for domain_object in queryset]
+
+        return [url for url in urls_list if url not in green_list]
+
     def create(self, request, *args, **kwargs):
         """
         """
@@ -182,9 +191,9 @@ class GreenDomainBatchView(CreateAPIView):
         if urls_list:
             queryset = GreenPresenting.objects.filter(url__in=urls_list)
 
-        combined_batch_check_results = self.build_green_greylist(
-            ["fossilfuels4ever.com"], queryset
-        )
+        grey_list = self.grey_urls_only(urls_list, queryset)
+
+        combined_batch_check_results = self.build_green_greylist(grey_list, queryset)
 
         serialized = GreenDomainSerializer(combined_batch_check_results, many=True)
 
