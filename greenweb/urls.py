@@ -31,8 +31,6 @@ urlpatterns = []
 
 router = DefaultRouter()
 router.register(r"ip-ranges", IPRangeViewSet, basename="ip-range")
-# router.register(r"greencheck", GreenDomainViewset, basename="green-domain")
-
 
 if settings.DEBUG:
     import debug_toolbar
@@ -58,6 +56,5 @@ urlpatterns += [
         GreenDomainBatchView.as_view(),
         name="green-domain-batch",
     ),
-    # user_detail = UserViewSet.as_view({'get': 'retrieve'})
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
 ]
