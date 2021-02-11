@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from apps.accounts.models import Hostingprovider
 
-from .models import GreencheckIp
+from .models import GreencheckIp, GreenPresenting
 
 
 class IPDecimalField(serializers.DecimalField):
@@ -78,3 +78,27 @@ class GreenIPRangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = GreencheckIp
         fields = ["ip_start", "ip_end", "hostingprovider", "id"]
+
+
+class GreenDomainSerializer(serializers.ModelSerializer):
+    """
+    The serialiser for our green domains checking table.
+    """
+
+    class Meta:
+        model = GreenPresenting
+        fields = [
+            "url",
+            "hosted_by",
+            "hosted_by_website",
+            "partner",
+            "green",
+            "hosted_by_id",
+            "modified",
+        ]
+
+
+class GreenDomainBatchSerializer(serializers.Serializer):
+
+    urls = serializers.FileField()
+

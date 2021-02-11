@@ -1,18 +1,25 @@
 import ipaddress
 import logging
+import pathlib
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import RequestFactory
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.authtoken import models, views
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APIRequestFactory, RequestsClient
 
 from apps.greencheck.models import GreencheckIp, Hostingprovider
-from apps.greencheck.viewsets import IPRangeViewSet
+from apps.greencheck.viewsets import (
+    IPRangeViewSet,
+    GreenDomainViewset,
+    GreenDomainBatchView,
+)
+from apps.greencheck.legacy_workers import LegacySiteCheckLogger, SiteCheck
 
 User = get_user_model()
 
@@ -21,6 +28,23 @@ pytestmark = pytest.mark.django_db
 logger = logging.getLogger(__name__)
 
 rf = APIRequestFactory()
+
+
+def greencheck_sitecheck(
+    domain, hosting_provider: Hostingprovider, green_ip: GreencheckIp
+):
+
+    return SiteCheck(
+        url=domain,
+        ip="192.30.252.153",
+        data=True,
+        green=True,
+        hosting_provider_id=hosting_provider.id,
+        checked_at=timezone.now(),
+        match_type="ip",
+        match_ip_range=green_ip.id,
+        cached=True,
+    )
 
 
 class TestUsingAuthToken:
@@ -297,3 +321,120 @@ class TestIpRangeViewSetDelete:
         assert GreencheckIp.objects.filter(active=True).count() == 0
         assert GreencheckIp.objects.filter(active=False).count() == 1
         assert GreencheckIp.objects.count() == 1
+
+
+@pytest.mark.only
+class TestGreenDomainViewset:
+    """
+    """
+
+    # @pytest.mark.skip(reason="pending")
+    def test_check_url(
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
+        green_ip: GreencheckIp,
+    ):
+        """
+        Check single URL, hitting.
+        """
+
+        hosting_provider.save()
+        sample_hoster_user.hostingprovider = hosting_provider
+        sample_hoster_user.save()
+        sitecheck_logger = LegacySiteCheckLogger()
+
+        domain = "google.com"
+
+        sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+
+        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-detail", kwargs={"url": domain})
+        logger.info(f"url_path: {url_path}")
+
+        request = rf.get(url_path)
+
+        view = GreenDomainViewset.as_view({"get": "retrieve"})
+
+        response = view(request, url=domain)
+
+        assert response.status_code is 200
+        assert response.data["green"] is True
+
+    def test_check_multple_urls(
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
+        green_ip: GreencheckIp,
+    ):
+        """
+        Check multiple URLs, sent as a batch request
+        """
+
+        hosting_provider.save()
+        sample_hoster_user.hostingprovider = hosting_provider
+        sample_hoster_user.save()
+        sitecheck_logger = LegacySiteCheckLogger()
+
+        domains = ["google.com", "anothergreendomain.com"]
+
+        for domain in domains:
+            sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+
+            sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-list")
+        request = rf.get(url_path, {"urls": domains})
+
+        view = GreenDomainViewset.as_view({"get": "list"})
+
+        response = view(request)
+        assert response.status_code == 200
+        assert len(response.data) == 2
+
+
+@pytest.mark.only
+class TestGreenDomaBatchView:
+    def test_check_multple_urls_via_post(
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
+        green_ip: GreencheckIp,
+        client,
+    ):
+        """
+            Check multiple URLs, sent as a batch request
+            """
+
+        hosting_provider.save()
+        sample_hoster_user.hostingprovider = hosting_provider
+        sample_hoster_user.save()
+        sitecheck_logger = LegacySiteCheckLogger()
+
+        domains = ["google.com", "anothergreendomain.com"]
+
+        for domain in domains:
+            sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+
+            sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+
+        # rf = APIRequestFactory()
+        url_path = reverse("green-domain-batch")
+        # request = rf.post(url_path, data={"urls": domains}, format="json")
+
+        csv_path = pathlib.Path().cwd() / "apps/greencheck/sample.csv"
+
+        # files = {"file": open(csv_path, "rb")}
+        # import ipdb
+
+        # ipdb.set_trace()
+        response = client.post(url_path, {"urls": open(csv_path, "rb")})
+
+        # view = GreenDomainBatchView.as_view()
+        # response = view(request)
+        assert response.status_code == 200
+        assert len(response.data) == 1
+
