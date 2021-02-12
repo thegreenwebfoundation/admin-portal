@@ -119,8 +119,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
 class GreenDomainBatchView(CreateAPIView):
     """
-    A batch API for making buik requests, by POSTing a file
-    comprised of a list of domains.
+    A batch API for checking domains in bulk, rather than individually.
     """
 
     queryset = GreenPresenting.objects.all()

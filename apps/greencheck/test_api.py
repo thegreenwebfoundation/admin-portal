@@ -65,6 +65,23 @@ def greencheck_sitecheck(
     )
 
 
+def parse_csv_from_response(response):
+    """
+    Convenience function for working with CSV responses.
+    Parses the CSV rows and returns a list of dicts, using the
+    keys as columns
+    """
+    file_from_string = io.StringIO(response.content.decode("utf-8"))
+    parsed_rows = []
+    reader = csv.DictReader(file_from_string)
+
+    for row in reader:
+        logger.debug(row)
+        parsed_rows.append(row)
+
+    return parsed_rows
+
+
 class TestUsingAuthToken:
     def test_fetching_auth_token(
         self, hosting_provider: Hostingprovider, sample_hoster_user: User,
