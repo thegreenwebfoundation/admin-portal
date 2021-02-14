@@ -38,6 +38,9 @@ class IPRangeViewSet(
 ):
     """
     This viewset automatically provides `list` and `retrieve` actions.
+    Don't want ipranges to be editble once created, so we expose a 'create'
+    endpoint, as well as a 'destroy' one, which does not delete the range,
+    but instead marks it as inactive.
     """
 
     serializer_class = GreenIPRangeSerializer
