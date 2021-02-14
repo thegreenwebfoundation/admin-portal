@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class IPRangeViewSet(
     mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
