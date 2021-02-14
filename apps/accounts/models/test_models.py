@@ -51,7 +51,6 @@ class TestHostingProvider:
 
 
 class TestUser:
-    @pytest.mark.only
     def test_create_user_has_password_and_legacy_password_set(
         self, db, hosting_provider
     ):

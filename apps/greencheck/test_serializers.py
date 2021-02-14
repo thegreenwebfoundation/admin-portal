@@ -22,7 +22,6 @@ SAMPLE_IPS = [
 ]
 
 
-@pytest.mark.only
 class TestGreenIpRangeSerialiser:
     # @given(
     #     ip_addy_start=strategies.ip_addresses(), ip_addy_end=strategies.ip_addresses()

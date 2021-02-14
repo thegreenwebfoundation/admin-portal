@@ -16,8 +16,16 @@ Including another URLconf
 from django.conf import settings
 from django.urls import path, include
 from django.http import HttpResponse
+from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
-from apps.greencheck.viewsets import IPRangeViewSet
+
+
+from apps.greencheck.viewsets import (
+    IPRangeViewSet,
+    GreenDomainViewset,
+    GreenDomainBatchView,
+)
+from apps.greencheck.swagger import TGWFSwaggerView, TGWFSwaggerUIRenderer
 
 from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts import urls as accounts_urls
@@ -28,15 +36,36 @@ urlpatterns = []
 router = DefaultRouter()
 router.register(r"ip-ranges", IPRangeViewSet, basename="ip-range")
 
-
 if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
 
+
 urlpatterns += [
     path("", admin.urls),
     path("", include(accounts_urls)),
+    # API
     path("api/v2/", include(router.urls)),
+    path(
+        "api/v2/greencheck/",
+        GreenDomainViewset.as_view({"get": "list"}),
+        name="green-domain-list",
+    ),
+    path(
+        "api/v2/greencheck/<url>",
+        GreenDomainViewset.as_view({"get": "retrieve"}),
+        name="green-domain-detail",
+    ),
+    path(
+        "api/v2/batch/greencheck",
+        GreenDomainBatchView.as_view(),
+        name="green-domain-batch",
+    ),
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
+    path(
+        "api-docs/",
+        TGWFSwaggerView.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
 ]
