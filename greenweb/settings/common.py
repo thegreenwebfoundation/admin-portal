@@ -137,8 +137,12 @@ DEFAULT_FROM_EMAIL = "support@thegreenwebfoundation.org"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-STATIC_ROOT = ROOT("static")
 STATIC_URL = "/static/"
+
+# staticfiles it the name of the directory we collate files,
+# so we can follow the convention of using static *inside django apps*
+# for files we can to pick up with `collectstatic` commands.
+STATIC_ROOT = ROOT("staticfiles")
 
 # Media Files
 MEDIA_ROOT = ROOT("media")
