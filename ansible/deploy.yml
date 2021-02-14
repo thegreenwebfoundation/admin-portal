@@ -108,13 +108,13 @@
 
     - name: set up supervisor entry for worker
       template:
-        src: "supervisor.gunicorn.conf.j2"
+        src: "supervisor.worker.conf.j2"
         dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf"
       become: yes
 
     - name: trigger restart for app with supervisor
       supervisorctl:
-        name: "{{ gunicorn_app }}"
+        name: "{{ gunicorn_app }}:"
         state: restarted
       become: yes
 

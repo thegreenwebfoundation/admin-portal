@@ -9,4 +9,11 @@ release:
 dev.test:
 	pytest -s --create-db --looponfail
 
+dev.test.only:
+	pytest -s --create-db --looponfail -m only -v
+
+test.only:
+	pytest -s --create-db -m only -v
+
+
 .PHONY: release
