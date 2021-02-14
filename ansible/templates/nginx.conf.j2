@@ -26,10 +26,6 @@ server {
         log_not_found off;
     }
 
-    location /static/ {
-        root "{{ project_root }}/current/";
-    }
-
     location @proxy_to_app {
         proxy_set_header           X-Forwarded-For $proxy_add_x_forwarded_for;
 		proxy_set_header           X-Forwarded-Proto $scheme;
@@ -41,6 +37,16 @@ server {
     }
 
     location / {
+        # make sure only static files we choose to expose are reachable, then fallback to
+        # django serving the request
+        root "{{ project_root }}/current/staticfiles";
+		try_files                  $uri @proxy_to_app;
+	}
+
+    location /media/ {
+        # make sure only static files we choose to expose are reachable, then fallback to
+        # django serving the request
+        root "{{ project_root }}/shared/media/";
 		try_files                  $uri @proxy_to_app;
 	}
 
