@@ -16,6 +16,7 @@ from rest_framework.authentication import BasicAuthentication, SessionAuthentica
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.settings import api_settings
+from rest_framework import mixins
 from rest_framework_csv import renderers as drf_csv_rndr
 
 from .models import GreencheckIp, GreenPresenting
@@ -28,7 +29,12 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
-class IPRangeViewSet(viewsets.ModelViewSet):
+class IPRangeViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     This viewset automatically provides `list` and `retrieve` actions.
     """
@@ -119,7 +125,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
 class GreenDomainBatchView(CreateAPIView):
     """
-    A batch API for checking domains in bulk, rather than individually.
+    A batch API for checking domains in bulk, rather than individually. Upload a CSV file containing a list of domains, to get back the status of each domain.
     """
 
     queryset = GreenPresenting.objects.all()
@@ -128,9 +134,7 @@ class GreenDomainBatchView(CreateAPIView):
     permission_classes = [AllowAny]
     pagination_class = pagination.PageNumberPagination
     parser_classes = [parsers.FormParser, parsers.MultiPartParser]
-    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES + [
-        drf_csv_rndr.CSVRenderer
-    ]
+    renderer_classes = [drf_csv_rndr.CSVRenderer]
 
     def collect_urls(self, request: request.Request) -> list:
         """
@@ -155,9 +159,7 @@ class GreenDomainBatchView(CreateAPIView):
 
     def build_green_greylist(self, grey_list: list, green_list) -> list:
         """
-        Create a list of geeen and grey domains, to serialise and deliver.
-
-
+        Create a list of green and grey domains, to serialise and deliver.
         """
         grey_domains = []
 
@@ -203,3 +205,16 @@ class GreenDomainBatchView(CreateAPIView):
         headers = self.get_success_headers(serialized.data)
 
         return response.Response(serialized.data, headers=headers)
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        """
+        Override the default, so if we see a filename requested, send the
+        header. This tells the client to treat it ike a file to download,
+        rather than trying to display it inline if using a browser.
+        """
+        filename = request.data.get("response_filename")
+        if filename is not None:
+            response["Content-Disposition"] = f"attachment; filename={filename}"
+
+        return super().finalize_response(request, response, *args, **kwargs)
+

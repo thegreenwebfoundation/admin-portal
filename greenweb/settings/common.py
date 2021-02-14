@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django_registration",
     "rest_framework",
     "rest_framework.authtoken",
+    "drf_yasg",
     # project specific
     "apps.accounts",
     "apps.greencheck",

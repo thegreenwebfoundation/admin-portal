@@ -99,6 +99,13 @@ class GreenDomainSerializer(serializers.ModelSerializer):
 
 
 class GreenDomainBatchSerializer(serializers.Serializer):
+    """
+    """
 
-    urls = serializers.FileField()
-
+    urls = serializers.FileField(
+        help_text="Accepts a csv file, with one domain per line"
+    )
+    response_filename = serializers.CharField(
+        required=False,
+        help_text="Provide a filename to get back a downloadable file. Without this, csv information is returned as an inline response.",
+    )

@@ -515,24 +515,24 @@ class TestGreenDomaBatchView:
 
         url_path = reverse("green-domain-batch")
         response = client.post(
-            url_path, {"urls": fake_csv_file}, HTTP_ACCEPT="text/csv"
+            url_path,
+            {"urls": fake_csv_file, "response_filename": "given_filename.csv"},
+            HTTP_ACCEPT="text/csv",
         )
 
         assert response.accepted_media_type == "text/csv"
+        assert response.status_code == 200
 
-        file_from_string = io.StringIO(response.content.decode("utf-8"))
-        parsed_domains = []
-        rdr = csv.DictReader(file_from_string)
-
-        for row in rdr:
-            logger.debug(row)
-            parsed_domains.append(row)
+        parsed_domains = parse_csv_from_response(response)
         returned_domains = [data.get("url") for data in parsed_domains]
 
-        assert response.status_code == 200
         assert len(returned_domains) == 3
 
         domains = green_domains + grey_domains
         for domain in domains:
             assert domain in returned_domains
+
+        assert (
+            response["Content-Disposition"] == "attachment; filename=given_filename.csv"
+        )
 
