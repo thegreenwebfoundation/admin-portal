@@ -16,6 +16,7 @@ from rest_framework.authentication import BasicAuthentication, SessionAuthentica
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.settings import api_settings
+from rest_framework.decorators import api_view
 from rest_framework import mixins
 from rest_framework_csv import renderers as drf_csv_rndr
 
