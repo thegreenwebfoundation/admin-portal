@@ -8,7 +8,7 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(console)
 
 from apps.greencheck.legacy_workers import LegacySiteCheckLogger, SiteCheck
-from apps.greencheck.models import Greencheck, GreenPresenting
+from apps.greencheck.models import Greencheck, GreenDomain
 from apps.accounts.models import Hostingprovider
 
 
@@ -98,12 +98,12 @@ class TestSiteCheckConsumerParsePHP:
         )
 
         assert Greencheck.objects.count() == 0
-        assert GreenPresenting.objects.count() == 0
+        assert GreenDomain.objects.count() == 0
 
         sitecheck_logger.parse_and_log_to_database(serialised_php)
 
         assert Greencheck.objects.count() == 1
-        assert GreenPresenting.objects.count() == 1
+        assert GreenDomain.objects.count() == 1
 
     @pytest.mark.parametrize(
         "green, hosting_provider_id, green_domain_count, greencheck_ip_range_id, greencheck_match_type",
@@ -139,7 +139,7 @@ class TestSiteCheckConsumerParsePHP:
         )
 
         assert Greencheck.objects.count() == 0
-        assert GreenPresenting.objects.count() == 0
+        assert GreenDomain.objects.count() == 0
 
         sample_sitecheck.green = green
         sample_sitecheck.hosting_provider_id = hosting_provider_id
@@ -150,4 +150,4 @@ class TestSiteCheckConsumerParsePHP:
         sitecheck_logger.log_sitecheck_to_database(sample_sitecheck)
 
         assert Greencheck.objects.count() == 1
-        assert GreenPresenting.objects.count() == green_domain_count
+        assert GreenDomain.objects.count() == green_domain_count
