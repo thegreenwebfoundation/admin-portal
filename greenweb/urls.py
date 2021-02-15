@@ -46,19 +46,19 @@ urlpatterns += [
     path("", admin.urls),
     path("", include(accounts_urls)),
     # API
-    path("api/v2/", include(router.urls)),
+    path("api/v3/", include(router.urls)),
     path(
-        "api/v2/greencheck/",
+        "api/v3/greencheck/",
         GreenDomainViewset.as_view({"get": "list"}),
         name="green-domain-list",
     ),
     path(
-        "api/v2/greencheck/<url>",
+        "api/v3/greencheck/<url>",
         GreenDomainViewset.as_view({"get": "retrieve"}),
         name="green-domain-detail",
     ),
     path(
-        "api/v2/batch/greencheck",
+        "api/v3/batch/greencheck",
         GreenDomainBatchView.as_view(),
         name="green-domain-batch",
     ),
