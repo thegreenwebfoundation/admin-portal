@@ -21,6 +21,11 @@ server {
 
     keepalive_timeout 5;
 
+    # for batch API checks we can end up with large files being
+    # uploaded/downloaded. Adding this gives support, and stops
+    # the Nginx 413 Request Entity Too Large error
+    client_max_body_size = 128M;
+
     location = /favicon.ico {
         access_log off;
         log_not_found off;
