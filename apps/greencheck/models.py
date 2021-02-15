@@ -331,7 +331,7 @@ class TopUrl(models.Model):
         db_table = "top_1m_urls"
 
 
-class GreenPresenting(models.Model):
+class GreenDomain(models.Model):
 
     url = models.CharField(max_length=255)
     hosted_by = models.CharField(max_length=255)
@@ -345,4 +345,4 @@ class GreenPresenting(models.Model):
         return f"{self.url} - {self.modified}"
 
     class Meta:
-        db_table = "green_presenting"
+        db_table = "greendomain"

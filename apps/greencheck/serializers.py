@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from apps.accounts.models import Hostingprovider
 
-from .models import GreencheckIp, GreenPresenting
+from .models import GreencheckIp, GreenDomain
 
 
 class IPDecimalField(serializers.DecimalField):
@@ -86,7 +86,7 @@ class GreenDomainSerializer(serializers.ModelSerializer):
     """
 
     class Meta:
-        model = GreenPresenting
+        model = GreenDomain
         fields = [
             "url",
             "hosted_by",

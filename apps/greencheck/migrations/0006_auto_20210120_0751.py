@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     operations = [
         # migrations.CreateModel(
-        #     name='GreenPresenting',
+        #     name='GreenDomain',
         #     fields=[
         #         ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
         #         ('url', models.CharField(max_length=255)),
