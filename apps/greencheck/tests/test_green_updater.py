@@ -2,7 +2,7 @@ import pytest
 
 from datetime import datetime
 from apps.greencheck.models import (
-    GreenPresenting,
+    GreenDomain,
     Greencheck,
     TopUrl,
     Hostingprovider,
@@ -54,7 +54,7 @@ def top_url():
 class TestUpdateList:
     def test_update_green_list(self, db, greencheck, top_url):
 
-        assert GreenPresenting.objects.count() == 0
+        assert GreenDomain.objects.count() == 0
 
         # set up fixture
         top_url.save()
@@ -64,7 +64,7 @@ class TestUpdateList:
         tu_updater.update_green_domains(top_urls)
 
         # check we have the value
-        gp_google = GreenPresenting.objects.filter(url="google.com").first()
+        gp_google = GreenDomain.objects.filter(url="google.com").first()
         assert gp_google.url == "google.com"
 
         assert gp_google.modified == greencheck.date
@@ -78,7 +78,7 @@ class TestUpdateList:
         greencheck.save()
         hostingprovider = Hostingprovider.objects.get(pk=greencheck.hostingprovider)
 
-        gp = GreenPresenting(
+        gp = GreenDomain(
             green=True,
             hosted_by_id=greencheck.hostingprovider,
             hosted_by=hostingprovider,
@@ -93,8 +93,8 @@ class TestUpdateList:
         tu_updater.update_green_domains(top_urls)
 
         # check we have the value
-        gp_google = GreenPresenting.objects.filter(url="google.com").first()
+        gp_google = GreenDomain.objects.filter(url="google.com").first()
         assert gp_google.url == "google.com"
 
         assert gp_google.modified == greencheck.date
-        assert GreenPresenting.objects.filter(url="google.com").count() == 1
+        assert GreenDomain.objects.filter(url="google.com").count() == 1
