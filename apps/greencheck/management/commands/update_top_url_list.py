@@ -1,5 +1,5 @@
 import logging
-from apps.greencheck.models import Greencheck, GreenPresenting, TopUrl, Hostingprovider
+from apps.greencheck.models import Greencheck, GreenDomain, TopUrl, Hostingprovider
 
 from django.core.management.base import BaseCommand
 from django.db import connection
@@ -36,7 +36,7 @@ class TopUrlUpdater:
                 logger.info(f"Processed: {count} domains so far. Time: {now}")
 
             try:
-                gp = GreenPresenting.objects.get(url=domain.url)
+                gp = GreenDomain.objects.get(url=domain.url)
 
                 # find green checks that have happened since the last listed date
                 # for the given domain
@@ -75,7 +75,7 @@ class TopUrlUpdater:
                         logger.error(f"greencheck: {gc.__dict__}, gp: {gp.__dict__}")
                         # import ipdb ; ipdb.set_trace()
 
-            except GreenPresenting.DoesNotExist:
+            except GreenDomain.DoesNotExist:
                 gc = (
                     Greencheck.objects.filter(url=domain.url, green="yes")
                     .order_by("-date")
@@ -98,7 +98,7 @@ class TopUrlUpdater:
                         logger.error(f"greencheck: {gc.__dict__}, gp: {gp.__dict__}")
 
                     try:
-                        gp = GreenPresenting()
+                        gp = GreenDomain()
 
                         gp.green = 1
                         gp.modified = gc.date

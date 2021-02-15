@@ -22,7 +22,7 @@ from rest_framework_csv import renderers as drf_csv_rndr
 
 from drf_yasg.utils import swagger_auto_schema
 
-from .models import GreencheckIp, GreenPresenting
+from .models import GreencheckIp, GreenDomain
 from .serializers import (
     GreenDomainBatchSerializer,
     GreenDomainSerializer,
@@ -96,7 +96,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
     swagger_schema = None
 
-    queryset = GreenPresenting.objects.all()
+    queryset = GreenDomain.objects.all()
     serializer_class = GreenDomainSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
@@ -116,7 +116,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             urls = self.request.data.get("urls")
 
         if urls is not None:
-            queryset = GreenPresenting.objects.filter(url__in=urls)
+            queryset = GreenDomain.objects.filter(url__in=urls)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -131,7 +131,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         Fetch entry matching the provided URL, like an 'detail' view
         """
         url = self.kwargs.get("url")
-        instance = get_object_or_404(GreenPresenting, url=url)
+        instance = get_object_or_404(GreenDomain, url=url)
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
 
@@ -141,7 +141,7 @@ class GreenDomainBatchView(CreateAPIView):
     A batch API for checking domains in bulk, rather than individually. Upload a CSV file containing a list of domains, to get back the status of each domain.
     """
 
-    queryset = GreenPresenting.objects.all()
+    queryset = GreenDomain.objects.all()
     serializer_class = GreenDomainBatchSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
@@ -177,7 +177,7 @@ class GreenDomainBatchView(CreateAPIView):
         grey_domains = []
 
         for domain in grey_list:
-            gp = GreenPresenting(url=domain)
+            gp = GreenDomain(url=domain)
             gp.hosted_by = None
             gp.hosted_by_id = None
             gp.hosted_by_website = None
@@ -207,7 +207,7 @@ class GreenDomainBatchView(CreateAPIView):
         logger.debug(f"urls_list: {urls_list}")
 
         if urls_list:
-            queryset = GreenPresenting.objects.filter(url__in=urls_list)
+            queryset = GreenDomain.objects.filter(url__in=urls_list)
 
         grey_list = self.grey_urls_only(urls_list, queryset)
 

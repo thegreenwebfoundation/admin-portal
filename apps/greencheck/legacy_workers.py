@@ -1,7 +1,7 @@
 import phpserialize
 from dataclasses import dataclass
 from django.utils import dateparse
-from apps.greencheck.models import Greencheck, GreenPresenting, GreencheckIp
+from apps.greencheck.models import Greencheck, GreenDomain, GreencheckIp
 from apps.accounts.models import Hostingprovider
 
 import tld
@@ -243,9 +243,9 @@ class LegacySiteCheckLogger:
         """
 
         try:
-            green_domain = GreenPresenting.objects.get(url=sitecheck.url)
-        except GreenPresenting.DoesNotExist:
-            green_domain = GreenPresenting(url=sitecheck.url)
+            green_domain = GreenDomain.objects.get(url=sitecheck.url)
+        except GreenDomain.DoesNotExist:
+            green_domain = GreenDomain(url=sitecheck.url)
 
         green_domain.hosted_by = hosting_provider.name
         green_domain.hosted_by_id = sitecheck.hosting_provider_id
