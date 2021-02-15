@@ -19,6 +19,8 @@ from rest_framework.settings import api_settings
 from rest_framework import mixins
 from rest_framework_csv import renderers as drf_csv_rndr
 
+from drf_yasg.utils import swagger_auto_schema
+
 from .models import GreencheckIp, GreenPresenting
 from .serializers import (
     GreenDomainBatchSerializer,
@@ -42,6 +44,8 @@ class IPRangeViewSet(
     endpoint, as well as a 'destroy' one, which does not delete the range,
     but instead marks it as inactive.
     """
+
+    swagger_schema = None
 
     serializer_class = GreenIPRangeSerializer
     queryset = GreencheckIp.objects.all()
@@ -89,12 +93,16 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
     providing a slower, no-cache response that carries out the full domain lookup.
     """
 
+    swagger_schema = None
+
     queryset = GreenPresenting.objects.all()
     serializer_class = GreenDomainSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
     lookup_field = "url"
 
+    @swagger_auto_schema(method="get", auto_schema=None)
+    @api_view(["GET"])
     def list(self, request, *args, **kwargs):
         """
         Our override for bulk URL lookups, like an index/listing view
