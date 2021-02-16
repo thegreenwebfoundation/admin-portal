@@ -18,22 +18,6 @@ def serialised_php():
 
 
 @pytest.fixture
-def sample_sitecheck():
-
-    return SiteCheck(
-        url="somesite.berlin",
-        ip="192.30.252.153",
-        data=True,
-        green=True,
-        hosting_provider_id=595,
-        checked_at="2021-01-20 13:35:52",
-        match_type=None,
-        match_ip_range=None,
-        cached=True,
-    )
-
-
-@pytest.fixture
 def sitecheck_logger():
     return LegacySiteCheckLogger()
 

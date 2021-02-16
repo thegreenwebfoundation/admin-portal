@@ -11,7 +11,7 @@ class GreenUrlsView(TemplateView):
 
     def fetch_urls(self):
         client = storage.Client()
-        bucket_name = settings.PRESENTING_BUCKET
+        bucket_name = settings.DOMAIN_SNAPSHOT_BUCKET
         bucket = client.get_bucket(bucket_name)
         blobs = bucket.list_blobs()
         return [(b.name, b.public_url) for b in blobs]

@@ -4,7 +4,9 @@ import pytest
 
 from apps.accounts.models import Hostingprovider, Datacenter
 from apps.greencheck.models import GreencheckIp
+from apps.greencheck.legacy_workers import SiteCheck
 from django.contrib.auth import get_user_model
+
 
 User = get_user_model()
 
@@ -14,6 +16,22 @@ def sample_hoster_user():
     u = User(username="joebloggs", email="joe@example.com")
     u.set_password("topSekrit")
     return u
+
+
+@pytest.fixture
+def sample_sitecheck():
+
+    return SiteCheck(
+        url="somesite.berlin",
+        ip="192.30.252.153",
+        data=True,
+        green=True,
+        hosting_provider_id=595,
+        checked_at="2021-01-20 13:35:52",
+        match_type=None,
+        match_ip_range=None,
+        cached=True,
+    )
 
 
 @pytest.fixture
@@ -27,6 +45,26 @@ def hosting_provider():
         iconurl="",
         model="groeneenergie",
         name="Amazon US West",
+        partner="",
+        showonwebsite=True,
+        website="http://aws.amazon.com",
+    )
+
+
+@pytest.fixture
+def hosting_provider_aws():
+
+    oregon, *rest = [region for region in GREEN_REGIONS if region[1] == "us-west-2"]
+    name, region, host_id = oregon
+    return Hostingprovider(
+        archived=False,
+        country="US",
+        customer=False,
+        icon="",
+        iconurl="",
+        id=host_id,
+        model="groeneenergie",
+        name=name,
         partner="",
         showonwebsite=True,
         website="http://aws.amazon.com",

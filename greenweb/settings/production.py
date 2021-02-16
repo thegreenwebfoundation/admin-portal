@@ -18,8 +18,8 @@ ALLOWED_HOSTS = [
     "staging-admin.thegreenwebfoundation.org",
 ]
 
-# bucket name in GCP
-PRESENTING_BUCKET = "presenting_bucket_production"
+
+DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-live"
 
 # report when things asplode
 sentry_dsn = os.environ.get("SENTRY_DSN", False)

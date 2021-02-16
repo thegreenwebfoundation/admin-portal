@@ -62,6 +62,10 @@ INSTALLED_APPS = [
 # Auth Mechanism
 AUTH_USER_MODEL = "accounts.User"
 
+# We need this to account for providers with massive numbers of IP ranges
+# to update. The default limit it too low for django admin!
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -148,8 +152,13 @@ STATIC_ROOT = ROOT("staticfiles")
 MEDIA_ROOT = ROOT("media")
 MEDIA_URL = "/media/"
 
-# GCP BUCKET
-PRESENTING_BUCKET = "presenting_bucket_staging"
+
+# OBJECT STORAGE BUCKET
+DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-staging"
+OBJECT_STORAGE_ENDPOINT = "https://s3.nl-ams.scw.cloud"
+OBJECT_STORAGE_REGION = "nl-ams"
+OBJECT_STORAGE_ACCESS_KEY_ID = "SCWYJRJX78EP0MKYH45K"
+OBJECT_STORAGE_SECRET_ACCESS_KEY = "ea159089-67fe-4c70-a2a6-1b65634fc527"
 
 RABBITMQ_URL = env("RABBITMQ_URL")
 

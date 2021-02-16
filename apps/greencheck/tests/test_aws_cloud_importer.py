@@ -42,7 +42,7 @@ def aws_cloud_provider(hosting_provider):
 @pytest.fixture
 def aws_json_ip_ranges():
     this_file = pathlib.Path(__file__)
-    json_path = this_file.parent.joinpath("fixtures", "ip_ranges.json")
+    json_path = this_file.parent.parent.joinpath("fixtures", "ip_ranges.json")
     with open(json_path) as ipr:
         ip_ranges = json.loads(ipr.read())
         return ip_ranges
