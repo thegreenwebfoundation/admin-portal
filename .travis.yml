@@ -7,7 +7,7 @@ install:
   - pipenv install --dev
 # command to run tests
 script:
-  - pytest --create-db
+  - pytest --create-db -m "not smoke_test"
 services:
     - mysql
     - rabbitmq
