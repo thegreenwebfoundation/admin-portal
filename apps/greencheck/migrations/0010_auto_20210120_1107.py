@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                 ("hosted_by_id", models.IntegerField()),
                 ("modified", models.DateTimeField()),
             ],
-            options={"db_table": "green_presenting",},
+            options={"db_table": "greendomain",},
         ),
         migrations.CreateModel(
             name="TopUrl",

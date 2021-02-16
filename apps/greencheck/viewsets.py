@@ -102,8 +102,8 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     lookup_field = "url"
 
-    @swagger_auto_schema(method="get", auto_schema=None)
-    @api_view(["GET"])
+    # @swagger_auto_schema(method="get", auto_schema=None)
+    # @api_view(["GET"])
     def list(self, request, *args, **kwargs):
         """
         Our override for bulk URL lookups, like an index/listing view
