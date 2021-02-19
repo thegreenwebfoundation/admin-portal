@@ -194,6 +194,8 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
         "__str__",
         "link",
         "status",
+        "created",
+        "modified",
     ]
     list_display_links = None
     list_filter = [StatusIpFilter]
@@ -220,6 +222,8 @@ class GreencheckASNApprove(admin.ModelAdmin):
         "__str__",
         "link",
         "status",
+        "created",
+        "modified",
     ]
     list_filter = [StatusAsFilter]
     list_display_links = None
