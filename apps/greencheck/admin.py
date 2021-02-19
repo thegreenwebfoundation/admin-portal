@@ -62,7 +62,6 @@ class GreencheckAsnInline(admin.TabularInline):
 
 
 class GreencheckAsnApproveInline(admin.TabularInline, ApprovalFieldMixin):
-    classes = ["collapse"]
     extra = 0
     form = forms.GreencheckAsnApprovalForm
     model = models.GreencheckASNapprove
@@ -107,7 +106,6 @@ class GreencheckIpInline(admin.TabularInline):
 
 
 class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
-    classes = ["collapse"]
     extra = 0
     form = GreecheckIpApprovalForm
     model = GreencheckIpApprove
