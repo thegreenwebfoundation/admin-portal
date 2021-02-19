@@ -1,8 +1,6 @@
-from datetime import date
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.conf import settings
-from google.cloud import storage
 from django.views.generic.base import TemplateView
 
 from . import object_storage
@@ -14,7 +12,11 @@ class GreenUrlsView(TemplateView):
     template_name = "green_url.html"
 
     def fetch_urls(self):
-
+        """
+        Fetch the name, link pairs required to iterate through
+        the downloadable snapshots in the admin.
+        Returns a list of two-tuples, containing a filename and link.
+        """
         return [
             (obj.key, object_storage.public_url(obj)) for obj in bucket.objects.all()
         ]
@@ -29,7 +31,6 @@ class GreenUrlsView(TemplateView):
         if not accessed_date or self._date < date.today():
             self._date = date.today() + timedelta(weeks=2)
             self._urls = self.fetch_urls()
-
         return self._urls
 
     def get_context_data(self, **kwargs):
