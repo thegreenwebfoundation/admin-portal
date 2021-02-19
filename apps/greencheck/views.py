@@ -5,16 +5,19 @@ from django.conf import settings
 from google.cloud import storage
 from django.views.generic.base import TemplateView
 
+from . import object_storage
+
+bucket = object_storage.green_domains_bucket()
+
 
 class GreenUrlsView(TemplateView):
     template_name = "green_url.html"
 
     def fetch_urls(self):
-        client = storage.Client()
-        bucket_name = settings.DOMAIN_SNAPSHOT_BUCKET
-        bucket = client.get_bucket(bucket_name)
-        blobs = bucket.list_blobs()
-        return [(b.name, b.public_url) for b in blobs]
+
+        return [
+            (obj.key, object_storage.public_url(obj)) for obj in bucket.objects.all()
+        ]
 
     @property
     def urls(self):
