@@ -37,21 +37,10 @@
         dest: "{{ project_root }}/shared/.env"
       become: yes
 
-    - name: move cloud-auth
-      copy:
-        src: "cloud-auth.{{ tgwf_stage }}.json"
-        dest: "{{ project_root }}/shared/cloud-auth.json"
-
     - name: Link .env to shared directory
       file:
         src: "{{ project_root }}/shared/.env"
         dest: "{{ project_root }}/current/.env"
-        state: link
-
-    - name: Link google cloud json to shared directory
-      file:
-        src: "{{ project_root }}/shared/cloud-auth.json"
-        dest: "{{ project_root }}/current/cloud-auth.json"
         state: link
 
     - name: install pipenv and mariadb libraries for python
