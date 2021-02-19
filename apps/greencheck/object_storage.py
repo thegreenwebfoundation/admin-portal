@@ -24,7 +24,8 @@ def green_domains_bucket():
 def make_object_public(obj):
     """
     Apply the permissive `public-read` ACL to the object,
-    in case it isn't already visible.
+    to make it publicly downloadable, in case it isn't already
+    visible.
     """
     acl = obj.Acl()
     acl.put(ACL="public-read")
