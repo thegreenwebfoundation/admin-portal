@@ -83,6 +83,8 @@ class GreenDomainBatchView(CreateAPIView):
     A batch API for checking domains in bulk, rather than individually.
 
     Upload a CSV file containing a list of domains, to get back the status of each domain.
+
+    If you just want a list of green domains to check against, we publish a daily snapshot of all the green domains we have, for offline use and analysis, at https://datasets.thegreenwebfoundation.org
     """  # noqa
 
     queryset = GreenDomain.objects.all()
