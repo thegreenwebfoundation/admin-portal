@@ -1,7 +1,11 @@
+import logging
+
 from django.db import models
 from django.conf import settings
 from django_countries.fields import CountryField
 from django_mysql.models import EnumField
+from anymail.message import AnymailMessage
+from django.template.loader import render_to_string
 
 from model_utils.models import TimeStampedModel
 
@@ -13,6 +17,8 @@ from .choices import (
     ClassificationChoice,
     CoolingChoice,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class Datacenter(models.Model):
@@ -103,6 +109,61 @@ class Hostingprovider(models.Model):
 
     def __str__(self):
         return self.name
+
+    def mark_as_pending_review(self, approval_request):
+        """
+        Accept an approval request, and if the hosting provider
+        doesn't already have outstanding approvals, notify admins
+        to review the IP Range or AS network.
+        """
+        logger.info(f"Approval request: {approval_request}")
+
+        if self.needs_review(approval_request):
+            return self.flag_for_review(approval_request)
+
+    def needs_review(self, approval_request=None):
+        """
+        Checks if the hosting provider has outstanding submissions
+        from partners to review, and returns either True if so, or
+        false if not.
+        """
+        approval_requests = self.greencheckasnapprove_set.filter(status="new")
+
+        # if the provided approval new, and not seen before?
+        # return true if so, otherwise assume this is not new
+        # import ipdb
+
+        # ipdb.set_trace()
+        if approval_request is None:
+            return False
+
+        if approval_request not in approval_requests:
+            return True
+
+        return False
+
+    def flag_for_review(self, approval_request):
+        """
+        Mark this hosting provider as in need of review by admins.
+        Sends an notification via email to admins.
+        """
+
+        #  notify_admin_via_email(approval_request)
+        provider = approval_request.hostingprovider
+        ctx = {"approval_request": approval_request, "provider": provider}
+        notification_subject = f"TGWF: {approval_request.hostingprovider} - has been updated and needs a review"
+
+        notification_email_copy = render_to_string("flag_for_review_text.txt", ctx)
+
+        msg = AnymailMessage(
+            subject=notification_subject,
+            body=notification_email_copy,
+            to=["support@thegreenwebfoundation.org"],
+        )
+
+        # this adds the HTML version we've rendered
+        # msg.attach_alternative(generated_html, "text/html")
+        msg.send()
 
     class Meta:
         # managed = False
