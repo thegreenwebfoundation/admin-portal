@@ -17,6 +17,10 @@ from .choices import (
     ClassificationChoice,
     CoolingChoice,
 )
+from apps.greencheck.choices import (
+    StatusApproval,
+    ActionChoice,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -129,10 +133,10 @@ class Hostingprovider(models.Model):
         false if not.
         """
         outstanding_asn_approval_reqs = self.greencheckasnapprove_set.filter(
-            status="new"
+            status__in=[StatusApproval.new, StatusApproval.update]
         )
         outstanding_ip_range_approval_reqs = self.greencheckipapprove_set.filter(
-            status="new"
+            status__in=[StatusApproval.new, StatusApproval.update]
         )
         # use list() to evalute the queryset to a datastructure that
         # we can concatenate easily

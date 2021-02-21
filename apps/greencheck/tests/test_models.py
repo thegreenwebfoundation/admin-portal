@@ -46,13 +46,29 @@ class TestHostingProviderASNApprovalNeedsReview:
     We want to know when a hosting provider has an outstanding ASN that needs review.
     """
 
+    @pytest.mark.parametrize(
+        "action,status",
+        [
+            (choices.ActionChoice.new, choices.StatusApproval.new),
+            (choices.ActionChoice.update, choices.StatusApproval.update),
+            (choices.ActionChoice.new, choices.StatusApproval.update),
+            (choices.ActionChoice.update, choices.StatusApproval.new),
+        ],
+    )
     def test_hosting_provider_is_pending_with_new_ASN(
-        self, db, hosting_provider_with_sample_user, green_asn_approval_request
+        self,
+        db,
+        hosting_provider_with_sample_user,
+        green_asn_approval_request,
+        status,
+        action,
     ):
         """
         When a hosting provider has a ASN approval waiting a response,
         a hosting provider should count as in a 'needs review' state.
         """
+        green_asn_approval_request.status = status
+        green_asn_approval_request.action = action
 
         # when we pass nothing in we expect a false response
         assert not hosting_provider_with_sample_user.needs_review()
@@ -68,10 +84,25 @@ class TestHostingProviderASNApprovalNeedsReview:
         green_asn_approval_request.save()
         assert hosting_provider_with_sample_user.needs_review()
 
+    @pytest.mark.parametrize(
+        "action,status",
+        [
+            (choices.ActionChoice.new, choices.StatusApproval.new),
+            (choices.ActionChoice.update, choices.StatusApproval.update),
+            (choices.ActionChoice.new, choices.StatusApproval.update),
+            (choices.ActionChoice.update, choices.StatusApproval.new),
+        ],
+    )
     def test_hosting_provider_is_pending_with_new_IRange(
-        self, db, hosting_provider_with_sample_user, green_ip_range_approval_request
+        self,
+        db,
+        hosting_provider_with_sample_user,
+        green_ip_range_approval_request,
+        status,
+        action,
     ):
-
+        green_ip_range_approval_request.status = status
+        green_ip_range_approval_request.action = action
         # when we pass nothing in we expect a false response
         assert not hosting_provider_with_sample_user.needs_review()
 
@@ -88,12 +119,23 @@ class TestHostingProviderASNApprovalNeedsReview:
 
 
 class TestHostingProviderSendsNotification:
+    @pytest.mark.parametrize(
+        "action,status",
+        [
+            (choices.ActionChoice.new, choices.StatusApproval.new),
+            (choices.ActionChoice.update, choices.StatusApproval.update),
+            (choices.ActionChoice.new, choices.StatusApproval.update),
+            (choices.ActionChoice.update, choices.StatusApproval.new),
+        ],
+    )
     def test_hosting_provider_notifications_sent_when_review_needed_for_asn(
         self,
         db,
         hosting_provider_with_sample_user,
         green_asn_approval_request,
         mailoutbox,
+        status,
+        action,
     ):
         """
         When a hosting provider counts as in need of review, we only want to send an
@@ -102,6 +144,8 @@ class TestHostingProviderSendsNotification:
         We do this, because we don't want to deluge admins with unnecessary
         notifications.
         """
+        green_asn_approval_request.status = status
+        green_asn_approval_request.action = action
 
         assert not hosting_provider_with_sample_user.needs_review()
 
@@ -114,16 +158,29 @@ class TestHostingProviderSendsNotification:
         msg, *_ = mailoutbox
         assert hosting_provider_with_sample_user.name in msg.subject
 
+    @pytest.mark.parametrize(
+        "action,status",
+        [
+            (choices.ActionChoice.new, choices.StatusApproval.new),
+            (choices.ActionChoice.update, choices.StatusApproval.update),
+            (choices.ActionChoice.new, choices.StatusApproval.update),
+            (choices.ActionChoice.update, choices.StatusApproval.new),
+        ],
+    )
     def test_hosting_provider_notifications_sent_when_review_needed_for_ip_range(
         self,
         db,
         hosting_provider_with_sample_user,
         green_ip_range_approval_request,
         mailoutbox,
+        status,
+        action,
     ):
         """
         As above, but with an IP Range. We can't pass fixtures in as parameters in tests
         """
+        green_ip_range_approval_request.status = status
+        green_ip_range_approval_request.action = action
 
         assert not hosting_provider_with_sample_user.needs_review()
 
@@ -136,12 +193,23 @@ class TestHostingProviderSendsNotification:
         msg, *_ = mailoutbox
         assert hosting_provider_with_sample_user.name in msg.subject
 
+    @pytest.mark.parametrize(
+        "action,status",
+        [
+            (choices.ActionChoice.new, choices.StatusApproval.new),
+            (choices.ActionChoice.update, choices.StatusApproval.update),
+            (choices.ActionChoice.new, choices.StatusApproval.update),
+            (choices.ActionChoice.update, choices.StatusApproval.new),
+        ],
+    )
     def test_hosting_provider_does_not_send_duplicate_notifications_for_asn(
         self,
         db,
         hosting_provider_with_sample_user,
         green_asn_approval_request,
         mailoutbox,
+        status,
+        action,
     ):
         """
             When a hosting provider counts as in need of review, we only want to send
@@ -149,7 +217,9 @@ class TestHostingProviderSendsNotification:
             to review, to a state of having claims to review.
             We do this because we don't want to deluge admins with unnecessary
             notifications.
-            """
+        """
+        green_asn_approval_request.status = status
+        green_asn_approval_request.action = action
 
         assert not hosting_provider_with_sample_user.needs_review()
 
@@ -171,12 +241,23 @@ class TestHostingProviderSendsNotification:
         msg, *_ = mailoutbox
         assert hosting_provider_with_sample_user.name in msg.subject
 
+    @pytest.mark.parametrize(
+        "action,status",
+        [
+            (choices.ActionChoice.new, choices.StatusApproval.new),
+            (choices.ActionChoice.update, choices.StatusApproval.update),
+            (choices.ActionChoice.new, choices.StatusApproval.update),
+            (choices.ActionChoice.update, choices.StatusApproval.new),
+        ],
+    )
     def test_hosting_provider_does_not_send_duplicate_notifications_for_ip_range(
         self,
         db,
         hosting_provider_with_sample_user,
         green_ip_range_approval_request,
         mailoutbox,
+        action,
+        status,
     ):
         """
             When a hosting provider counts as in need of review, we only want to send
@@ -186,6 +267,8 @@ class TestHostingProviderSendsNotification:
             notifications.
             """
 
+        green_ip_range_approval_request.status = status
+        green_ip_range_approval_request.action = action
         assert not hosting_provider_with_sample_user.needs_review()
 
         hosting_provider_with_sample_user.mark_as_pending_review(
