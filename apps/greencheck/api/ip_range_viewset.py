@@ -20,40 +20,50 @@ from ..serializers import (
 logger = logging.getLogger(__name__)
 
 IP_RANGE_API_LIST_DESCRIPTION = """
-    LISTNG DESCRIPTION GOES HERE
-"""
+    List the IP ranges associated with this provider.
+
+    Returns a list of ip ranges, with a start and end IP address, registered with the provider.
+"""  # noqa
 IP_RANGE_API_CREATE_DESCRIPTION = """
-    CREATE DESCRIPTION GOES HERE
-"""
+    Register a new IP range for the hosting provider associated with this user.
+
+    Once an API is registered, it can take a short while before checks against the new IP
+    range show as green.
+"""  # noqa
 IP_RANGE_API_DESTROY_DESCRIPTION = """
-    DESTROY DESCRIPTION GOES HERE.
+    Removes the association of the IP range with the corresponding id from this
+    hosting provider.
+
+    As with POSTing a new IP Range, there can be a delay until the change propogates.
 
 """
 IP_RANGE_API_RETRIEVE_DESCRIPTION = """
-    RETRIEVE DESCRPTION GOES HERE
+    Fetch the IP Range for the corresponding id provided.
 """
 
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(operation_description=IP_RANGE_API_LIST_DESCRIPTION),
+    decorator=swagger_auto_schema(
+        operation_description=IP_RANGE_API_LIST_DESCRIPTION, tags=["IP Range"]
+    ),
 )
 @method_decorator(
     name="create",
     decorator=swagger_auto_schema(
-        operation_description=IP_RANGE_API_CREATE_DESCRIPTION
+        operation_description=IP_RANGE_API_CREATE_DESCRIPTION, tags=["IP Range"]
     ),
 )
 @method_decorator(
     name="retrieve",
     decorator=swagger_auto_schema(
-        operation_description=IP_RANGE_API_RETRIEVE_DESCRIPTION
+        operation_description=IP_RANGE_API_RETRIEVE_DESCRIPTION, tags=["IP Range"]
     ),
 )
 @method_decorator(
     name="destroy",
     decorator=swagger_auto_schema(
-        operation_description=IP_RANGE_API_DESTROY_DESCRIPTION
+        operation_description=IP_RANGE_API_DESTROY_DESCRIPTION, tags=["IP Range"]
     ),
 )
 class IPRangeViewSet(

@@ -9,6 +9,7 @@ from rest_framework import pagination, parsers, request, response, viewsets
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
+from drf_yasg.utils import swagger_auto_schema  # noqa
 
 # flake8 doesn't like rest_framework_csv. It's not clear why
 from rest_framework_csv import renderers as drf_csv_rndr  # noqa
@@ -80,9 +81,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 class GreenDomainBatchView(CreateAPIView):
     """
     A batch API for checking domains in bulk, rather than individually.
-    Upload a CSV file containing a list of domains, to get back the
-    status of each domain.
-    """
+
+    Upload a CSV file containing a list of domains, to get back the status of each domain.
+    """  # noqa
 
     queryset = GreenDomain.objects.all()
     serializer_class = GreenDomainBatchSerializer

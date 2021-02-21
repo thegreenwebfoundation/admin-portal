@@ -79,6 +79,8 @@ class GreenIPRangeSerializer(serializers.ModelSerializer):
         model = GreencheckIp
         fields = ["ip_start", "ip_end", "hostingprovider", "id"]
 
+        ref_name = "IP Range"
+
 
 class GreenDomainSerializer(serializers.ModelSerializer):
     """
