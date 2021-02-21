@@ -3,34 +3,11 @@ from datetime import date
 from io import StringIO
 
 import pytest
-import boto3
+from django.core import management
 
-from django.core.management import call_command
-from django.utils import timezone
+from . import greencheck_sitecheck, create_greendomain
 from sqlite_utils import Database
-
-from ..models import Hostingprovider
-from ..legacy_workers import SiteCheck
 from ..management.commands.dump_green_domains import GreenDomainExporter
-from ..models import GreencheckIp
-
-from . import create_greendomain
-
-
-def greencheck_sitecheck(
-    domain, hosting_provider: Hostingprovider, green_ip: GreencheckIp
-):
-    return SiteCheck(
-        url=domain,
-        ip="192.30.252.153",
-        data=True,
-        green=True,
-        hosting_provider_id=hosting_provider.id,
-        checked_at=timezone.now(),
-        match_type="ip",
-        match_ip_range=green_ip.id,
-        cached=True,
-    )
 
 
 @pytest.fixture
@@ -43,18 +20,6 @@ def cleared_test_bucket(object_storage_bucket):
     assert "test" in object_storage_bucket.name
     [obj.delete() for obj in object_storage_bucket.objects.all() if obj]
     return object_storage_bucket
-
-
-@pytest.fixture
-def object_storage_bucket(settings):
-    session = boto3.Session(region_name=settings.OBJECT_STORAGE_REGION)
-    object_storage = session.resource(
-        "s3",
-        endpoint_url=settings.OBJECT_STORAGE_ENDPOINT,
-        aws_access_key_id=settings.OBJECT_STORAGE_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.OBJECT_STORAGE_SECRET_ACCESS_KEY,
-    )
-    return object_storage.Bucket(settings.DOMAIN_SNAPSHOT_BUCKET)
 
 
 @pytest.mark.only
@@ -102,7 +67,7 @@ class TestDumpGreenDomainCommand:
     def test_handle(self):
         out = StringIO()
         err = StringIO()
-        call_command("dump_green_domains", stdout=out, stderr=err)
+        management.call_command("dump_green_domains", stdout=out, stderr=err)
 
         # silence is golden.
         assert not out.getvalue()
@@ -116,7 +81,7 @@ class TestDumpGreenDomainCommand:
         """
 
         out = StringIO()
-        call_command("dump_green_domains", upload=True, stdout=out)
+        management.call_command("dump_green_domains", upload=True, stdout=out)
 
         today = date.today()
         compressed_db_name = f"green_urls_{today}.db.gz"

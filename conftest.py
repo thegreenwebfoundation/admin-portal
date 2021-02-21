@@ -2,11 +2,12 @@ import pathlib
 
 import pytest
 
-from apps.accounts.models import Hostingprovider, Datacenter
-from apps.greencheck.models import GreencheckIp
 from apps.greencheck.legacy_workers import SiteCheck
 from django.contrib.auth import get_user_model
 
+from apps.accounts.models import Hostingprovider, Datacenter
+from apps.greencheck.models import GreencheckIp
+from apps.greencheck.management.commands import update_aws_ip_ranges
 
 User = get_user_model()
 
@@ -54,7 +55,11 @@ def hosting_provider():
 @pytest.fixture
 def hosting_provider_aws():
 
-    oregon, *rest = [region for region in GREEN_REGIONS if region[1] == "us-west-2"]
+    oregon, *rest = [
+        region
+        for region in update_aws_ip_ranges.GREEN_REGIONS
+        if region[1] == "us-west-2"
+    ]
     name, region, host_id = oregon
     return Hostingprovider(
         archived=False,

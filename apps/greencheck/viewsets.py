@@ -5,22 +5,11 @@ from io import TextIOWrapper
 import tld
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework import (
-    pagination,
-    parsers,
-    request,
-    response,
-    viewsets,
-)
+from rest_framework import mixins, pagination, parsers, request, response, viewsets
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.settings import api_settings
-from rest_framework.decorators import api_view
-from rest_framework import mixins
 from rest_framework_csv import renderers as drf_csv_rndr
-
-from drf_yasg.utils import swagger_auto_schema
 
 from .models import GreencheckIp, GreenDomain
 from .serializers import (
@@ -138,7 +127,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
 class GreenDomainBatchView(CreateAPIView):
     """
-    A batch API for checking domains in bulk, rather than individually. Upload a CSV file containing a list of domains, to get back the status of each domain.
+    A batch API for checking domains in bulk, rather than individually.
+    Upload a CSV file containing a list of domains, to get back the
+    status of each domain.
     """
 
     queryset = GreenDomain.objects.all()
@@ -230,4 +221,3 @@ class GreenDomainBatchView(CreateAPIView):
             response["Content-Disposition"] = f"attachment; filename={filename}"
 
         return super().finalize_response(request, response, *args, **kwargs)
-

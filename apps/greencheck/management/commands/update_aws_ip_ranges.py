@@ -1,4 +1,3 @@
-import json
 import requests
 import ipaddress
 import logging
@@ -6,7 +5,7 @@ from apps.greencheck.models import GreencheckIp
 from apps.accounts.models import Hostingprovider
 
 from django.core.management.base import BaseCommand
-from django.db import connection
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +54,11 @@ class AmazonCloudProvider:
             )
 
             logger.info(
-                f"Found {len(green_ipv4_ranges)} ipv4 and {len(green_ipv6_ranges)} ipv6 network ranges for {region_name}. Adding new ones to database"
+                (
+                    f"Found {len(green_ipv4_ranges)} ipv4 "
+                    f"and {len(green_ipv6_ranges)} ipv6 network ranges "
+                    f"for {region_name}. Adding new ones to database"
+                )
             )
 
             assert len(green_ipv4_ranges) > 0
