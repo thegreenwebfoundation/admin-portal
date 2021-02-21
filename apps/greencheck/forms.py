@@ -16,19 +16,26 @@ class ApprovalMixin:
     ApprovalModel = None
 
     def _save_approval(self):
+        """
+        Save the approval request, be it an IP Range or an AS Network
+        from a
+        """
         if self.ApprovalModel is None:
             raise NotImplementedError("Approval model missing")
 
         model_name = self.ApprovalModel._meta.model_name
-
         if not self.cleaned_data["is_staff"]:
+            hosting_provider = self.instance.hostingprovider
+
+            # changed here represents an
             action = ActionChoice.update if self.changed else ActionChoice.new
             status = StatusApproval.update if self.changed else StatusApproval.new
             kwargs = {
                 "action": action,
                 "status": status,
-                "hostingprovider": self.instance.hostingprovider,
+                "hostingprovider": hosting_provider,
             }
+
             if model_name == "greencheckasnapprove":
                 self.instance = GreencheckASNapprove(asn=self.instance.asn, **kwargs)
             else:
@@ -37,6 +44,8 @@ class ApprovalMixin:
                     ip_start=self.instance.ip_start,
                     **kwargs
                 )
+
+            hosting_provider.mark_as_pending_review(self.instance)
 
     def clean_is_staff(self):
         try:

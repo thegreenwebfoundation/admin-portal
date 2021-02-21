@@ -1,0 +1,11 @@
+Hello there.
+
+{{ provider  }} has just updated their organisation profile is now awaiting review from staff.
+
+In need of review:
+
+- {{ approval_request }}
+
+You can update this at the link below
+
+{{ link_url }}

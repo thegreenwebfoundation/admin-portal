@@ -248,6 +248,12 @@ class GreencheckASN(TimeStampedModel):
 
 
 class GreencheckASNapprove(TimeStampedModel):
+    """
+    A greencheck ASN approve is a request, to register an AS Network
+    with a given hosting provider. Once approved, associates the AS
+    with the provider.
+    """
+
     action = models.TextField(choices=ActionChoice.choices)
     asn = models.IntegerField()
     hostingprovider = models.ForeignKey(
@@ -263,7 +269,7 @@ class GreencheckASNapprove(TimeStampedModel):
         verbose_name = "Greencheck ASN Submissions"
 
     def __str__(self):
-        return f"Status: {self.status} Action: {self.action}"
+        return f"ASN: {self.asn} - Status: {self.status} Action: {self.action}"
 
 
 # class Tld(models.Model):

@@ -1,7 +1,12 @@
+import logging
+
 from django.db import models
 from django.conf import settings
 from django_countries.fields import CountryField
+from django.urls import reverse
 from django_mysql.models import EnumField
+from anymail.message import AnymailMessage
+from django.template.loader import render_to_string
 
 from model_utils.models import TimeStampedModel
 
@@ -13,6 +18,9 @@ from .choices import (
     ClassificationChoice,
     CoolingChoice,
 )
+from apps.greencheck.choices import StatusApproval
+
+logger = logging.getLogger(__name__)
 
 
 class Datacenter(models.Model):
@@ -103,6 +111,77 @@ class Hostingprovider(models.Model):
 
     def __str__(self):
         return self.name
+
+    def mark_as_pending_review(self, approval_request):
+        """
+        Accept an approval request, and if the hosting provider
+        doesn't already have outstanding approvals, notify admins
+        to review the IP Range or AS network. Returns true if
+        marking it as pending trigger action, otherwise false.
+        """
+        hosting_provider = approval_request.hostingprovider
+        logger.debug(f"Approval request: {approval_request} for {hosting_provider}")
+
+        approval_requests = self.outstanding_approval_requests()
+
+        if approval_request not in approval_requests:
+            self.flag_for_review(approval_request)
+            return True
+
+        return False
+
+    def outstanding_approval_requests(self):
+        """
+        Return all the ASN or IP Range requests as a single list.
+        """
+        logger.debug(self.greencheckasnapprove_set.all())
+        logger.debug(self.greencheckipapprove_set.all())
+        outstanding_asn_approval_reqs = self.greencheckasnapprove_set.filter(
+            status__in=[StatusApproval.new, StatusApproval.update]
+        )
+        outstanding_ip_range_approval_reqs = self.greencheckipapprove_set.filter(
+            status__in=[StatusApproval.new, StatusApproval.update]
+        )
+        # use list() to evalute the queryset to a datastructure that
+        # we can concatenate easily
+        approval_requests = list(outstanding_asn_approval_reqs) + list(
+            outstanding_ip_range_approval_reqs
+        )
+        return approval_requests
+
+    def flag_for_review(self, approval_request):
+        """
+        Mark this hosting provider as in need of review by admins.
+        Sends an notification via email to admins.
+        """
+
+        #  notify_admin_via_email(approval_request)
+        provider = approval_request.hostingprovider
+        link_path = reverse(
+            "greenweb_admin:accounts_hostingprovider_change", args=[provider.id]
+        )
+        link_url = f"{settings.SITE_URL}{link_path}"
+        ctx = {
+            "approval_request": approval_request,
+            "provider": provider,
+            "link_url": link_url,
+        }
+        notification_subject = (
+            f"TGWF: {approval_request.hostingprovider} - "
+            "has been updated and needs a review"
+        )
+
+        notification_email_copy = render_to_string("flag_for_review_text.txt", ctx)
+        notification_email_html = render_to_string("flag_for_review_text.html", ctx)
+
+        msg = AnymailMessage(
+            subject=notification_subject,
+            body=notification_email_copy,
+            to=["support@thegreenwebfoundation.org"],
+        )
+
+        msg.attach_alternative(notification_email_html, "text/html")
+        msg.send()
 
     class Meta:
         # managed = False

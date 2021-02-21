@@ -72,6 +72,18 @@ def hosting_provider_aws():
 
 
 @pytest.fixture
+def hosting_provider_with_sample_user(hosting_provider, sample_hoster_user):
+    """
+    Return a hosting provider that's been persisted to the database,
+    and has a user associated with it
+    """
+    hosting_provider.save()
+    sample_hoster_user.hostingprovider = hosting_provider
+    sample_hoster_user.save()
+    return hosting_provider
+
+
+@pytest.fixture
 def datacenter():
 
     return Datacenter(
