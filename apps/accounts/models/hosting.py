@@ -3,6 +3,7 @@ import logging
 from django.db import models
 from django.conf import settings
 from django_countries.fields import CountryField
+from django.urls import reverse
 from django_mysql.models import EnumField
 from anymail.message import AnymailMessage
 from django.template.loader import render_to_string
@@ -17,10 +18,7 @@ from .choices import (
     ClassificationChoice,
     CoolingChoice,
 )
-from apps.greencheck.choices import (
-    StatusApproval,
-    ActionChoice,
-)
+from apps.greencheck.choices import StatusApproval
 
 logger = logging.getLogger(__name__)
 
@@ -159,10 +157,22 @@ class Hostingprovider(models.Model):
 
         #  notify_admin_via_email(approval_request)
         provider = approval_request.hostingprovider
-        ctx = {"approval_request": approval_request, "provider": provider}
-        notification_subject = f"TGWF: {approval_request.hostingprovider} - has been updated and needs a review"
+        link_path = reverse(
+            "greenweb_admin:accounts_hostingprovider_change", args=[provider.id]
+        )
+        link_url = f"{settings.SITE_URL}{link_path}"
+        ctx = {
+            "approval_request": approval_request,
+            "provider": provider,
+            "link_url": link_url,
+        }
+        notification_subject = (
+            f"TGWF: {approval_request.hostingprovider} - "
+            "has been updated and needs a review"
+        )
 
         notification_email_copy = render_to_string("flag_for_review_text.txt", ctx)
+        notification_email_html = render_to_string("flag_for_review_text.html", ctx)
 
         msg = AnymailMessage(
             subject=notification_subject,
@@ -170,8 +180,7 @@ class Hostingprovider(models.Model):
             to=["support@thegreenwebfoundation.org"],
         )
 
-        # this adds the HTML version we've rendered
-        # msg.attach_alternative(generated_html, "text/html")
+        msg.attach_alternative(notification_email_html, "text/html")
         msg.send()
 
     class Meta:

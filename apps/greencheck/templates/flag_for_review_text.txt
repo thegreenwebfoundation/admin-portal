@@ -6,6 +6,6 @@ In need of review:
 
 - {{ approval_request }}
 
-You can update this at:
+You can update this at the link below
 
-{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}
+{{ link_url }}
