@@ -3,7 +3,7 @@ from datetime import date
 from io import StringIO
 
 import pytest
-import boto3
+import boto3  # noqa
 
 from django.core.management import call_command
 from django.utils import timezone
