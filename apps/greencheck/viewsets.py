@@ -10,6 +10,8 @@ from rest_framework.authentication import BasicAuthentication, SessionAuthentica
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_csv import renderers as drf_csv_rndr
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 
 from .models import GreencheckIp, GreenDomain
 from .serializers import (
@@ -20,7 +22,43 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
+IP_RANGE_API_LIST_DESCRIPTION = """
+    LISTNG DESCRIPTION GOES HERE
+"""
+IP_RANGE_API_CREATE_DESCRIPTION = """
+    CREATE DESCRIPTION GOES HERE
+"""
+IP_RANGE_API_DESTROY_DESCRIPTION = """
+    DESTROY DESCRIPTION GOES HERE.
 
+"""
+IP_RANGE_API_RETRIEVE_DESCRIPTION = """
+    RETRIEVE DESCRPTION GOES HERE
+"""
+
+
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(operation_description=IP_RANGE_API_LIST_DESCRIPTION),
+)
+@method_decorator(
+    name="create",
+    decorator=swagger_auto_schema(
+        operation_description=IP_RANGE_API_CREATE_DESCRIPTION
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=swagger_auto_schema(
+        operation_description=IP_RANGE_API_RETRIEVE_DESCRIPTION
+    ),
+)
+@method_decorator(
+    name="destroy",
+    decorator=swagger_auto_schema(
+        operation_description=IP_RANGE_API_DESTROY_DESCRIPTION
+    ),
+)
 class IPRangeViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
@@ -30,12 +68,12 @@ class IPRangeViewSet(
 ):
     """
     This viewset automatically provides `list` and `retrieve` actions.
-    Don't want ipranges to be editble once created, so we expose a 'create'
-    endpoint, as well as a 'destroy' one, which does not delete the range,
-    but instead marks it as inactive.
+    We don't want ip-ranges to be editable once created, as they're often linked
+    to an request to approve a set range.
+    So, we exposes a 'create', 'destroy' and 'list' methods.
+    Similarly, 'delete' does not delete a range, but instead it marks the IP range
+    as inactive.
     """
-
-    swagger_schema = None
 
     serializer_class = GreenIPRangeSerializer
     queryset = GreencheckIp.objects.all()
@@ -67,6 +105,9 @@ class IPRangeViewSet(
         Overriding this one function means that the rest of
         our destroy method works as expected.
         """
+
+        # check if this user is authorised to modify this ip range
+
         instance.active = False
         instance.save()
 
