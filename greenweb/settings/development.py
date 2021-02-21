@@ -15,3 +15,9 @@ INSTALLED_APPS.insert(0, "whitenoise.runserver_nostatic")
 MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# mailhog
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 1025
+SITE_URL = "http://localhost:9000"

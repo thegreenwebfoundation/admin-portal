@@ -212,3 +212,5 @@ LOGGING = {
         }
     },
 }
+
+SITE_URL = "https://admin.thegreenwebfoundation.org"
