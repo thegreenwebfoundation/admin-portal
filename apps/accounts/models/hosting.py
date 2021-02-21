@@ -118,20 +118,26 @@ class Hostingprovider(models.Model):
         """
         Accept an approval request, and if the hosting provider
         doesn't already have outstanding approvals, notify admins
-        to review the IP Range or AS network.
+        to review the IP Range or AS network. Returns true if
+        marking it as pending trigger action, otherwise false.
         """
         hosting_provider = approval_request.hostingprovider
         logger.debug(f"Approval request: {approval_request} for {hosting_provider}")
 
-        if self.needs_review(approval_request):
-            return self.flag_for_review(approval_request)
+        approval_requests = self.outstanding_approval_requests()
 
-    def needs_review(self, approval_request=None):
+        if approval_request not in approval_requests:
+            self.flag_for_review(approval_request)
+            return True
+
+        return False
+
+    def outstanding_approval_requests(self):
         """
-        Checks if the hosting provider has outstanding submissions
-        from partners to review, and returns either True if so, or
-        false if not.
+        Return all the ASN or IP Range requests as a single list.
         """
+        logger.debug(self.greencheckasnapprove_set.all())
+        logger.debug(self.greencheckipapprove_set.all())
         outstanding_asn_approval_reqs = self.greencheckasnapprove_set.filter(
             status__in=[StatusApproval.new, StatusApproval.update]
         )
@@ -143,16 +149,7 @@ class Hostingprovider(models.Model):
         approval_requests = list(outstanding_asn_approval_reqs) + list(
             outstanding_ip_range_approval_reqs
         )
-
-        # if the provided approval new, and not seen before?
-        # return true if so, otherwise assume this is not new
-        if approval_request is None:
-            return False
-
-        if approval_request not in approval_requests:
-            return True
-
-        return False
+        return approval_requests
 
     def flag_for_review(self, approval_request):
         """

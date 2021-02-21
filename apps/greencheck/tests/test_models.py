@@ -71,18 +71,22 @@ class TestHostingProviderASNApprovalNeedsReview:
         green_asn_approval_request.action = action
 
         # when we pass nothing in we expect a false response
-        assert not hosting_provider_with_sample_user.needs_review()
+        assert not hosting_provider_with_sample_user.outstanding_approval_requests()
 
         # we call this with the new request before persisting it
-        # to database. this simulates its use in forms or serailisers
-        assert hosting_provider_with_sample_user.needs_review(
+        # to database. this simulates its use in forms or serialisers
+        assert hosting_provider_with_sample_user.mark_as_pending_review(
             green_asn_approval_request
         )
 
-        # once a request has been persisted, we still want future `needs_review
-        # checks to count as True.
+        # once a request has been persisted, we still want to be able to see if
+        # there are outstanding_approval_requests, even if we are no longer sending
+        # more notifications
         green_asn_approval_request.save()
-        assert hosting_provider_with_sample_user.needs_review()
+        assert hosting_provider_with_sample_user.outstanding_approval_requests()
+        assert not hosting_provider_with_sample_user.mark_as_pending_review(
+            green_asn_approval_request
+        )
 
     @pytest.mark.parametrize(
         "action,status",
@@ -93,7 +97,7 @@ class TestHostingProviderASNApprovalNeedsReview:
             (choices.ActionChoice.update, choices.StatusApproval.new),
         ],
     )
-    def test_hosting_provider_is_pending_with_new_IRange(
+    def test_hosting_provider_is_pending_with_new_ip_range(
         self,
         db,
         hosting_provider_with_sample_user,
@@ -104,18 +108,24 @@ class TestHostingProviderASNApprovalNeedsReview:
         green_ip_range_approval_request.status = status
         green_ip_range_approval_request.action = action
         # when we pass nothing in we expect a false response
-        assert not hosting_provider_with_sample_user.needs_review()
+        assert not hosting_provider_with_sample_user.outstanding_approval_requests()
 
         # we call this with the new request before persisting it
         # to database. this simulates its use in forms or serailisers
-        assert hosting_provider_with_sample_user.needs_review(
+        assert hosting_provider_with_sample_user.mark_as_pending_review(
             green_ip_range_approval_request
         )
 
         # once a request has been persisted, we still want future `needs_review
         # checks to count as True.
+        # once a request has been persisted, we still want to be able to see if
+        # there are outstanding_approval_requests, even if we are no longer sending
+        # more notifications
         green_ip_range_approval_request.save()
-        assert hosting_provider_with_sample_user.needs_review()
+        assert hosting_provider_with_sample_user.outstanding_approval_requests()
+        assert not hosting_provider_with_sample_user.mark_as_pending_review(
+            green_ip_range_approval_request
+        )
 
 
 class TestHostingProviderSendsNotification:
@@ -147,7 +157,7 @@ class TestHostingProviderSendsNotification:
         green_asn_approval_request.status = status
         green_asn_approval_request.action = action
 
-        assert not hosting_provider_with_sample_user.needs_review()
+        assert not hosting_provider_with_sample_user.outstanding_approval_requests()
 
         hosting_provider_with_sample_user.mark_as_pending_review(
             green_asn_approval_request
@@ -182,7 +192,7 @@ class TestHostingProviderSendsNotification:
         green_ip_range_approval_request.status = status
         green_ip_range_approval_request.action = action
 
-        assert not hosting_provider_with_sample_user.needs_review()
+        assert not hosting_provider_with_sample_user.outstanding_approval_requests()
 
         hosting_provider_with_sample_user.mark_as_pending_review(
             green_ip_range_approval_request
@@ -221,7 +231,7 @@ class TestHostingProviderSendsNotification:
         green_asn_approval_request.status = status
         green_asn_approval_request.action = action
 
-        assert not hosting_provider_with_sample_user.needs_review()
+        assert not hosting_provider_with_sample_user.outstanding_approval_requests()
 
         hosting_provider_with_sample_user.mark_as_pending_review(
             green_asn_approval_request
@@ -269,7 +279,7 @@ class TestHostingProviderSendsNotification:
 
         green_ip_range_approval_request.status = status
         green_ip_range_approval_request.action = action
-        assert not hosting_provider_with_sample_user.needs_review()
+        assert not hosting_provider_with_sample_user.outstanding_approval_requests()
 
         hosting_provider_with_sample_user.mark_as_pending_review(
             green_ip_range_approval_request
