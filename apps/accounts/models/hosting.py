@@ -116,7 +116,8 @@ class Hostingprovider(models.Model):
         doesn't already have outstanding approvals, notify admins
         to review the IP Range or AS network.
         """
-        logger.info(f"Approval request: {approval_request}")
+        hosting_provider = approval_request.hostingprovider
+        logger.debug(f"Approval request: {approval_request} for {hosting_provider}")
 
         if self.needs_review(approval_request):
             return self.flag_for_review(approval_request)
@@ -127,13 +128,20 @@ class Hostingprovider(models.Model):
         from partners to review, and returns either True if so, or
         false if not.
         """
-        approval_requests = self.greencheckasnapprove_set.filter(status="new")
+        outstanding_asn_approval_reqs = self.greencheckasnapprove_set.filter(
+            status="new"
+        )
+        outstanding_ip_range_approval_reqs = self.greencheckipapprove_set.filter(
+            status="new"
+        )
+        # use list() to evalute the queryset to a datastructure that
+        # we can concatenate easily
+        approval_requests = list(outstanding_asn_approval_reqs) + list(
+            outstanding_ip_range_approval_reqs
+        )
 
         # if the provided approval new, and not seen before?
         # return true if so, otherwise assume this is not new
-        # import ipdb
-
-        # ipdb.set_trace()
         if approval_request is None:
             return False
 
