@@ -5,81 +5,25 @@ from io import TextIOWrapper
 import tld
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework import (
-    pagination,
-    parsers,
-    request,
-    response,
-    viewsets,
-)
+from rest_framework import pagination, parsers, request, response, viewsets
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.settings import api_settings
-from rest_framework.decorators import api_view
-from rest_framework import mixins
-from rest_framework_csv import renderers as drf_csv_rndr
+from rest_framework.permissions import AllowAny
+from drf_yasg.utils import swagger_auto_schema  # noqa
 
-from drf_yasg.utils import swagger_auto_schema
+# flake8 doesn't like rest_framework_csv. It's not clear why
+from rest_framework_csv import renderers as drf_csv_rndr  # noqa
 
-from .models import GreencheckIp, GreenDomain
+from .api.ip_range_viewset import IPRangeViewSet  # noqa
+from .api.asn_viewset import ASNViewSet  # noqa
+
+from .models import GreenDomain
 from .serializers import (
     GreenDomainBatchSerializer,
     GreenDomainSerializer,
-    GreenIPRangeSerializer,
 )
 
 logger = logging.getLogger(__name__)
-
-
-class IPRangeViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet,
-):
-    """
-    This viewset automatically provides `list` and `retrieve` actions.
-    Don't want ipranges to be editble once created, so we expose a 'create'
-    endpoint, as well as a 'destroy' one, which does not delete the range,
-    but instead marks it as inactive.
-    """
-
-    swagger_schema = None
-
-    serializer_class = GreenIPRangeSerializer
-    queryset = GreencheckIp.objects.all()
-
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def filter_queryset(self, queryset):
-        """
-        Because our viewset takes care of pagination and the rest
-        all we change is what is returned when we filter the queryset
-        for a given user.
-
-        http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html#list
-        """
-
-        user = self.request.user
-
-        if user is not None:
-            provider = self.request.user.hostingprovider
-
-            if provider is not None:
-                return provider.greencheckip_set.filter(active=True)
-
-        return []
-
-    def perform_destroy(self, instance):
-        """
-        Overriding this one function means that the rest of
-        our destroy method works as expected.
-        """
-        instance.active = False
-        instance.save()
 
 
 class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
@@ -138,8 +82,12 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
 class GreenDomainBatchView(CreateAPIView):
     """
-    A batch API for checking domains in bulk, rather than individually. Upload a CSV file containing a list of domains, to get back the status of each domain.
-    """
+    A batch API for checking domains in bulk, rather than individually.
+
+    Upload a CSV file containing a list of domains, to get back the status of each domain.
+
+    If you just want a list of green domains to check against, we publish a daily snapshot of all the green domains we have, for offline use and analysis, at https://datasets.thegreenwebfoundation.org
+    """  # noqa
 
     queryset = GreenDomain.objects.all()
     serializer_class = GreenDomainBatchSerializer
@@ -230,4 +178,3 @@ class GreenDomainBatchView(CreateAPIView):
             response["Content-Disposition"] = f"attachment; filename={filename}"
 
         return super().finalize_response(request, response, *args, **kwargs)
-

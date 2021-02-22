@@ -121,6 +121,11 @@ class IpAddressField(Field):
 
 
 class GreencheckIp(TimeStampedModel):
+    """
+    An IP Range associated with a hosting provider, to act as a way to
+    link it to the sustainability claims by the company.
+    """
+
     active = models.BooleanField(null=True)
     ip_end = IpAddressField(db_column="ip_eind")
     ip_start = IpAddressField()
@@ -171,6 +176,12 @@ class Greencheck(models.Model):
 
 
 class GreencheckIpApprove(TimeStampedModel):
+    """
+    An approval request for a given IP Range. These are submitted by hosting providers
+    and once they are reviewed, and approved, a new IP Range with the same IP addresses
+    is created.
+    """
+
     action = models.TextField(choices=ActionChoice.choices)
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE, db_column="id_hp", null=True
@@ -232,9 +243,14 @@ class GreencheckTLD(models.Model):
 
 
 class GreencheckASN(TimeStampedModel):
+    """
+    An AS Number to identify a hosting provider with, so we can link
+    an IP address or ASN to the hosting provider's green claims.
+    """
+
     active = models.BooleanField(null=True)
     # https://en.wikipedia.org/wiki/Autonomous_system_(Internet)
-    asn = models.IntegerField(verbose_name="Autonomous system number")
+    asn = models.IntegerField(verbose_name="Autonomous system number", unique=True)
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )

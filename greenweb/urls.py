@@ -22,6 +22,7 @@ from rest_framework.routers import DefaultRouter
 
 from apps.greencheck.viewsets import (
     IPRangeViewSet,
+    ASNViewSet,
     GreenDomainViewset,
     GreenDomainBatchView,
 )
@@ -35,6 +36,7 @@ urlpatterns = []
 
 router = DefaultRouter()
 router.register(r"ip-ranges", IPRangeViewSet, basename="ip-range")
+router.register(r"asns", ASNViewSet, basename="asn")
 
 if settings.DEBUG:
     import debug_toolbar
