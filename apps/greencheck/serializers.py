@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from apps.accounts.models import Hostingprovider
 
-from .models import GreencheckIp, GreenDomain
+from .models import GreencheckIp, GreenDomain, GreencheckASN
 
 
 class IPDecimalField(serializers.DecimalField):
@@ -80,6 +80,19 @@ class GreenIPRangeSerializer(serializers.ModelSerializer):
         fields = ["ip_start", "ip_end", "hostingprovider", "id"]
 
         ref_name = "IP Range"
+
+
+class GreenASNSerializer(serializers.ModelSerializer):
+    asn = serializers.IntegerField()
+    hostingprovider = UserFilteredPrimaryKeyRelatedField(
+        queryset=Hostingprovider.objects.all()
+    )
+
+    class Meta:
+        model = GreencheckASN
+        fields = ["asn", "hostingprovider", "id"]
+
+        ref_name = "AS Network"
 
 
 class GreenDomainSerializer(serializers.ModelSerializer):
