@@ -17,6 +17,13 @@ logger = logging.getLogger(__name__)
 rf = APIRequestFactory()
 
 
+@pytest.fixture
+def another_host_user():
+    u = User(username="another_user", email="another@example.com")
+    u.set_password("topSekrit")
+    return u
+
+
 class TestASNViewSetList:
     def test_get_asn_empty(self, hosting_provider_with_sample_user: Hostingprovider):
         """
@@ -122,8 +129,6 @@ class TestASNViewSetList:
         green_asn, *_ = GreencheckASN.objects.filter(asn=12345)
         response.data["id"] == green_asn.id
 
-    # no duplicates
-
     def test_get_asn_delete(
         self,
         hosting_provider_with_sample_user: Hostingprovider,
@@ -152,3 +157,56 @@ class TestASNViewSetList:
 
         fetched_green_asn = GreencheckASN.objects.filter(asn=12345).first()
         assert fetched_green_asn.active == False
+
+    def test_can_only_create_asns_for_own_hosting_provider(
+        self,
+        hosting_provider_with_sample_user: Hostingprovider,
+        another_host_user: User,
+    ):
+        """
+        An user must be associated with a hosting provider to be able to create
+        ASNs or IP Ranges for the provider
+        """
+
+        rf = APIRequestFactory()
+        url_path = reverse("asn-list")
+        request = rf.delete(url_path)
+        request.user = another_host_user
+
+        # GET end point for IP Ranges
+        view = ASNViewSet.as_view({"post": "create"})
+
+        response = view(request)
+
+        # check contents
+        assert response.status_code == 405
+        assert GreencheckASN.objects.filter(asn=12345).count() == 0
+
+    def test_can_only_destroy_asns_for_own_hosting_provider(
+        self,
+        hosting_provider_with_sample_user: Hostingprovider,
+        another_host_user: User,
+        green_asn: GreencheckASN,
+    ):
+        """
+        An user must be associated with a hosting provider to be able to create or destroy
+        ASNs or IP Ranges for the provider
+        """
+        green_asn.save()
+        assert GreencheckASN.objects.filter(asn=12345).count() == 1
+
+        rf = APIRequestFactory()
+        url_path = reverse("asn-detail", kwargs={"pk": green_asn.id})
+        user = hosting_provider_with_sample_user.user_set.first()
+        request = rf.delete(url_path)
+        request.user = another_host_user
+
+        # GET end point for IP Ranges
+        view = ASNViewSet.as_view({"delete": "destroy"})
+
+        response = view(request, pk=green_asn.id)
+
+        # check contents
+        assert response.status_code == 404
+        assert GreencheckASN.objects.filter(asn=12345, active=True).count() == 1
+

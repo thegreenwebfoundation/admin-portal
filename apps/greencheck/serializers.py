@@ -1,10 +1,13 @@
 import ipaddress
 
 from rest_framework import serializers
-
+from rest_framework.validators import UniqueValidator
 from apps.accounts.models import Hostingprovider
 
 from .models import GreencheckIp, GreenDomain, GreencheckASN
+
+HIGHEST_ASN_POSSIBLE = 4294967295
+LOWEST_ASN_POSSIBLE = 1
 
 
 class IPDecimalField(serializers.DecimalField):
@@ -78,12 +81,15 @@ class GreenIPRangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = GreencheckIp
         fields = ["ip_start", "ip_end", "hostingprovider", "id"]
-
         ref_name = "IP Range"
 
 
 class GreenASNSerializer(serializers.ModelSerializer):
-    asn = serializers.IntegerField()
+    asn = serializers.IntegerField(
+        max_value=HIGHEST_ASN_POSSIBLE,
+        min_value=LOWEST_ASN_POSSIBLE,
+        validators=[UniqueValidator(queryset=GreencheckASN.objects.all())],
+    )  # noqa
     hostingprovider = UserFilteredPrimaryKeyRelatedField(
         queryset=Hostingprovider.objects.all()
     )
@@ -91,7 +97,6 @@ class GreenASNSerializer(serializers.ModelSerializer):
     class Meta:
         model = GreencheckASN
         fields = ["asn", "hostingprovider", "id"]
-
         ref_name = "AS Network"
 
 

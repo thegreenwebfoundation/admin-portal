@@ -6,7 +6,7 @@ from hypothesis import given, strategies
 from hypothesis.extra.django import from_model
 from rest_framework import serializers
 
-from apps.greencheck.models import GreencheckIp, GreencheckASN
+from apps.greencheck.models import GreencheckIp, GreencheckASN, Hostingprovider
 from apps.greencheck.serializers import GreenIPRangeSerializer, GreenASNSerializer
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,23 @@ SAMPLE_IPS = [
         "3e5c:a68a:9dbe:c49a:6884:943f:7c71:27dd",
     ),
 ]
+
+
+@pytest.fixture
+def new_hosting_provider():
+
+    return Hostingprovider(
+        archived=False,
+        country="NL",
+        customer=False,
+        icon="",
+        iconurl="",
+        model="groeneenergie",
+        name="Greeny Cloudy",
+        partner="",
+        showonwebsite=True,
+        website="http://greeny.cloud",
+    )
 
 
 class TestGreenIpRangeSerialiser:
@@ -179,10 +196,9 @@ class TestGreenASNSerialiser:
         created_asn.asn == sample_data["asn"]
         created_asn.hostingprovider.id == sample_data["hostingprovider"]
 
-    @pytest.mark.skip(reason="skipping until we figure out where to have these checks")
-    def test_asn_is_checked_as_a_valid_number(self):
-        # TODO figure out where to add these checks. Should they be in the model instead?
-
+    def test_asn_is_checked_as_a_valid_number(
+        self, db, hosting_provider, new_hosting_provider
+    ):
         # ASNs are always greater than 0
         # ASNs count up to 4294967295
         # https://www.arin.net/resources/guide/asn/
@@ -190,5 +206,23 @@ class TestGreenASNSerialiser:
         # there are also some reserved AS Numbers we ought to be aware of
         # https://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29
 
-        pass
+        hosting_provider.save()
+        new_hosting_provider.save()
+
+        sample_data = {
+            "asn": 12345,
+            "hostingprovider": hosting_provider.id,
+        }
+
+        gcn = GreenASNSerializer(data=sample_data)
+        assert gcn.is_valid()
+
+        gcn.save()
+
+        second_sample_data = {
+            "asn": 12345,
+            "hostingprovider": new_hosting_provider.id,
+        }
+        second_gcn = GreenASNSerializer(data=second_sample_data)
+        assert not second_gcn.is_valid()
 
