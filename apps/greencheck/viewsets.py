@@ -15,6 +15,8 @@ from drf_yasg.utils import swagger_auto_schema  # noqa
 from rest_framework_csv import renderers as drf_csv_rndr  # noqa
 
 from .api.ip_range_viewset import IPRangeViewSet  # noqa
+from .api.asn_viewset import ASNViewSet  # noqa
+
 from .models import GreenDomain
 from .serializers import (
     GreenDomainBatchSerializer,

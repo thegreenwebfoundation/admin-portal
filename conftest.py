@@ -6,7 +6,7 @@ from apps.greencheck.legacy_workers import SiteCheck
 from django.contrib.auth import get_user_model
 
 from apps.accounts.models import Hostingprovider, Datacenter
-from apps.greencheck.models import GreencheckIp
+from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.greencheck.management.commands import update_aws_ip_ranges
 
 User = get_user_model()
@@ -116,6 +116,15 @@ def green_ip(hosting_provider):
         active=True,
         ip_start="172.217.168.238",
         ip_end="172.217.168.239",
+        hostingprovider=hosting_provider,
+    )
+
+@pytest.fixture
+def green_asn(hosting_provider):
+    hosting_provider.save()
+    return GreencheckASN(
+        active=True,
+        asn=12345,
         hostingprovider=hosting_provider,
     )
 
