@@ -17,6 +17,8 @@ from ..serializers import (
     GreenIPRangeSerializer,
 )
 
+from .permissions import BelongsToHostingProvider
+
 logger = logging.getLogger(__name__)
 
 IP_RANGE_API_LIST_DESCRIPTION = """
@@ -86,7 +88,7 @@ class IPRangeViewSet(
     queryset = GreencheckIp.objects.all()
 
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [BelongsToHostingProvider]
 
     def filter_queryset(self, queryset):
         """
@@ -99,7 +101,7 @@ class IPRangeViewSet(
 
         user = self.request.user
 
-        if user is not None:
+        if user.is_authenticated:
             provider = self.request.user.hostingprovider
 
             if provider is not None:

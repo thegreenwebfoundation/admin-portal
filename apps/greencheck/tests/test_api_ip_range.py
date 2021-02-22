@@ -100,6 +100,10 @@ class TestIpRangeViewSetList:
     def test_get_ip_ranges_without_auth(
         self, hosting_provider: Hostingprovider, sample_hoster_user: User,
     ):
+        """
+        We don't want to list all the IP ranges we have, so we just show an empty
+        list for anon users.
+        """
         hosting_provider.save()
         sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.save()
@@ -111,17 +115,11 @@ class TestIpRangeViewSetList:
         # set up the viewset, as a views, so it knows what to do when we
         # pass in a GET request as defined a couple of lines up
         view = IPRangeViewSet.as_view({"get": "list"})
-
-        # ipdb.set_trace()
-        # has_permission = permission.has_permission(request, None)
-        # import ipdb
-
-        # ipdb.set_trace()
         response = view(request)
 
         # check contents
-        assert response.status_code == 403
-        # assert len(response.data) == 0
+        assert response.status_code == 200
+        assert len(response.data) == 0
 
     def test_get_ip_range_for_user_with_no_hosting_provider(
         self, sample_hoster_user: User, rf: RequestFactory,

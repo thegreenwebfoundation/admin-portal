@@ -12,6 +12,7 @@ from drf_yasg.utils import swagger_auto_schema  # noqa
 
 from ..models import GreencheckASN
 from ..serializers import GreenDomainSerializer, GreenASNSerializer
+from .permissions import BelongsToHostingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class ASNViewSet(
     queryset = GreencheckASN.objects.all()
 
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [BelongsToHostingProvider]
 
     def filter_queryset(self, queryset):
         """
@@ -108,9 +109,6 @@ class ASNViewSet(
         Overriding this one function means that the rest of
         our destroy method works as expected.
         """
-
-        # check if this user is authorised to modify this ip range
-
         instance.active = False
         instance.save()
 
