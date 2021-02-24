@@ -31,7 +31,6 @@ class SiteCheck:
     match_type: str
     match_ip_range: int
     cached: bool
-    checked_at: str
 
 
 class LegacySiteCheckLogger:
