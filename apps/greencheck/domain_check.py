@@ -52,45 +52,39 @@ class GreenDomainChecker:
         ip_string = socket.gethostbyname(domain)
         return ipaddress.ip_address(ip_string)
 
-    def check_domain(self, domain: str):
+    def green_sitecheck_by_ip_range(self, domain, ip_address, ip_match):
         """
-        Accept a domain name and return the either a GreenDomain Object,
-        or the best matching IP range forip address it resolves to.
+        Return a SiteCheck object, that has been marked as green by
+        looking up against an IP range
         """
+        return legacy_workers.SiteCheck(
+            url=domain,
+            ip=str(ip_address),
+            data=True,
+            green=True,
+            hosting_provider_id=ip_match.hostingprovider.id,
+            match_type="IP",
+            match_ip_range=ip_match.id,
+            cached=False,
+            checked_at=timezone.now(),
+        )
 
-        ip_address = self.convert_domain_to_ip(domain)
+    def green_sitecheck_by_asn(self, domain, ip_address, matching_asn):
+        return legacy_workers.SiteCheck(
+            url=domain,
+            ip=str(ip_address),
+            data=True,
+            green=True,
+            hosting_provider_id=matching_asn.hostingprovider.id,
+            match_type="ASN",
+            match_ip_range=matching_asn.id,
+            cached=False,
+            checked_at=timezone.now(),
+        )
 
-        ip_match = self.check_for_matching_ip_ranges(ip_address)
-        if ip_match:
-
-            check = legacy_workers.SiteCheck(
-                url=domain,
-                ip=str(ip_address),
-                data=True,
-                green=True,
-                hosting_provider_id=ip_match.hostingprovider.id,
-                match_type="IP",
-                match_ip_range=ip_match.id,
-                cached=False,
-                checked_at=timezone.now(),
-            )
-            return check
-
-        matching_asn = self.check_for_matching_asn(ip_address)
-        logger.debug(f"matching_asn: {matching_asn}")
-        if matching_asn:
-            return legacy_workers.SiteCheck(
-                url=domain,
-                ip=str(ip_address),
-                data=True,
-                green=True,
-                hosting_provider_id=matching_asn.hostingprovider.id,
-                match_type="ASN",
-                match_ip_range=matching_asn.id,
-                cached=False,
-                checked_at=timezone.now(),
-            )
-
+    def grey_sitecheck(
+        self, domain, ip_address,
+    ):
         return legacy_workers.SiteCheck(
             url=domain,
             ip=str(ip_address),
@@ -102,6 +96,25 @@ class GreenDomainChecker:
             cached=False,
             checked_at=timezone.now(),
         )
+
+    def check_domain(self, domain: str):
+        """
+        Accept a domain name and return the either a GreenDomain Object,
+        or the best matching IP range forip address it resolves to.
+        """
+
+        ip_address = self.convert_domain_to_ip(domain)
+
+        ip_match = self.check_for_matching_ip_ranges(ip_address)
+        if ip_match:
+            return self.greencheck_by_ip_range(domain, ip_address, ip_match)
+
+        matching_asn = self.check_for_matching_asn(ip_address)
+        if matching_asn:
+            return self.greencheck_by_asn(domain, ip_address, matching_asn)
+
+        # otherwise, return a 'grey' result
+        return self.grey_sitecheck(domain, ip_address)
 
     def check_for_matching_ip_ranges(self, ip_address):
         """
