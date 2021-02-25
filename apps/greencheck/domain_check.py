@@ -105,13 +105,11 @@ class GreenDomainChecker:
 
         ip_address = self.convert_domain_to_ip(domain)
 
-        ip_match = self.check_for_matching_ip_ranges(ip_address)
-        if ip_match:
-            return self.greencheck_by_ip_range(domain, ip_address, ip_match)
+        if ip_match := self.check_for_matching_ip_ranges(ip_address):
+            return self.green_sitecheck_by_ip_range(domain, ip_address, ip_match)
 
-        matching_asn = self.check_for_matching_asn(ip_address)
-        if matching_asn:
-            return self.greencheck_by_asn(domain, ip_address, matching_asn)
+        if matching_asn := self.check_for_matching_asn(ip_address):
+            return self.green_sitecheck_by_asn(domain, ip_address, matching_asn)
 
         # otherwise, return a 'grey' result
         return self.grey_sitecheck(domain, ip_address)
