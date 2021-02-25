@@ -3,6 +3,7 @@ import logging
 from io import TextIOWrapper
 
 import tld
+import urllib
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import pagination, parsers, request, response, viewsets
@@ -17,11 +18,12 @@ from rest_framework_csv import renderers as drf_csv_rndr  # noqa
 from .api.ip_range_viewset import IPRangeViewSet  # noqa
 from .api.asn_viewset import ASNViewSet  # noqa
 
-from .models import GreenDomain
+from .models import GreenDomain, Hostingprovider
 from .serializers import (
     GreenDomainBatchSerializer,
     GreenDomainSerializer,
 )
+from .domain_check import GreenDomainChecker
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
     providing a slower, no-cache response that carries out the full domain lookup.
     """
 
-    swagger_schema = None
+    # swagger_schema = None
 
     queryset = GreenDomain.objects.all()
     serializer_class = GreenDomainSerializer
@@ -46,8 +48,8 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     lookup_field = "url"
 
-    # @swagger_auto_schema(method="get", auto_schema=None)
-    # @api_view(["GET"])
+    checker = GreenDomainChecker()
+
     def list(self, request, *args, **kwargs):
         """
         Our override for bulk URL lookups, like an index/listing view
@@ -72,12 +74,57 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Fetch entry matching the provided URL, like an 'detail' view
+        Fetch entry matching the provided URL, like a 'detail' view
         """
         url = self.kwargs.get("url")
-        instance = get_object_or_404(GreenDomain, url=url)
+        is_valid_tld = tld.is_tld(url)
+        domain = None
+
+        # TODO turn this into a function
+        # not a domain, try ip address:
+        if is_valid_tld:
+            res = tld.get_tld(url, fix_protocol=True, as_object=True)
+            domain = res.parsed_url.netloc
+
+        if not is_valid_tld:
+            parsed_url = urllib.parse.urlparse(url)
+            if not parsed_url.netloc:
+                # add the //, so that our url reading code
+                # parses it properly
+                parsed_url = urllib.parse.urlparse(f"//{url}")
+            domain = parsed_url.netloc
+
+        instance = GreenDomain.objects.filter(url=domain).first()
+
+        if not instance:
+            instance = self.perform_full_lookup(domain)
+
+            # log_the_check asynchronously
+            # self.log_check_async(site_check)
+
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
+
+    def perform_full_lookup(self, domain):
+        """
+        Return a Green Domain object from doing a lookup.
+        """
+        res = self.checker.check_domain(domain)
+        hosting_provider = Hostingprovider.objects.get(pk=res.hosting_provider_id)
+
+        # return a domain result, but don't save it,
+        # as persisting it is handled asynchronously
+        # by another worker, and logged to both the greencheck
+        # table and this 'cache' table
+        return GreenDomain(
+            url=res.url,
+            hosted_by=hosting_provider.name,
+            hosted_by_id=hosting_provider.id,
+            hosted_by_website=hosting_provider.website,
+            partner=hosting_provider.partner,
+            modified=res.checked_at,
+            green=res.green,
+        )
 
 
 class GreenDomainBatchView(CreateAPIView):
