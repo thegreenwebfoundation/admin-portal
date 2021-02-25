@@ -1,6 +1,8 @@
 import csv
 import io
 import logging
+from typing import List
+
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -22,7 +24,7 @@ rf = APIRequestFactory()
 
 
 def setup_domains(
-    domains: list[str], hosting_provider: Hostingprovider, ip_range: GreencheckIp
+    domains: List[str], hosting_provider: Hostingprovider, ip_range: GreencheckIp
 ):
     """
     Set up our domains, with the corrsponding cache tables
