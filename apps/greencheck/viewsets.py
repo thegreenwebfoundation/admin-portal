@@ -55,14 +55,23 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         Our override for bulk URL lookups, like an index/listing view
         """
         queryset = []
-        urls = self.request.query_params.getlist("urls")
+        urls = None
+
+        get_url_params = self.request.query_params.getlist("urls")
+        if get_url_params:
+            urlstring, *_ = get_url_params
+            urls = urlstring.split(",")
 
         # check for a payload. this takes precedence, to support large requests
         if self.request.data.get("urls"):
-            urls = self.request.data.get("urls")
+            urls = self.request.data.getlist("urls")
 
         if urls is not None:
             queryset = GreenDomain.objects.filter(url__in=urls)
+
+        # import ipdb
+
+        # ipdb.set_trace()
 
         page = self.paginate_queryset(queryset)
         if page is not None:
