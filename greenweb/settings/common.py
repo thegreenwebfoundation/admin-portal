@@ -69,8 +69,8 @@ AUTH_USER_MODEL = "accounts.User"
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
