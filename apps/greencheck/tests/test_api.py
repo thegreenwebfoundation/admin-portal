@@ -1,11 +1,12 @@
 import logging
 
 import pytest
+from corsheaders.conf import conf
+from corsheaders.middleware import ACCESS_CONTROL_ALLOW_ORIGIN
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.authtoken import models, views
 from rest_framework.test import APIRequestFactory
-from corsheaders.middleware import ACCESS_CONTROL_ALLOW_ORIGIN
 
 from ..models import Hostingprovider
 from ..viewsets import GreenDomainViewset
@@ -60,10 +61,14 @@ class TestCORSforAPI:
         # url_path = reverse("green-domain-detail", kwargs={"url": "google.com"})
         url_path = reverse("green-domain-list")
 
-        # create our request
-        response = client.get(url_path)
+        # create our request, without our origin,
+        # we don't have any access control responses
+        response = client.get(url_path, HTTP_ORIGIN="http://example.com")
 
+        # do we have working response?
         assert response.status_code == 200
+
         # do we have the expected header to allow cross domain API calls?
         assert ACCESS_CONTROL_ALLOW_ORIGIN in response
+        assert response[ACCESS_CONTROL_ALLOW_ORIGIN] == "*"
 
