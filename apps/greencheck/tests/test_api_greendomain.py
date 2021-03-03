@@ -94,7 +94,45 @@ class TestGreenDomainViewset:
         assert response.status_code == 200
         assert response.data["green"] is True
 
-    def test_check_multple_urls(
+    def test_check_multple_urls_get(
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
+        green_ip: GreencheckIp,
+    ):
+        """
+        Check multiple URLs, sent as a batch request
+        """
+
+        hosting_provider.save()
+        sample_hoster_user.hostingprovider = hosting_provider
+        sample_hoster_user.save()
+        sitecheck_logger = LegacySiteCheckLogger()
+
+        domains = ["google.com", "anothergreendomain.com"]
+        COMMA_SEPARATOR = ","
+        domain_string = COMMA_SEPARATOR.join(domains)
+
+        for domain in domains:
+            sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+            sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-list")
+        request = rf.get(url_path, {"urls": domain_string})
+
+        view = GreenDomainViewset.as_view({"get": "list"})
+
+        response = view(request)
+        assert response.status_code == 200
+        logger.debug("response.data")
+        logger.debug(response.data)
+        assert len(response.data) == 2
+        return_domains = [datum["url"] for datum in response.data]
+        for domain in domains:
+            assert domain in return_domains
+
+    def test_check_multple_urls_post(
         self,
         hosting_provider: Hostingprovider,
         sample_hoster_user: User,
@@ -117,15 +155,18 @@ class TestGreenDomainViewset:
 
         rf = APIRequestFactory()
         url_path = reverse("green-domain-list")
-        request = rf.get(url_path, {"urls": domains})
+        request = rf.post(url_path, {"urls": domains})
 
-        view = GreenDomainViewset.as_view({"get": "list"})
+        view = GreenDomainViewset.as_view({"post": "list"})
 
         response = view(request)
         assert response.status_code == 200
         logger.debug("response.data")
         logger.debug(response.data)
         assert len(response.data) == 2
+        return_domains = [datum["url"] for datum in response.data]
+        for domain in domains:
+            assert domain in return_domains
 
     def test_check_single_url_new_domain(
         self,
