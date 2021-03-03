@@ -5,8 +5,10 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.authtoken import models, views
 from rest_framework.test import APIRequestFactory
+from corsheaders.middleware import ACCESS_CONTROL_ALLOW_ORIGIN
 
 from ..models import Hostingprovider
+from ..viewsets import GreenDomainViewset
 
 User = get_user_model()
 
@@ -44,3 +46,24 @@ class TestUsingAuthToken:
         # check contents, is the token the right token?
         assert response.status_code == 200
         assert response.data["token"] == token.key
+
+
+class TestCORSforAPI:
+    def test_requests_have_permissive_cors_enabled_for_api(
+        self, hosting_provider_with_sample_user: Hostingprovider, client
+    ):
+        """
+        Are we serving CORS enabled requests, so that browser extensions can
+        look up domains easily?
+        """
+
+        # url_path = reverse("green-domain-detail", kwargs={"url": "google.com"})
+        url_path = reverse("green-domain-list")
+
+        # create our request
+        response = client.get(url_path)
+
+        assert response.status_code == 200
+        # do we have the expected header to allow cross domain API calls?
+        assert ACCESS_CONTROL_ALLOW_ORIGIN in response
+
