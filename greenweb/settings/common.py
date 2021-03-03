@@ -34,6 +34,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = ["thegreenwebfoundation.org"]
 
+
 # Setting for django-registration
 ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
 
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "drf_yasg",
+    "corsheaders",
     # project specific
     "apps.accounts",
     "apps.greencheck",
@@ -67,6 +69,7 @@ AUTH_USER_MODEL = "accounts.User"
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -108,6 +111,10 @@ DATABASES = {
     "default": env.db(),
     # 'extra': env.db('SQLITE_URL'),
 }
+
+# Allow requests from any origin, but only make the API urls available
+# CORS_URLS_REGEX = r"^/api/.*$"
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # Password validation
