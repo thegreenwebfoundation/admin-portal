@@ -1,11 +1,18 @@
 import subprocess
-import os
 from datetime import date
-from pathlib import Path
 
+from requests import request, HTTPError
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from sqlite_utils import Database
+
+from ...object_storage import public_url
+
+
+_COMPRESSION_TYPES = {
+    "gzip": (("gzip", "--force", "--best"), "gz"),
+    "bzip2": (("bzip2", "--force", "--compress"), "bz2"),
+}
 
 
 class GreenDomainExporter:
@@ -36,18 +43,55 @@ class GreenDomainExporter:
         green_domains_table = db["greendomain"]
         # green_domains_table.create_index(["hosted_by"])
 
-    def compress_file(self, file_path: str):
+    @staticmethod
+    def compress_file(file_path: str, compression_type: str = "gzip") -> str:
         """
         Compress the file at file_path with gzip.
         Should compress a sqlite file down to ~25% of original size.
         """
-        subprocess.run(["gzip", "--force", file_path])
+        if compression_type not in _COMPRESSION_TYPES:
+            raise Exception((
+                f'The "{compression_type}" is not supported. Use one '
+                'of "%s".' % ('", "'.join(_COMPRESSION_TYPES.keys()))
+            ))
 
-    def delete_file(self, file_path: str):
-        subprocess.run(["rm", "-rf", file_path])
+        arguments, file_extension = _COMPRESSION_TYPES[compression_type]
+        archive_path = f"{file_path}.{file_extension}"
+        compression_process = subprocess.run([*arguments, archive_path])
 
-    def upload_file(self, file_path: str, file_destination: str):
-        subprocess.run(["aws", "s3", "cp", "--acl", "public-read", file_path, file_destination])
+        if compression_process.returncode > 0:
+            raise Exception(f'Failed to compress "{file_path}" using "{compression_type}".')
+
+        return archive_path
+
+    @staticmethod
+    def delete_files(*file_paths: str) -> None:
+        subprocess.run(["rm", "-rf", *file_paths])
+
+    @staticmethod
+    def upload_file(file_path: str, bucket_name: str) -> None:
+        upload_process = subprocess.run([
+            "aws", "s3", "cp",
+            "--acl", "public-read",
+            file_path, f"s3://{bucket_name}/{file_path}",
+        ])
+
+        if upload_process.returncode > 0:
+            raise Exception(f'Failed to upload "{file_path}".')
+
+        try:
+            access_check_response = request("head", public_url(bucket_name, file_path))
+
+            if access_check_response.status_code != 200:
+                raise Exception((
+                    "The uploaded file is not publicly accessible "
+                    f"(HTTP {access_check_response.status_code})."
+                ))
+        except HTTPError as error:
+            raise Exception((
+                "The status check request failed. Unable to determine "
+                "whether the uploaded file is publicly available."
+            )) from error
 
 
 class Command(BaseCommand):
@@ -56,29 +100,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--upload", help="Also upload to Object Storage")
 
-    def handle(self, *args, **options):
-
+    def handle(self, *args, **options) -> None:
         exporter = GreenDomainExporter()
+        db_name = f"green_urls_{date.today()}.db"
 
-        root = Path(settings.ROOT)
-
-        conn_string = exporter.get_conn_string()
-        today = date.today()
-        db_name = f"green_urls_{today}.db"
-
-        exporter.export_to_sqlite(conn_string, db_name)
+        exporter.export_to_sqlite(exporter.get_conn_string(), db_name)
         exporter.prepare_for_datasette(db_name)
 
-        upload = options["upload"]
-        if upload:
-            bucket_name = settings.DOMAIN_SNAPSHOT_BUCKET
-            compressed_db_path = f"{db_name}.gz"
-            destination_path = f"s3://{bucket_name}/{compressed_db_path}"
+        if options["upload"]:
+            try:
+                compressed_db_path = exporter.compress_file(db_name)
 
-            exporter.compress_file(db_name)
-            exporter.upload_file(compressed_db_path, destination_path)
-
-            # tidy up after ourselves
-            exporter.delete_file(compressed_db_path)
-            exporter.delete_file(db_name)
-
+                exporter.upload_file(compressed_db_path, settings.DOMAIN_SNAPSHOT_BUCKET)
+                exporter.delete_files(compressed_db_path, db_name)
+            except Exception as error:
+                raise CommandError(str(error)) from error

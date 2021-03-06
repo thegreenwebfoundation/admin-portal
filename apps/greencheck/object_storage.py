@@ -21,25 +21,11 @@ def green_domains_bucket():
     return object_storage.Bucket(settings.DOMAIN_SNAPSHOT_BUCKET)
 
 
-def make_object_public(obj):
-    """
-    Apply the permissive `public-read` ACL to the object,
-    to make it publicly downloadable, in case it isn't already
-    visible.
-    """
-    acl = obj.Acl()
-    acl.put(ACL="public-read")
-    return obj
-
-
-def public_url(obj):
+def public_url(bucket: str, key: str) -> str:
     """
     Return the public url for a given key in object storage.
     Scaleway's url structure is as follows for object storage.
     # https://[bucket-name].s3.[scaleway-region].scw.cloud/[object_path]
     """
     region = settings.OBJECT_STORAGE_REGION
-    bucket = obj.bucket_name
-    key = obj.key
     return f"https://{bucket}.s3.{region}.scw.cloud/{key}"
-
