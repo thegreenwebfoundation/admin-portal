@@ -47,7 +47,7 @@ class GreenDomainExporter:
         subprocess.run(["rm", "-rf", file_path])
 
     def upload_file(self, file_path: str, file_destination: str):
-        subprocess.run(["aws", "s3", "cp", file_path, file_destination])
+        subprocess.run(["aws", "s3", "cp", "--acl", "public-read", file_path, file_destination])
 
 
 class Command(BaseCommand):
