@@ -79,18 +79,37 @@ class TestGreenDomainExporter:
         conn_string = exporter.get_conn_string()
 
         # act
-        res = exporter.export_to_sqlite(conn_string, db_name)
+        exporter.export_to_sqlite(conn_string, db_name)
         sqlite_db = Database(db_name)
-
-        # assert
-        # check we have an ok exit code for db-to-sqlite
-        assert res.returncode == 0
 
         # do we have our generated db?
         pathlib.Path.exists(root / db_name)
 
         # is the table there?
         assert "greendomain" in [table.name for table in sqlite_db.tables]
+
+    def test_delete_files(self) -> None:
+        exporter = GreenDomainExporter()
+
+        # Deletion of missing files shouldn't error.
+        assert exporter.delete_files("/tmp/non-existing.file") is None
+
+        fpaths = []
+        for fname in ("a.txt", "b.txt"):
+            fpath = f"/tmp/{fname}"
+            with open(fpath, "w") as fd:
+                fd.write(fname)
+            fpaths.append(fpath)
+
+        assert exporter.delete_files(*fpaths) is None
+
+        # The files must not exist after deletion.
+        for fpath in fpaths:
+            assert not pathlib.Path(fpath).exists(), fpath
+
+        with pytest.raises(RuntimeError) as error:
+            exporter.delete_files("/tmp")
+        assert f'Failed to remove these files: "/tmp".' in str(error)
 
 
 @pytest.mark.django_db

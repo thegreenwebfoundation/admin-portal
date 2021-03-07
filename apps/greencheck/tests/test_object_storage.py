@@ -44,12 +44,8 @@ class TestGreenDomainExporter:
         conn_string = exporter.get_conn_string()
 
         # act
-        res = exporter.export_to_sqlite(conn_string, db_name)
+        exporter.export_to_sqlite(conn_string, db_name)
         sqlite_db = Database(db_name)
-
-        # assert
-        # check we have an ok exit code for db-to-sqlite
-        assert res.returncode == 0
 
         # do we have our generated db?
         pathlib.Path.exists(root / db_name)
