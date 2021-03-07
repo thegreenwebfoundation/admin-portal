@@ -4,13 +4,15 @@ from typing import List
 
 from requests import request, HTTPError
 from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 from sqlite_utils import Database
 
 from ...object_storage import public_url
 
 
 _COMPRESSION_TYPES = {
+    # Must be the first key to preserve the previous state
+    # when it was the only and therefore default option.
     "gzip": (("gzip", "--force", "--best"), "gz"),
     "bzip2": (("bzip2", "--force", "--compress"), "bz2"),
 }
@@ -21,6 +23,8 @@ class GreenDomainExporter:
     Exports a snapshot of the green domains, to use for bulk exports
     or making available for analysis and browsing via Datasette.
     """
+
+    TABLE = "greendomain"
 
     @staticmethod
     def get_conn_string() -> str:
@@ -33,19 +37,25 @@ class GreenDomainExporter:
         return f"mysql://{db['USER']}:{db['PASSWORD']}@{db['HOST']}/{db['NAME']}"
 
     @classmethod
-    def export_to_sqlite(cls, database_url: str, db_name: str) -> None:
+    def export_to_sqlite(cls, database_url: str, db_path: str) -> None:
+        """
+        Export the `cls.TABLE` to `db_path` from given `database_url`.
+
+        :param database_url: The database ARN to exported the `cls.TABLE` from.
+        :param db_path: The path to file to export SQLite database to.
+        """
         cls._subprocess(
-            ["db-to-sqlite", database_url, db_name, "--table=greendomain"],
-            f'Failed to export the "{db_name}" database to SQLite.'
+            ["db-to-sqlite", database_url, db_path, f"--table={cls.TABLE}"],
+            f'Failed to export the "{cls.TABLE}" table to "{db_path}" SQLite database.'
         )
 
-    @staticmethod
-    def prepare_for_datasette(db_name: str) -> None:
+    @classmethod
+    def prepare_for_datasette(cls, db_path: str) -> None:
         """
         Make sure we have the indexes we need for use in datasette
         """
-        db = Database(db_name)
-        green_domains_table = db["greendomain"]
+        db = Database(db_path)
+        green_domains_table = db[cls.TABLE]
         # green_domains_table.create_index(["hosted_by"])
 
     @classmethod
@@ -61,8 +71,8 @@ class GreenDomainExporter:
         """
         if compression_type not in _COMPRESSION_TYPES:
             raise Exception((
-                f'The "{compression_type}" is not supported. Use one '
-                'of "%s".' % ('", "'.join(_COMPRESSION_TYPES.keys()))
+                f'The "{compression_type}" compression is not supported. Use '
+                'one of "%s".' % ('", "'.join(_COMPRESSION_TYPES.keys()))
             ))
 
         arguments, file_extension = _COMPRESSION_TYPES[compression_type]
@@ -129,23 +139,38 @@ class GreenDomainExporter:
 
 
 class Command(BaseCommand):
-    help = "Dump green_domain table into sqlite."
+    help = f'Dump the "{GreenDomainExporter.TABLE}" table into SQLite.'
 
-    def add_arguments(self, parser):
-        parser.add_argument("--upload", help="Also upload to Object Storage")
+    def add_arguments(self, parser: CommandParser) -> None:
+        parser.add_argument(
+            "--upload",
+            help="Also upload to Object Storage",
+            action="store_true",
+            default=False,
+        )
 
-    def handle(self, *args, **options) -> None:
+        for compression_type in _COMPRESSION_TYPES.keys():
+            parser.add_argument(
+                f"--{compression_type}",
+                help=f'Compress SQLite dump using "{compression_type}".',
+                dest="compression_type",
+                const=compression_type,
+                action="store_const",
+                default=compression_type,
+            )
+
+    def handle(self, upload: bool, compression_type: str, *args, **options) -> None:
         try:
             exporter = GreenDomainExporter()
-            db_name = f"green_urls_{date.today()}.db"
+            db_path = f"green_urls_{date.today()}.db"
 
-            exporter.export_to_sqlite(exporter.get_conn_string(), db_name)
-            exporter.prepare_for_datasette(db_name)
+            exporter.export_to_sqlite(exporter.get_conn_string(), db_path)
+            exporter.prepare_for_datasette(db_path)
 
-            if options["upload"]:
-                compressed_db_path = exporter.compress_file(db_name)
+            if upload:
+                compressed_db_path = exporter.compress_file(db_path, compression_type)
 
                 exporter.upload_file(compressed_db_path, settings.DOMAIN_SNAPSHOT_BUCKET)
-                exporter.delete_files(compressed_db_path, db_name)
+                exporter.delete_files(compressed_db_path, db_path)
         except Exception as error:
             raise CommandError(str(error)) from error

@@ -1,11 +1,11 @@
-import pathlib
+from pathlib import Path
 from datetime import date
 from io import StringIO
 
 import pytest
 import boto3  # noqa
 
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 from django.utils import timezone
 from sqlite_utils import Database
 
@@ -69,21 +69,20 @@ class TestGreenDomainExporter:
         """
         # arrange
         exporter = GreenDomainExporter()
-
         sitecheck = greencheck_sitecheck("example.com", hosting_provider, green_ip)
         create_greendomain(hosting_provider, sitecheck)
 
-        root = pathlib.Path(settings.ROOT)
+        root = Path(settings.ROOT)
         today = date.today()
-        db_name = f"green_urls_{today}.db"
+        db_path = f"green_urls_{today}.db"
         conn_string = exporter.get_conn_string()
 
         # act
-        exporter.export_to_sqlite(conn_string, db_name)
-        sqlite_db = Database(db_name)
+        exporter.export_to_sqlite(conn_string, db_path)
+        sqlite_db = Database(db_path)
 
         # do we have our generated db?
-        pathlib.Path.exists(root / db_name)
+        Path.exists(root / db_path)
 
         # is the table there?
         assert "greendomain" in [table.name for table in sqlite_db.tables]
@@ -105,7 +104,7 @@ class TestGreenDomainExporter:
 
         # The files must not exist after deletion.
         for fpath in fpaths:
-            assert not pathlib.Path(fpath).exists(), fpath
+            assert not Path(fpath).exists(), fpath
 
         with pytest.raises(RuntimeError) as error:
             exporter.delete_files("/tmp")
@@ -114,31 +113,90 @@ class TestGreenDomainExporter:
 
 @pytest.mark.django_db
 class TestDumpGreenDomainCommand:
-    """
+    @staticmethod
+    def _call_command(**kwargs) -> Path:
+        stdout = StringIO()
+        stderr = StringIO()
+        db_path = Path(f"green_urls_{date.today()}.db")
 
-    """
+        assert not db_path.exists(), "The DB dump must not exist upon creation."
+        call_command("dump_green_domains", stdout=stdout, stderr=stderr, **kwargs)
+        assert not stdout.getvalue()
+        assert not stderr.getvalue()
 
-    def test_handle(self):
-        out = StringIO()
-        err = StringIO()
-        call_command("dump_green_domains", stdout=out, stderr=err)
+        return db_path
 
-        # silence is golden.
-        assert not out.getvalue()
-        assert not err.getvalue()
+    def test_handle(self) -> None:
+        db_path = self._call_command()
+        compressed_db_path = Path(f"{db_path}.gz")
+
+        assert \
+            db_path.exists(), \
+            "The DB dump must persist on disk if `--upload` is not supplied."
+        assert \
+            not compressed_db_path.exists(), \
+            "The compressed DB dump must not be created when `--upload` is not supplied."
 
     @pytest.mark.object_storage
     @pytest.mark.smoke_test
-    def test_handle_with_update(self, cleared_test_bucket, settings):
+    def test_handle_with_update(self, cleared_test_bucket, settings, **kwargs) -> None:
         """
         Check that this really has uploaded to the bucket we expect it to.
         """
+        archive_extension = kwargs.pop("archive_extension", "gz")
+        db_path = self._call_command(upload=True, **kwargs)
+        compressed_db_path = Path(f"{db_path}.{archive_extension}")
 
-        out = StringIO()
-        call_command("dump_green_domains", upload=True, stdout=out)
+        assert \
+            not db_path.exists(), \
+            "The DB dump must not persist on disk if `--upload` is supplied."
+        assert \
+            not compressed_db_path.exists(), \
+            "The compressed DB dump must not persist on disk if `--upload` is supplied."
 
-        today = date.today()
-        compressed_db_name = f"green_urls_{today}.db.gz"
+        def is_uploaded(fname: str) -> bool:
+            for obj in cleared_test_bucket.objects.all():
+                if obj.key.endswith(f"/{fname}"):
+                    return True
+            return False
 
-        uploaded_files = [obj.key for obj in cleared_test_bucket.objects.all()]
-        assert compressed_db_name in uploaded_files
+        assert \
+            not is_uploaded(db_path.name), \
+            "The uncompressed DB dump must not be uploaded to object storage."
+        assert \
+            is_uploaded(compressed_db_path.name), \
+            "The compressed DB dump must be uploaded to object storage."
+
+    @pytest.mark.object_storage
+    @pytest.mark.smoke_test
+    def test_handle_with_update_and_gzip_compression_type(self, cleared_test_bucket, settings) -> None:
+        self.test_handle_with_update(
+            cleared_test_bucket,
+            settings,
+            compression_type="gzip",
+            archive_extension="gz",
+        )
+
+    @pytest.mark.object_storage
+    @pytest.mark.smoke_test
+    def test_handle_with_update_and_bzip2_compression_type(self, cleared_test_bucket, settings) -> None:
+        self.test_handle_with_update(
+            cleared_test_bucket,
+            settings,
+            compression_type="bzip2",
+            archive_extension="bz2",
+        )
+
+    @pytest.mark.object_storage
+    @pytest.mark.smoke_test
+    def test_handle_with_update_and_invalid_compression_type(self, cleared_test_bucket, settings) -> None:
+        with pytest.raises(CommandError) as error:
+            self.test_handle_with_update(
+                cleared_test_bucket,
+                settings,
+                compression_type="blah",
+                archive_extension="b",
+            )
+
+        assert \
+            'The "blah" compression is not supported. Use one one of "gzip", "bzip2".' in str(error)
