@@ -1,11 +1,10 @@
 import subprocess
 from datetime import date
-from typing import List
+from typing import List, Iterable
 
 from requests import request, HTTPError
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
-from sqlite_utils import Database
 
 from ...object_storage import public_url
 
@@ -13,6 +12,7 @@ from ...object_storage import public_url
 _COMPRESSION_TYPES = {
     # Must be the first key to preserve the previous state
     # when it was the only and therefore default option.
+    # Feel free to change this later if `bzip2` supersedes `gzip`.
     "gzip": (("gzip", "--force", "--best"), "gz"),
     "bzip2": (("bzip2", "--force", "--compress"), "bz2"),
 }
@@ -50,15 +50,6 @@ class GreenDomainExporter:
         )
 
     @classmethod
-    def prepare_for_datasette(cls, db_path: str) -> None:
-        """
-        Make sure we have the indexes we need for use in datasette
-        """
-        db = Database(db_path)
-        green_domains_table = db[cls.TABLE]
-        # green_domains_table.create_index(["hosted_by"])
-
-    @classmethod
     def compress_file(cls, file_path: str, compression_type: str = "gzip") -> str:
         """
         Compress the file at `file_path` with `gzip` or `bzip2`.
@@ -71,8 +62,8 @@ class GreenDomainExporter:
         """
         if compression_type not in _COMPRESSION_TYPES:
             raise Exception((
-                f'The "{compression_type}" compression is not supported. Use '
-                'one of "%s".' % ('", "'.join(_COMPRESSION_TYPES.keys()))
+                f'The "{compression_type}" compression is not supported. '
+                f'Use one of {cls._quote_items(_COMPRESSION_TYPES.keys())}.'
             ))
 
         arguments, file_extension = _COMPRESSION_TYPES[compression_type]
@@ -95,7 +86,7 @@ class GreenDomainExporter:
         """
         cls._subprocess(
             ["rm", "-f", *file_paths],
-            'Failed to remove these files: "%s".' % ('", "'.join(file_paths)),
+            f'Failed to remove these files: {cls._quote_items(file_paths)}.',
         )
 
     @classmethod
@@ -132,10 +123,31 @@ class GreenDomainExporter:
 
     @staticmethod
     def _subprocess(args: List[str], error: str) -> None:
+        """
+        Run a subprocess and raise a `RuntimeError` in case of a non-zero exit code.
+
+        :param args: The command to run in a subprocess. See `subprocess.Popen`.
+        :param error: The error message for the `RuntimeError` in case of
+         failure. The `stderr` of the process will be appended.
+        :raises RuntimeError: When the subprocess exits with a non-zero code.
+        """
         process = subprocess.run(args, capture_output=True)
 
         if process.returncode > 0:
             raise RuntimeError(f"{error}\n------------------\n{process.stderr.decode('utf8')}")
+
+    @staticmethod
+    def _quote_items(args: Iterable[str]) -> str:
+        """
+        Wrap each item of `args` into double-quotes and split them by comma.
+
+        >>> GreenDomainExporter._quote_items(["test1", "test2", "test3"])
+        '"test1", "test2", "test3"'
+
+        :param args: The set of items to wrap members of.
+        :returns: The stringified version of `args`.
+        """
+        return '"%s"' % '", "'.join(args)
 
 
 class Command(BaseCommand):
@@ -161,11 +173,9 @@ class Command(BaseCommand):
 
     def handle(self, upload: bool, compression_type: str, *args, **options) -> None:
         try:
-            exporter = GreenDomainExporter()
             db_path = f"green_urls_{date.today()}.db"
-
+            exporter = GreenDomainExporter()
             exporter.export_to_sqlite(exporter.get_conn_string(), db_path)
-            exporter.prepare_for_datasette(db_path)
 
             if upload:
                 compressed_db_path = exporter.compress_file(db_path, compression_type)

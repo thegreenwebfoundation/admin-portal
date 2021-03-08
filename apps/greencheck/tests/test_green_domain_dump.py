@@ -142,6 +142,8 @@ class TestDumpGreenDomainCommand:
     def test_handle_with_update(self, cleared_test_bucket, settings, **kwargs) -> None:
         """
         Check that this really has uploaded to the bucket we expect it to.
+
+        This test also ensures the default `compression_type` is `gzip`.
         """
         archive_extension = kwargs.pop("archive_extension", "gz")
         db_path = self._call_command(upload=True, **kwargs)
