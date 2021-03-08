@@ -1,7 +1,6 @@
 from django.utils.safestring import mark_safe
 from django.contrib import admin
 
-from apps.accounts.utils import reverse_admin_name
 from apps.accounts.models import Hostingprovider
 from .models import (
     GreencheckIp,

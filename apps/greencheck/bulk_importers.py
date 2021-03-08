@@ -1,8 +1,6 @@
 import csv
 import ipaddress
-import json
 import logging
-from io import StringIO
 
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.models import GreencheckIp
@@ -44,7 +42,7 @@ class ImporterCSV:
             except ipaddress.AddressValueError:
                 logger.exception(f"Couldn't load ipaddress for row: {row}")
             except Exception:
-                logger.exception(f"New error, dropping to debug")
+                logger.exception("New error, dropping to debug")
                 import ipdb
 
                 ipdb.set_trace()

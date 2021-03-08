@@ -37,7 +37,7 @@ class LegacySiteCheckLogger(SiteCheckLogger):
         Accept a dict from parsed php, and return a datastructure without the name
         spacing.
         """
-        php_dict = self.parse_serialised_php(body)
+        self.parse_serialised_php(body)
 
         return SiteCheck(
             ip=self.prefixed_attr("ip"),
@@ -118,7 +118,6 @@ class LegacySiteCheckLogger(SiteCheckLogger):
         a dict, we need to fetch only the value we need.
         """
         # coerce the <phpobject b'DateTime'> to a dict
-        date_dict = res._asdict()
         cleaned_res = {}
 
         for key, val in res._asdict().items():

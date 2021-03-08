@@ -17,13 +17,17 @@ _spec_renderers = tuple(renderer.with_validators([]) for renderer in SPEC_RENDER
 schema_view = get_schema_view(
     openapi.Info(
         title="Welcome to The Green Web Foundation Partner API ",
-        description="Use this API to update information about the digital infrastructure you are using, services you provide to others, and see the status of providers in your own supply chain.",
+        description=(
+            "Use this API to update information about the digital "
+            "infrastructure you are using, services you provide to "
+            "others, and see the status of providers in your own supply chain."
+        ),
         default_version="v3",
         terms_of_service="https://www.thegreenwebfoundation.org/privacy-statement/",
         contact=openapi.Contact(email="support@thegreenwebfoundation.org"),
         license=openapi.License(name="License: Apache 2.0. "),
         x_logo={
-            "url": "https://www.thegreenwebfoundation.org/wp-content/themes/tgwf2015/img/top-logo-greenweb.png",
+            "url": "https://www.thegreenwebfoundation.org/wp-content/themes/tgwf2015/img/top-logo-greenweb.png",  # noqa
             "background": "#000000",
         },
     ),

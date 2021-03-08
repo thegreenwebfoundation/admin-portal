@@ -6,7 +6,6 @@ from apps.greencheck.models import (
     Greencheck,
     TopUrl,
     Hostingprovider,
-    GreencheckIp,
 )
 from apps.greencheck.management.commands.update_top_url_list import TopUrlUpdater
 

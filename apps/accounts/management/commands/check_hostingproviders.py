@@ -6,7 +6,7 @@ import requests
 
 from apps.accounts.models import Hostingprovider
 
-URL = re.compile("^(https?:\/\/)?(.*)")
+URL = re.compile("^(https?://)?(.*)")
 GREENCHECK_URL = "http://api.thegreenwebfoundation.org/greencheck/{}"
 
 

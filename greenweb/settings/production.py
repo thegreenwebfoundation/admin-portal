@@ -4,7 +4,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 
 ANYMAIL = {
-    "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
+    "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),  # noqa
     "MAILGUN_SENDER_DOMAIN": "mg.thegreenwebfoundation.org",
     "MAILGUN_API_URL": "https://api.eu.mailgun.net/v3",
 }
@@ -22,7 +22,7 @@ ALLOWED_HOSTS = [
 DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-live"
 
 # report when things asplode
-sentry_dsn = os.environ.get("SENTRY_DSN", False)
+sentry_dsn = os.environ.get("SENTRY_DSN", False)  # noqa
 if sentry_dsn:
     sentry_sdk.init(
         dsn=sentry_dsn,

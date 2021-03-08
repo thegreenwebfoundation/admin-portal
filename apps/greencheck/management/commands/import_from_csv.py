@@ -1,10 +1,6 @@
-import ipaddress
-import json
 import logging
 
-import requests
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.bulk_importers import ImporterCSV
@@ -13,7 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = "Update IP ranges for the given provider. Expects a hosting provider id, and a path to a csv file"
+    help = (
+        "Update IP ranges for the given provider. "
+        "Expects a hosting provider id, and a path to a csv file"
+    )
 
     def add_arguments(self, parser):
         parser.add_argument("hoster", type=str, help="The id of the hosting provider")
@@ -32,5 +31,8 @@ class Command(BaseCommand):
         green_ipv4s = res["ipv4"]
 
         self.stdout.write(
-            f"Import Complete: Added {len(green_ipv4s)} new IPV4 addresses for {hosting_provider}"
+            (
+                f"Import Complete: Added {len(green_ipv4s)} "
+                f"new IPV4 addresses for {hosting_provider}"
+            )
         )

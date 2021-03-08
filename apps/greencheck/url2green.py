@@ -1,4 +1,3 @@
-import csv
 import re
 
 # this module exists for working with some files are very large.
@@ -23,7 +22,7 @@ def write_clean_urls(lazy_url_list, path_to_outfile):
     write the valid urls to the file `path_to_outfile`
     """
     with open(path_to_outfile, "w") as clean_url_list:
-        for url in lazy_url_iterator:
+        for url in lazy_url_list:
             if is_valid_hostname(url):
                 clean_url_list.write(url)
 
@@ -38,7 +37,7 @@ def is_valid_hostname(hostname):
         return False
     if hostname[-1] == ".":
         hostname = hostname[:-1]  # strip exactly one dot from the right, if present
-    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    allowed = re.compile("(?!-)[A-Z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
     return all(allowed.match(x) for x in hostname.split("."))
 
 
@@ -48,4 +47,4 @@ def create_clean_url_list(path_to_infile, path_to_outfile):
     to write to, then writes the cleaned urls to the file.
     """
     urls = lazy_messy_url_list("path/to/file")
-    write_clean_urls(urls)
+    write_clean_urls(urls, path_to_outfile)

@@ -66,13 +66,19 @@ class SiteCheckLogger:
                 fixed_tld = ""
             except Exception:
                 logger.exception(
-                    "not a domain, or an IP address, not logging. Sitecheck results: {sitecheck}"
+                    (
+                        "not a domain, or an IP address, not logging. "
+                        f"Sitecheck results: {sitecheck}"
+                    )
                 )
                 return {"status": "Error", "sitecheck": sitecheck}
 
         except Exception:
             logger.exception(
-                "Unexpected error. Not logging the result. Sitecheck results: {sitecheck}"
+                (
+                    "Unexpected error. Not logging the result. "
+                    f"Sitecheck results: {sitecheck}"
+                )
             )
             return {"status": "Error", "sitecheck": sitecheck}
 

@@ -2,8 +2,6 @@ import ipaddress
 import logging
 
 import pytest
-from hypothesis import given, strategies
-from hypothesis.extra.django import from_model
 from rest_framework import serializers
 
 from apps.greencheck.models import GreencheckIp, GreencheckASN, Hostingprovider
