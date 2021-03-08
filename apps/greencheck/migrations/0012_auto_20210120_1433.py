@@ -36,6 +36,8 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="greenlist", name="last_checked", field=models.DateTimeField(),
+            model_name="greenlist",
+            name="last_checked",
+            field=models.DateTimeField(),
         ),
     ]

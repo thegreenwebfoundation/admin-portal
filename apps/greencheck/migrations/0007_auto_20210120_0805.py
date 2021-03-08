@@ -11,6 +11,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="greencheck", name="greencheck_ip", field=models.IntegerField(),
+            model_name="greencheck",
+            name="greencheck_ip",
+            field=models.IntegerField(),
         ),
     ]

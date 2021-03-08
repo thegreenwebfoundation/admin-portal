@@ -23,4 +23,3 @@ class BelongsToHostingProvider(permissions.BasePermission):
             or request.user
             and obj.hostingprovider == request.user.hostingprovider
         )
-

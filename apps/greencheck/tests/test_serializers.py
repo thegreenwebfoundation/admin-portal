@@ -126,7 +126,10 @@ class TestGreenIpRangeSerialiser:
         "ip_addy_start,ip_addy_end",
         [
             # ipv4
-            ("240.0.0.245", "240.0.0.1",),
+            (
+                "240.0.0.245",
+                "240.0.0.1",
+            ),
             # ipv6
             (
                 "3e5c:a68a:9dbe:c49a:6884:943f:7c71:27dd",
@@ -164,7 +167,9 @@ class TestGreenASNSerialiser:
         """
 
         gc_asn = GreencheckASN(
-            active=True, asn=12345, hostingprovider=hosting_provider,
+            active=True,
+            asn=12345,
+            hostingprovider=hosting_provider,
         )
         gc_asn_serialized = GreenASNSerializer(gc_asn)
         data = gc_asn_serialized.data
@@ -225,4 +230,3 @@ class TestGreenASNSerialiser:
         }
         second_gcn = GreenASNSerializer(data=second_sample_data)
         assert not second_gcn.is_valid()
-

@@ -119,8 +119,7 @@ class GreenDomainSerializer(serializers.ModelSerializer):
 
 
 class GreenDomainBatchSerializer(serializers.Serializer):
-    """
-    """
+    """"""
 
     urls = serializers.FileField(
         help_text="Accepts a csv file, with one domain per line."

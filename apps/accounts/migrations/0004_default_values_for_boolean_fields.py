@@ -16,12 +16,18 @@ class Migration(migrations.Migration):
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name="user", name="enabled", field=models.BooleanField(default=True),
+            model_name="user",
+            name="enabled",
+            field=models.BooleanField(default=True),
         ),
         migrations.AlterField(
-            model_name="user", name="expired", field=models.BooleanField(default=False),
+            model_name="user",
+            name="expired",
+            field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name="user", name="locked", field=models.BooleanField(default=False),
+            model_name="user",
+            name="locked",
+            field=models.BooleanField(default=False),
         ),
     ]

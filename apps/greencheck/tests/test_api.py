@@ -22,7 +22,9 @@ rf = APIRequestFactory()
 
 class TestUsingAuthToken:
     def test_fetching_auth_token(
-        self, hosting_provider: Hostingprovider, sample_hoster_user: User,
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
     ):
         """
         Anyone who is able to update an organisation is able to
@@ -71,4 +73,3 @@ class TestCORSforAPI:
         # do we have the expected header to allow cross domain API calls?
         assert ACCESS_CONTROL_ALLOW_ORIGIN in response
         assert response[ACCESS_CONTROL_ALLOW_ORIGIN] == "*"
-

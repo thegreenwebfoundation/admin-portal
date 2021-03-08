@@ -53,7 +53,10 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (
             None,
-            {"classes": ("wide",), "fields": ("username", "password1", "password2"),},
+            {
+                "classes": ("wide",),
+                "fields": ("username", "password1", "password2"),
+            },
         ),
     )
 
@@ -142,7 +145,18 @@ class HostingAdmin(admin.ModelAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldset = [
-            ("Hostingprovider info", {"fields": (("name", "website",), "country"),}),
+            (
+                "Hostingprovider info",
+                {
+                    "fields": (
+                        (
+                            "name",
+                            "website",
+                        ),
+                        "country",
+                    ),
+                },
+            ),
             ("Visual", {"fields": (("icon", "iconurl"),)}),
             ("Other", {"fields": (("partner", "model"),)}),
         ]
@@ -151,7 +165,11 @@ class HostingAdmin(admin.ModelAdmin):
             "Admin only",
             {
                 "fields": (
-                    ("archived", "showonwebsite", "customer",),
+                    (
+                        "archived",
+                        "showonwebsite",
+                        "customer",
+                    ),
                     ("email_template", "send_button"),
                 )
             },
@@ -194,7 +212,9 @@ class HostingAdmin(admin.ModelAdmin):
     @mark_safe
     def send_button(self, obj):
         url = reverse_admin_name(
-            Hostingprovider, name="send_email", kwargs={"provider": obj.pk},
+            Hostingprovider,
+            name="send_email",
+            kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="sendEmail">Send email</a>'
         return link
@@ -399,10 +419,16 @@ class DatacenterAdmin(admin.ModelAdmin):
                 "Datacenter info",
                 {
                     "fields": (
-                        ("name", "website",),
+                        (
+                            "name",
+                            "website",
+                        ),
                         ("country", "user"),
                         ("pue", "residualheat"),
-                        ("temperature", "temperature_type",),
+                        (
+                            "temperature",
+                            "temperature_type",
+                        ),
                         ("dc12v", "virtual", "greengrid", "showonwebsite"),
                         ("model",),
                     ),

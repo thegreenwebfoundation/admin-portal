@@ -111,4 +111,3 @@ class ASNViewSet(
         """
         instance.active = False
         instance.save()
-

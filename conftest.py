@@ -119,6 +119,7 @@ def green_ip(hosting_provider):
         hostingprovider=hosting_provider,
     )
 
+
 @pytest.fixture
 def green_asn(hosting_provider):
     hosting_provider.save()
