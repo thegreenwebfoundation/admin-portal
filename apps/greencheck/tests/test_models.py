@@ -304,4 +304,3 @@ class TestHostingProviderSendsNotification:
 
         msg, *_ = mailoutbox
         assert hosting_provider_with_sample_user.name in msg.subject
-

@@ -57,8 +57,7 @@ def parse_csv_from_response(response):
 
 
 class TestGreenDomainViewset:
-    """
-    """
+    """"""
 
     def test_check_single_url(
         self,

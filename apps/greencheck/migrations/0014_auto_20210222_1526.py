@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('greencheck', '0013_auto_20210215_1809'),
+        ("greencheck", "0013_auto_20210215_1809"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='greencheckasn',
-            name='asn',
-            field=models.IntegerField(unique=True, verbose_name='Autonomous system number'),
+            model_name="greencheckasn",
+            name="asn",
+            field=models.IntegerField(
+                unique=True, verbose_name="Autonomous system number"
+            ),
         ),
     ]

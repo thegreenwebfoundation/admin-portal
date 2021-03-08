@@ -20,7 +20,9 @@ rf = APIRequestFactory()
 
 class TestIpRangeViewSetList:
     def test_get_ip_ranges_empty(
-        self, hosting_provider: Hostingprovider, sample_hoster_user: User,
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
     ):
         """
         Exercise the simplest happy path.
@@ -98,7 +100,9 @@ class TestIpRangeViewSetList:
         assert len(response.data) == 0
 
     def test_get_ip_ranges_without_auth(
-        self, hosting_provider: Hostingprovider, sample_hoster_user: User,
+        self,
+        hosting_provider: Hostingprovider,
+        sample_hoster_user: User,
     ):
         """
         We don't want to list all the IP ranges we have, so we just show an empty
@@ -122,7 +126,9 @@ class TestIpRangeViewSetList:
         assert len(response.data) == 0
 
     def test_get_ip_range_for_user_with_no_hosting_provider(
-        self, sample_hoster_user: User, rf: RequestFactory,
+        self,
+        sample_hoster_user: User,
+        rf: RequestFactory,
     ):
         sample_hoster_user.save()
 

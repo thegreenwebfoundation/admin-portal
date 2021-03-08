@@ -12,7 +12,12 @@ User = get_user_model()
 
 class TestDatacenter:
     @pytest.mark.parametrize(
-        "accounting_model", ("groeneenergie", "mixed", "compensatie",)
+        "accounting_model",
+        (
+            "groeneenergie",
+            "mixed",
+            "compensatie",
+        ),
     )
     def test_accepted_ways_to_model(self, hosting_provider, db, accounting_model):
         val, *_ = [
@@ -28,7 +33,12 @@ class TestDatacenter:
 
 class TestHostingProvider:
     @pytest.mark.parametrize(
-        "accounting_model", ("groeneenergie", "mixed", "compensatie",)
+        "accounting_model",
+        (
+            "groeneenergie",
+            "mixed",
+            "compensatie",
+        ),
     )
     def test_accepted_ways_to_model(
         self, datacenter, db, sample_hoster_user, accounting_model, hosting_provider

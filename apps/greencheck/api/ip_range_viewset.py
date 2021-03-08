@@ -119,4 +119,3 @@ class IPRangeViewSet(
 
         instance.active = False
         instance.save()
-

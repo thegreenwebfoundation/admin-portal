@@ -11,7 +11,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddIndex(
-            model_name="datacenter", index=models.Index(fields=["name"], name="name"),
+            model_name="datacenter",
+            index=models.Index(fields=["name"], name="name"),
         ),
         migrations.AddIndex(
             model_name="hostingprovider",

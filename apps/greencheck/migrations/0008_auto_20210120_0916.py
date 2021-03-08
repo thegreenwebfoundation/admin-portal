@@ -11,7 +11,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveIndex(
-            model_name="greencheckipapprove", name="greencheck__created_23c8a1_idx",
+            model_name="greencheckipapprove",
+            name="greencheck__created_23c8a1_idx",
         ),
         migrations.AlterField(
             model_name="greencheck",

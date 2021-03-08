@@ -203,8 +203,7 @@ class GreenDomainBatchView(CreateAPIView):
         return [url for url in urls_list if url not in green_list]
 
     def create(self, request, *args, **kwargs):
-        """
-        """
+        """"""
 
         urls_list = self.collect_urls(request)
 

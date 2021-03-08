@@ -76,7 +76,9 @@ class IpAddressField(Field):
             return ipaddress.ip_address(value)
         except (TypeError, ValueError):
             raise exceptions.ValidationError(
-                self.error_messages["invalid"], code="invalid", params={"value": value},
+                self.error_messages["invalid"],
+                code="invalid",
+                params={"value": value},
             )
 
     def get_db_prep_save(self, value, connection):

@@ -44,7 +44,9 @@ class Migration(migrations.Migration):
                 ),
                 ("template", models.CharField(max_length=128)),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.AddField(
             model_name="hostingcommunication",

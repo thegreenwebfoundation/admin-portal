@@ -131,7 +131,9 @@ class Migration(migrations.Migration):
                 ("username", models.CharField(max_length=255, unique=True)),
                 ("username_canonical", models.CharField(max_length=255)),
             ],
-            options={"db_table": "fos_user",},
+            options={
+                "db_table": "fos_user",
+            },
         ),
         migrations.CreateModel(
             name="Datacenter",
@@ -183,7 +185,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "datacenters",},
+            options={
+                "db_table": "datacenters",
+            },
         ),
         migrations.CreateModel(
             name="HostingproviderStats",
@@ -208,7 +212,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "hostingproviders_stats",},
+            options={
+                "db_table": "hostingproviders_stats",
+            },
         ),
         migrations.CreateModel(
             name="HostingproviderDatacenter",
@@ -242,7 +248,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "datacenters_hostingproviders",},
+            options={
+                "db_table": "datacenters_hostingproviders",
+            },
         ),
         migrations.CreateModel(
             name="HostingproviderCertificate",
@@ -283,7 +291,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "hostingprovider_certificates",},
+            options={
+                "db_table": "hostingprovider_certificates",
+            },
         ),
         migrations.AddField(
             model_name="hostingprovider",
@@ -326,7 +336,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "datacenters_coolings",},
+            options={
+                "db_table": "datacenters_coolings",
+            },
         ),
         migrations.CreateModel(
             name="DatacenterClassification",
@@ -362,7 +374,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "datacenters_classifications",},
+            options={
+                "db_table": "datacenters_classifications",
+            },
         ),
         migrations.CreateModel(
             name="DatacenterCertificate",
@@ -403,7 +417,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "datacenter_certificates",},
+            options={
+                "db_table": "datacenter_certificates",
+            },
         ),
         migrations.AddIndex(
             model_name="hostingprovider",
@@ -518,11 +534,14 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddIndex(
-            model_name="user", index=models.Index(fields=["email"], name="email"),
+            model_name="user",
+            index=models.Index(fields=["email"], name="email"),
         ),
         migrations.AlterModelManagers(
             name="user",
-            managers=[("objects", django.contrib.auth.models.UserManager()),],
+            managers=[
+                ("objects", django.contrib.auth.models.UserManager()),
+            ],
         ),
         migrations.AddField(
             model_name="user",

@@ -38,7 +38,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "greencheck_ip",},
+            options={
+                "db_table": "greencheck_ip",
+            },
         ),
         migrations.CreateModel(
             name="Greencheck",
@@ -96,7 +98,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "greencheck",},
+            options={
+                "db_table": "greencheck",
+            },
         ),
         migrations.CreateModel(
             name="GreencheckASN",
@@ -121,7 +125,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "greencheck_as",},
+            options={
+                "db_table": "greencheck_as",
+            },
         ),
         migrations.CreateModel(
             name="GreencheckASNapprove",
@@ -155,7 +161,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "greencheck_as_approve",},
+            options={
+                "db_table": "greencheck_as_approve",
+            },
         ),
         migrations.CreateModel(
             name="GreencheckIpApprove",
@@ -174,7 +182,9 @@ class Migration(migrations.Migration):
                 ("ip_start", IpAddressField()),
                 ("status", models.TextField()),
             ],
-            options={"db_table": "greencheck_ip_approve",},
+            options={
+                "db_table": "greencheck_ip_approve",
+            },
         ),
         migrations.CreateModel(
             name="GreencheckLinked",
@@ -218,7 +228,9 @@ class Migration(migrations.Migration):
                 ("count", models.IntegerField()),
                 ("ips", models.IntegerField()),
             ],
-            options={"db_table": "greencheck_stats",},
+            options={
+                "db_table": "greencheck_stats",
+            },
         ),
         migrations.CreateModel(
             name="GreencheckStatsTotal",
@@ -248,7 +260,9 @@ class Migration(migrations.Migration):
                 ("count", models.IntegerField()),
                 ("ips", models.IntegerField()),
             ],
-            options={"db_table": "greencheck_stats_total",},
+            options={
+                "db_table": "greencheck_stats_total",
+            },
         ),
         migrations.CreateModel(
             name="GreencheckTLD",
@@ -268,7 +282,9 @@ class Migration(migrations.Migration):
                 ("tld", models.CharField(max_length=50)),
                 ("toplevel", models.CharField(max_length=64)),
             ],
-            options={"db_table": "greencheck_tld",},
+            options={
+                "db_table": "greencheck_tld",
+            },
         ),
         migrations.CreateModel(
             name="GreencheckWeeklyStats",
@@ -293,7 +309,9 @@ class Migration(migrations.Migration):
                 ("week", models.IntegerField()),
                 ("year", models.PositiveSmallIntegerField()),
             ],
-            options={"db_table": "greencheck_weekly",},
+            options={
+                "db_table": "greencheck_weekly",
+            },
         ),
         migrations.CreateModel(
             name="GreenList",
@@ -340,10 +358,13 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "greenlist",},
+            options={
+                "db_table": "greenlist",
+            },
         ),
         migrations.AddIndex(
-            model_name="greenchecktld", index=models.Index(fields=["tld"], name="tld"),
+            model_name="greenchecktld",
+            index=models.Index(fields=["tld"], name="tld"),
         ),
         migrations.AddIndex(
             model_name="greencheckstatstotal",
@@ -373,7 +394,8 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddIndex(
-            model_name="greenlist", index=models.Index(fields=["url"], name="url"),
+            model_name="greenlist",
+            index=models.Index(fields=["url"], name="url"),
         ),
         migrations.AddIndex(
             model_name="greencheckip",
@@ -392,7 +414,8 @@ class Migration(migrations.Migration):
             index=models.Index(fields=["active"], name="active"),
         ),
         migrations.AddIndex(
-            model_name="greencheckasn", index=models.Index(fields=["asn"], name="asn"),
+            model_name="greencheckasn",
+            index=models.Index(fields=["asn"], name="asn"),
         ),
         migrations.AlterField(
             model_name="greenchecktld",

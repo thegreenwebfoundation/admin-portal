@@ -12,9 +12,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name="hostingprovider", options={"verbose_name": "Hosting Provider"},
+            name="hostingprovider",
+            options={"verbose_name": "Hosting Provider"},
         ),
-        migrations.RemoveField(model_name="hostingproviderstats", name="id",),
+        migrations.RemoveField(
+            model_name="hostingproviderstats",
+            name="id",
+        ),
         migrations.AlterField(
             model_name="hostingproviderstats",
             name="hostingprovider",

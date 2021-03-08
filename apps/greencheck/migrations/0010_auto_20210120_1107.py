@@ -30,7 +30,9 @@ class Migration(migrations.Migration):
                 ("hosted_by_id", models.IntegerField()),
                 ("modified", models.DateTimeField()),
             ],
-            options={"db_table": "greendomain",},
+            options={
+                "db_table": "greendomain",
+            },
         ),
         migrations.CreateModel(
             name="TopUrl",
@@ -46,7 +48,12 @@ class Migration(migrations.Migration):
                 ),
                 ("url", models.CharField(max_length=255)),
             ],
-            options={"db_table": "top_1m_urls",},
+            options={
+                "db_table": "top_1m_urls",
+            },
         ),
-        migrations.AlterModelTable(name="greencheck", table="greencheck_2020",),
+        migrations.AlterModelTable(
+            name="greencheck",
+            table="greencheck_2020",
+        ),
     ]

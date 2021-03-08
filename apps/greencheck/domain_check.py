@@ -83,7 +83,9 @@ class GreenDomainChecker:
         )
 
     def grey_sitecheck(
-        self, domain, ip_address,
+        self,
+        domain,
+        ip_address,
     ):
         return legacy_workers.SiteCheck(
             url=domain,
@@ -122,7 +124,8 @@ class GreenDomainChecker:
         gc = GreencheckIp.objects.all().first()
 
         ip_matches = GreencheckIp.objects.filter(
-            ip_end__gte=ip_address, ip_start__lte=ip_address,
+            ip_end__gte=ip_address,
+            ip_start__lte=ip_address,
         )
         # order matches by ascending range size
         return ip_matches.first()
@@ -133,4 +136,3 @@ class GreenDomainChecker:
         """
         asn = self.asn_from_ip(ip_address)
         return GreencheckASN.objects.filter(asn=asn).first()
-
