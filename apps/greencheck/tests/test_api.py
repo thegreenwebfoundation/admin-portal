@@ -1,7 +1,6 @@
 import logging
 
 import pytest
-from corsheaders.conf import conf
 from corsheaders.middleware import ACCESS_CONTROL_ALLOW_ORIGIN
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -9,7 +8,6 @@ from rest_framework.authtoken import models, views
 from rest_framework.test import APIRequestFactory
 
 from ..models import Hostingprovider
-from ..viewsets import GreenDomainViewset
 
 User = get_user_model()
 

@@ -1,9 +1,11 @@
 import pytest
 
-from apps.accounts.models import Datacenter
 from apps.accounts.models.choices import ModelType
 
-# TODO these hit the database, when they probably don't need to, and this will make tests slow. If we can test that these objects are valid another way we should - maybe checking at the field level, or form level.
+# TODO these hit the database, when they probably don't need to, and
+#  this will make tests slow. If we can test that these objects are
+#  valid another way we should - maybe checking at the field level,
+#  or form level.
 
 from django.contrib.auth import get_user_model
 

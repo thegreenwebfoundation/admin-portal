@@ -2,7 +2,6 @@ import logging
 from apps.greencheck.models import Greencheck, GreenDomain, TopUrl, Hostingprovider
 
 from django.core.management.base import BaseCommand
-from django.db import connection
 import datetime
 import warnings
 
@@ -18,9 +17,9 @@ GREEN = 1
 class TopUrlUpdater:
     def update_green_domains(self, queryset):
         """
-        Accepts a queryset of objects with a 'url' property, and iterates through the
-        list of domains, updating the Green Presenting table, with the date of the latest
-        check.
+        Accepts a queryset of objects with a 'url' property, and iterates through
+        the list of domains, updating the Green Presenting table, with the date
+        of the latest check.
         """
         count = 0
         new_domains = 0
@@ -63,7 +62,6 @@ class TopUrlUpdater:
                     gp.hosted_by_id = hp.id
                     gp.hosted_by = hp.name
                     gp.hosted_by_website = hp.website
-                    partner = hp.partner
 
                     try:
                         gp.save()
@@ -126,7 +124,10 @@ class TopUrlUpdater:
                 # import ipdb ; ipdb.set_trace()
 
         logger.info(
-            f"Finished updating. Total processed domains: {count}. Newly added domains: {new_domains}. Updated domains: {updated_domains}"
+            (
+                f"Finished updating. Total processed domains: {count}. Newly "
+                f"added domains: {new_domains}. Updated domains: {updated_domains}"
+            )
         )
 
 

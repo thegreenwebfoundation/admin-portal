@@ -22,8 +22,10 @@ from .choices import (
 )
 
 """
-- greencheck_linked - the purpose of the table is not very clear. Contains many entries though.
-- greencheck_stats_total and greencheck_stats - self explanatory. Contained in this view here: https://admin.thegreenwebfoundation.org/admin/stats/greencheck
+- greencheck_linked - the purpose of the table is not very clear.
+   Contains many entries though.
+- greencheck_stats_total and greencheck_stats - self explanatory.
+   See https://admin.thegreenwebfoundation.org/admin/stats/greencheck
 
 # wait for reply on these.
 - greenenergy - also an old table
@@ -157,11 +159,19 @@ class Greencheck(models.Model):
     # to at least track this properly.
     hostingprovider = models.IntegerField(db_column="id_hp", default=0)
     # hostingprovider = models.ForeignKey(
-    #     Hostingprovider, db_column='id_hp', on_delete=models.CASCADE, blank=True, null=True
+    #     Hostingprovider,
+    #     db_column="id_hp",
+    #     on_delete=models.CASCADE,
+    #     blank=True,
+    #     null=True,
     # )
     greencheck_ip = models.IntegerField(db_column="id_greencheck", default=0)
     # greencheck_ip = models.ForeignKey(
-    #     GreencheckIp, on_delete=models.CASCADE, db_column='id_greencheck', blank=True, null=True
+    #     GreencheckIp,
+    #     on_delete=models.CASCADE,
+    #     db_column="id_greencheck",
+    #     blank=True,
+    #     null=True,
     # )
     date = models.DateTimeField(db_column="datum")
     green = EnumField(choices=BoolChoice.choices)

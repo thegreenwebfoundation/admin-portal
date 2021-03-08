@@ -1,7 +1,6 @@
 import logging
 
 from rest_framework import permissions
-from rest_framework import permissions
 
 logger = logging.getLogger(__name__)
 

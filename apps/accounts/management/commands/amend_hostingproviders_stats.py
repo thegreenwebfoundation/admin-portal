@@ -3,15 +3,15 @@ from django.db import connection
 
 
 class Command(BaseCommand):
-    help = "Add missing id column for hostingstats."
+    help = "Add missing id column for hosting stats."
+    TABLE = "hostingproviders_stats"
 
     def handle(self, *args, **options):
         with connection.cursor() as cursor:
-            self.cursor = cursor
-            self.cursor.execute(
-                """
+            cursor.execute(
+                f"""
                 START TRANSACTION;
-                CREATE TABLE `hostingproviders_stats_copy` (
+                CREATE TABLE `{self.TABLE}_copy` (
                     `id` INT(11) primary key Not null auto_increment,
                     `id_hp` Int( 11 ) NOT NULL,
                     `green_checks` Int( 11 ) NOT NULL,
@@ -22,12 +22,15 @@ class Command(BaseCommand):
                 ENGINE = InnoDB;
                 -------------------------------------------------------------
 
-                INSERT into hostingproviders_stats_copy(id_hp, green_checks, green_domains)
-                SELECT id_hp, green_checks, green_domains FROM hostingproviders_stats;
+                INSERT INTO
+                    {self.TABLE}_copy(id_hp, green_checks, green_domains)
+                SELECT
+                    id_hp, green_checks, green_domains
+                FROM
+                    {self.TABLE};
 
-                DROP table hostingproviders_stats;
-
-                ALTER table hostingproviders_stats_copy rename to hostingproviders_stats;
+                DROP TABLE {self.TABLE};
+                ALTER TABLE {self.TABLE}_copy RENAME TO {self.TABLE};
                 COMMIT;
             """
             )

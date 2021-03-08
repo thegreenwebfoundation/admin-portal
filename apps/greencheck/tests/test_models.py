@@ -5,7 +5,8 @@ from apps.greencheck import choices, models
 @pytest.fixture
 def green_ip_range_approval_request(green_ip):
     """
-    Return an IP Range approval request, using the data from the provided green_ip fixture
+    Return an IP Range approval request, using the data from the provided
+     green_ip fixture
     """
     return models.GreencheckIpApprove(
         action=choices.ActionChoice.new,
@@ -70,9 +71,10 @@ class TestHostingProviderASNApprovalNeedsReview:
         action,
     ):
         """
-        When a hosting provider has a ASN approval request created, we should be
-        able to mark the provider as 'pending review', but a provider has outstanding
-        approval requests, we should be able to tell if notification would have been sent.
+        When a hosting provider has a ASN approval request created, we should
+        be able to mark the provider as 'pending review', but a provider has
+        outstanding approval requests, we should be able to tell if notification
+        would have been sent.
 
         """
         green_asn_approval_request.status = status
@@ -114,7 +116,8 @@ class TestHostingProviderASNApprovalNeedsReview:
         action,
     ):
         """
-        Similar in intention as `test_hosting_provider_is_pending_with_new_ASN`, but for IP range approval requests.
+        Similar in intention as `test_hosting_provider_is_pending_with_new_ASN`,
+         but for IP range approval requests.
         """
 
         green_ip_range_approval_request.status = status

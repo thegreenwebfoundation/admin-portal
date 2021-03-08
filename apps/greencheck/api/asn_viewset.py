@@ -1,17 +1,14 @@
 import logging
 
 
-from django.shortcuts import get_object_or_404
-from rest_framework import mixins, pagination, parsers, request, response, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_csv import renderers as drf_csv_rndr  # noqa
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # noqa
 
 from ..models import GreencheckASN
-from ..serializers import GreenDomainSerializer, GreenASNSerializer
+from ..serializers import GreenASNSerializer
 from .permissions import BelongsToHostingProvider
 
 logger = logging.getLogger(__name__)

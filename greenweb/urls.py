@@ -15,8 +15,6 @@ Including another URLconf
 """
 from django.conf import settings
 from django.urls import path, include
-from django.http import HttpResponse
-from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 
 
@@ -26,7 +24,7 @@ from apps.greencheck.viewsets import (
     GreenDomainViewset,
     GreenDomainBatchView,
 )
-from apps.greencheck.swagger import TGWFSwaggerView, TGWFSwaggerUIRenderer
+from apps.greencheck.swagger import TGWFSwaggerView
 
 from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts import urls as accounts_urls

@@ -49,7 +49,12 @@ class Command(BaseCommand):
             )
 
             cursor.execute(
-                "ALTER TABLE `fos_user` ADD COLUMN `is_superuser` TinyInt( 1 ) NOT NULL;"
+                """
+                ALTER TABLE
+                    `fos_user`
+                ADD COLUMN
+                    `is_superuser` TinyInt( 1 ) NOT NULL;
+                """
             )
 
             cursor.execute(
@@ -78,7 +83,8 @@ class Command(BaseCommand):
 
             cursor.execute("ALTER TABLE greencheck_ip MODIFY active TINYINT(1)")
 
-            # Will truncate a few com and net domains. That are mislabeled in the first place.
+            # Will truncate a few com and net domains. That are mislabeled
+            # in the first place.
             cursor.execute(
                 "ALTER TABLE hostingproviders MODIFY countrydomain VARCHAR(2)"
             )
@@ -88,7 +94,8 @@ class Command(BaseCommand):
                 "UPDATE hostingproviders SET partner = '' WHERE partner IS NULL"
             )
 
-            # There is no type for year with django, use integer for better compatibility
+            # There is no type for year with django, use integer for better
+            # compatibility.
             cursor.execute("ALTER TABLE greencheck_weekly MODIFY year SMALLINT(5)")
             self.stdout.write(self.style.SUCCESS("Schema migrations completed!"))
 

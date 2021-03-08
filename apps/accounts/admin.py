@@ -3,7 +3,6 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
 from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
@@ -228,9 +227,13 @@ class HostingAdmin(admin.ModelAdmin):
 
         obj = Hostingprovider.objects.get(pk=kwargs["provider"])
         subject = {
-            "additional-info.txt": "Additional information needed to approve your listing in the Green Web Directory.",
-            "pending-removal.txt": "Pending removal from the Green Web Directory due to questions around the green hosting of {}".format(
-                obj.name
+            "additional-info.txt": (
+                "Additional information needed to approve "
+                "your listing in the Green Web Directory."
+            ),
+            "pending-removal.txt": (
+                "Pending removal from the Green Web Directory due "
+                f"to questions around the green hosting of {obj.name}"
             ),
         }
         user = obj.user_set.all().first()

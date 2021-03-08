@@ -121,7 +121,7 @@ class GreenDomainChecker:
         Look up the IP ranges that include this IP address, and return
         a list of IP ranges, ordered by smallest, most precise range first.
         """
-        gc = GreencheckIp.objects.all().first()
+        GreencheckIp.objects.all().first()
 
         ip_matches = GreencheckIp.objects.filter(
             ip_end__gte=ip_address,

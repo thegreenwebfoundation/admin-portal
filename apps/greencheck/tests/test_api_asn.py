@@ -157,7 +157,7 @@ class TestASNViewSetList:
         assert GreencheckASN.objects.filter(asn=12345).count() == 1
 
         fetched_green_asn = GreencheckASN.objects.filter(asn=12345).first()
-        assert fetched_green_asn.active == False
+        assert not fetched_green_asn.active
 
     def test_can_only_create_asns_for_own_hosting_provider(
         self,
@@ -190,15 +190,15 @@ class TestASNViewSetList:
         green_asn: GreencheckASN,
     ):
         """
-        An user must be associated with a hosting provider to be able to create or destroy
-        ASNs or IP Ranges for the provider
+        An user must be associated with a hosting provider to be able
+         to create or destroy ASNs or IP Ranges for the provider
         """
         green_asn.save()
         assert GreencheckASN.objects.filter(asn=12345).count() == 1
 
         rf = APIRequestFactory()
         url_path = reverse("asn-detail", kwargs={"pk": green_asn.id})
-        user = hosting_provider_with_sample_user.user_set.first()
+        hosting_provider_with_sample_user.user_set.first()
         request = rf.delete(url_path)
         request.user = another_host_user
 

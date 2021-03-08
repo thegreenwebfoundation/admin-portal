@@ -126,7 +126,10 @@ class GreenDomainBatchSerializer(serializers.Serializer):
     )
     response_filename = serializers.CharField(
         required=False,
-        help_text="Provide a filename to get back a downloadable file. Without this, csv information is returned as an inline response.",
+        help_text=(
+            "Provide a filename to get back a downloadable file. "
+            "Without this, csv information is returned as an inline response."
+        ),
     )
 
     class Meta:
