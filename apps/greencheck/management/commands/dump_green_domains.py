@@ -41,7 +41,7 @@ class GreenDomainExporter:
         """
         Export the `cls.TABLE` to `db_path` from given `database_url`.
 
-        :param database_url: The database ARN to exported the `cls.TABLE` from.
+        :param database_url: The database URL to export the `cls.TABLE` from.
         :param db_path: The path to file to export SQLite database to.
         """
         cls._subprocess(
