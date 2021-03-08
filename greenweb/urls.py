@@ -68,4 +68,11 @@ urlpatterns += [
         TGWFSwaggerView.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
+    # replicate the PHP API, at the same url, so we can also put
+    # it behind the reverse proxy
+    path(
+        "greencheck/<url>",
+        GreenDomainViewset.as_view({"get": "retrieve"}),
+        name="green-domain-detail",
+    ),
 ]
