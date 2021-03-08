@@ -8,6 +8,7 @@ install:
 # command to run tests
 script:
   - pytest --create-db -m "not smoke_test"
+  - make ci
 services:
     - mysql
     - rabbitmq

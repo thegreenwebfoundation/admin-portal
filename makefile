@@ -1,3 +1,8 @@
+.PHONY: release venv
+
+# Create Python virtual environment if not yet created.
+venv:
+	test -d venv || python3 -m venv venv
 
 ## Installing
 release:
@@ -15,5 +20,13 @@ dev.test.only:
 test.only:
 	pytest -s --create-db -m only -v
 
+flake:
+	flake8 ./greenweb ./apps ./*.py --count --statistics
 
-.PHONY: release
+black:
+	black ./greenweb ./apps ./*.py $(ARGS)
+
+black.check:
+	@ARGS="--check --color --diff" make black
+
+ci: | black.check flake

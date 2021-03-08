@@ -21,6 +21,7 @@ pytest-django = "*"
 pytest-watch = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
+black = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
@@ -56,3 +57,7 @@ awscli-plugin-endpoint = "*"
 boto3 = "*"
 ipwhois = "*"
 django-cors-headers = "*"
+
+[pipenv]
+# Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
+allow_prereleases = true
