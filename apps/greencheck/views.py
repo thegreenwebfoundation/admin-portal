@@ -17,7 +17,8 @@ class GreenUrlsView(TemplateView):
         Returns a list of two-tuples, containing a filename and link.
         """
         return [
-            (obj.key, object_storage.public_url(obj.bucket_name, obj.key)) for obj in bucket.objects.all()
+            (obj.key, object_storage.public_url(obj.bucket_name, obj.key))
+            for obj in bucket.objects.all()
         ]
 
     @property

@@ -46,7 +46,7 @@ class GreenDomainExporter:
         """
         cls._subprocess(
             ["db-to-sqlite", database_url, db_path, f"--table={cls.TABLE}"],
-            f'Failed to export the "{cls.TABLE}" table to "{db_path}" SQLite database.'
+            f'Failed to export the "{cls.TABLE}" table to "{db_path}" SQLite database.',
         )
 
     @classmethod
@@ -61,10 +61,12 @@ class GreenDomainExporter:
         :raises RuntimeError: When the compression process fails.
         """
         if compression_type not in _COMPRESSION_TYPES:
-            raise Exception((
-                f'The "{compression_type}" compression is not supported. '
-                f'Use one of {cls._quote_items(_COMPRESSION_TYPES.keys())}.'
-            ))
+            raise Exception(
+                (
+                    f'The "{compression_type}" compression is not supported. '
+                    f"Use one of {cls._quote_items(_COMPRESSION_TYPES.keys())}."
+                )
+            )
 
         arguments, file_extension = _COMPRESSION_TYPES[compression_type]
         archive_path = f"{file_path}.{file_extension}"
@@ -86,7 +88,7 @@ class GreenDomainExporter:
         """
         cls._subprocess(
             ["rm", "-f", *file_paths],
-            f'Failed to remove these files: {cls._quote_items(file_paths)}.',
+            f"Failed to remove these files: {cls._quote_items(file_paths)}.",
         )
 
     @classmethod
@@ -101,8 +103,13 @@ class GreenDomainExporter:
         """
         cls._subprocess(
             [
-                "aws", "s3", "cp", "--acl", "public-read",
-                file_path, f"s3://{bucket_name}/{file_path}",
+                "aws",
+                "s3",
+                "cp",
+                "--acl",
+                "public-read",
+                file_path,
+                f"s3://{bucket_name}/{file_path}",
             ],
             f'Failed to upload the "{file_path}" to "{bucket_name}" S3 bucket.',
         )
@@ -111,15 +118,19 @@ class GreenDomainExporter:
             access_check_response = request("head", public_url(bucket_name, file_path))
 
             if access_check_response.status_code != 200:
-                raise RuntimeError((
-                    "The uploaded file is not publicly accessible "
-                    f"(HTTP {access_check_response.status_code})."
-                ))
+                raise RuntimeError(
+                    (
+                        "The uploaded file is not publicly accessible "
+                        f"(HTTP {access_check_response.status_code})."
+                    )
+                )
         except HTTPError as error:
-            raise RuntimeError((
-                "The status check request failed. Unable to determine "
-                "whether the uploaded file is publicly available."
-            )) from error
+            raise RuntimeError(
+                (
+                    "The status check request failed. Unable to determine "
+                    "whether the uploaded file is publicly available."
+                )
+            ) from error
 
     @staticmethod
     def _subprocess(args: List[str], error: str) -> None:
@@ -134,7 +145,15 @@ class GreenDomainExporter:
         process = subprocess.run(args, capture_output=True)
 
         if process.returncode > 0:
-            raise RuntimeError(f"{error}\n------------------\n{process.stderr.decode('utf8')}")
+            raise RuntimeError(
+                "\n".join(
+                    [
+                        error,
+                        "------------------",
+                        process.stderr.decode("utf8"),
+                    ]
+                )
+            )
 
     @staticmethod
     def _quote_items(args: Iterable[str]) -> str:
@@ -178,9 +197,19 @@ class Command(BaseCommand):
             exporter.export_to_sqlite(exporter.get_conn_string(), db_path)
 
             if upload:
-                compressed_db_path = exporter.compress_file(db_path, compression_type)
+                compressed_db_path = exporter.compress_file(
+                    db_path,
+                    compression_type,
+                )
 
-                exporter.upload_file(compressed_db_path, settings.DOMAIN_SNAPSHOT_BUCKET)
-                exporter.delete_files(compressed_db_path, db_path)
+                exporter.upload_file(
+                    compressed_db_path,
+                    settings.DOMAIN_SNAPSHOT_BUCKET,
+                )
+
+                exporter.delete_files(
+                    compressed_db_path,
+                    db_path,
+                )
         except Exception as error:
             raise CommandError(str(error)) from error

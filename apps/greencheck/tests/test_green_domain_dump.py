@@ -108,7 +108,7 @@ class TestGreenDomainExporter:
 
         with pytest.raises(RuntimeError) as error:
             exporter.delete_files("/tmp")
-        assert f'Failed to remove these files: "/tmp".' in str(error)
+        assert 'Failed to remove these files: "/tmp".' in str(error)
 
 
 @pytest.mark.django_db
@@ -130,12 +130,12 @@ class TestDumpGreenDomainCommand:
         db_path = self._call_command()
         compressed_db_path = Path(f"{db_path}.gz")
 
-        assert \
-            db_path.exists(), \
-            "The DB dump must persist on disk if `--upload` is not supplied."
-        assert \
-            not compressed_db_path.exists(), \
-            "The compressed DB dump must not be created when `--upload` is not supplied."
+        assert (
+            db_path.exists()
+        ), "The DB dump must persist on disk if `--upload` is not supplied."
+        assert (
+            not compressed_db_path.exists()
+        ), "The compressed DB dump must not be created when `--upload` is not supplied."
 
     @pytest.mark.object_storage
     @pytest.mark.smoke_test
@@ -149,12 +149,12 @@ class TestDumpGreenDomainCommand:
         db_path = self._call_command(upload=True, **kwargs)
         compressed_db_path = Path(f"{db_path}.{archive_extension}")
 
-        assert \
-            not db_path.exists(), \
-            "The DB dump must not persist on disk if `--upload` is supplied."
-        assert \
-            not compressed_db_path.exists(), \
-            "The compressed DB dump must not persist on disk if `--upload` is supplied."
+        assert (
+            not db_path.exists()
+        ), "The DB dump must not persist on disk if `--upload` is supplied."
+        assert (
+            not compressed_db_path.exists()
+        ), "The compressed DB dump must not persist on disk if `--upload` is supplied."
 
         def is_uploaded(fname: str) -> bool:
             for obj in cleared_test_bucket.objects.all():
@@ -162,16 +162,18 @@ class TestDumpGreenDomainCommand:
                     return True
             return False
 
-        assert \
-            not is_uploaded(db_path.name), \
-            "The uncompressed DB dump must not be uploaded to object storage."
-        assert \
-            is_uploaded(compressed_db_path.name), \
-            "The compressed DB dump must be uploaded to object storage."
+        assert not is_uploaded(
+            db_path.name
+        ), "The uncompressed DB dump must not be uploaded to object storage."
+        assert is_uploaded(
+            compressed_db_path.name
+        ), "The compressed DB dump must be uploaded to object storage."
 
     @pytest.mark.object_storage
     @pytest.mark.smoke_test
-    def test_handle_with_update_and_gzip_compression_type(self, cleared_test_bucket, settings) -> None:
+    def test_handle_with_update_and_gzip_compression_type(
+        self, cleared_test_bucket, settings
+    ) -> None:
         self.test_handle_with_update(
             cleared_test_bucket,
             settings,
@@ -181,7 +183,9 @@ class TestDumpGreenDomainCommand:
 
     @pytest.mark.object_storage
     @pytest.mark.smoke_test
-    def test_handle_with_update_and_bzip2_compression_type(self, cleared_test_bucket, settings) -> None:
+    def test_handle_with_update_and_bzip2_compression_type(
+        self, cleared_test_bucket, settings
+    ) -> None:
         self.test_handle_with_update(
             cleared_test_bucket,
             settings,
@@ -191,7 +195,9 @@ class TestDumpGreenDomainCommand:
 
     @pytest.mark.object_storage
     @pytest.mark.smoke_test
-    def test_handle_with_update_and_invalid_compression_type(self, cleared_test_bucket, settings) -> None:
+    def test_handle_with_update_and_invalid_compression_type(
+        self, cleared_test_bucket, settings
+    ) -> None:
         with pytest.raises(CommandError) as error:
             self.test_handle_with_update(
                 cleared_test_bucket,
@@ -200,5 +206,7 @@ class TestDumpGreenDomainCommand:
                 archive_extension="b",
             )
 
-        assert \
-            'The "blah" compression is not supported. Use one one of "gzip", "bzip2".' in str(error)
+        assert (
+            'The "blah" compression is not supported. Use one one of "gzip", "bzip2".'
+            in str(error)
+        )
