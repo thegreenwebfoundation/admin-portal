@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from django.utils import dateparse
+from django.utils import dateparse, timezone
 from apps.greencheck.models import Greencheck, GreenDomain
 from apps.accounts.models import Hostingprovider
 
@@ -45,7 +45,10 @@ class SiteCheckLogger:
 
         checker = GreenDomainChecker()
         sitecheck = checker.perform_full_lookup(url)
-        sitecheck.checked_at = str(sitecheck.checked_at)
+        if sitecheck.checked_at:
+            sitecheck.checked_at = str(sitecheck.checked_at)
+        else:
+            sitecheck.checked_at = str(timezone.now())
         self.log_sitecheck_to_database(sitecheck)
 
     def log_sitecheck_to_database(self, sitecheck: SiteCheck):
