@@ -1,5 +1,6 @@
 import csv
 import logging
+import socket
 from io import TextIOWrapper
 
 import tld
@@ -114,7 +115,12 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         if not instance:
             from .tasks import process_log
 
-            instance = self.checker.perform_full_lookup(domain)
+            try:
+                instance = self.checker.perform_full_lookup(domain)
+
+            except socket.gaierror:
+                # not a valid domain, OR a valid IP. Get rid of it.
+                return response.Response({"green": False, "url": url, "data": False})
 
             # log_the_check asynchronously
             process_log.send(domain)
