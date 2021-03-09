@@ -35,7 +35,7 @@ django-registration = "==3.0.1"
 django-unixdatetimefield = "==1.0.3"
 gunicorn = "==19.9.0"
 mysqlclient = "==1.4.4"
-requests = "==2.22.0"
+requests = ">=2"
 whitenoise = {extras = ["brotli"],version = "==4.1.4"}
 db-to-sqlite = "*"
 sqlite-utils = "*"

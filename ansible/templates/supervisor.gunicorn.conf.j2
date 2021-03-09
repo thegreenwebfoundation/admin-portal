@@ -6,9 +6,10 @@ environment=LC_ALL='en_US.UTF-8',LANG='en_US.UTF-8'
 
 [program:admin_web]
 directory=/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/current/
-numprocs=10                                                                               command=bash ./run_gunicorn.sh
+numprocs=10
+command=bash ./run_gunicorn.sh
 process_name=%(process_num)02d
-environment=PORT=90"%(process_num)02d"
+environment=PORT=90%(process_num)02d
 autostart=true
 autorestart=true
 stopsignal=QUIT
