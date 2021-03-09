@@ -76,6 +76,7 @@ def fetch_providers_for_country(country_code):
 
 @api_view()
 @permission_classes([AllowAny])
+@renderer_classes([JSONPRenderer])
 @cache_page(60 * 15)
 def directory(request):
     """
