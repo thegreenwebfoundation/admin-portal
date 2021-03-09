@@ -120,18 +120,18 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
                 instance = self.checker.perform_full_lookup(domain)
 
             except socket.gaierror:
+                process_log.send(domain)
                 # not a valid domain, OR a valid IP. Get rid of it.
                 return response.Response({"green": False, "url": url, "data": False})
 
             # log_the_check asynchronously
-            process_log.send(domain)
-
         # match the old API request
         if not instance.green:
+            process_log.send(domain)
             return response.Response(
                 {"green": False, "url": instance.url, "data": True}
             )
-
+        process_log.send(domain)
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
 
