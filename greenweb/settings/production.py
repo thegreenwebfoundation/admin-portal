@@ -16,6 +16,7 @@ ALLOWED_HOSTS = [
     "admin.thegreenwebfoundation.org",
     "newadmin.thegreenwebfoundation.org",
     "staging-admin.thegreenwebfoundation.org",
+    "api.thegreenwebfoundation.org",
 ]
 
 
