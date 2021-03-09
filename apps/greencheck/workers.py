@@ -44,7 +44,7 @@ class SiteCheckLogger:
         from .domain_check import GreenDomainChecker
 
         checker = GreenDomainChecker()
-        sitecheck = checker.perform_full_lookup(url)
+        sitecheck = checker.check_domain(url)
         if sitecheck.checked_at:
             sitecheck.checked_at = str(sitecheck.checked_at)
         else:

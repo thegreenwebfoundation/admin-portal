@@ -14,7 +14,7 @@ This follows largely the same approach:
 """
 import socket
 import logging
-from .models import GreencheckASN, GreencheckIp, Hostingprovider, GreenDomain
+from .models import GreenDomain
 
 from . import legacy_workers
 from ipwhois.asn import IPASN
@@ -32,10 +32,12 @@ class GreenDomainChecker:
     matching SiteCheck result, that we might log.
     """
 
-    def perform_full_lookup(self, domain):
+    def perform_full_lookup(self, domain) -> GreenDomain:
         """
         Return a Green Domain object from doing a lookup.
         """
+        from .models import Hostingprovider
+
         res = self.check_domain(domain)
 
         if not res.green:
@@ -89,7 +91,7 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=ip_match.hostingprovider.id,
-            match_type="IP",
+            match_type="ip",
             match_ip_range=ip_match.id,
             cached=False,
             checked_at=timezone.now(),
@@ -102,7 +104,7 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=matching_asn.hostingprovider.id,
-            match_type="ASN",
+            match_type="as",
             match_ip_range=matching_asn.id,
             cached=False,
             checked_at=timezone.now(),
@@ -123,7 +125,7 @@ class GreenDomainChecker:
             checked_at=timezone.now(),
         )
 
-    def check_domain(self, domain: str):
+    def check_domain(self, domain: str) -> legacy_workers.SiteCheck:
         """
         Accept a domain name and return the either a GreenDomain Object,
         or the best matching IP range forip address it resolves to.
@@ -145,6 +147,7 @@ class GreenDomainChecker:
         Look up the IP ranges that include this IP address, and return
         a list of IP ranges, ordered by smallest, most precise range first.
         """
+        from .models import GreencheckIp
 
         ip_matches = GreencheckIp.objects.filter(
             ip_end__gte=ip_address, ip_start__lte=ip_address,
@@ -156,6 +159,8 @@ class GreenDomainChecker:
         """
         Return the Green ASN that this IP address 'belongs' to.
         """
+        from .models import GreencheckASN
+
         try:
             asn = self.asn_from_ip(ip_address)
         except IPDefinedError:
