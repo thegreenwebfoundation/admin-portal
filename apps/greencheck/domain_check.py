@@ -14,7 +14,7 @@ This follows largely the same approach:
 """
 import socket
 import logging
-from .models import GreencheckASN, GreencheckIp
+from .models import GreencheckASN, GreencheckIp, Hostingprovider, GreenDomain
 
 from . import legacy_workers
 from ipwhois.asn import IPASN
@@ -30,6 +30,31 @@ class GreenDomainChecker:
     The checking class. Used to run a check against a domain, to find the
     matching SiteCheck result, that we might log.
     """
+
+    def perform_full_lookup(self, domain):
+        """
+        Return a Green Domain object from doing a lookup.
+        """
+        res = self.check_domain(domain)
+
+        if not res.green:
+            return res
+
+        hosting_provider = Hostingprovider.objects.get(pk=res.hosting_provider_id)
+
+        # return a domain result, but don't save it,
+        # as persisting it is handled asynchronously
+        # by another worker, and logged to both the greencheck
+        # table and this 'cache' table
+        return GreenDomain(
+            url=res.url,
+            hosted_by=hosting_provider.name,
+            hosted_by_id=hosting_provider.id,
+            hosted_by_website=hosting_provider.website,
+            partner=hosting_provider.partner,
+            modified=res.checked_at,
+            green=res.green,
+        )
 
     def asn_from_ip(self, ip_address):
         """
@@ -83,9 +108,7 @@ class GreenDomainChecker:
         )
 
     def grey_sitecheck(
-        self,
-        domain,
-        ip_address,
+        self, domain, ip_address,
     ):
         return legacy_workers.SiteCheck(
             url=domain,
@@ -121,11 +144,9 @@ class GreenDomainChecker:
         Look up the IP ranges that include this IP address, and return
         a list of IP ranges, ordered by smallest, most precise range first.
         """
-        GreencheckIp.objects.all().first()
 
         ip_matches = GreencheckIp.objects.filter(
-            ip_end__gte=ip_address,
-            ip_start__lte=ip_address,
+            ip_end__gte=ip_address, ip_start__lte=ip_address,
         )
         # order matches by ascending range size
         return ip_matches.first()

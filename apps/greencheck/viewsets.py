@@ -101,10 +101,12 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         instance = GreenDomain.objects.filter(url=domain).first()
 
         if not instance:
-            instance = self.perform_full_lookup(domain)
+            from .tasks import process_log
+
+            instance = self.checker.perform_full_lookup(domain)
 
             # log_the_check asynchronously
-            # self.log_check_async(site_check)
+            process_log.send(domain)
 
         # match the old API request
         if not instance.green:
@@ -114,31 +116,6 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
-
-    def perform_full_lookup(self, domain):
-        """
-        Return a Green Domain object from doing a lookup.
-        """
-        res = self.checker.check_domain(domain)
-
-        if not res.green:
-            return res
-
-        hosting_provider = Hostingprovider.objects.get(pk=res.hosting_provider_id)
-
-        # return a domain result, but don't save it,
-        # as persisting it is handled asynchronously
-        # by another worker, and logged to both the greencheck
-        # table and this 'cache' table
-        return GreenDomain(
-            url=res.url,
-            hosted_by=hosting_provider.name,
-            hosted_by_id=hosting_provider.id,
-            hosted_by_website=hosting_provider.website,
-            partner=hosting_provider.partner,
-            modified=res.checked_at,
-            green=res.green,
-        )
 
 
 class GreenDomainBatchView(CreateAPIView):
