@@ -19,6 +19,7 @@ from .models import GreencheckASN, GreencheckIp, Hostingprovider, GreenDomain
 from . import legacy_workers
 from ipwhois.asn import IPASN
 from ipwhois.net import Net
+from ipwhois.exceptions import IPDefinedError
 import ipaddress
 from django.utils import timezone
 
@@ -155,5 +156,11 @@ class GreenDomainChecker:
         """
         Return the Green ASN that this IP address 'belongs' to.
         """
-        asn = self.asn_from_ip(ip_address)
+        try:
+            asn = self.asn_from_ip(ip_address)
+        except IPDefinedError:
+            return False
+        except Exception as err:
+            logger.exception(err)
+            return False
         return GreencheckASN.objects.filter(asn=asn).first()
