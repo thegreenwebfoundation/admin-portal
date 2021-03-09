@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f3048f39d46a8c3e6d5a8dbbbc5a73564f099d7e382ccd424be729bb9df1fd71"
+            "sha256": "9b7e889f9f5e8f6aa58116512f14d6b8d5e5398a595554418323dd117a3c0cef"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -334,6 +334,14 @@
             ],
             "index": "pypi",
             "version": "==2.1.0"
+        },
+        "djangorestframework-jsonp": {
+            "hashes": [
+                "sha256:053c8dc58ff5c2f931834d6ec6568c308474912db2129af47c0683506e01b597",
+                "sha256:fff4584e1a08f3c92f220eefb6f25907a54cc8fe39214ae058c572530f5c9277"
+            ],
+            "index": "pypi",
+            "version": "==1.0.2"
         },
         "dnspython": {
             "hashes": [

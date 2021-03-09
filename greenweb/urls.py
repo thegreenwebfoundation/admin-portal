@@ -29,6 +29,7 @@ from apps.greencheck.swagger import TGWFSwaggerView
 from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
+from apps.greencheck.api import legacy_views
 
 urlpatterns = []
 
@@ -74,5 +75,10 @@ urlpatterns += [
         "greencheck/<url>",
         GreenDomainViewset.as_view({"get": "retrieve"}),
         name="green-domain-detail",
+    ),
+    path(
+        "checks/latest/",
+        legacy_views.latest_greenchecks,
+        name="legacy-latest-greenchecks",
     ),
 ]
