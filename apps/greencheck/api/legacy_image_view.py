@@ -1,6 +1,7 @@
 # from typing import Boolean
 from pathlib import Path
 
+from django.views.decorators.cache import cache_page
 from PIL import Image, ImageDraw, ImageFont
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
@@ -109,8 +110,7 @@ def annotate_img(img, domain, green=False, provider=None) -> Image:
         return img
 
 
-@api_view()
-@permission_classes([AllowAny])
+@cache_page(60 * 15)
 def legacy_greencheck_image(request, url):
     """
     Serve the custom image request is created
