@@ -81,9 +81,11 @@ urlpatterns += [
         legacy_views.latest_greenchecks,
         name="legacy-latest-greenchecks",
     ),
+    path("data/directory/", legacy_views.directory, name="legacy-directory",),
     path(
-        "data/directory/",
-        legacy_views.directory,
-        name="legacy-directory",
+        "greencheckimage/<url>",
+        legacy_views.legacy_greencheck_image,
+        name="legacy-greencheck-image",
     ),
 ]
+

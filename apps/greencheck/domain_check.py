@@ -22,6 +22,8 @@ from ipwhois.net import Net
 from ipwhois.exceptions import IPDefinedError
 import ipaddress
 from django.utils import timezone
+import urllib
+import tld
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,28 @@ class GreenDomainChecker:
     The checking class. Used to run a check against a domain, to find the
     matching SiteCheck result, that we might log.
     """
+
+    def validate_domain(self, url) -> str:
+        """
+        Attempt to clean the provided url, and pull
+        return the domain, or ip address
+        """
+
+        is_valid_tld = tld.is_tld(url)
+
+        # looks like a domain
+        if is_valid_tld:
+            res = tld.get_tld(url, fix_protocol=True, as_object=True)
+            return res.parsed_url.netloc
+
+        # not a domain, try ip address:
+        if not is_valid_tld:
+            parsed_url = urllib.parse.urlparse(url)
+            if not parsed_url.netloc:
+                # add the //, so that our url reading code
+                # parses it properly
+                parsed_url = urllib.parse.urlparse(f"//{url}")
+            return parsed_url.netloc
 
     def perform_full_lookup(self, domain) -> GreenDomain:
         """
@@ -111,9 +135,7 @@ class GreenDomainChecker:
         )
 
     def grey_sitecheck(
-        self,
-        domain,
-        ip_address,
+        self, domain, ip_address,
     ):
         return legacy_workers.SiteCheck(
             url=domain,
@@ -152,8 +174,7 @@ class GreenDomainChecker:
         from .models import GreencheckIp
 
         ip_matches = GreencheckIp.objects.filter(
-            ip_end__gte=ip_address,
-            ip_start__lte=ip_address,
+            ip_end__gte=ip_address, ip_start__lte=ip_address,
         )
         # order matches by ascending range size
         return ip_matches.first()

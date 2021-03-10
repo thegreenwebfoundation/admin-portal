@@ -90,32 +90,21 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         from .tasks import process_log
 
         url = self.kwargs.get("url")
-        is_valid_tld = tld.is_tld(url)
         domain = None
+        try:
+            domain = self.checker.validate_domain(url)
+        except Exception:
+            logger.warning(f"unable to extract domain from {url}")
+            return response.Response({"green": False, "url": url, "data": False})
 
-        cache_hit = redis_cache.get(f"domains:{url}")
+        cache_hit = redis_cache.get(f"domains:{domain}")
         if cache_hit:
             process_log.send(domain)
             return response.Response(json.loads(cache_hit))
 
-        # TODO turn this into a function
-        # not a domain, try ip address:
-        if is_valid_tld:
-            res = tld.get_tld(url, fix_protocol=True, as_object=True)
-            domain = res.parsed_url.netloc
-
-        if not is_valid_tld:
-            parsed_url = urllib.parse.urlparse(url)
-            if not parsed_url.netloc:
-                # add the //, so that our url reading code
-                # parses it properly
-                parsed_url = urllib.parse.urlparse(f"//{url}")
-            domain = parsed_url.netloc
-
         instance = GreenDomain.objects.filter(url=domain).first()
 
         if not instance:
-
             try:
                 instance = self.checker.perform_full_lookup(domain)
 

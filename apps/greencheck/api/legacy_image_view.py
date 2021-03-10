@@ -1,8 +1,14 @@
 # from typing import Boolean
-from PIL import Image
-from PIL import ImageFont
-from PIL import ImageDraw
 from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+from django.http import HttpResponse
+from rest_framework.decorators import api_view, permission_classes, renderer_classes
+from rest_framework.permissions import AllowAny
+from rest_framework_jsonp.renderers import JSONPRenderer
+
+from ..models import GreenDomain
+from ..domain_check import GreenDomainChecker
 
 GREEN_DOMAIN_TEXT_COLOR = (00, 70, 00)
 GREEN_DOMAIN_TEXT_SHADOW = (79, 138, 74)
@@ -20,9 +26,7 @@ domain_font = ImageFont.truetype(str(font_path), 14)
 hosted_by_font = ImageFont.truetype(str(font_path), 11)
 
 
-def parse_domain_from_url(url):
-    """"""
-    pass
+checker = GreenDomainChecker()
 
 
 def check_for_browser_visit(request) -> bool:
@@ -45,7 +49,7 @@ def fetch_template_image(domain, green=False) -> Image:
         color = "grey"
 
     app_dir = Path(__file__).parent.parent
-    img_path = app_dir / "badges" / f"150119{color}.png"
+    img_path = app_dir / "badges" / f"blank-badge-{color}.png"
     img = Image.open(img_path)
     return img
 
@@ -105,20 +109,33 @@ def annotate_img(img, domain, green=False, provider=None) -> Image:
         return img
 
 
+@api_view()
+@permission_classes([AllowAny])
 def legacy_greencheck_image(request, url):
     """
     Serve the custom image request is created
     """
     # if the request type is text, we assume a user is following the
     # url in a browser. we redirect to the greencheck page
+    green = False
+    provider = None
     browser_visit = check_for_browser_visit(request)
 
     if browser_visit:
         # redirect_to_main_site(())
         pass
 
-    domain = parse_domain_from_url(url)
-    img = fetch_template_image(green=True)
-    annotated_img = add_details(domain)
+    domain = checker.validate_domain(url)
+    green_domain = GreenDomain.objects.filter(url=domain).first()
+    if green_domain:
+        green = True
+        provider = green_domain.hosted_by
 
-    return annotated_img
+    img = fetch_template_image(url, green=green)
+    annotated_img = annotate_img(img, domain, green=green, provider=provider)
+
+    # responses work a bit like FileObjects, so we can write directly into like so
+    response = HttpResponse(content_type="image/png")
+    annotated_img.save(response, "PNG")
+
+    return response

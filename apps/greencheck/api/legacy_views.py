@@ -10,6 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_jsonp.renderers import JSONPRenderer
 
 from ..models import Greencheck
+from .legacy_image_view import legacy_greencheck_image
 
 logger = logging.getLogger(__name__)
 

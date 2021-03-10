@@ -1,7 +1,12 @@
 # import webbrowser
 import pathlib
-from ..api.legacy_image_view import fetch_template_image, annotate_img
+from django.urls import reverse
 import pytest
+import webbrowser
+
+from ..api.legacy_image_view import annotate_img, fetch_template_image
+from ..models import GreencheckIp, Hostingprovider
+from . import setup_domains
 
 
 class TestGreenBadgeGenerator:
@@ -60,4 +65,54 @@ class TestGreenBadgeGenerator:
         updated_img.save(img_path)
         assert img.format == "PNG"
         # webbrowser.open(img_path)
+
+
+class TestGreencheckImageView:
+    def test_download_greencheck_image_green(
+        self,
+        db,
+        hosting_provider_with_sample_user: Hostingprovider,
+        green_ip: GreencheckIp,
+        client,
+    ):
+        """
+        Hit the greencheckimage endpoint to download a badge image for a green provider
+        """
+        website = "some_green_site.com"
+
+        setup_domains([website], hosting_provider_with_sample_user, green_ip)
+
+        url_path = reverse("legacy-greencheck-image", args=[website])
+
+        response = client.get(url_path)
+
+        with open(f"{website}.png", "wb") as imgfile:
+            imgfile.write(response.content)
+
+        webbrowser.open(f"{website}.png")
+
+        assert response.status_code == 200
+
+    def test_download_greencheck_image_grey(
+        self,
+        db,
+        hosting_provider_with_sample_user: Hostingprovider,
+        green_ip: GreencheckIp,
+        client,
+    ):
+        """
+            Hit the greencheckimage endpoint to download a badge image for a green provider
+            """
+        website = "some_grey_site.com"
+
+        url_path = reverse("legacy-greencheck-image", args=[website])
+
+        response = client.get(url_path)
+
+        with open(f"{website}.png", "wb") as imgfile:
+            imgfile.write(response.content)
+
+        webbrowser.open(f"{website}.png")
+
+        assert response.status_code == 200
 
