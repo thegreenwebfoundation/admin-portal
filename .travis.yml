@@ -12,5 +12,6 @@ script:
 services:
     - mysql
     - rabbitmq
+    - redis-server
 after_success:
     - codecov
