@@ -3,7 +3,7 @@ import dramatiq
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 console = logging.StreamHandler()
 logger.addHandler(console)
 
@@ -15,4 +15,5 @@ def process_log(domain):
     check_logger = SiteCheckLogger()
 
     logger.debug(f"logging a check for {domain}")
-    check_logger.log_sitecheck_for_domain(domain)
+    if domain is not None:
+        check_logger.log_sitecheck_for_domain(domain)

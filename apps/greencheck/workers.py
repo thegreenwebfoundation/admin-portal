@@ -3,6 +3,7 @@ from django.utils import dateparse, timezone
 from apps.greencheck.models import Greencheck, GreenDomain
 from apps.accounts.models import Hostingprovider
 
+import socket
 import datetime
 import tld
 import ipaddress
@@ -44,7 +45,18 @@ class SiteCheckLogger:
         from .domain_check import GreenDomainChecker
 
         checker = GreenDomainChecker()
-        sitecheck = checker.check_domain(url)
+        try:
+            sitecheck = checker.check_domain(url)
+        except socket.gaierror:
+            # exit early, we do nothing further
+            logger.info(
+                (
+                    f"{url} doesn't appear to be a domain we can look up. "
+                    "Not logging a check."
+                )
+            )
+            return None
+
         if sitecheck.checked_at:
             sitecheck.checked_at = str(sitecheck.checked_at)
         else:
