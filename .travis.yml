@@ -7,7 +7,7 @@ install:
   - pipenv install --dev
 # command to run tests
 script:
-  - pytest --create-db -m "not smoke_test"
+  - pytest --create-db -m "not smoke_test" -m "not dramatiq"
   - make ci
 services:
     - mysql
