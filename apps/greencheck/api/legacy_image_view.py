@@ -1,15 +1,17 @@
 # from typing import Boolean
 from pathlib import Path
+import logging
 
+from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.views.decorators.cache import cache_page
 from PIL import Image, ImageDraw, ImageFont
-from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import AllowAny
 from rest_framework_jsonp.renderers import JSONPRenderer
 
-from ..models import GreenDomain
 from ..domain_check import GreenDomainChecker
+from ..models import GreenDomain
 
 GREEN_DOMAIN_TEXT_COLOR = (00, 70, 00)
 GREEN_DOMAIN_TEXT_SHADOW = (79, 138, 74)
@@ -26,17 +28,20 @@ font_path = app_dir / "badges" / "OpenSans-Regular.ttf"
 domain_font = ImageFont.truetype(str(font_path), 14)
 hosted_by_font = ImageFont.truetype(str(font_path), 11)
 
-
+logger = logging.getLogger(__name__)
 checker = GreenDomainChecker()
 
 
 def check_for_browser_visit(request) -> bool:
     """
     Check if the request is a browser visiting this
-    as the main url. Instead of showing the image,
-    we redirect to the page.
+    as the main url, rather than requesting an image.
     """
-    pass
+
+    accepted_headers = request.headers.get("Accept")
+    logger.info(f"accepted_headers - {accepted_headers}")
+    if accepted_headers:
+        return "text/html" in accepted_headers or "*/*" in accepted_headers
 
 
 def fetch_template_image(domain, green=False) -> Image:
@@ -110,7 +115,7 @@ def annotate_img(img, domain, green=False, provider=None) -> Image:
         return img
 
 
-@cache_page(60 * 15)
+# @cache_page(60 * 15)
 def legacy_greencheck_image(request, url):
     """
     Serve the custom image request is created
@@ -119,13 +124,16 @@ def legacy_greencheck_image(request, url):
     # url in a browser. we redirect to the greencheck page
     green = False
     provider = None
+
     browser_visit = check_for_browser_visit(request)
 
-    if browser_visit:
-        # redirect_to_main_site(())
-        pass
-
     domain = checker.validate_domain(url)
+
+    if browser_visit:
+        return redirect(
+            f"https://www.thegreenwebfoundation.org/green-web-check/?url={domain}"
+        )
+
     green_domain = GreenDomain.objects.filter(url=domain).first()
     if green_domain:
         green = True

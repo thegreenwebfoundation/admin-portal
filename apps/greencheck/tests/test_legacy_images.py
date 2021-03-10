@@ -94,15 +94,11 @@ class TestGreencheckImageView:
         assert response.status_code == 200
 
     def test_download_greencheck_image_grey(
-        self,
-        db,
-        hosting_provider_with_sample_user: Hostingprovider,
-        green_ip: GreencheckIp,
-        client,
+        self, db, client,
     ):
         """
-            Hit the greencheckimage endpoint to download a badge image for a green provider
-            """
+        Hit the greencheckimage endpoint to download a badge image for a green provider
+        """
         website = "some_grey_site.com"
 
         url_path = reverse("legacy-greencheck-image", args=[website])
@@ -115,4 +111,19 @@ class TestGreencheckImageView:
         webbrowser.open(f"{website}.png")
 
         assert response.status_code == 200
+
+    def test_redirected_when_browsing_to_greencheck_image(
+        self, db, client,
+    ):
+        """
+        When a user tries to visit the badge, we redirect them to the main site
+        """
+        website = "some_grey_site.com"
+
+        url_path = reverse("legacy-greencheck-image", args=[website])
+
+        # We simulate a browser and sending accept headers with HTTP_ACCEPT="*/*"
+        response = client.get(url_path, HTTP_ACCEPT="*/*")
+
+        assert response.status_code == 302
 
