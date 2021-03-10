@@ -125,7 +125,7 @@ def legacy_greencheck_image(request, url):
     green = False
     provider = None
 
-    browser_visit = check_for_browser_visit(request)
+    # browser_visit = check_for_browser_visit(request)
 
     domain = checker.validate_domain(url)
 
