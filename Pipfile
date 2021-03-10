@@ -59,9 +59,8 @@ django-redis = "*"
 redis = "*"
 honeycomb-beeline = "*"
 djangorestframework-jsonp = "*"
+pillow = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
 allow_prereleases = true
-
-
