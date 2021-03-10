@@ -16,4 +16,3 @@ class GreencheckConfig(AppConfig):
             service_name=os.getenv("HONEYCOMBIO_SERVICE_NAME"),
             debug=True,
         )
-
