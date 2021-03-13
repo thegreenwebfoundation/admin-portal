@@ -9,10 +9,14 @@ from rest_framework.decorators import api_view, permission_classes, renderer_cla
 from rest_framework.permissions import AllowAny
 from rest_framework_jsonp.renderers import JSONPRenderer
 
-from ..models import Greencheck
+from ..domain_check import GreenDomainChecker
+from ..models import Greencheck, GreenDomain
 from .legacy_image_view import legacy_greencheck_image
+from ..serializers import GreenDomainSerializer
 
 logger = logging.getLogger(__name__)
+
+checker = GreenDomainChecker()
 
 
 def augmented_greencheck(check):
@@ -102,3 +106,30 @@ def directory(request):
         country_list[country.code] = country_obj
 
     return response.Response(country_list)
+
+
+@api_view()
+@permission_classes([AllowAny])
+def greencheck_multi(request, url_list: str):
+    """
+    Return a JSON object for the multichecks, like the API
+    """
+    urls = None
+    try:
+        urls = json.loads(url_list)
+    except Exception:
+        urls = []
+
+    green_matches = GreenDomain.objects.filter(url__in=urls)
+    grey_urls = checker.grey_urls_only(urls, green_matches)
+    checked_domains = checker.build_green_greylist(grey_urls, green_matches)
+
+    serialised_domains = GreenDomainSerializer(checked_domains, many=True)
+
+    data = serialised_domains.data
+    result_dict = {}
+    for url in urls:
+        result_dict[url] = [datum for datum in data if datum["url"] == url]
+
+    return response.Response(result_dict)
+
