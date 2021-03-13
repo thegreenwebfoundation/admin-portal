@@ -34,6 +34,9 @@ logger = logging.getLogger(__name__)
 redis_cache = redis.Redis(host="localhost", port=6379, db=0)
 
 
+checker = GreenDomainChecker()
+
+
 class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
     """
     The greencheck service to replicate the older PHP API for checking domains.
@@ -163,34 +166,6 @@ class GreenDomainBatchView(CreateAPIView):
 
         return urls_list
 
-    def build_green_greylist(self, grey_list: list, green_list) -> list:
-        """
-        Create a list of green and grey domains, to serialise and deliver.
-        """
-        grey_domains = []
-
-        for domain in grey_list:
-            gp = GreenDomain(url=domain)
-            gp.hosted_by = None
-            gp.hosted_by_id = None
-            gp.hosted_by_website = None
-            gp.partner = None
-            gp.modified = timezone.now()
-            grey_domains.append(gp)
-
-        evaluated_green_queryset = green_list[::1]
-
-        return evaluated_green_queryset + grey_domains
-
-    def grey_urls_only(self, urls_list, queryset) -> list:
-        """
-        Accept a list of domain names, and a queryset of checked green
-        domain objects, and return a list of only the grey domains.
-        """
-        green_list = [domain_object.url for domain_object in queryset]
-
-        return [url for url in urls_list if url not in green_list]
-
     def create(self, request, *args, **kwargs):
         """"""
 
@@ -201,9 +176,9 @@ class GreenDomainBatchView(CreateAPIView):
         if urls_list:
             queryset = GreenDomain.objects.filter(url__in=urls_list)
 
-        grey_list = self.grey_urls_only(urls_list, queryset)
+        grey_list = checker.grey_urls_only(urls_list, queryset)
 
-        combined_batch_check_results = self.build_green_greylist(grey_list, queryset)
+        combined_batch_check_results = checker.build_green_greylist(grey_list, queryset)
 
         serialized = GreenDomainSerializer(combined_batch_check_results, many=True)
 

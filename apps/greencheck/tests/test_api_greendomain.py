@@ -12,7 +12,7 @@ from rest_framework.test import APIRequestFactory
 from ..legacy_workers import LegacySiteCheckLogger
 from ..models import GreencheckIp, GreenDomain, Hostingprovider
 from ..viewsets import GreenDomainViewset
-from . import greencheck_sitecheck
+from . import greencheck_sitecheck, setup_domains
 
 User = get_user_model()
 
@@ -21,22 +21,6 @@ pytestmark = pytest.mark.django_db
 logger = logging.getLogger(__name__)
 
 rf = APIRequestFactory()
-
-
-def setup_domains(
-    domains: List[str], hosting_provider: Hostingprovider, ip_range: GreencheckIp
-):
-    """
-    Set up our domains, with the corrsponding cache tables
-
-    """
-    sitecheck_logger = LegacySiteCheckLogger()
-
-    for domain in domains:
-        sitecheck = greencheck_sitecheck(domain, hosting_provider, ip_range)
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
-
-    assert GreenDomain.objects.all().count() == len(domains)
 
 
 def parse_csv_from_response(response):

@@ -193,3 +193,31 @@ class GreenDomainChecker:
             logger.exception(err)
             return False
         return GreencheckASN.objects.filter(asn=asn).first()
+
+    def grey_urls_only(self, urls_list, queryset) -> list:
+        """
+        Accept a list of domain names, and a queryset of checked green
+        domain objects, and return a list of only the grey domains.
+        """
+        green_list = [domain_object.url for domain_object in queryset]
+
+        return [url for url in urls_list if url not in green_list]
+
+    def build_green_greylist(self, grey_list: list, green_list) -> list:
+        """
+        Create a list of green and grey domains, to serialise and deliver.
+        """
+        grey_domains = []
+
+        for domain in grey_list:
+            gp = GreenDomain(url=domain)
+            gp.hosted_by = None
+            gp.hosted_by_id = None
+            gp.hosted_by_website = None
+            gp.partner = None
+            gp.modified = timezone.now()
+            grey_domains.append(gp)
+
+        evaluated_green_queryset = green_list[::1]
+
+        return evaluated_green_queryset + grey_domains
