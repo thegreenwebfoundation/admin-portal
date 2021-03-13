@@ -87,5 +87,10 @@ urlpatterns += [
         legacy_views.legacy_greencheck_image,
         name="legacy-greencheck-image",
     ),
+    path(
+        "v2/greencheckmulti/<url_list>",
+        legacy_views.greencheck_multi,
+        name="legacy-greencheck-multi",
+    ),
 ]
 
