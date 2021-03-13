@@ -1,8 +1,11 @@
 # import webbrowser
+import json
 import pathlib
-from django.urls import reverse
-import pytest
 import webbrowser
+
+import pytest
+from urllib import parse
+from django.urls import reverse
 
 from ..api.legacy_image_view import annotate_img, fetch_template_image
 from ..models import GreencheckIp, Hostingprovider
@@ -112,6 +115,7 @@ class TestGreencheckImageView:
 
         assert response.status_code == 200
 
+    @pytest.mark.skip
     def test_redirected_when_browsing_to_greencheck_image(
         self, db, client,
     ):
