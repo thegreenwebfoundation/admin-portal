@@ -109,6 +109,9 @@ celerybeat-schedule
 .project
 .pydevproject
 
+# vs code
+.code-workspace
+
 # mkdocs documentation
 /site
 
@@ -122,8 +125,13 @@ dmypy.json
 
 # Project specific
 .env
+.env.test
 notes.md
+
+.vscode/
+.vscode/
 sublime.sublime-workspace
+*.code-workspace
 static/*.*
 static
 
@@ -135,8 +143,14 @@ data
 *.prod.json
 .DS_Store
 cloud-auth.json
-.vscode/settings.json
+
 
 
 cruft
 staticfiles
+
+# do not track database dumps, duh
+*.db
+
+# only used for notifying sentry of releases
+RELEASE
