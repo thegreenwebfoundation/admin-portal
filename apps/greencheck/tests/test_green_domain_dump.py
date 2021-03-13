@@ -2,6 +2,7 @@ from pathlib import Path
 from datetime import date
 from io import StringIO
 
+import os
 import pytest
 import boto3  # noqa
 
@@ -127,6 +128,10 @@ class TestDumpGreenDomainCommand:
         return db_path
 
     def test_handle(self) -> None:
+
+        if os.path.exists(f"green_urls_{date.today()}.db"):
+            os.unlink(f"green_urls_{date.today()}.db")
+
         db_path = self._call_command()
         compressed_db_path = Path(f"{db_path}.gz")
 
