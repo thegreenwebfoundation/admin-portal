@@ -33,6 +33,8 @@ from .models import (
     HostingproviderCertificate,
     Hostingprovider,
     User,
+    DatacentreSupportingDocument,
+    HostingProviderSupportingDocument,
 )
 
 
@@ -52,10 +54,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (
             None,
-            {
-                "classes": ("wide",),
-                "fields": ("username", "password1", "password2"),
-            },
+            {"classes": ("wide",), "fields": ("username", "password1", "password2"),},
         ),
     )
 
@@ -94,10 +93,15 @@ class CustomUserAdmin(UserAdmin):
         )
 
 
-class HostingCertificateInline(admin.TabularInline):
+class HostingCertificateInline(admin.StackedInline):
     extra = 0
     model = HostingproviderCertificate
-    classes = ["collapse"]
+    # classes = ["collapse"]
+
+
+class HostingProviderSupportingDocumentInline(admin.StackedInline):
+    extra = 0
+    model = HostingProviderSupportingDocument
 
 
 @admin.register(Hostingprovider, site=greenweb_admin)
@@ -112,10 +116,11 @@ class HostingAdmin(admin.ModelAdmin):
         filters.CountryFilter,
     ]
     inlines = [
-        HostingCertificateInline,
+        # HostingCertificateInline,
+        HostingProviderSupportingDocumentInline,
         GreencheckAsnInline,
-        GreencheckAsnApproveInline,
         GreencheckIpInline,
+        GreencheckAsnApproveInline,
         GreencheckIpApproveInline,
     ]
     search_fields = ("name",)
@@ -144,31 +149,14 @@ class HostingAdmin(admin.ModelAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldset = [
-            (
-                "Hostingprovider info",
-                {
-                    "fields": (
-                        (
-                            "name",
-                            "website",
-                        ),
-                        "country",
-                    ),
-                },
-            ),
-            ("Visual", {"fields": (("icon", "iconurl"),)}),
-            ("Other", {"fields": (("partner", "model"),)}),
+            ("Hostingprovider info", {"fields": (("name", "website",), "country",)}),
         ]
 
         admin_editable = (
             "Admin only",
             {
                 "fields": (
-                    (
-                        "archived",
-                        "showonwebsite",
-                        "customer",
-                    ),
+                    ("archived", "showonwebsite", "customer",),
                     ("email_template", "send_button"),
                 )
             },
@@ -211,9 +199,7 @@ class HostingAdmin(admin.ModelAdmin):
     @mark_safe
     def send_button(self, obj):
         url = reverse_admin_name(
-            Hostingprovider,
-            name="send_email",
-            kwargs={"provider": obj.pk},
+            Hostingprovider, name="send_email", kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="sendEmail">Send email</a>'
         return link
@@ -347,11 +333,13 @@ class HostingAdmin(admin.ModelAdmin):
         return len(obj.hostingprovider_certificates.all())
 
     certificates_amount.short_description = "Certificates"
+    # certificates_amount.admin_order_field = "hostingprovider_certificates__count"
 
     def datacenter_amount(self, obj):
         return len(obj.datacenter.all())
 
     datacenter_amount.short_description = "Datacenters"
+    # datacenter_amount.admin_order_field = "datacenter__count"
 
 
 class DatacenterCertificateInline(admin.TabularInline):
@@ -422,16 +410,10 @@ class DatacenterAdmin(admin.ModelAdmin):
                 "Datacenter info",
                 {
                     "fields": (
-                        (
-                            "name",
-                            "website",
-                        ),
+                        ("name", "website",),
                         ("country", "user"),
                         ("pue", "residualheat"),
-                        (
-                            "temperature",
-                            "temperature_type",
-                        ),
+                        ("temperature", "temperature_type",),
                         ("dc12v", "virtual", "greengrid", "showonwebsite"),
                         ("model",),
                     ),

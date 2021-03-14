@@ -60,6 +60,7 @@ redis = "*"
 honeycomb-beeline = "*"
 djangorestframework-jsonp = "*"
 pillow = "*"
+haikunator = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
