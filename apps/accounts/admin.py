@@ -13,7 +13,7 @@ from apps.greencheck.admin import (
     GreencheckAsnInline,
     GreencheckAsnApproveInline,
 )
-
+from taggit.models import Tag
 from apps.greencheck.models import GreencheckASN
 from apps.greencheck.models import GreencheckIp
 from apps.greencheck.models import GreencheckIpApprove
@@ -104,6 +104,14 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
     model = HostingProviderSupportingDocument
 
 
+@admin.register(Tag, site=greenweb_admin)
+class ServiceAdmin(admin.ModelAdmin):
+    model = Tag
+
+    class Meta:
+        verbose_name = "Services Offered"
+
+
 @admin.register(Hostingprovider, site=greenweb_admin)
 class HostingAdmin(admin.ModelAdmin):
     form = forms.HostingAdminForm
@@ -149,7 +157,10 @@ class HostingAdmin(admin.ModelAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldset = [
-            ("Hostingprovider info", {"fields": (("name", "website",), "country",)}),
+            (
+                "Hostingprovider info",
+                {"fields": (("name", "website",), "country", "services")},
+            )
         ]
 
         admin_editable = (

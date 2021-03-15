@@ -61,6 +61,8 @@ honeycomb-beeline = "*"
 djangorestframework-jsonp = "*"
 pillow = "*"
 haikunator = "*"
+django-taggit-labels = "*"
+django-taggit = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.

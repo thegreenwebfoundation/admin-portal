@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_yasg",
     "corsheaders",
+    "taggit",
+    "taggit_labels",
     # project specific
     "apps.accounts",
     "apps.greencheck",
@@ -220,3 +222,7 @@ LOGGING = {
 }
 
 SITE_URL = "https://admin.thegreenwebfoundation.org"
+
+
+TAGGIT_CASE_INSENSITIVE = True
+

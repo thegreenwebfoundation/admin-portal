@@ -9,6 +9,8 @@ from anymail.message import AnymailMessage
 from django.utils import timezone
 from django.template.loader import render_to_string
 from haikunator import Haikunator
+from taggit.managers import TaggableManager
+
 
 from model_utils.models import TimeStampedModel
 
@@ -104,6 +106,10 @@ class Hostingprovider(models.Model):
         default=PartnerChoice.none,
         choices=PartnerChoice.choices,
         blank=True,
+    )
+    services = TaggableManager(
+        verbose_name="Services Offered",
+        help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
     )
     showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
     website = models.CharField(max_length=255)
