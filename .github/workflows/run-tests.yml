@@ -1,0 +1,59 @@
+name: Run tests
+
+on: [push]
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:10.3
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: just-for-github-actions
+          MYSQL_DATABASE: greencheck
+
+      # rabbitmq
+      rabbitmq:
+        image: rabbitmq:3.8
+        env:
+          RABBITMQ_USERNAME: "guest"
+          RABBITMQ_PASSWORD: "guest"
+        ports:
+          - 5672:5672
+        options: '--hostname "rmq" --health-cmd "rabbitmqctl status" --health-interval 10s --health-timeout 10s --health-retries 3 --health-start-period 60s'
+
+      # redis
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --dev
+
+      - name: Run tests
+        run: |
+          pipenv run "pytest -x"
+        env:
+          CI: true
+          DATABASE_URL: "mysql://localhost:3306/greencheck"

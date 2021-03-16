@@ -10,8 +10,8 @@ script:
   - pytest --create-db -m "not smoke_test" -m "not dramatiq"
   - make ci
 services:
-    - mysql
-    - rabbitmq
-    - redis-server
+  - mysql
+  - rabbitmq
+  - redis-server
 after_success:
-    - codecov
+  - codecov
