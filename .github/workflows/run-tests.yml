@@ -52,6 +52,12 @@ jobs:
           pip install pipenv
           pipenv install --dev
 
+      - name: Sleep...
+        run: sleep 10
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v1
+
       - name: Run tests
         run: |
           pipenv run "pytest -x"
