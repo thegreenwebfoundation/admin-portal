@@ -125,7 +125,6 @@ dmypy.json
 
 # Project specific
 .env
-.env.test
 notes.md
 
 .vscode/
