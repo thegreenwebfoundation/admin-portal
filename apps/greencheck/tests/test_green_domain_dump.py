@@ -168,13 +168,14 @@ class TestDumpGreenDomainCommand:
 
         def is_uploaded(fname: str) -> bool:
             for obj in cleared_test_bucket.objects.all():
-                if obj.key.endswith(f"/{fname}"):
+                if obj.key.endswith(fname):
                     return True
             return False
 
         assert not is_uploaded(
             db_path.name
         ), "The uncompressed DB dump must not be uploaded to object storage."
+
         assert is_uploaded(
             compressed_db_path.name
         ), "The compressed DB dump must be uploaded to object storage."
@@ -215,8 +216,6 @@ class TestDumpGreenDomainCommand:
                 compression_type="blah",
                 archive_extension="b",
             )
+        assert 'The "blah" compression is not supported.' in str(error)
+        assert 'Use one of "gzip", "bzip2".' in str(error)
 
-        assert (
-            'The "blah" compression is not supported. Use one one of "gzip", "bzip2".'
-            in str(error)
-        )
