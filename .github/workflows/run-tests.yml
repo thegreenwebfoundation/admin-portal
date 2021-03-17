@@ -54,6 +54,11 @@ jobs:
 
       - name: Run tests
         run: |
-          pipenv run "pytest -x"
+          pipenv run "pytest -m 'not smoke_test' -m 'not dramatiq'
         env:
           PIPENV_DOTENV_LOCATION: .env.test
+          DOMAIN_SNAPSHOT_BUCKET: ${{ secrets.TESTING_DOMAIN_SNAPSHOT_BUCKET }
+          OBJECT_STORAGE_ACCESS_KEY_ID: ${{ secrets.TESTING_OBJECT_STORAGE_ACCESS_KEY_ID }
+          OBJECT_STORAGE_ENDPOINT: ${{ secrets.TESTING_OBJECT_STORAGE_ENDPOINT }
+          OBJECT_STORAGE_REGION: ${{ secrets.TESTING_OBJECT_STORAGE_REGION }
+          OBJECT_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.TESTING_OBJECT_STORAGE_SECRET_ACCESS_KEY }

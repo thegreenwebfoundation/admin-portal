@@ -19,6 +19,15 @@ env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, os.getenv("SECRET_KEY")),
     DATABASE_URL=(str, os.getenv("DATABASE_URL")),
+    DOMAIN_SNAPSHOT_BUCKET=(str, os.getenv("DOMAIN_SNAPSHOT_BUCKET")),
+    # add for object storage
+    OBJECT_STORAGE_ENDPOINT=(str, os.getenv("OBJECT_STORAGE_ENDPOINT")),
+    OBJECT_STORAGE_REGION=(str, os.getenv("OBJECT_STORAGE_REGION")),
+    OBJECT_STORAGE_ACCESS_KEY_ID=(str, os.getenv("OBJECT_STORAGE_ACCESS_KEY_ID")),
+    OBJECT_STORAGE_SECRET_ACCESS_KEY=(
+        str,
+        os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
+    ),
 )
 
 environ.Env.read_env(".env")  # Read .env

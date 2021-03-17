@@ -6,7 +6,7 @@ from requests import request, HTTPError
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
-from ...object_storage import public_url
+from ...object_storage import public_url, green_domains_bucket
 
 
 _COMPRESSION_TYPES = {
@@ -101,18 +101,9 @@ class GreenDomainExporter:
         :raises RuntimeError: When the upload process fails or if the
          uploaded file cannot be accessed publicly.
         """
-        cls._subprocess(
-            [
-                "aws",
-                "s3",
-                "cp",
-                "--acl",
-                "public-read",
-                file_path,
-                f"s3://{bucket_name}/{file_path}",
-            ],
-            f'Failed to upload the "{file_path}" to "{bucket_name}" S3 bucket.',
-        )
+        with open(file_path, "rb") as file_to_upload:
+            bucket = green_domains_bucket()
+            bucket.put_object(ACL="public-read", Key=file_path, Body=file_to_upload)
 
         try:
             access_check_response = request("head", public_url(bucket_name, file_path))
