@@ -29,6 +29,7 @@ from apps.greencheck.swagger import TGWFSwaggerView
 from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
+from apps.greencheck.api import legacy_views
 
 urlpatterns = []
 
@@ -68,4 +69,28 @@ urlpatterns += [
         TGWFSwaggerView.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
+    # replicate the PHP API, at the same url, so we can also put
+    # it behind the reverse proxy
+    path(
+        "greencheck/<url>",
+        GreenDomainViewset.as_view({"get": "retrieve"}),
+        name="green-domain-detail",
+    ),
+    path(
+        "checks/latest/",
+        legacy_views.latest_greenchecks,
+        name="legacy-latest-greenchecks",
+    ),
+    path("data/directory/", legacy_views.directory, name="legacy-directory",),
+    path(
+        "greencheckimage/<url>",
+        legacy_views.legacy_greencheck_image,
+        name="legacy-greencheck-image",
+    ),
+    path(
+        "v2/greencheckmulti/<url_list>",
+        legacy_views.greencheck_multi,
+        name="legacy-greencheck-multi",
+    ),
 ]
+

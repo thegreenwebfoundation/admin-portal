@@ -78,9 +78,7 @@ class IpAddressField(Field):
             return ipaddress.ip_address(value)
         except (TypeError, ValueError):
             raise exceptions.ValidationError(
-                self.error_messages["invalid"],
-                code="invalid",
-                params={"value": value},
+                self.error_messages["invalid"], code="invalid", params={"value": value},
             )
 
     def get_db_prep_save(self, value, connection):
@@ -262,7 +260,7 @@ class GreencheckASN(TimeStampedModel):
 
     active = models.BooleanField(null=True)
     # https://en.wikipedia.org/wiki/Autonomous_system_(Internet)
-    asn = models.IntegerField(verbose_name="Autonomous system number", unique=True)
+    asn = models.IntegerField(verbose_name="Autonomous system number")
     hostingprovider = models.ForeignKey(
         Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
@@ -272,6 +270,11 @@ class GreencheckASN(TimeStampedModel):
         indexes = [
             models.Index(fields=["active"], name="active"),
             models.Index(fields=["asn"], name="asn"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asn", "active"], name="unique_active_asns"
+            ),
         ]
 
 

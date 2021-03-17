@@ -14,13 +14,16 @@ This follows largely the same approach:
 """
 import socket
 import logging
-from .models import GreencheckASN, GreencheckIp
+from .models import GreenDomain
 
 from . import legacy_workers
 from ipwhois.asn import IPASN
 from ipwhois.net import Net
+from ipwhois.exceptions import IPDefinedError
 import ipaddress
 from django.utils import timezone
+import urllib
+import tld
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +33,55 @@ class GreenDomainChecker:
     The checking class. Used to run a check against a domain, to find the
     matching SiteCheck result, that we might log.
     """
+
+    def validate_domain(self, url) -> str:
+        """
+        Attempt to clean the provided url, and pull
+        return the domain, or ip address
+        """
+
+        is_valid_tld = tld.is_tld(url)
+
+        # looks like a domain
+        if is_valid_tld:
+            res = tld.get_tld(url, fix_protocol=True, as_object=True)
+            return res.parsed_url.netloc
+
+        # not a domain, try ip address:
+        if not is_valid_tld:
+            parsed_url = urllib.parse.urlparse(url)
+            if not parsed_url.netloc:
+                # add the //, so that our url reading code
+                # parses it properly
+                parsed_url = urllib.parse.urlparse(f"//{url}")
+            return parsed_url.netloc
+
+    def perform_full_lookup(self, domain) -> GreenDomain:
+        """
+        Return a Green Domain object from doing a lookup.
+        """
+        from .models import Hostingprovider
+
+        res = self.check_domain(domain)
+
+        if not res.green:
+            return res
+
+        hosting_provider = Hostingprovider.objects.get(pk=res.hosting_provider_id)
+
+        # return a domain result, but don't save it,
+        # as persisting it is handled asynchronously
+        # by another worker, and logged to both the greencheck
+        # table and this 'cache' table
+        return GreenDomain(
+            url=res.url,
+            hosted_by=hosting_provider.name,
+            hosted_by_id=hosting_provider.id,
+            hosted_by_website=hosting_provider.website,
+            partner=hosting_provider.partner,
+            modified=res.checked_at,
+            green=res.green,
+        )
 
     def asn_from_ip(self, ip_address):
         """
@@ -63,7 +115,7 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=ip_match.hostingprovider.id,
-            match_type="IP",
+            match_type="ip",
             match_ip_range=ip_match.id,
             cached=False,
             checked_at=timezone.now(),
@@ -76,16 +128,14 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=matching_asn.hostingprovider.id,
-            match_type="ASN",
+            match_type="as",
             match_ip_range=matching_asn.id,
             cached=False,
             checked_at=timezone.now(),
         )
 
     def grey_sitecheck(
-        self,
-        domain,
-        ip_address,
+        self, domain, ip_address,
     ):
         return legacy_workers.SiteCheck(
             url=domain,
@@ -99,7 +149,7 @@ class GreenDomainChecker:
             checked_at=timezone.now(),
         )
 
-    def check_domain(self, domain: str):
+    def check_domain(self, domain: str) -> legacy_workers.SiteCheck:
         """
         Accept a domain name and return the either a GreenDomain Object,
         or the best matching IP range forip address it resolves to.
@@ -121,11 +171,10 @@ class GreenDomainChecker:
         Look up the IP ranges that include this IP address, and return
         a list of IP ranges, ordered by smallest, most precise range first.
         """
-        GreencheckIp.objects.all().first()
+        from .models import GreencheckIp
 
         ip_matches = GreencheckIp.objects.filter(
-            ip_end__gte=ip_address,
-            ip_start__lte=ip_address,
+            ip_end__gte=ip_address, ip_start__lte=ip_address,
         )
         # order matches by ascending range size
         return ip_matches.first()
@@ -134,5 +183,41 @@ class GreenDomainChecker:
         """
         Return the Green ASN that this IP address 'belongs' to.
         """
-        asn = self.asn_from_ip(ip_address)
+        from .models import GreencheckASN
+
+        try:
+            asn = self.asn_from_ip(ip_address)
+        except IPDefinedError:
+            return False
+        except Exception as err:
+            logger.exception(err)
+            return False
         return GreencheckASN.objects.filter(asn=asn).first()
+
+    def grey_urls_only(self, urls_list, queryset) -> list:
+        """
+        Accept a list of domain names, and a queryset of checked green
+        domain objects, and return a list of only the grey domains.
+        """
+        green_list = [domain_object.url for domain_object in queryset]
+
+        return [url for url in urls_list if url not in green_list]
+
+    def build_green_greylist(self, grey_list: list, green_list) -> list:
+        """
+        Create a list of green and grey domains, to serialise and deliver.
+        """
+        grey_domains = []
+
+        for domain in grey_list:
+            gp = GreenDomain(url=domain)
+            gp.hosted_by = None
+            gp.hosted_by_id = None
+            gp.hosted_by_website = None
+            gp.partner = None
+            gp.modified = timezone.now()
+            grey_domains.append(gp)
+
+        evaluated_green_queryset = green_list[::1]
+
+        return evaluated_green_queryset + grey_domains

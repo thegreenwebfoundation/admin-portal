@@ -12,9 +12,6 @@ codecov = "*"
 flake8 = "*"
 ipython = "*"
 ipdb = "*"
-# needed because 0.18 breaks tab completion
-jedi = "==0.17.2"
-mycli = "*"
 werkzeug = "*"
 pytest = "*"
 pytest-django = "*"
@@ -22,6 +19,7 @@ pytest-watch = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
 black = "*"
+iredis = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
@@ -37,7 +35,7 @@ django-registration = "==3.0.1"
 django-unixdatetimefield = "==1.0.3"
 gunicorn = "==19.9.0"
 mysqlclient = "==1.4.4"
-requests = "==2.22.0"
+requests = ">=2"
 whitenoise = {extras = ["brotli"],version = "==4.1.4"}
 db-to-sqlite = "*"
 sqlite-utils = "*"
@@ -57,6 +55,14 @@ awscli-plugin-endpoint = "*"
 boto3 = "*"
 ipwhois = "*"
 django-cors-headers = "*"
+django-redis = "*"
+redis = "*"
+honeycomb-beeline = "*"
+djangorestframework-jsonp = "*"
+pillow = "*"
+haikunator = "*"
+django-taggit-labels = "*"
+django-taggit = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.

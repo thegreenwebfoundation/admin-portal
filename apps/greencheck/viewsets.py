@@ -1,5 +1,7 @@
 import csv
 import logging
+import socket
+import json
 from io import TextIOWrapper
 
 import tld
@@ -24,7 +26,15 @@ from .serializers import (
 )
 from .domain_check import GreenDomainChecker
 
+
+import redis
+
 logger = logging.getLogger(__name__)
+
+redis_cache = redis.Redis(host="localhost", port=6379, db=0)
+
+
+checker = GreenDomainChecker()
 
 
 class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
@@ -68,10 +78,6 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         if urls is not None:
             queryset = GreenDomain.objects.filter(url__in=urls)
 
-        # import ipdb
-
-        # ipdb.set_trace()
-
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -84,55 +90,42 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         """
         Fetch entry matching the provided URL, like a 'detail' view
         """
+        from .tasks import process_log
+
         url = self.kwargs.get("url")
-        is_valid_tld = tld.is_tld(url)
         domain = None
+        try:
+            domain = self.checker.validate_domain(url)
+        except Exception:
+            logger.warning(f"unable to extract domain from {url}")
+            return response.Response({"green": False, "url": url, "data": False})
 
-        # TODO turn this into a function
-        # not a domain, try ip address:
-        if is_valid_tld:
-            res = tld.get_tld(url, fix_protocol=True, as_object=True)
-            domain = res.parsed_url.netloc
-
-        if not is_valid_tld:
-            parsed_url = urllib.parse.urlparse(url)
-            if not parsed_url.netloc:
-                # add the //, so that our url reading code
-                # parses it properly
-                parsed_url = urllib.parse.urlparse(f"//{url}")
-            domain = parsed_url.netloc
+        cache_hit = redis_cache.get(f"domains:{domain}")
+        if cache_hit:
+            process_log.send(domain)
+            return response.Response(json.loads(cache_hit))
 
         instance = GreenDomain.objects.filter(url=domain).first()
 
         if not instance:
-            instance = self.perform_full_lookup(domain)
+            try:
+                instance = self.checker.perform_full_lookup(domain)
+
+            except socket.gaierror:
+                process_log.send(domain)
+                # not a valid domain, OR a valid IP. Get rid of it.
+                return response.Response({"green": False, "url": url, "data": False})
 
             # log_the_check asynchronously
-            # self.log_check_async(site_check)
-
+        # match the old API request
+        if not instance.green:
+            process_log.send(domain)
+            return response.Response(
+                {"green": False, "url": instance.url, "data": True}
+            )
+        process_log.send(domain)
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
-
-    def perform_full_lookup(self, domain):
-        """
-        Return a Green Domain object from doing a lookup.
-        """
-        res = self.checker.check_domain(domain)
-        hosting_provider = Hostingprovider.objects.get(pk=res.hosting_provider_id)
-
-        # return a domain result, but don't save it,
-        # as persisting it is handled asynchronously
-        # by another worker, and logged to both the greencheck
-        # table and this 'cache' table
-        return GreenDomain(
-            url=res.url,
-            hosted_by=hosting_provider.name,
-            hosted_by_id=hosting_provider.id,
-            hosted_by_website=hosting_provider.website,
-            partner=hosting_provider.partner,
-            modified=res.checked_at,
-            green=res.green,
-        )
 
 
 class GreenDomainBatchView(CreateAPIView):
@@ -173,34 +166,6 @@ class GreenDomainBatchView(CreateAPIView):
 
         return urls_list
 
-    def build_green_greylist(self, grey_list: list, green_list) -> list:
-        """
-        Create a list of green and grey domains, to serialise and deliver.
-        """
-        grey_domains = []
-
-        for domain in grey_list:
-            gp = GreenDomain(url=domain)
-            gp.hosted_by = None
-            gp.hosted_by_id = None
-            gp.hosted_by_website = None
-            gp.partner = None
-            gp.modified = timezone.now()
-            grey_domains.append(gp)
-
-        evaluated_green_queryset = green_list[::1]
-
-        return evaluated_green_queryset + grey_domains
-
-    def grey_urls_only(self, urls_list, queryset) -> list:
-        """
-        Accept a list of domain names, and a queryset of checked green
-        domain objects, and return a list of only the grey domains.
-        """
-        green_list = [domain_object.url for domain_object in queryset]
-
-        return [url for url in urls_list if url not in green_list]
-
     def create(self, request, *args, **kwargs):
         """"""
 
@@ -211,9 +176,9 @@ class GreenDomainBatchView(CreateAPIView):
         if urls_list:
             queryset = GreenDomain.objects.filter(url__in=urls_list)
 
-        grey_list = self.grey_urls_only(urls_list, queryset)
+        grey_list = checker.grey_urls_only(urls_list, queryset)
 
-        combined_batch_check_results = self.build_green_greylist(grey_list, queryset)
+        combined_batch_check_results = checker.build_green_greylist(grey_list, queryset)
 
         serialized = GreenDomainSerializer(combined_batch_check_results, many=True)
 

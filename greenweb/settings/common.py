@@ -19,6 +19,15 @@ env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, os.getenv("SECRET_KEY")),
     DATABASE_URL=(str, os.getenv("DATABASE_URL")),
+    DOMAIN_SNAPSHOT_BUCKET=(str, os.getenv("DOMAIN_SNAPSHOT_BUCKET")),
+    # add for object storage
+    OBJECT_STORAGE_ENDPOINT=(str, os.getenv("OBJECT_STORAGE_ENDPOINT")),
+    OBJECT_STORAGE_REGION=(str, os.getenv("OBJECT_STORAGE_REGION")),
+    OBJECT_STORAGE_ACCESS_KEY_ID=(str, os.getenv("OBJECT_STORAGE_ACCESS_KEY_ID")),
+    OBJECT_STORAGE_SECRET_ACCESS_KEY=(
+        str,
+        os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
+    ),
 )
 
 environ.Env.read_env(".env")  # Read .env
@@ -56,6 +65,8 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_yasg",
     "corsheaders",
+    "taggit",
+    "taggit_labels",
     # project specific
     "apps.accounts",
     "apps.greencheck",
@@ -70,6 +81,7 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "beeline.middleware.django.HoneyMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -129,15 +141,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
@@ -175,11 +181,9 @@ OBJECT_STORAGE_SECRET_ACCESS_KEY = "ea159089-67fe-4c70-a2a6-1b65634fc527"
 
 RABBITMQ_URL = env("RABBITMQ_URL")
 
-
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -188,17 +192,13 @@ REST_FRAMEWORK = {
 
 DRAMATIQ_BROKER = {
     "BROKER": "dramatiq.brokers.rabbitmq.RabbitmqBroker",
-    "OPTIONS": {
-        "url": RABBITMQ_URL,
-    },
+    "OPTIONS": {"url": RABBITMQ_URL,},  # noqa
     "MIDDLEWARE": [
         "dramatiq.middleware.Prometheus",
         "dramatiq.middleware.AgeLimit",
         "dramatiq.middleware.TimeLimit",
         "dramatiq.middleware.Callbacks",
         "dramatiq.middleware.Retries",
-        "django_dramatiq.middleware.DbConnectionsMiddleware",
-        "django_dramatiq.middleware.AdminMiddleware",
     ],
 }
 
@@ -231,3 +231,7 @@ LOGGING = {
 }
 
 SITE_URL = "https://admin.thegreenwebfoundation.org"
+
+
+TAGGIT_CASE_INSENSITIVE = True
+

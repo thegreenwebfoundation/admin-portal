@@ -6,7 +6,7 @@ from requests import request, HTTPError
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
-from ...object_storage import public_url
+from ...object_storage import public_url, green_domains_bucket
 
 
 _COMPRESSION_TYPES = {
@@ -72,7 +72,7 @@ class GreenDomainExporter:
         archive_path = f"{file_path}.{file_extension}"
 
         cls._subprocess(
-            [*arguments, archive_path],
+            [*arguments, file_path],
             f'Failed to compress "{file_path}" using "{compression_type}".',
         )
 
@@ -101,18 +101,9 @@ class GreenDomainExporter:
         :raises RuntimeError: When the upload process fails or if the
          uploaded file cannot be accessed publicly.
         """
-        cls._subprocess(
-            [
-                "aws",
-                "s3",
-                "cp",
-                "--acl",
-                "public-read",
-                file_path,
-                f"s3://{bucket_name}/{file_path}",
-            ],
-            f'Failed to upload the "{file_path}" to "{bucket_name}" S3 bucket.',
-        )
+        with open(file_path, "rb") as file_to_upload:
+            bucket = green_domains_bucket()
+            bucket.put_object(ACL="public-read", Key=file_path, Body=file_to_upload)
 
         try:
             access_check_response = request("head", public_url(bucket_name, file_path))
@@ -146,13 +137,7 @@ class GreenDomainExporter:
 
         if process.returncode > 0:
             raise RuntimeError(
-                "\n".join(
-                    [
-                        error,
-                        "------------------",
-                        process.stderr.decode("utf8"),
-                    ]
-                )
+                "\n".join([error, "------------------", process.stderr.decode("utf8"),])
             )
 
     @staticmethod
@@ -197,19 +182,14 @@ class Command(BaseCommand):
             exporter.export_to_sqlite(exporter.get_conn_string(), db_path)
 
             if upload:
-                compressed_db_path = exporter.compress_file(
-                    db_path,
-                    compression_type,
-                )
+                compressed_db_path = exporter.compress_file(db_path, compression_type,)
 
                 exporter.upload_file(
-                    compressed_db_path,
-                    settings.DOMAIN_SNAPSHOT_BUCKET,
+                    compressed_db_path, settings.DOMAIN_SNAPSHOT_BUCKET,
                 )
 
                 exporter.delete_files(
-                    compressed_db_path,
-                    db_path,
+                    compressed_db_path, db_path,
                 )
         except Exception as error:
             raise CommandError(str(error)) from error

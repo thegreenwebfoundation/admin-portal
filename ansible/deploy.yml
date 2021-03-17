@@ -26,7 +26,7 @@
       file:
         path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
         state: directory
-        mode: '0755'
+        mode: "0755"
         owner: deploy
         group: deploy
       become: yes

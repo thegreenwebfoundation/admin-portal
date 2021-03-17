@@ -6,7 +6,11 @@ from django_countries.fields import CountryField
 from django.urls import reverse
 from django_mysql.models import EnumField
 from anymail.message import AnymailMessage
+from django.utils import timezone
 from django.template.loader import render_to_string
+from haikunator import Haikunator
+from taggit.managers import TaggableManager
+
 
 from model_utils.models import TimeStampedModel
 
@@ -22,9 +26,12 @@ from apps.greencheck.choices import StatusApproval
 
 logger = logging.getLogger(__name__)
 
+haikunator = Haikunator()
+
 
 class Datacenter(models.Model):
     country = CountryField(db_column="countrydomain")
+
     dc12v = models.BooleanField()
     greengrid = models.BooleanField()
     mja3 = models.BooleanField(null=True, verbose_name="meerjaren plan energie 3")
@@ -99,6 +106,10 @@ class Hostingprovider(models.Model):
         default=PartnerChoice.none,
         choices=PartnerChoice.choices,
         blank=True,
+    )
+    services = TaggableManager(
+        verbose_name="Services Offered",
+        help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
     )
     showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
     website = models.CharField(max_length=255)
@@ -215,6 +226,84 @@ class HostingproviderDatacenter(models.Model):
     class Meta:
         db_table = "datacenters_hostingproviders"
         # managed = False
+
+
+class AbstractSupportingDocument(models.Model):
+    """
+    When a hosting provider makes claims about running on green energy,
+    offsetting their emissions, and so on want to them to upload the
+    evidence.
+    We subclass this
+
+    """
+
+    title = models.CharField(
+        max_length=255,
+        help_text="Describe what you are listing, as you would to a user or customer.",
+    )
+    attachment = models.FileField(
+        upload_to="uploads/",
+        blank=True,
+        help_text="If you have a sustainability report, or bill from a energy provider provider, or similar certificate of supply from a green tariff add it here.",
+    )
+    url = models.URLField(
+        blank=True,
+        help_text="Alternatively, if you add a link, we'll fetch a copy at the URL you list, so we can point to the version when you listed it",
+    )
+    description = models.TextField(blank=True,)
+    valid_from = models.DateField()
+    valid_to = models.DateField()
+
+    public = models.BooleanField(
+        default=True,
+        help_text=(
+            "If this is checked, we'll add a link to this "
+            "document/page in your entry in the green web directory."
+        ),
+    )
+
+    def __str__(self):
+        return f"{self.valid_from} - {self.title}"
+
+    class Meta:
+        abstract = True
+        verbose_name = "Supporting Document"
+
+
+class DatacentreSupportingDocument(AbstractSupportingDocument):
+    """
+    The concrete class for datacentre providers.
+    """
+
+    datacenter = models.ForeignKey(
+        Datacenter,
+        db_column="id_dc",
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="datacenter_evidence",
+    )
+
+    @property
+    def parent(self):
+        return self.datacentre
+
+
+class HostingProviderSupportingDocument(AbstractSupportingDocument):
+    """
+    The subclass for hosting providers.
+    """
+
+    hostingprovider = models.ForeignKey(
+        Hostingprovider,
+        db_column="id_hp",
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="hostingprovider_evidence",
+    )
+
+    @property
+    def parent(self):
+        return self.hostingprovider
 
 
 class Certificate(models.Model):

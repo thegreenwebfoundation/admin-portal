@@ -3,6 +3,9 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import User, Datacenter, Hostingprovider
+from taggit.forms import TagField
+from taggit_labels.widgets import LabelWidget
+from taggit.models import Tag
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -30,6 +33,9 @@ class HostingAdminForm(forms.ModelForm):
     class Meta:
         model = Hostingprovider
         fields = "__all__"
+        widgets = {
+            "services": LabelWidget(model=Tag),
+        }
 
 
 class DatacenterAdminForm(forms.ModelForm):
