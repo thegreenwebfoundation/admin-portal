@@ -47,9 +47,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Install pipenv and wheel for managing dependencies
         run: |
-          pip install pipenv
+          python -m pip install --upgrade pipenv wheel
+
+      # TODO: this really should be cached if we aren't changing much
+      # as it's the slowest part of the whole testing set up
+      - name: Install dependencies with pipenv
+        run: |
           pipenv install --dev
 
       - name: Run tests

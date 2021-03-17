@@ -8,7 +8,7 @@
   vars:
     project_git_repo: "git@github.com:thegreenwebfoundation/admin-portal.git"
     project_deploy_strategy: git
-    project_version: "ca-honeycombio-test"
+    project_version: "master"
     project_local_path: "../"
     restart_supervisor: false
     supervisor_user: "deploy"
@@ -26,7 +26,7 @@
       file:
         path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
         state: directory
-        mode: '0755'
+        mode: "0755"
         owner: deploy
         group: deploy
       become: yes
