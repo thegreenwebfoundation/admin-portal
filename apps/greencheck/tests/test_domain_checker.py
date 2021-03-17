@@ -52,3 +52,14 @@ class TestDomainChecker:
         assert res.green is False
         assert res.url == "172.217.168.238"
         assert res.ip == "172.217.168.238"
+
+    def test_with_green_domain_by_asn_double(self, green_asn, checker):
+        """
+        """
+        green_asn.save()
+        checker.asn_from_ip = mock.MagicMock(return_value=f"{green_asn.asn} 12345")
+
+        res = checker.check_domain("172.217.168.238")
+
+        assert isinstance(res, legacy_workers.SiteCheck)
+        assert res.hosting_provider_id == green_asn.hostingprovider.id
