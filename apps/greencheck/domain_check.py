@@ -186,13 +186,24 @@ class GreenDomainChecker:
         from .models import GreencheckASN
 
         try:
-            asn = self.asn_from_ip(ip_address)
+            asn_result = self.asn_from_ip(ip_address)
         except IPDefinedError:
             return False
         except Exception as err:
             logger.exception(err)
             return False
-        return GreencheckASN.objects.filter(asn=asn).first()
+
+        if isinstance(asn_result, int):
+            return GreencheckASN.objects.filter(asn=asn_result).first()
+
+        # we have a string containing more than one ASN.
+        # look them up, and return the first green one
+        asns = asn_result.split(" ")
+        for asn in asns:
+            asn_match = GreencheckASN.objects.filter(asn=asn)
+            if asn_match:
+                # we have a match, return the result
+                return asn_match.first()
 
     def grey_urls_only(self, urls_list, queryset) -> list:
         """
