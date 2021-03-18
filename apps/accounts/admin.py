@@ -168,6 +168,7 @@ class HostingAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     ("archived", "showonwebsite", "customer",),
+                    ("partner", "model"),
                     ("email_template", "send_button"),
                 )
             },
