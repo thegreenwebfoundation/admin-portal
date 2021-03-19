@@ -115,6 +115,31 @@ class TestGreencheckImageView:
 
         assert response.status_code == 200
 
+    def test_download_greencheck_image_green_nocache(
+        self,
+        db,
+        client,
+        hosting_provider_with_sample_user: Hostingprovider,
+        green_ip: GreencheckIp,
+    ):
+        """
+        Check we have support for 'nocache' - this gives us a slow check
+        in return for always returning the results from a network, rather than
+        checking any locally cached result in nginx, redis, or the database.
+        """
+
+        website = green_ip.ip_start
+        url_path = reverse("legacy-greencheck-image", args=[website])
+
+        response = client.get(url_path, {"nocache": "true"})
+
+        with open(f"{website}.png", "wb") as imgfile:
+            imgfile.write(response.content)
+
+        webbrowser.open(f"{website}.png")
+
+        assert response.status_code == 200
+
     @pytest.mark.skip
     def test_redirected_when_browsing_to_greencheck_image(
         self, db, client,

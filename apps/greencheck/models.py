@@ -8,6 +8,7 @@ from django_mysql.models import EnumField
 from django.core import exceptions
 from django.core import validators
 from django.utils.text import capfirst
+from django.utils import timezone
 from django.utils.functional import cached_property
 
 from model_utils.models import TimeStampedModel
@@ -380,6 +381,37 @@ class GreenDomain(models.Model):
 
     def __str__(self):
         return f"{self.url} - {self.modified}"
+
+    # Factories
+    @classmethod
+    def grey_result(cls, domain):
+        """
+        Return a grey domain with just the domain name added,
+        the time of the and the rest empty.
+        """
+        return GreenDomain(
+            url=domain,
+            hosted_by=None,
+            hosted_by_id=None,
+            hosted_by_website=None,
+            partner=None,
+            modified=timezone.now(),
+        )
+
+    @classmethod
+    def from_sitecheck(cls, domain):
+        """
+        Return a grey domain with just the domain name added,
+        the time of the and the rest empty.
+        """
+        return GreenDomain(
+            url=domain,
+            hosted_by=None,
+            hosted_by_id=None,
+            hosted_by_website=None,
+            partner=None,
+            modified=timezone.now(),
+        )
 
     class Meta:
         db_table = "greendomain"
