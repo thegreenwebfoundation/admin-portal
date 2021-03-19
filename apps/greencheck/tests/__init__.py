@@ -1,7 +1,7 @@
 from django.utils import timezone
 from typing import List
-from apps.greencheck.models import GreencheckIp, Hostingprovider, GreenDomain
-from apps.greencheck.legacy_workers import SiteCheck, LegacySiteCheckLogger
+from apps.greencheck.models import GreencheckIp, Hostingprovider, GreenDomain, SiteCheck
+from apps.greencheck.legacy_workers import LegacySiteCheckLogger
 
 
 def create_greendomain(hosting_provider, sitecheck):
