@@ -399,18 +399,22 @@ class GreenDomain(models.Model):
         )
 
     @classmethod
-    def from_sitecheck(cls, domain):
+    def from_sitecheck(cls, sitecheck):
         """
         Return a grey domain with just the domain name added,
         the time of the and the rest empty.
         """
+        hosting_provider = None
+
+        hosting_provider = Hostingprovider.objects.get(pk=sitecheck.hosting_provider_id)
         return GreenDomain(
-            url=domain,
-            hosted_by=None,
-            hosted_by_id=None,
-            hosted_by_website=None,
-            partner=None,
+            url=sitecheck.url,
+            hosted_by=hosting_provider.name,
+            hosted_by_id=hosting_provider.id,
+            hosted_by_website=hosting_provider.website,
+            partner=hosting_provider.partner,
             modified=timezone.now(),
+            green=True,
         )
 
     class Meta:

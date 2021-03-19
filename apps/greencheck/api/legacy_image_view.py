@@ -142,7 +142,7 @@ def legacy_greencheck_image(request, url):
     if request.GET.get("nocache") == "true":
         sitecheck = checker.perform_full_lookup(domain)
         if sitecheck.green:
-            green_domain = GreenDomain.from_sitecheck(sitecheck)
+            green_domain = GreenDomain.grey_result(sitecheck)
     else:
         green_domain = GreenDomain.objects.filter(url=domain).first()
 
