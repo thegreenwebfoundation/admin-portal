@@ -60,28 +60,16 @@ class GreenDomainChecker:
         """
         Return a Green Domain object from doing a lookup.
         """
-        from .models import Hostingprovider
-
         res = self.check_domain(domain)
 
         if not res.green:
-            return res
-
-        hosting_provider = Hostingprovider.objects.get(pk=res.hosting_provider_id)
+            return GreenDomain.grey_result(domain=res.url)
 
         # return a domain result, but don't save it,
         # as persisting it is handled asynchronously
         # by another worker, and logged to both the greencheck
         # table and this 'cache' table
-        return GreenDomain(
-            url=res.url,
-            hosted_by=hosting_provider.name,
-            hosted_by_id=hosting_provider.id,
-            hosted_by_website=hosting_provider.website,
-            partner=hosting_provider.partner,
-            modified=res.checked_at,
-            green=res.green,
-        )
+        return GreenDomain.from_sitecheck(res)
 
     def asn_from_ip(self, ip_address):
         """
@@ -221,12 +209,7 @@ class GreenDomainChecker:
         grey_domains = []
 
         for domain in grey_list:
-            gp = GreenDomain(url=domain)
-            gp.hosted_by = None
-            gp.hosted_by_id = None
-            gp.hosted_by_website = None
-            gp.partner = None
-            gp.modified = timezone.now()
+            gp = GreenDomain.grey_result(domain=domain)
             grey_domains.append(gp)
 
         evaluated_green_queryset = green_list[::1]

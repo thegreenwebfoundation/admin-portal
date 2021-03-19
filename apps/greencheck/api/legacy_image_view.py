@@ -124,7 +124,7 @@ def legacy_greencheck_image(request, url):
     # url in a browser. we redirect to the greencheck page
     green = False
     provider = None
-    green_domain = None
+
     # browser_visit = check_for_browser_visit(request)
     browser_visit = False
 
@@ -138,17 +138,13 @@ def legacy_greencheck_image(request, url):
     # `nocache=true` is the same string used by nginx. Using the same params
     # means we won't have to worry about nginx caching our request before it
     # hits an app server
+    skip_cache = request.GET.get("nocache") == "true"
 
-    if request.GET.get("nocache") == "true":
-        sitecheck = checker.perform_full_lookup(domain)
-        if sitecheck.green:
-            green_domain = GreenDomain.grey_result(sitecheck)
-    else:
-        green_domain = GreenDomain.objects.filter(url=domain).first()
+    checked_domain = GreenDomain.check_for_domain(domain, skip_cache)
+    green = checked_domain and checked_domain.green
 
-    if green_domain:
-        green = True
-        provider = green_domain.hosted_by
+    if green:
+        provider = checked_domain.hosted_by
 
     img = fetch_template_image(url, green=green)
     annotated_img = annotate_img(img, domain, green=green, provider=provider)
