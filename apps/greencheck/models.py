@@ -1,5 +1,6 @@
 import decimal
 import ipaddress
+import logging
 
 from django import forms
 from django.db import models
@@ -14,6 +15,7 @@ from django.utils.functional import cached_property
 from model_utils.models import TimeStampedModel
 
 from apps.accounts.models import Hostingprovider
+
 from .choices import (
     ActionChoice,
     GreenlistChoice,
@@ -22,6 +24,7 @@ from .choices import (
     StatusApproval,
 )
 
+logger = logging.getLogger(__name__)
 """
 - greencheck_linked - the purpose of the table is not very clear.
    Contains many entries though.
@@ -383,8 +386,9 @@ class GreenDomain(models.Model):
         return f"{self.url} - {self.modified}"
 
     # Factories
+
     @classmethod
-    def grey_result(cls, domain):
+    def grey_result(cls, domain=None):
         """
         Return a grey domain with just the domain name added,
         the time of the and the rest empty.
@@ -405,8 +409,16 @@ class GreenDomain(models.Model):
         the time of the and the rest empty.
         """
         hosting_provider = None
+        try:
+            hosting_provider = Hostingprovider.objects.get(
+                pk=sitecheck.hosting_provider_id
+            )
+        except Hostingprovider.DoesNotExist:
+            logger.warning(
+                ("We expected to find a provider for this sitecheck, " "But didn't. ")
+            )
+            return cls.grey_result(domain=sitecheck.url)
 
-        hosting_provider = Hostingprovider.objects.get(pk=sitecheck.hosting_provider_id)
         return GreenDomain(
             url=sitecheck.url,
             hosted_by=hosting_provider.name,
@@ -416,6 +428,24 @@ class GreenDomain(models.Model):
             modified=timezone.now(),
             green=True,
         )
+
+    # Queries
+
+    @classmethod
+    def check_for_domain(cls, domain, skip_cache=False):
+        """
+        Accept a domain, or object that resolves to an IP and check.
+        Accepts skip_cache option to perform a full DNS lookup
+        instead of looking up a domain by key
+        """
+        from .domain_check import GreenDomainChecker
+
+        checker = GreenDomainChecker()
+
+        if skip_cache:
+            return checker.perform_full_lookup(domain)
+
+        return GreenDomain.objects.filter(url=domain).first()
 
     class Meta:
         db_table = "greendomain"
