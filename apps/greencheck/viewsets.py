@@ -94,23 +94,27 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
         url = self.kwargs.get("url")
         domain = None
+
+        # `nocache=true` is the same string used by nginx. Using the same params
+        # means we won't have to worry about nginx caching our request before it
+        # hits an app server
+        skip_cache = request.GET.get("nocache") == "true"
+
         try:
             domain = self.checker.validate_domain(url)
         except Exception:
             logger.warning(f"unable to extract domain from {url}")
             return response.Response({"green": False, "url": url, "data": False})
 
-        cache_hit = redis_cache.get(f"domains:{domain}")
-        if cache_hit:
-            process_log.send(domain)
-            return response.Response(json.loads(cache_hit))
+        if not skip_cache:
+            cache_hit = redis_cache.get(f"domains:{domain}")
+            if cache_hit:
+                process_log.send(domain)
+                return response.Response(json.loads(cache_hit))
 
         instance = GreenDomain.objects.filter(url=domain).first()
 
-        # `nocache=true` is the same string used by nginx. Using the same params
-        # means we won't have to worry about nginx caching our request before it
-        # hits an app server
-        if request.GET.get("nocache") == "true":
+        if skip_cache:
             sitecheck = checker.perform_full_lookup(domain)
             if sitecheck.green:
                 instance = GreenDomain.from_sitecheck(sitecheck)
