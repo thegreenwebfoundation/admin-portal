@@ -107,6 +107,14 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
         instance = GreenDomain.objects.filter(url=domain).first()
 
+        # `nocache=true` is the same string used by nginx. Using the same params
+        # means we won't have to worry about nginx caching our request before it
+        # hits an app server
+        if request.GET.get("nocache") == "true":
+            sitecheck = checker.perform_full_lookup(domain)
+            if sitecheck.green:
+                instance = GreenDomain.from_sitecheck(sitecheck)
+
         if not instance:
             try:
                 instance = self.checker.perform_full_lookup(domain)
