@@ -10,8 +10,7 @@ from django.core.management import call_command, CommandError
 from django.utils import timezone
 from sqlite_utils import Database
 
-from ..models import Hostingprovider
-from ..legacy_workers import SiteCheck
+from ..models import Hostingprovider, SiteCheck
 from ..management.commands.dump_green_domains import GreenDomainExporter
 from ..models import GreencheckIp
 

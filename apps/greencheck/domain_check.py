@@ -14,9 +14,8 @@ This follows largely the same approach:
 """
 import socket
 import logging
-from .models import GreenDomain
 
-from . import legacy_workers
+
 from ipwhois.asn import IPASN
 from ipwhois.net import Net
 from ipwhois.exceptions import IPDefinedError
@@ -24,6 +23,8 @@ import ipaddress
 from django.utils import timezone
 import urllib
 import tld
+
+from .models import GreenDomain, SiteCheck
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,8 @@ class GreenDomainChecker:
         """
         Return a Green Domain object from doing a lookup.
         """
+        from .models import GreenDomain
+
         res = self.check_domain(domain)
 
         if not res.green:
@@ -97,7 +100,7 @@ class GreenDomainChecker:
         Return a SiteCheck object, that has been marked as green by
         looking up against an IP range
         """
-        return legacy_workers.SiteCheck(
+        return SiteCheck(
             url=domain,
             ip=str(ip_address),
             data=True,
@@ -110,7 +113,7 @@ class GreenDomainChecker:
         )
 
     def green_sitecheck_by_asn(self, domain, ip_address, matching_asn):
-        return legacy_workers.SiteCheck(
+        return SiteCheck(
             url=domain,
             ip=str(ip_address),
             data=True,
@@ -125,7 +128,7 @@ class GreenDomainChecker:
     def grey_sitecheck(
         self, domain, ip_address,
     ):
-        return legacy_workers.SiteCheck(
+        return SiteCheck(
             url=domain,
             ip=str(ip_address),
             data=False,
@@ -137,7 +140,7 @@ class GreenDomainChecker:
             checked_at=timezone.now(),
         )
 
-    def check_domain(self, domain: str) -> legacy_workers.SiteCheck:
+    def check_domain(self, domain: str) -> SiteCheck:
         """
         Accept a domain name and return the either a GreenDomain Object,
         or the best matching IP range forip address it resolves to.
@@ -184,6 +187,11 @@ class GreenDomainChecker:
         if isinstance(asn_result, int):
             return GreencheckASN.objects.filter(asn=asn_result).first()
 
+        if asn_result == "NA":
+            logger.info("Received a result we can't match to an ASN. Skipping")
+            # we can't process this IP address. Skip it.
+            return False
+
         # we have a string containing more than one ASN.
         # look them up, and return the first green one
         asns = asn_result.split(" ")
@@ -206,6 +214,8 @@ class GreenDomainChecker:
         """
         Create a list of green and grey domains, to serialise and deliver.
         """
+        from .models import GreenDomain
+
         grey_domains = []
 
         for domain in grey_list:

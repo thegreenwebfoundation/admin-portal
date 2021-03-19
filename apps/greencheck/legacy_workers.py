@@ -1,7 +1,9 @@
 import phpserialize
 
 from django.utils import dateparse
-from .workers import SiteCheck, SiteCheckLogger
+from .workers import SiteCheckLogger
+from .models import SiteCheck
+
 
 import logging
 

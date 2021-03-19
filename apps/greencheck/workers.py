@@ -1,6 +1,5 @@
-from dataclasses import dataclass
 from django.utils import dateparse, timezone
-from apps.greencheck.models import Greencheck, GreenDomain
+from apps.greencheck.models import Greencheck, GreenDomain, SiteCheck
 from apps.accounts.models import Hostingprovider
 
 import socket
@@ -13,23 +12,6 @@ console = logging.StreamHandler()
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.WARN)
 # logger.addHandler(console)
-@dataclass
-class SiteCheck:
-    """
-    A representation of the Sitecheck object from the PHP app.
-    We use it as a basis for logging to the Greencheck, but also maintaining
-    our green_domains tables.
-    """
-
-    url: str
-    ip: str
-    data: bool
-    green: bool
-    hosting_provider_id: int
-    checked_at: str
-    match_type: str
-    match_ip_range: int
-    cached: bool
 
 
 class SiteCheckLogger:
@@ -86,11 +68,17 @@ class SiteCheckLogger:
             fixed_tld, *_ = (tld.get_tld(sitecheck.url, fix_protocol=True),)
         except tld.exceptions.TldDomainNotFound:
 
+            if sitecheck.url == "localhost":
+                return {
+                    "status": "We can't look up localhost. Skipping.",
+                    "sitecheck": sitecheck,
+                }
+
             try:
                 ipaddress.ip_address(sitecheck.url)
                 fixed_tld = ""
             except Exception:
-                logger.exception(
+                logger.warning(
                     (
                         "not a domain, or an IP address, not logging. "
                         f"Sitecheck results: {sitecheck}"
