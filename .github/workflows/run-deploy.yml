@@ -34,7 +34,7 @@ jobs:
           key: ${{secrets.SSH_PRIVATE_KEY}}
           inventory: |
           options: |
-            --inventory inventories/prod
+            --inventory inventories/prod.yml
         env:
           ANSIBLE_STDOUT_CALLBACK: debug
           PYTHONDONTWRITEBYTECODE: 1
