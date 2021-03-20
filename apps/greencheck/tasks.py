@@ -2,6 +2,8 @@ import dramatiq
 
 import logging
 
+import MySQLdb
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 console = logging.StreamHandler()
@@ -16,4 +18,18 @@ def process_log(domain):
 
     logger.debug(f"logging a check for {domain}")
     if domain is not None:
-        check_logger.log_sitecheck_for_domain(domain)
+        try:
+            check_logger.log_sitecheck_for_domain(domain)
+        except MySQLdb.OperationalError as err:
+            logger.warning(
+                (
+                    f"Problem reported by the database when trying to "
+                    f"log domain: {domain}"
+                )
+            )
+            logger.warning(err)
+            return False
+        except Exception as err:
+            logger.exception(err)
+            return False
+

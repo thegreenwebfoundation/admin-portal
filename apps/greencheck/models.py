@@ -203,7 +203,7 @@ class Greencheck(models.Model):
     url = models.CharField(max_length=255)
 
     class Meta:
-        db_table = "greencheck_2020"
+        db_table = "greencheck_2021"
 
     def __str__(self):
         return f"{self.url} - {self.ip}"
