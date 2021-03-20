@@ -27,8 +27,21 @@ class SiteCheckLogger:
         from .domain_check import GreenDomainChecker
 
         checker = GreenDomainChecker()
+
         try:
             sitecheck = checker.check_domain(url)
+        # we don't have a recognisable domain name that we can resolve
+        except UnicodeError:
+            # exit early, we do nothing further
+            logger.info(
+                (
+                    f"{url} doesn't appear to be a domain we can look up. "
+                    "Not logging a check."
+                )
+            )
+            return None
+        # we have resolved the domain, but it's not a valid IP address
+        # that we can look up (i.e. a private, internal IP, or localhost)
         except socket.gaierror:
             # exit early, we do nothing further
             logger.info(
