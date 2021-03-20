@@ -115,9 +115,10 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         instance = GreenDomain.objects.filter(url=domain).first()
 
         if skip_cache:
-            sitecheck = checker.perform_full_lookup(domain)
-            if sitecheck.green:
-                instance = GreenDomain.from_sitecheck(sitecheck)
+            # try to fetch domain
+            res = checker.perform_full_lookup(domain)
+            if res.green:
+                instance = res
 
         if not instance:
             try:
