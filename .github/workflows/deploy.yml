@@ -1,0 +1,41 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - ca-add-ansible-github-actions
+
+defaults:
+  run:
+    shell: bash
+    working-directory: ./
+
+jobs:
+  deploy:
+    environment: prod
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Use turnstyle to serialise deploys
+        uses: softprops/turnstyle@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: sample-run.yml
+          directory: ./ansible
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          inventory: |
+          options: |
+            --inventory inventories/prod
+        env:
+          ANSIBLE_STDOUT_CALLBACK: debug
+          PYTHONDONTWRITEBYTECODE: 1
+          TOP_SEKRET: ${{secrets.TOP_SEKRET }}

@@ -1,0 +1,15 @@
+---
+- name: Deploy the TGWF django admin
+  hosts:
+    - all
+  remote_user: "deploy"
+  become: no
+
+  tasks:
+    - name: run a sample command as a test
+      ansible.builtin.command: bat sample-text-file.md
+      chdir: /home/deploy
+
+    - name: test accessing values added to the environmen from github secrets for a specific environment
+      ansible.builtin.debug:
+        msg: "We can access env vars from in ansible runs. Example value: {{ lookup('env', 'TOP_SEKRET') }}"
