@@ -86,6 +86,13 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return response.Response(serializer.data)
 
+    def legacy_grey_response(self, domain: str):
+        """
+        Return the response we historically send when
+        a check doesn't return a green result.
+        """
+        return response.Response({"green": False, "url": domain, "data": False})
+
     def retrieve(self, request, *args, **kwargs):
         """
         Fetch entry matching the provided URL, like a 'detail' view
@@ -103,39 +110,42 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         try:
             domain = self.checker.validate_domain(url)
         except Exception:
+            # not a valid domain, OR a valid IP. Get rid of it.
             logger.warning(f"unable to extract domain from {url}")
-            return response.Response({"green": False, "url": url, "data": False})
+            return self.legacy_grey_response(url)
 
+        # try our cache first before hitting the database
         if not skip_cache:
             cache_hit = redis_cache.get(f"domains:{domain}")
             if cache_hit:
                 process_log.send(domain)
                 return response.Response(json.loads(cache_hit))
 
+        # not in the cache, try the slower lookups
         instance = GreenDomain.objects.filter(url=domain).first()
 
         if skip_cache:
-            # try to fetch domain
-            res = checker.perform_full_lookup(domain)
-            if res.green:
-                instance = res
+            # try to fetch domain, clearing it from the cache if already present
+            redis_cache.delete(f"domain:{domain}")
+            try:
+                res = checker.perform_full_lookup(domain)
+                if res.green:
+                    instance = res
+            except socket.gaierror:
+                process_log.send(domain)
+                return self.legacy_grey_response(domain)
 
         if not instance:
             try:
                 instance = self.checker.perform_full_lookup(domain)
-
             except socket.gaierror:
                 process_log.send(domain)
-                # not a valid domain, OR a valid IP. Get rid of it.
-                return response.Response({"green": False, "url": url, "data": False})
+                return self.legacy_grey_response(domain)
 
-            # log_the_check asynchronously
-        # match the old API request
+        # log_the_check asynchronously
         if not instance.green:
-            process_log.send(domain)
-            return response.Response(
-                {"green": False, "url": instance.url, "data": True}
-            )
+            return self.legacy_grey_response(url)
+
         process_log.send(domain)
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
