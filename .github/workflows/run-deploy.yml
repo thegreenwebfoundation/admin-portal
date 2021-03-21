@@ -35,8 +35,6 @@ jobs:
           inventory: |
           options: |
             --inventory ./ansible/inventories/prod.yml
-            -vvv
-
         env:
           ANSIBLE_STDOUT_CALLBACK: yaml
           PYTHONDONTWRITEBYTECODE: 1
