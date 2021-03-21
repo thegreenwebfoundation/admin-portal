@@ -7,7 +7,7 @@
 
   tasks:
     - name: run a sample command as a test
-      command: echo "Accesing TOP_SEKRET via ansible env lookup - {{ lookup('env','TOP_SECRET') }}"
+      command: echo "Accesing TOP_SEKRET via ansible env lookup - {{ lookup('env','TOP_SEKRET') }}"
       register: result
       args:
         chdir: /home/deploy
