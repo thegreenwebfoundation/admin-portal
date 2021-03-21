@@ -30,11 +30,11 @@ jobs:
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: deploy.yml
-          directory: ./ansible
+          directory: ./
           key: ${{secrets.SSH_PRIVATE_KEY}}
           inventory: |
           options: |
-            --inventory inventories/prod.yml
+            --inventory ./ansible/inventories/prod.yml
         env:
           ANSIBLE_STDOUT_CALLBACK: yaml
           PYTHONDONTWRITEBYTECODE: 1
