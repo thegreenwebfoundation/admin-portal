@@ -42,9 +42,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DJANGO_SETTINGS_MODULE: ${{ secrets.DJANGO_SETTINGS_MODULE }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-
