@@ -9,9 +9,9 @@
     - name: run a sample command as a test
       ansible.builtin.command: bat sample-text-file.md
       register: result
-      args:
-        chdir: /home/deploy
 
+      # args:
+      # chdir: /home/deploy
     - name: test accessing values added to the environmen from github secrets for a specific environment
       ansible.builtin.debug:
         var: result
