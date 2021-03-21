@@ -7,11 +7,10 @@
 
   tasks:
     - name: run a sample command as a test
-      ansible.builtin.command: ls
-      # register: result
-
+      command: pwd
+      register: result
       # args:
       # chdir: /home/deploy
-    # - name: test accessing values added to the environmen from github secrets for a specific environment
-    #   ansible.builtin.debug:
-    #     var: result
+    - name: test accessing values added to the environmen from github secrets for a specific environment
+      ansible.builtin.debug:
+        var: result
