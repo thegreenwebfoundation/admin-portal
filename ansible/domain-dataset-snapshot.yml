@@ -1,0 +1,12 @@
+---
+- name: Create green domain snapshot
+  hosts:
+    - all
+  remote_user: "deploy"
+  become: no
+
+  tasks:
+    - name: run management task to create domains snapshot
+      shell: "pipenv run ./manage.py dump_green_domains --upload"
+      args:
+        chdir: "{{ project_root }}/current"
