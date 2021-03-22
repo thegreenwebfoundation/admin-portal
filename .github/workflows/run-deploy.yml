@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - ca-add-ansible-github-actions
 
 defaults:
   run:
