@@ -134,12 +134,16 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             except socket.gaierror:
                 process_log.send(domain)
                 return self.legacy_grey_response(domain)
+            except UnicodeError:
+                return self.legacy_grey_response(domain)
 
         if not instance:
             try:
                 instance = self.checker.perform_full_lookup(domain)
             except socket.gaierror:
                 process_log.send(domain)
+                return self.legacy_grey_response(domain)
+            except UnicodeError:
                 return self.legacy_grey_response(domain)
 
         # log_the_check asynchronously
