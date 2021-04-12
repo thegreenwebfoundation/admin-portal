@@ -1,4 +1,4 @@
-name: Create database snapsho
+name: Create database snapshot
 
 on:
   schedule:
