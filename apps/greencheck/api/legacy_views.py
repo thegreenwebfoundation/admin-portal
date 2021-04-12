@@ -120,8 +120,28 @@ def directory_provider(self, id):
     what they do, and evidence supporting their
     sustainability claims
     """
+    provider = Hostingprovider.objects.get(pk=id)
 
-    return response.Response([])
+    # basic case, no datacenters or certificates
+    provider_dict = {
+        "id": provider.id,
+        "naam": provider.name,
+        "website": provider.website,
+        "countrydomain": str(provider.country),
+        "model": provider.model,
+        "partner": provider.partner,
+        "certurl": None,
+        "valid_from": None,
+        "valid_to": None,
+        "mainenergytype": None,
+        "energyprovider": None,
+        "datacenters": [],
+    }
+
+    # import ipdb
+
+    # ipdb.set_trace()
+    return response.Response([provider_dict])
 
 
 @api_view()

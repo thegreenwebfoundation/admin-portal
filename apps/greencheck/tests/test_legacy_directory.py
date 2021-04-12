@@ -1,8 +1,10 @@
 import ipaddress
+import json
 from typing import List
 
 import pytest
 from django.utils import text
+from django.shortcuts import reverse
 
 from ..api.legacy_views import fetch_providers_for_country
 from ..models import GreencheckIp, Hostingprovider
@@ -114,9 +116,54 @@ class TestGreenWebDirectoryDetail:
     information necessary for listing in the directory
     """
 
-    def test_directory_provider(self, db, hosting_provider_a):
+    def test_directory_provider(self, db, hosting_provider_a, client):
         # fetch with regular client
-        pass
+        hosting_provider_a.save()
+
+        url_path = reverse("legacy-directory-detail", args=[hosting_provider_a.id])
+
+        resp = client.get(url_path)
+        # import ipdb
+
+        # ipdb.set_trace()
+        # should look like this
+        # [
+        #     {
+        #         "id": "131",
+        #         "naam": "Hetzner Online AG",
+        #         "website": "www.hetzner.de",
+        #         "countrydomain": "DE",
+        #         "model": "groeneenergie",
+        #         "certurl": null,
+        #         "valid_from": null,
+        #         "valid_to": null,
+        #         "mainenergytype": null,
+        #         "energyprovider": null,
+        #         "partner": "",
+        #         "datacenters": [],
+        #     }
+        # ]
+
+        # list the name, id, website, country, and how energy
+        # is green (either green energy, or compensation)
+        payload = json.loads(resp.content)
+        provider = payload[0]
+
+        for key in [
+            "id",
+            "naam",
+            "website",
+            "countrydomain",
+            "model",
+            "certurl",
+            "valid_from",
+            "valid_to",
+            "mainenergytype",
+            "energyprovider",
+            "partner",
+            "datacenters",
+        ]:
+            assert key in provider
 
     def test_directory_provider_with_datacentre(self, db, hosting_provider_a):
         """
