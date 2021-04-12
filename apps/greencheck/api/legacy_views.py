@@ -62,10 +62,14 @@ def latest_greenchecks(request):
 def fetch_providers_for_country(country_code):
     """
     Return all the country providers that should be visible
-    as a list
+    as a list, with partners listed first, then in
+    alphetical order.
     """
-    # logger.info(f"Looking for providers from {country_code}")c
-    providers = Hostingprovider.objects.filter(country=country_code, showonwebsite=True)
+    # we need to order by partner, then alphabetical
+    # order
+    providers = Hostingprovider.objects.filter(
+        country=country_code, showonwebsite=True
+    ).order_by("-partner", "name")
 
     return [
         {
