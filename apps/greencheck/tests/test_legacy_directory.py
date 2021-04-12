@@ -52,7 +52,7 @@ def add_green_ip_to(
     )
 
 
-class TestGreenWebDirectory:
+class TestGreenWebDirectoryListing:
     def test_legacy_directory_ordering(
         self, db, hosting_provider_a, hosting_provider_z, client
     ):
@@ -79,7 +79,7 @@ class TestGreenWebDirectory:
         assert providers[0]["naam"] == hosting_provider_a.name
 
     def test_legacy_directory_partner_priority(
-        self, db, hosting_provider_a, hosting_provider_z, client
+        self, db, hosting_provider_a, hosting_provider_z
     ):
         """
         Inside a given country, with certified providers, are they listed first?
@@ -106,4 +106,22 @@ class TestGreenWebDirectory:
 
         #  is the first provider the one we expect to see
         assert providers[0]["naam"] == hosting_provider_z.name
+
+
+class TestGreenWebDirectoryDetail:
+    """
+    Check that a directory detail API call exposes
+    information necessary for listing in the directory
+    """
+
+    def test_directory_provider(self, db, hosting_provider_a):
+        # fetch with regular client
+        pass
+
+    def test_directory_provider_with_datacentre(self, db, hosting_provider_a):
+        """
+        Are we showing the datacentres in the data structure too?
+        """
+        # fetch with regular client
+        pass
 

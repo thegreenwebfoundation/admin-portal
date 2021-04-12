@@ -114,6 +114,18 @@ def directory(request):
 
 @api_view()
 @permission_classes([AllowAny])
+def directory_provider(self, id):
+    """
+    Return a JSON object representing the provider,
+    what they do, and evidence supporting their
+    sustainability claims
+    """
+
+    return response.Response([])
+
+
+@api_view()
+@permission_classes([AllowAny])
 def greencheck_multi(request, url_list: str):
     """
     Return a JSON object for the multichecks, like the API
