@@ -117,35 +117,12 @@ class TestGreenWebDirectoryDetail:
     """
 
     def test_directory_provider(self, db, hosting_provider_a, client):
-        # fetch with regular client
-        hosting_provider_a.save()
 
+        hosting_provider_a.save()
         url_path = reverse("legacy-directory-detail", args=[hosting_provider_a.id])
 
         resp = client.get(url_path)
-        # import ipdb
 
-        # ipdb.set_trace()
-        # should look like this
-        # [
-        #     {
-        #         "id": "131",
-        #         "naam": "Hetzner Online AG",
-        #         "website": "www.hetzner.de",
-        #         "countrydomain": "DE",
-        #         "model": "groeneenergie",
-        #         "certurl": null,
-        #         "valid_from": null,
-        #         "valid_to": null,
-        #         "mainenergytype": null,
-        #         "energyprovider": null,
-        #         "partner": "",
-        #         "datacenters": [],
-        #     }
-        # ]
-
-        # list the name, id, website, country, and how energy
-        # is green (either green energy, or compensation)
         payload = json.loads(resp.content)
         provider = payload[0]
 
@@ -165,10 +142,99 @@ class TestGreenWebDirectoryDetail:
         ]:
             assert key in provider
 
-    def test_directory_provider_with_datacentre(self, db, hosting_provider_a):
+    def test_directory_provider_with_datacentre(
+        self, db, hosting_provider_a, sample_hoster_user, datacenter, client
+    ):
         """
         Are we showing the datacentres in the data structure too?
         """
         # fetch with regular client
+
+        hosting_provider_a.save()
+        sample_hoster_user.save()
+
+        datacenter.user_id = sample_hoster_user.id
+        datacenter.save()
+        hosting_provider_a.datacenter.add(datacenter)
+        hosting_provider_a.save()
+        datacenter.save()
+
+        url_path = reverse("legacy-directory-detail", args=[hosting_provider_a.id])
+
+        resp = client.get(url_path)
+
+        payload = json.loads(resp.content)
+
+        # legacy payload
+        # [
+        #     {
+        #         "id": "380",
+        #         "naam": "Netcetera",
+        #         "website": "http://www.website.co.uk",
+        #         "countrydomain": "UK",
+        #         "model": "groeneenergie",
+        #         "certurl": null,
+        #         "valid_from": null,
+        #         "valid_to": null,
+        #         "mainenergytype": null,
+        #         "energyprovider": null,
+        #         "partner": "",
+        #         "datacenters": [
+        #             {
+        #                 "id": "28",
+        #                 "naam": "Website Dataport",
+        #                 "website": "http://www.website.co.uk",
+        #                 "countrydomain": "UK",
+        #                 "model": "groeneenergie",
+        #                 "pue": "1.2",
+        #                 "mja3": "0",
+        #                 "city": "Ballasalla",
+        #                 "country": "Isle of Man",
+        #                 "classification": null,
+        #                 "certificates": [],
+        #                 "classifications": [],
+        #             }
+        #         ],
+        #     }
+        # ]
+
+        pass
+
+    def test_directory_provider_with_certificates(self, db, hosting_provider_a):
+        """
+            Are we showing the datacentres in the data structure too?
+            """
+        # fetch with regular client
+
+        # [
+        #     {
+        #         "id": "747",
+        #         "naam": "Alfahosting GmbH",
+        #         "website": "www.alfahosting.de",
+        #         "countrydomain": "DE",
+        #         "model": "groeneenergie",
+        #         "certurl": "https://alfahosting.de/downloads/Herkunftsnachweis_Strom.pdf",
+        #         "valid_from": "2018-01-01",
+        #         "valid_to": "2018-12-31",
+        #         "mainenergytype": "mixed",
+        #         "energyprovider": "envia Mitteldeutsche Energie AG",
+        #         "partner": null,
+        #         "datacenters": [],
+        #     },
+        #     {
+        #         "id": "747",
+        #         "naam": "Alfahosting GmbH",
+        #         "website": "www.alfahosting.de",
+        #         "countrydomain": "DE",
+        #         "model": "groeneenergie",
+        #         "certurl": "https://cdn.marketing-cloud.io/wp-content/enviatel_dcl/uploads/2020/05/28104527/200528_Urkunde_envia_TEL_HKN_2019_nicht-editierbar.pdf",
+        #         "valid_from": "2019-01-01",
+        #         "valid_to": "2019-12-31",
+        #         "mainenergytype": "mixed",
+        #         "energyprovider": "envia Mitteldeutsche Energie AG",
+        #         "partner": null,
+        #         "datacenters": [],
+        #     },
+        # ]
         pass
 

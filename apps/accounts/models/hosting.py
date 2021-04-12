@@ -48,6 +48,45 @@ class Datacenter(models.Model):
     virtual = models.BooleanField()
     website = models.CharField(max_length=255)
 
+    def legacy_representation(self):
+        """
+        Return a dictionary representation of datacentre,
+        suitable for serving in the older directory
+        API.
+        """
+
+        # {
+        #     "id": "28",
+        #     "naam": "Website Dataport",
+        #     "website": "http://www.website.co.uk",
+        #     "countrydomain": "UK",
+        #     "model": "groeneenergie",
+        #     "pue": "1.2",
+        #     "mja3": "0",
+        #     "city": "Ballasalla",
+        #     "country": "Isle of Man",
+        #     "classification": null,
+        #     "certificates": [],
+        #     "classifications": [],
+        # }
+        return {
+            "id": self.id,
+            "naam": self.name,
+            "website": self.website,
+            "countrydomain": str(self.country),
+            "model": self.model,
+            "pue": self.pue,
+            "mja3": self.mja3,
+            # this needs a new table we don't have
+            "city": "NOT IMPLEMENTED",
+            "country": "NOT IMPLEMENTED",
+            "classification": "NOT IMPLEMENTED",
+            # this lists through DatacenterCertificate
+            "certificates": ["NOT IMPLEMENTED"],
+            # this lists through DatacenterClassification
+            "classifications": ["NOT IMPLEMENTED"],
+        }
+
     def __str__(self):
         return self.name
 
