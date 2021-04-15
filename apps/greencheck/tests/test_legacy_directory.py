@@ -13,22 +13,22 @@ from ..models import GreencheckIp, Hostingprovider
 from apps.accounts.models import DatacenterCertificate
 from . import setup_domains
 
-THREE_MONTHS_BACK  = timezone.now() + relativedelta(weeks=-12)
+THREE_MONTHS_BACK = timezone.now() + relativedelta(weeks=-12)
 YEAR_FROM_NOW = timezone.now() + relativedelta(years=1)
+
 
 @pytest.fixture
 def green_dc_certificate(datacenter):
-        
+
     return DatacenterCertificate(
-        energyprovider = "Some Energy Co.",
-        mainenergy_type = "mixed",
-        url = "https://link.to.company/certificate.pdf",
-        valid_from = THREE_MONTHS_BACK,
-        valid_to = YEAR_FROM_NOW,
-        datacenter= datacenter,
+        energyprovider="Some Energy Co.",
+        mainenergy_type="mixed",
+        url="https://link.to.company/certificate.pdf",
+        valid_from=THREE_MONTHS_BACK,
+        valid_to=YEAR_FROM_NOW,
+        datacenter=datacenter,
     )
-    
-    
+
 
 def named_hosting_provider(name: str) -> Hostingprovider:
     """
@@ -162,7 +162,13 @@ class TestGreenWebDirectoryDetail:
             assert key in provider
 
     def test_directory_provider_with_datacentre(
-        self, db, hosting_provider_a, sample_hoster_user, datacenter, green_dc_certificate, client
+        self,
+        db,
+        hosting_provider_a,
+        sample_hoster_user,
+        datacenter,
+        green_dc_certificate,
+        client,
     ):
         """
         Are we showing the datacentres in the data structure too?
@@ -180,83 +186,70 @@ class TestGreenWebDirectoryDetail:
         green_dc_certificate.save()
         datacenter.save()
 
-        
         url_path = reverse("legacy-directory-detail", args=[hosting_provider_a.id])
 
         resp = client.get(url_path)
 
         payload = json.loads(resp.content)
+        provider = payload[0]
 
-        # legacy payload
-        # [
-        #     {
-        #         "id": "380",
-        #         "naam": "Netcetera",
-        #         "website": "http://www.website.co.uk",
-        #         "countrydomain": "UK",
-        #         "model": "groeneenergie",
-        #         "certurl": null,
-        #         "valid_from": null,
-        #         "valid_to": null,
-        #         "mainenergytype": null,
-        #         "energyprovider": null,
-        #         "partner": "",
-        #         "datacenters": [
-        #             {
-        #                 "id": "28",
-        #                 "naam": "Website Dataport",
-        #                 "website": "http://www.website.co.uk",
-        #                 "countrydomain": "UK",
-        #                 "model": "groeneenergie",
-        #                 "pue": "1.2",
-        #                 "mja3": "0",
-        #                 "city": "Ballasalla",
-        #                 "country": "Isle of Man",
-        #                 "classification": null,
-        #                 "certificates": [],
-        #                 "classifications": [],
-        #             }
-        #         ],
-        #     }
-        # ]
+        assert len(provider["datacenters"]) == 1
+        dc = provider["datacenters"][0]
 
-        pass
+        for key in [
+            "city",
+            "country",
+            "countrydomain",
+            "id",
+            "naam",
+            "pue",
+            "website",
+        ]:
+            assert key in dc
 
-    def test_directory_provider_with_certificates(self, db, hosting_provider_a):
+    def test_directory_provider_with_certificates(
+        self,
+        db,
+        hosting_provider_a,
+        sample_hoster_user,
+        datacenter,
+        green_dc_certificate,
+        client,
+    ):
         """
-            Are we showing the datacentres in the data structure too?
-            """
-        # fetch with regular client
+        Are we showing the certificates we have for the
+        datacentres as well?
+        """
+        hosting_provider_a.save()
+        sample_hoster_user.save()
 
-        # [
-        #     {
-        #         "id": "747",
-        #         "naam": "Alfahosting GmbH",
-        #         "website": "www.alfahosting.de",
-        #         "countrydomain": "DE",
-        #         "model": "groeneenergie",
-        #         "certurl": "https://alfahosting.de/downloads/Herkunftsnachweis_Strom.pdf",
-        #         "valid_from": "2018-01-01",
-        #         "valid_to": "2018-12-31",
-        #         "mainenergytype": "mixed",
-        #         "energyprovider": "envia Mitteldeutsche Energie AG",
-        #         "partner": null,
-        #         "datacenters": [],
-        #     },
-        #     {
-        #         "id": "747",
-        #         "naam": "Alfahosting GmbH",
-        #         "website": "www.alfahosting.de",
-        #         "countrydomain": "DE",
-        #         "model": "groeneenergie",
-        #         "certurl": "https://cdn.marketing-cloud.io/wp-content/enviatel_dcl/uploads/2020/05/28104527/200528_Urkunde_envia_TEL_HKN_2019_nicht-editierbar.pdf",
-        #         "valid_from": "2019-01-01",
-        #         "valid_to": "2019-12-31",
-        #         "mainenergytype": "mixed",
-        #         "energyprovider": "envia Mitteldeutsche Energie AG",
-        #         "partner": null,
-        #         "datacenters": [],
-        #     },
-        # ]
-        pass
+        datacenter.user_id = sample_hoster_user.id
+        datacenter.save()
+        hosting_provider_a.datacenter.add(datacenter)
+        hosting_provider_a.save()
+        green_dc_certificate.datacenter = datacenter
+        green_dc_certificate.save()
+        datacenter.save()
+
+        url_path = reverse("legacy-directory-detail", args=[hosting_provider_a.id])
+
+        resp = client.get(url_path)
+
+        payload = json.loads(resp.content)
+        provider = payload[0]
+
+        assert len(provider["datacenters"]) == 1
+        dc = provider["datacenters"][0]
+
+        certs = dc["certificates"]
+        assert len(certs) == 1
+
+        cert = certs[0]
+
+        for key in [
+            "cert_valid_from",
+            "cert_valid_to",
+            "cert_url",
+        ]:
+            assert key in cert
 

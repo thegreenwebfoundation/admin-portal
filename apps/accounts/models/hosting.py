@@ -276,7 +276,7 @@ class DataCenterLocation(models.Model):
         return f"{self.city}, {self.country}"
 
     class Meta:
-        verbose_name = "Hosting Provider"
+        verbose_name = "Datacentre Location"
         db_table = "datacenters_locations"
 
 
