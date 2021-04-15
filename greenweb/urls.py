@@ -83,7 +83,7 @@ urlpatterns += [
     ),
     path("data/directory/", legacy_views.directory, name="legacy-directory-listing",),
     path(
-        "data/directory/<id>",
+        "data/hostingprovider/<id>",
         legacy_views.directory_provider,
         name="legacy-directory-detail",
     ),

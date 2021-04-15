@@ -5,11 +5,30 @@ from typing import List
 import pytest
 from django.utils import text
 from django.shortcuts import reverse
+from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 
 from ..api.legacy_views import fetch_providers_for_country
 from ..models import GreencheckIp, Hostingprovider
+from apps.accounts.models import DatacenterCertificate
 from . import setup_domains
 
+THREE_MONTHS_BACK  = timezone.now() + relativedelta(weeks=-12)
+YEAR_FROM_NOW = timezone.now() + relativedelta(years=1)
+
+@pytest.fixture
+def green_dc_certificate(datacenter):
+        
+    return DatacenterCertificate(
+        energyprovider = "Some Energy Co.",
+        mainenergy_type = "mixed",
+        url = "https://link.to.company/certificate.pdf",
+        valid_from = THREE_MONTHS_BACK,
+        valid_to = YEAR_FROM_NOW,
+        datacenter= datacenter,
+    )
+    
+    
 
 def named_hosting_provider(name: str) -> Hostingprovider:
     """
@@ -143,7 +162,7 @@ class TestGreenWebDirectoryDetail:
             assert key in provider
 
     def test_directory_provider_with_datacentre(
-        self, db, hosting_provider_a, sample_hoster_user, datacenter, client
+        self, db, hosting_provider_a, sample_hoster_user, datacenter, green_dc_certificate, client
     ):
         """
         Are we showing the datacentres in the data structure too?
@@ -157,8 +176,11 @@ class TestGreenWebDirectoryDetail:
         datacenter.save()
         hosting_provider_a.datacenter.add(datacenter)
         hosting_provider_a.save()
+        green_dc_certificate.datacenter = datacenter
+        green_dc_certificate.save()
         datacenter.save()
 
+        
         url_path = reverse("legacy-directory-detail", args=[hosting_provider_a.id])
 
         resp = client.get(url_path)

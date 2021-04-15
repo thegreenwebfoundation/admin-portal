@@ -69,6 +69,11 @@ class Datacenter(models.Model):
         #     "certificates": [],
         #     "classifications": [],
         # }
+
+        certificates = [
+            cert.legacy_representation() for cert in self.datacenter_certificates.all()
+        ]
+
         return {
             "id": self.id,
             "naam": self.name,
@@ -79,12 +84,13 @@ class Datacenter(models.Model):
             "mja3": self.mja3,
             # this needs a new table we don't have
             "city": "NOT IMPLEMENTED",
-            "country": "NOT IMPLEMENTED",
-            "classification": "NOT IMPLEMENTED",
+            "country": self.country.name,
             # this lists through DatacenterCertificate
-            "certificates": ["NOT IMPLEMENTED"],
+            "certificates": certificates,
+            # the options below are deprecated
+            "classification": "DEPRECATED",
             # this lists through DatacenterClassification
-            "classifications": ["NOT IMPLEMENTED"],
+            "classifications": ["DEPRECATED"],
         }
 
     def __str__(self):
@@ -366,6 +372,16 @@ class DatacenterCertificate(Certificate):
         on_delete=models.CASCADE,
         related_name="datacenter_certificates",
     )
+
+    def legacy_representation(self):
+        """
+        Return the JSON representation
+        """
+        return {
+            "cert_valid_from": self.valid_from,
+            "cert_valid_to": self.valid_to,
+            "cert_url": self.url,
+        }
 
     class Meta:
         db_table = "datacenter_certificates"
