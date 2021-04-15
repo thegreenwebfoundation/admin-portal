@@ -26,8 +26,6 @@ from apps.greencheck.choices import StatusApproval
 
 logger = logging.getLogger(__name__)
 
-haikunator = Haikunator()
-
 
 class Datacenter(models.Model):
     country = CountryField(db_column="countrydomain")
@@ -47,6 +45,18 @@ class Datacenter(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     virtual = models.BooleanField()
     website = models.CharField(max_length=255)
+
+    @property
+    def city(self):
+        """
+        Return the city this datacentre is
+        placed in.
+        """
+        location = self.datacenterlocation_set.first()
+        if location:
+            return location.city
+        else:
+            return None
 
     def legacy_representation(self):
         """
@@ -83,7 +93,7 @@ class Datacenter(models.Model):
             "pue": self.pue,
             "mja3": self.mja3,
             # this needs a new table we don't have
-            "city": "NOT IMPLEMENTED",
+            "city": self.city,
             "country": self.country.name,
             # this lists through DatacenterCertificate
             "certificates": certificates,
@@ -248,6 +258,26 @@ class Hostingprovider(models.Model):
             models.Index(fields=["archived"], name="archived"),
             models.Index(fields=["showonwebsite"], name="showonwebsite"),
         ]
+
+
+class DataCenterLocation(models.Model):
+    """
+    A join table linking datacentre cities
+    to the country.
+    """
+
+    city = models.CharField(max_length=255)
+    country = models.CharField(max_length=255)
+    datacenter = models.ForeignKey(
+        Datacenter, null=True, on_delete=models.CASCADE, db_column="id_dc"
+    )
+
+    def __str__(self):
+        return f"{self.city}, {self.country}"
+
+    class Meta:
+        verbose_name = "Hosting Provider"
+        db_table = "datacenters_locations"
 
 
 class HostingCommunication(TimeStampedModel):

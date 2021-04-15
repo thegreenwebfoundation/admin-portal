@@ -138,10 +138,6 @@ def directory_provider(self, id):
         "partner": provider.partner,
         "datacenters": datacenters,
     }
-
-    import ipdb
-
-    ipdb.set_trace()
     return response.Response([provider_dict])
 
 
