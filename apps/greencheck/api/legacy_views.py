@@ -1,7 +1,7 @@
 import json
 import logging
 
-from apps.accounts.models import Hostingprovider
+from apps.accounts.models import Hostingprovider, Datacenter
 from django.views.decorators.cache import cache_page
 from django_countries import countries
 from rest_framework import response
@@ -110,6 +110,35 @@ def directory(request):
         country_list[country.code] = country_obj
 
     return response.Response(country_list)
+
+
+@api_view()
+@permission_classes([AllowAny])
+def directory_provider(self, id):
+    """
+    Return a JSON object representing the provider,
+    what they do, and evidence supporting their
+    sustainability claims
+    """
+    provider = Hostingprovider.objects.get(pk=id)
+    datacenters = [dc.legacy_representation() for dc in provider.datacenter.all() if dc]
+
+    # basic case, no datacenters or certificates
+    provider_dict = {
+        "id": str(provider.id),
+        "naam": provider.name,
+        "website": provider.website,
+        "countrydomain": str(provider.country),
+        "model": provider.model,
+        "certurl": None,
+        "valid_from": None,
+        "valid_to": None,
+        "mainenergytype": None,
+        "energyprovider": None,
+        "partner": provider.partner,
+        "datacenters": datacenters,
+    }
+    return response.Response([provider_dict])
 
 
 @api_view()

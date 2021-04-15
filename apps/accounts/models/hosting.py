@@ -26,8 +26,6 @@ from apps.greencheck.choices import StatusApproval
 
 logger = logging.getLogger(__name__)
 
-haikunator = Haikunator()
-
 
 class Datacenter(models.Model):
     country = CountryField(db_column="countrydomain")
@@ -47,6 +45,48 @@ class Datacenter(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     virtual = models.BooleanField()
     website = models.CharField(max_length=255)
+
+    @property
+    def city(self):
+        """
+        Return the city this datacentre is
+        placed in.
+        """
+        location = self.datacenterlocation_set.first()
+        if location:
+            return location.city
+        else:
+            return None
+
+    def legacy_representation(self):
+        """
+        Return a dictionary representation of datacentre,
+        suitable for serving in the older directory
+        API.
+        """
+
+        certificates = [
+            cert.legacy_representation() for cert in self.datacenter_certificates.all()
+        ]
+
+        return {
+            "id": self.id,
+            "naam": self.name,
+            "website": self.website,
+            "countrydomain": str(self.country),
+            "model": self.model,
+            "pue": self.pue,
+            "mja3": self.mja3,
+            # this needs a new table we don't have
+            "city": self.city,
+            "country": self.country.name,
+            # this lists through DatacenterCertificate
+            "certificates": certificates,
+            # the options below are deprecated
+            "classification": "DEPRECATED",
+            # this lists through DatacenterClassification
+            "classifications": ["DEPRECATED"],
+        }
 
     def __str__(self):
         return self.name
@@ -205,6 +245,26 @@ class Hostingprovider(models.Model):
         ]
 
 
+class DataCenterLocation(models.Model):
+    """
+    A join table linking datacentre cities
+    to the country.
+    """
+
+    city = models.CharField(max_length=255)
+    country = models.CharField(max_length=255)
+    datacenter = models.ForeignKey(
+        Datacenter, null=True, on_delete=models.CASCADE, db_column="id_dc"
+    )
+
+    def __str__(self):
+        return f"{self.city}, {self.country}"
+
+    class Meta:
+        verbose_name = "Datacentre Location"
+        db_table = "datacenters_locations"
+
+
 class HostingCommunication(TimeStampedModel):
     template = models.CharField(max_length=128)
     hostingprovider = models.ForeignKey(
@@ -327,6 +387,16 @@ class DatacenterCertificate(Certificate):
         on_delete=models.CASCADE,
         related_name="datacenter_certificates",
     )
+
+    def legacy_representation(self):
+        """
+        Return the JSON representation
+        """
+        return {
+            "cert_valid_from": self.valid_from,
+            "cert_valid_to": self.valid_to,
+            "cert_url": self.url,
+        }
 
     class Meta:
         db_table = "datacenter_certificates"
