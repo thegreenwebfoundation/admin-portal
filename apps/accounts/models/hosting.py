@@ -65,21 +65,6 @@ class Datacenter(models.Model):
         API.
         """
 
-        # {
-        #     "id": "28",
-        #     "naam": "Website Dataport",
-        #     "website": "http://www.website.co.uk",
-        #     "countrydomain": "UK",
-        #     "model": "groeneenergie",
-        #     "pue": "1.2",
-        #     "mja3": "0",
-        #     "city": "Ballasalla",
-        #     "country": "Isle of Man",
-        #     "classification": null,
-        #     "certificates": [],
-        #     "classifications": [],
-        # }
-
         certificates = [
             cert.legacy_representation() for cert in self.datacenter_certificates.all()
         ]
