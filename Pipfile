@@ -62,6 +62,9 @@ djangorestframework-jsonp = "*"
 pillow = "*"
 django-taggit-labels = "*"
 django-taggit = "*"
+django-waffle = "*"
+django-tailwind = "*"
+django-widget-tweaks = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.

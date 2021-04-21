@@ -2,12 +2,16 @@ from django.urls import path
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 
-from apps.accounts.views import AdminRegistrationView
-from apps.accounts.views import AdminActivationView
+from apps.accounts.views import (
+    AdminActivationView,
+    AdminRegistrationView,
+    DashboardView,
+)
 
 urlpatterns = []
 
 urlpatterns = [
+    path("dashboard", DashboardView.as_view(), name="dashboard",),
     path(
         "password_reset/",
         auth_views.PasswordResetView.as_view(),

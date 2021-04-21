@@ -44,8 +44,10 @@ if settings.DEBUG:
 
 
 urlpatterns += [
-    path("", admin.urls),
+    # admin views
     path("", include(accounts_urls)),
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("admin/", admin.urls),
     # API
     path("api/v3/", include(router.urls)),
     path(

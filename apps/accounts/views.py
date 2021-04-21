@@ -4,11 +4,13 @@ from django.http import HttpResponseRedirect
 from django.utils.encoding import force_text
 from django.urls import reverse
 
+
 from django_registration.backends.activation.views import RegistrationView
 from django_registration.backends.activation.views import ActivationView
 from django_registration.forms import RegistrationFormCaseInsensitive
 from django_registration import signals
 from django_registration.exceptions import ActivationError
+from django.views.generic.base import TemplateView
 
 from .models import User
 
@@ -16,6 +18,19 @@ from .models import User
 class RegistrationForm(RegistrationFormCaseInsensitive):
     class Meta(RegistrationFormCaseInsensitive.Meta):
         model = User
+
+
+class DashboardView(TemplateView):
+
+    template_name = "dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        import ipdb
+
+        ipdb.set_trace()
+        return context
 
 
 class AdminRegistrationView(RegistrationView):

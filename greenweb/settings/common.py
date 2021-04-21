@@ -67,13 +67,23 @@ INSTALLED_APPS = [
     "corsheaders",
     "taggit",
     "taggit_labels",
+    "waffle",
+    # UI
+    "tailwind",
+    "theme",
+    "widget_tweaks",
     # project specific
     "apps.accounts",
     "apps.greencheck",
 ]
 
+TAILWIND_APP_NAME = "theme"
+
+
 # Auth Mechanism
 AUTH_USER_MODEL = "accounts.User"
+
+LOGIN_REDIRECT_URL = "accounts/dashboard"
 
 # We need this to account for providers with massive numbers of IP ranges
 # to update. The default limit it too low for django admin!
@@ -81,6 +91,7 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "waffle.middleware.WaffleMiddleware",
     "beeline.middleware.django.HoneyMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -162,10 +173,16 @@ DEFAULT_FROM_EMAIL = "support@thegreenwebfoundation.org"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_URL = "/static/"
 
+STATICFILES_DIRS = [
+    "theme",
+]
+
+
 # staticfiles it the name of the directory we collate files,
 # so we can follow the convention of using static *inside django apps*
 # for files we can to pick up with `collectstatic` commands.
 STATIC_ROOT = ROOT("staticfiles")
+
 
 # Media Files
 MEDIA_ROOT = ROOT("media")
@@ -235,3 +252,6 @@ SITE_URL = "https://admin.thegreenwebfoundation.org"
 
 TAGGIT_CASE_INSENSITIVE = True
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
