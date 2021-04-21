@@ -1,0 +1,40 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <title>Django Tailwind</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		{% tailwind_css %}
+	</head>
+
+	<body class="bg-gray-50 font-sans-serif leading-normal tracking-normal">
+
+		{% block nav %}
+
+		<div class="flex justify-between items-center bg-white border-b-2 border-gray-100 py-0 md:justify-start md:space-x-10">
+
+		<img src="https://datasets.thegreenwebfoundation.org/static/img/dataset-browser-logo.png"</div>
+
+
+		</div>
+
+
+
+
+		{% endblock nav %}
+
+
+		{% block content %}
+
+		<div class="container mx-auto">
+			<section class="flex items-center justify-center h-screen">
+				<h1 class="text-5xl">Django + Tailwind = ❤️</h1>
+			</section>
+		</div>
+
+		{% endblock  %}
+
+	</body>
+</html>
