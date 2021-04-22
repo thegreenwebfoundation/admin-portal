@@ -8,7 +8,6 @@ from django_mysql.models import EnumField
 from anymail.message import AnymailMessage
 from django.utils import timezone
 from django.template.loader import render_to_string
-from haikunator import Haikunator
 from taggit.managers import TaggableManager
 
 

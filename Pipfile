@@ -60,7 +60,6 @@ redis = "*"
 honeycomb-beeline = "*"
 djangorestframework-jsonp = "*"
 pillow = "*"
-haikunator = "*"
 django-taggit-labels = "*"
 django-taggit = "*"
 
