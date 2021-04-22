@@ -11,7 +11,7 @@ from apps.accounts.views import (
 urlpatterns = []
 
 urlpatterns = [
-    path("dashboard", DashboardView.as_view(), name="dashboard",),
+    path("", DashboardView.as_view(), name="dashboard",),
     path(
         "password_reset/",
         auth_views.PasswordResetView.as_view(),

@@ -14,6 +14,10 @@ from apps.greencheck.admin import (
     GreencheckAsnApproveInline,
 )
 from taggit.models import Tag
+
+from waffle.models import Flag
+from waffle.admin import FlagAdmin
+
 from apps.greencheck.models import GreencheckASN
 from apps.greencheck.models import GreencheckIp
 from apps.greencheck.models import GreencheckIpApprove
@@ -468,3 +472,6 @@ class DatacenterAdmin(admin.ModelAdmin):
         return len(obj.hostingproviders.all())
 
     hostingproviders_amount.short_description = "Hosters"
+
+
+greenweb_admin.register(Flag, FlagAdmin)
