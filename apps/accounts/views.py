@@ -1,3 +1,5 @@
+import waffle
+
 from django.contrib.auth.models import Group
 from django.contrib import messages
 from django.http import HttpResponseRedirect
@@ -24,13 +26,14 @@ class DashboardView(TemplateView):
 
     template_name = "dashboard.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get(self, request, *args, **kwargs):
 
-        import ipdb
+        if waffle.flag_is_active(request, "dashboard"):
+            # Behavior if flag is active.
+            return super().get(request, args, kwargs)
 
-        ipdb.set_trace()
-        return context
+        else:
+            return HttpResponseRedirect(reverse("greenweb_admin:index"))
 
 
 class AdminRegistrationView(RegistrationView):

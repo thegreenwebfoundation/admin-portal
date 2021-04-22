@@ -2,7 +2,8 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-    <title>Django Tailwind</title>
+
+    <title>The Green Web Foundation</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -13,16 +14,28 @@
 
 		{% block nav %}
 
-		<div class="flex justify-between items-center bg-white border-b-2 border-gray-100 py-0 md:justify-start md:space-x-10">
-
-		<img src="https://datasets.thegreenwebfoundation.org/static/img/dataset-browser-logo.png"</div>
-
-
-		</div>
-
-
+		<nav class="flex justify-between items-center bg-white border-b-2 border-gray-100 py-0 md:justify-start md:space-x-10 ">
+			<div class="flex-grow">
+				<a href="/">
+					<img src="{% static 'img/member-portal-logo.png' %}" />
+				</a>
+			</div>
 
 
+
+			<div class="px-10 display-block">
+				{% if request.user.is_authenticated %}
+				<p>
+					Hello {{ request.user.username }}
+					|
+					<a href="{% url 'logout' %}">Log out</a>
+				</p>
+				{% else %}
+					<a href="{% url 'login' %}">Log in</a>
+				{% endif %}
+
+			</div>
+		</nav>
 		{% endblock nav %}
 
 
