@@ -42,10 +42,30 @@ class TestGreenCheckIP:
         gcip = models.GreencheckIp.objects.create(
             active=True,
             ip_start="127.0.0.1",
-            ip_end="120.0.0.1",
+            ip_end="127.0.0.2",
             hostingprovider=hosting_provider,
         )
         gcip.save()
+
+    @pytest.mark.parametrize(
+        "ip_start, ip_end, range_length",
+        [
+            ("127.0.0.1", "127.0.0.1", 1),
+            ("127.0.0.1", "127.0.0.255", 255),
+            ("127.0.0.1", "127.0.1.1", 257),
+        ],
+    )
+    def test_greencheck_ip_calculates_range(
+        self, hosting_provider, db, ip_start, ip_end, range_length
+    ):
+        hosting_provider.save()
+        gcip = models.GreencheckIp.objects.create(
+            active=True,
+            ip_start=ip_start,
+            ip_end=ip_end,
+            hostingprovider=hosting_provider,
+        )
+        assert gcip.ip_range_length() == range_length
 
 
 class TestHostingProviderASNApprovalNeedsReview:

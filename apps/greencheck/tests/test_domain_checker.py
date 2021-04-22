@@ -4,6 +4,8 @@ import pytest
 
 from .. import legacy_workers
 from .. import domain_check
+from .. import models as gc_models
+from apps.accounts import models as ac_models
 from unittest import mock
 
 pytestmark = pytest.mark.django_db
@@ -63,3 +65,90 @@ class TestDomainChecker:
 
         assert isinstance(res, legacy_workers.SiteCheck)
         assert res.hosting_provider_id == green_asn.hostingprovider.id
+
+
+class TestDomainCheckerOrderBySize:
+    """
+    Check that we can return the ip ranges from a check in the
+    ascending correct order of size.
+    """
+
+    def test_order_ip_range_by_size(
+        self,
+        hosting_provider: ac_models.Hostingprovider,
+        checker: domain_check.GreenDomainChecker,
+        db,
+    ):
+        hosting_provider.save()
+        small_ip_range = gc_models.GreencheckIp.objects.create(
+            active=True,
+            ip_start="127.0.1.2",
+            ip_end="127.0.1.3",
+            hostingprovider=hosting_provider,
+        )
+        small_ip_range.save()
+
+        large_ip_range = gc_models.GreencheckIp.objects.create(
+            active=True,
+            ip_start="127.0.1.2",
+            ip_end="127.0.1.200",
+            hostingprovider=hosting_provider,
+        )
+        large_ip_range.save()
+
+        ip_matches = gc_models.GreencheckIp.objects.filter(
+            ip_end__gte="127.0.1.2", ip_start__lte="127.0.1.2",
+        )
+
+        res = checker.order_ip_range_by_size(ip_matches)
+
+        assert res[0].ip_end == "127.0.1.3"
+
+    def test_return_org_with_smallest_ip_range_first(
+        self,
+        hosting_provider: ac_models.Hostingprovider,
+        checker: domain_check.GreenDomainChecker,
+        db,
+    ):
+        """
+        When we have two hosting providers, where one provider is using a
+        subset of larger provider's IP range, we return the smaller
+        provider first. This allows resellers to be visible.
+        """
+
+        hosting_provider.save()
+
+        large_ip_range = gc_models.GreencheckIp.objects.create(
+            active=True,
+            ip_start="127.0.1.2",
+            ip_end="127.0.1.200",
+            hostingprovider=hosting_provider,
+        )
+        large_ip_range.save()
+
+        small_hosting_provider = ac_models.Hostingprovider(
+            archived=False,
+            country="US",
+            customer=False,
+            icon="",
+            iconurl="",
+            model="groeneenergie",
+            name="Smaller Reseller",
+            partner="",
+            showonwebsite=True,
+            website="http://small-reseller.com",
+        )
+        small_hosting_provider.save()
+
+        small_ip_range = gc_models.GreencheckIp.objects.create(
+            active=True,
+            ip_start="127.0.1.2",
+            ip_end="127.0.1.3",
+            hostingprovider=small_hosting_provider,
+        )
+        small_ip_range.save()
+
+        res = checker.check_domain("127.0.1.2")
+
+        assert res.hosting_provider_id == small_hosting_provider.id
+

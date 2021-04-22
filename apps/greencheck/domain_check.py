@@ -168,7 +168,12 @@ class GreenDomainChecker:
             ip_end__gte=ip_address, ip_start__lte=ip_address,
         )
         # order matches by ascending range size
-        return ip_matches.first()
+        # we can't do this in the database because we need to work out the
+        # size of the Ip ranges in order to order them properly
+        ordered_matches = self.order_ip_range_by_size(ip_matches)
+
+        if ordered_matches:
+            return ordered_matches[0]
 
     def check_for_matching_asn(self, ip_address):
         """
@@ -225,3 +230,24 @@ class GreenDomainChecker:
         evaluated_green_queryset = green_list[::1]
 
         return evaluated_green_queryset + grey_domains
+
+    def order_ip_range_by_size(self, ip_matches):
+        """
+        Returns a queryset's worth of Green IP Ranges, ordered
+        from smallest range first, as a list.
+        This allows resellers to show up in a supply chain check
+        on a site.
+        """
+        range_list = [
+            {"ip_range": ip_range, "range_length": ip_range.ip_range_length()}
+            for ip_range in ip_matches
+        ]
+
+        # now sort by the length, in ascending order
+        ascending_ip_ranges = sorted(
+            range_list, key=lambda ip_obj: ip_obj.get("range_length")
+        )
+
+        # sort to return the smallest first
+        return [obj["ip_range"] for obj in ascending_ip_ranges]
+

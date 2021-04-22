@@ -159,6 +159,18 @@ class GreencheckIp(TimeStampedModel):
         Hostingprovider, db_column="id_hp", on_delete=models.CASCADE
     )
 
+    def ip_range_length(self) -> int:
+        """
+        Return the length of the ip range beginning at
+        ip_start, and ending at ip_end
+        """
+        return (
+            int(ipaddress.IPv4Address(self.ip_end))
+            - int(ipaddress.IPv4Address(self.ip_start))
+            + 1
+        )
+        # return len(ip_range)
+
     def __str__(self):
         return f"{self.ip_start} - {self.ip_end}"
 
