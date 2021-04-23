@@ -64,6 +64,11 @@
         # remove the deps
         PIPENV_VENV_IN_PROJECT: 1
 
+    - name: install node deps for building tailwind
+      shell: "pipenv run ./manage.py tailwind install"
+      args:
+        chdir: "{{ project_root }}/current"
+
     - name: build minified tailwind css file
       shell: "pipenv run ./manage.py tailwind build"
       args:
