@@ -178,7 +178,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    "app/theme/static",
+    "apps/theme/static",
 ]
 
 
