@@ -58,6 +58,11 @@
       shell: "pipenv sync"
       args:
         chdir: "{{ project_root }}/current"
+      environment:
+        # make sure we install in the project root.
+        # this way when we clear up old releases we also
+        # remove the deps
+        PIPENV_VENV_IN_PROJECT: 1
 
     - name: collect static files for django
       shell: "pipenv run ./manage.py collectstatic --no-input"
