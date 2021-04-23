@@ -21,10 +21,11 @@ module.exports = {
         /*  Templates within theme app (e.g. base.html) */
         '../templates/**/*.html',
 
-        /* Templates in other apps. Adjust the following line so that it matches
-         * your project structure.
-         */
+        /* Templates in other apps. */
         '../../templates/**/*.html',
+
+        /* project root template dir */
+        '../../../templates/**/*.html',
 
         /**
          * JS: If you use Tailwind CSS in JavaScript, uncomment the following lines and make sure

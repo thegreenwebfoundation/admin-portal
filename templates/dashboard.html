@@ -8,16 +8,21 @@
 <div class="container mx-auto">
   <section class="mx-auto max-w-lg bg-white border-2 border-dark-gray rounded-md  h-100-l mt-8 p-8">
 
-  <h2>What do you want to do today?</h2>
+  <h2 class="text-xl">What do you want to do today?</h2>
 
-  <ul>
+  <ul class="mt-4">
 
     <li>
-      <a href="/" >
-        Register a digital service provider for the directory
+    {# if the user has a hosting provider #}
+      <a class="text-green-800" href="/" >
+        Register a digital service provider for the directory.
       </a>
     </li>
 
+  {# if user can create new hosting providers #}
+    <a class="text-green-800" href="" >
+        Visit stats
+      </a>
   </ul>
 
 
