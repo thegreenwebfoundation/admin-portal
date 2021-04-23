@@ -5,8 +5,10 @@ from django.contrib.auth.models import (
     UserManager,
     PermissionsMixin,
 )
+
 from django.db import models
 from django.core.mail import send_mail
+from django.urls import reverse
 
 from .hosting import Hostingprovider
 
@@ -77,6 +79,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+    def get_absolute_url(self):
+        return reverse("user_edit", args=[str(self.id)])
 
     def save(self, *args, **kwargs):
         self.username = self.username.lower()
