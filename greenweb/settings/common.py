@@ -70,20 +70,20 @@ INSTALLED_APPS = [
     "waffle",
     # UI
     "tailwind",
-    "theme",
     "widget_tweaks",
     # project specific
+    "apps.theme",
     "apps.accounts",
     "apps.greencheck",
 ]
 
-TAILWIND_APP_NAME = "theme"
+TAILWIND_APP_NAME = "apps.theme"
 
 
 # Auth Mechanism
 AUTH_USER_MODEL = "accounts.User"
 
-LOGIN_REDIRECT_URL = "accounts/dashboard"
+LOGIN_REDIRECT_URL = "/"
 
 # We need this to account for providers with massive numbers of IP ranges
 # to update. The default limit it too low for django admin!
@@ -174,7 +174,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    "theme",
+    "app/theme/static",
 ]
 
 
