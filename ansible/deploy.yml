@@ -64,6 +64,11 @@
         # remove the deps
         PIPENV_VENV_IN_PROJECT: 1
 
+    - name: build minified tailwind css file
+      shell: "pipenv run ./manage.py tailwind build"
+      args:
+        chdir: "{{ project_root }}/current"
+
     - name: collect static files for django
       shell: "pipenv run ./manage.py collectstatic --no-input"
       args:
