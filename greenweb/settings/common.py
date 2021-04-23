@@ -70,6 +70,8 @@ INSTALLED_APPS = [
     "waffle",
     # UI
     "tailwind",
+    "crispy_forms",
+    "crispy_tailwind",
     "widget_tweaks",
     # project specific
     "apps.theme",
@@ -78,6 +80,8 @@ INSTALLED_APPS = [
 ]
 
 TAILWIND_APP_NAME = "apps.theme"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+CRISPY_TEMPLATE_PACK = "tailwind"
 
 
 # Auth Mechanism

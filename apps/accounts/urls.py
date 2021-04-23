@@ -6,6 +6,7 @@ from apps.accounts.views import (
     AdminActivationView,
     AdminRegistrationView,
     DashboardView,
+    UserUpdateView,
 )
 
 urlpatterns = []
@@ -48,4 +49,5 @@ urlpatterns = [
         auth_views.PasswordResetCompleteView.as_view(),
         name="password_reset_complete",
     ),
+    path("user/<pk>/", UserUpdateView.as_view(), name="user_edit"),
 ]

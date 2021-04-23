@@ -9,12 +9,14 @@ from django.urls import reverse
 
 from django_registration.backends.activation.views import RegistrationView
 from django_registration.backends.activation.views import ActivationView
+from django.views.generic import UpdateView
 from django_registration.forms import RegistrationFormCaseInsensitive
 from django_registration import signals
 from django_registration.exceptions import ActivationError
 from django.views.generic.base import TemplateView
 
 from .models import User
+from .forms import CustomUserChangeForm
 
 
 class RegistrationForm(RegistrationFormCaseInsensitive):
@@ -27,11 +29,8 @@ class DashboardView(TemplateView):
     template_name = "dashboard.html"
 
     def get(self, request, *args, **kwargs):
-
         if waffle.flag_is_active(request, "dashboard"):
-            # Behavior if flag is active.
             return super().get(request, args, kwargs)
-
         else:
             return HttpResponseRedirect(reverse("greenweb_admin:index"))
 
@@ -97,3 +96,17 @@ class AdminActivationView(ActivationView):
 
         messages.add_message(self.request, messages.ERROR, error_message)
         return HttpResponseRedirect(force_text(self.get_success_url()))
+
+
+class UserUpdateView(UpdateView):
+    """
+    A view for allowing users to edit basic details, and control
+    notification settings
+    """
+
+    model = User
+    form_class = CustomUserChangeForm
+
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests: instantiate a blank version of the form."""
+        return super().get(request, args, kwargs)
