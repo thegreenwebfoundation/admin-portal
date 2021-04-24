@@ -5,6 +5,7 @@ import logging
 
 from django import forms
 from django.db import models
+from django_mysql import models as mysql_models
 from django.db.models.fields import Field
 from django_mysql.models import EnumField
 from django.core import exceptions
@@ -183,7 +184,7 @@ class GreencheckIp(TimeStampedModel):
         ]
 
 
-class Greencheck(models.Model):
+class Greencheck(mysql_models.Model):
     # NOTE: ideally we would have these two as Foreign keys, as the greencheck
     # table links back to where the recorded ip ranges we checked against are.
     # However, some `GreencheckIP` ip range objects have been deleted over
@@ -211,7 +212,7 @@ class Greencheck(models.Model):
     green = EnumField(choices=BoolChoice.choices)
     ip = IpAddressField()
     tld = models.CharField(max_length=64)
-    type = EnumField(choices=GreenlistChoice.choices, default=GreenlistChoice.none)
+    type = EnumField(choices=GreenlistChoice.choices, default=GreenlistChoice.NONE)
     url = models.CharField(max_length=255)
 
     class Meta:
@@ -304,8 +305,8 @@ class GreencheckASN(TimeStampedModel):
     class Meta:
         db_table = "greencheck_as"
         indexes = [
-            models.Index(fields=["active"], name="active"),
-            models.Index(fields=["asn"], name="asn"),
+            models.Index(fields=["active"], name="as_active"),
+            models.Index(fields=["asn"], name="as_asn"),
         ]
         constraints = [
             models.UniqueConstraint(
@@ -366,7 +367,7 @@ class GreencheckStats(Stats):
         # managed = False
         db_table = "greencheck_stats"
         indexes = [
-            models.Index(fields=["checked_through"], name="checked_through"),
+            models.Index(fields=["checked_through"], name="stats_checked_through"),
         ]
 
 
@@ -375,7 +376,9 @@ class GreencheckStatsTotal(Stats):
         # managed = False
         db_table = "greencheck_stats_total"
         indexes = [
-            models.Index(fields=["checked_through"], name="checked_through"),
+            models.Index(
+                fields=["checked_through"], name="stats_total_checked_through"
+            ),
         ]
 
 

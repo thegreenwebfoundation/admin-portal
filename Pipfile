@@ -14,26 +14,23 @@ ipython = "*"
 ipdb = "*"
 pytest = "*"
 pytest-django = "*"
-pytest-watch = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
 black = "*"
 iredis = "*"
 
 [packages]
-# psycopg2-binary = "*", not needed for now.
-django = {extras = ["bcrypt"],version = "<3.0"}
+django = {extras = ["bcrypt"],version = "==3.2"}
 django-anymail = {extras = ["mailgun"],version = "==7.0.0"}
-django-choices = "==1.7.0"
-django-countries = "==5.5"
+django-countries = "*"
 django-environ = "==0.4.5"
 django-extensions = "==2.2.5"
-django-model-utils = "==3.2.0"
+django-model-utils = "*"
 django-mysql = "*"
 django-registration = "==3.1.2"
 django-unixdatetimefield = "==1.0.3"
 gunicorn = "==19.9.0"
-mysqlclient = "==1.4.4"
+mysqlclient = "*"
 requests = ">=2"
 whitenoise = {extras = ["brotli"],version = "==4.1.4"}
 db-to-sqlite = "*"
@@ -56,7 +53,6 @@ ipwhois = "*"
 django-cors-headers = "*"
 django-redis = "*"
 redis = "*"
-honeycomb-beeline = "*"
 djangorestframework-jsonp = "*"
 pillow = "*"
 django-taggit-labels = "*"

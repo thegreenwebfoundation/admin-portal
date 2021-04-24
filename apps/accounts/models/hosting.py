@@ -93,14 +93,16 @@ class Datacenter(models.Model):
     class Meta:
         db_table = "datacenters"
         indexes = [
-            models.Index(fields=["name"], name="name"),
+            models.Index(fields=["name"], name="dc_name"),
         ]
         # managed = False
 
 
 class DatacenterClassification(models.Model):
     # TODO if this is used to some extent, this should be m2m
-    classification = models.CharField(max_length=255, choices=ClassificationChoice)
+    classification = models.CharField(
+        max_length=255, choices=ClassificationChoice.choices
+    )
     datacenter = models.ForeignKey(
         Datacenter,
         db_column="id_dc",
@@ -137,12 +139,12 @@ class Hostingprovider(models.Model):
     customer = models.BooleanField(default=False)
     icon = models.CharField(max_length=50, blank=True)
     iconurl = models.CharField(max_length=255, blank=True)
-    model = EnumField(choices=ModelType.choices, default=ModelType.compensation)
+    model = EnumField(choices=ModelType.choices, default=ModelType.COMPENSATION)
     name = models.CharField(max_length=255, db_column="naam")
     partner = models.CharField(
         max_length=255,
         null=True,
-        default=PartnerChoice.none,
+        default=PartnerChoice.NONE,
         choices=PartnerChoice.choices,
         blank=True,
     )
@@ -187,10 +189,10 @@ class Hostingprovider(models.Model):
         logger.debug(self.greencheckasnapprove_set.all())
         logger.debug(self.greencheckipapprove_set.all())
         outstanding_asn_approval_reqs = self.greencheckasnapprove_set.filter(
-            status__in=[StatusApproval.new, StatusApproval.update]
+            status__in=[StatusApproval.NEW, StatusApproval.UPDATE]
         )
         outstanding_ip_range_approval_reqs = self.greencheckipapprove_set.filter(
-            status__in=[StatusApproval.new, StatusApproval.update]
+            status__in=[StatusApproval.NEW, StatusApproval.UPDATE]
         )
         # use list() to evalute the queryset to a datastructure that
         # we can concatenate easily
@@ -238,9 +240,9 @@ class Hostingprovider(models.Model):
         verbose_name = "Hosting Provider"
         db_table = "hostingproviders"
         indexes = [
-            models.Index(fields=["name"], name="name"),
-            models.Index(fields=["archived"], name="archived"),
-            models.Index(fields=["showonwebsite"], name="showonwebsite"),
+            models.Index(fields=["name"], name="hp_name"),
+            models.Index(fields=["archived"], name="hp_archived"),
+            models.Index(fields=["showonwebsite"], name="hp_showonwebsite"),
         ]
 
 

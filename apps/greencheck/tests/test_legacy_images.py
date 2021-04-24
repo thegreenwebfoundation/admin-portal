@@ -92,7 +92,7 @@ class TestGreencheckImageView:
         with open(f"{website}.png", "wb") as imgfile:
             imgfile.write(response.content)
 
-        webbrowser.open(f"{website}.png")
+        # webbrowser.open(f"{website}.png")
 
         assert response.status_code == 200
 
@@ -111,7 +111,7 @@ class TestGreencheckImageView:
         with open(f"{website}.png", "wb") as imgfile:
             imgfile.write(response.content)
 
-        webbrowser.open(f"{website}.png")
+        # webbrowser.open(f"{website}.png")
 
         assert response.status_code == 200
 
@@ -136,7 +136,7 @@ class TestGreencheckImageView:
         with open(f"{website}.png", "wb") as imgfile:
             imgfile.write(response.content)
 
-        webbrowser.open(f"{website}.png")
+        # webbrowser.open(f"{website}.png")
 
         assert response.status_code == 200
 
