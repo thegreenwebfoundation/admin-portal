@@ -21,7 +21,6 @@ black = "*"
 iredis = "*"
 
 [packages]
-# psycopg2-binary = "*", not needed for now.
 django = {extras = ["bcrypt"],version = "==3.2"}
 django-anymail = {extras = ["mailgun"],version = "==7.0.0"}
 django-countries = "*"
@@ -55,7 +54,6 @@ ipwhois = "*"
 django-cors-headers = "*"
 django-redis = "*"
 redis = "*"
-honeycomb-beeline = "*"
 djangorestframework-jsonp = "*"
 pillow = "*"
 django-taggit-labels = "*"
