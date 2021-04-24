@@ -96,7 +96,6 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "waffle.middleware.WaffleMiddleware",
-    "beeline.middleware.django.HoneyMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
