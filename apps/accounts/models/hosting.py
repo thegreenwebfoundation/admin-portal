@@ -93,14 +93,16 @@ class Datacenter(models.Model):
     class Meta:
         db_table = "datacenters"
         indexes = [
-            models.Index(fields=["name"], name="name"),
+            models.Index(fields=["name"], name="dc_name"),
         ]
         # managed = False
 
 
 class DatacenterClassification(models.Model):
     # TODO if this is used to some extent, this should be m2m
-    classification = models.CharField(max_length=255, choices=ClassificationChoice)
+    classification = models.CharField(
+        max_length=255, choices=ClassificationChoice.choices
+    )
     datacenter = models.ForeignKey(
         Datacenter,
         db_column="id_dc",
@@ -238,9 +240,9 @@ class Hostingprovider(models.Model):
         verbose_name = "Hosting Provider"
         db_table = "hostingproviders"
         indexes = [
-            models.Index(fields=["name"], name="name"),
-            models.Index(fields=["archived"], name="archived"),
-            models.Index(fields=["showonwebsite"], name="showonwebsite"),
+            models.Index(fields=["name"], name="hp_name"),
+            models.Index(fields=["archived"], name="hp_archived"),
+            models.Index(fields=["showonwebsite"], name="hp_showonwebsite"),
         ]
 
 
