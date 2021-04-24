@@ -4,7 +4,7 @@ import os
 
 
 class GreencheckConfig(AppConfig):
-    name = "greencheck"
+    name = "apps.greencheck"
 
     def ready(self):
         # If you use uwsgi, gunicorn, celery, or other pre-fork models,

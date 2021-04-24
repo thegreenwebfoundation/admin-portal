@@ -22,10 +22,9 @@ iredis = "*"
 
 [packages]
 # psycopg2-binary = "*", not needed for now.
-django = {extras = ["bcrypt"],version = "<3.1"}
+django = {extras = ["bcrypt"],version = "==3.2"}
 django-anymail = {extras = ["mailgun"],version = "==7.0.0"}
-django-choices = "*"
-django-countries = "==5.5"
+django-countries = "*"
 django-environ = "==0.4.5"
 django-extensions = "==2.2.5"
 django-model-utils = "*"

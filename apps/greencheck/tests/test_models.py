@@ -9,8 +9,8 @@ def green_ip_range_approval_request(green_ip):
      green_ip fixture
     """
     return models.GreencheckIpApprove(
-        action=choices.ActionChoice.new,
-        status=choices.ActionChoice.new,
+        action=choices.ActionChoice.NEW,
+        status=choices.ActionChoice.NEW,
         hostingprovider=green_ip.hostingprovider,
         ip_end=green_ip.ip_end,
         ip_start=green_ip.ip_start,
@@ -24,8 +24,8 @@ def green_asn_approval_request(hosting_provider_with_sample_user):
     """
     hosting_provider = hosting_provider_with_sample_user
     return models.GreencheckASNapprove(
-        action=choices.ActionChoice.new,
-        status=choices.ActionChoice.new,
+        action=choices.ActionChoice.NEW,
+        status=choices.ActionChoice.NEW,
         hostingprovider=hosting_provider,
         asn=12345,
     )
@@ -76,10 +76,10 @@ class TestHostingProviderASNApprovalNeedsReview:
     @pytest.mark.parametrize(
         "action,status",
         [
-            (choices.ActionChoice.new, choices.StatusApproval.new),
-            (choices.ActionChoice.update, choices.StatusApproval.update),
-            (choices.ActionChoice.new, choices.StatusApproval.update),
-            (choices.ActionChoice.update, choices.StatusApproval.new),
+            (choices.ActionChoice.NEW, choices.StatusApproval.NEW),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.NEW, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.NEW),
         ],
     )
     def test_hosting_provider_is_pending_with_new_ASN(
@@ -121,10 +121,10 @@ class TestHostingProviderASNApprovalNeedsReview:
     @pytest.mark.parametrize(
         "action,status",
         [
-            (choices.ActionChoice.new, choices.StatusApproval.new),
-            (choices.ActionChoice.update, choices.StatusApproval.update),
-            (choices.ActionChoice.new, choices.StatusApproval.update),
-            (choices.ActionChoice.update, choices.StatusApproval.new),
+            (choices.ActionChoice.NEW, choices.StatusApproval.NEW),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.NEW, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.NEW),
         ],
     )
     def test_hosting_provider_is_pending_with_new_ip_range(
@@ -165,10 +165,10 @@ class TestHostingProviderSendsNotification:
     @pytest.mark.parametrize(
         "action,status",
         [
-            (choices.ActionChoice.new, choices.StatusApproval.new),
-            (choices.ActionChoice.update, choices.StatusApproval.update),
-            (choices.ActionChoice.new, choices.StatusApproval.update),
-            (choices.ActionChoice.update, choices.StatusApproval.new),
+            (choices.ActionChoice.NEW, choices.StatusApproval.NEW),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.NEW, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.NEW),
         ],
     )
     def test_hosting_provider_notifications_sent_when_review_needed_for_asn(
@@ -202,10 +202,10 @@ class TestHostingProviderSendsNotification:
     @pytest.mark.parametrize(
         "action,status",
         [
-            (choices.ActionChoice.new, choices.StatusApproval.new),
-            (choices.ActionChoice.update, choices.StatusApproval.update),
-            (choices.ActionChoice.new, choices.StatusApproval.update),
-            (choices.ActionChoice.update, choices.StatusApproval.new),
+            (choices.ActionChoice.NEW, choices.StatusApproval.NEW),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.NEW, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.NEW),
         ],
     )
     def test_hosting_provider_notifications_sent_when_review_needed_for_ip_range(
@@ -238,10 +238,10 @@ class TestHostingProviderSendsNotification:
     @pytest.mark.parametrize(
         "action,status",
         [
-            (choices.ActionChoice.new, choices.StatusApproval.new),
-            (choices.ActionChoice.update, choices.StatusApproval.update),
-            (choices.ActionChoice.new, choices.StatusApproval.update),
-            (choices.ActionChoice.update, choices.StatusApproval.new),
+            (choices.ActionChoice.NEW, choices.StatusApproval.NEW),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.NEW, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.NEW),
         ],
     )
     def test_hosting_provider_does_not_send_duplicate_notifications_for_asn(
@@ -286,10 +286,10 @@ class TestHostingProviderSendsNotification:
     @pytest.mark.parametrize(
         "action,status",
         [
-            (choices.ActionChoice.new, choices.StatusApproval.new),
-            (choices.ActionChoice.update, choices.StatusApproval.update),
-            (choices.ActionChoice.new, choices.StatusApproval.update),
-            (choices.ActionChoice.update, choices.StatusApproval.new),
+            (choices.ActionChoice.NEW, choices.StatusApproval.NEW),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.NEW, choices.StatusApproval.UPDATE),
+            (choices.ActionChoice.UPDATE, choices.StatusApproval.NEW),
         ],
     )
     def test_hosting_provider_does_not_send_duplicate_notifications_for_ip_range(
