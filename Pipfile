@@ -24,11 +24,11 @@ iredis = "*"
 # psycopg2-binary = "*", not needed for now.
 django = {extras = ["bcrypt"],version = "<3.1"}
 django-anymail = {extras = ["mailgun"],version = "==7.0.0"}
-django-choices = "==1.7.0"
+django-choices = "*"
 django-countries = "==5.5"
 django-environ = "==0.4.5"
 django-extensions = "==2.2.5"
-django-model-utils = "==3.2.0"
+django-model-utils = "*"
 django-mysql = "*"
 django-registration = "==3.1.2"
 django-unixdatetimefield = "==1.0.3"

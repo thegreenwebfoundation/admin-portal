@@ -137,12 +137,12 @@ class Hostingprovider(models.Model):
     customer = models.BooleanField(default=False)
     icon = models.CharField(max_length=50, blank=True)
     iconurl = models.CharField(max_length=255, blank=True)
-    model = EnumField(choices=ModelType.choices, default=ModelType.compensation)
+    model = EnumField(choices=ModelType.choices, default=ModelType.COMPENSATION)
     name = models.CharField(max_length=255, db_column="naam")
     partner = models.CharField(
         max_length=255,
         null=True,
-        default=PartnerChoice.none,
+        default=PartnerChoice.NONE,
         choices=PartnerChoice.choices,
         blank=True,
     )
@@ -187,10 +187,10 @@ class Hostingprovider(models.Model):
         logger.debug(self.greencheckasnapprove_set.all())
         logger.debug(self.greencheckipapprove_set.all())
         outstanding_asn_approval_reqs = self.greencheckasnapprove_set.filter(
-            status__in=[StatusApproval.new, StatusApproval.update]
+            status__in=[StatusApproval.NEW, StatusApproval.UPDATE]
         )
         outstanding_ip_range_approval_reqs = self.greencheckipapprove_set.filter(
-            status__in=[StatusApproval.new, StatusApproval.update]
+            status__in=[StatusApproval.NEW, StatusApproval.UPDATE]
         )
         # use list() to evalute the queryset to a datastructure that
         # we can concatenate easily

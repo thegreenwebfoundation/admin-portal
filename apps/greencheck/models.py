@@ -211,7 +211,7 @@ class Greencheck(models.Model):
     green = EnumField(choices=BoolChoice.choices)
     ip = IpAddressField()
     tld = models.CharField(max_length=64)
-    type = EnumField(choices=GreenlistChoice.choices, default=GreenlistChoice.none)
+    type = EnumField(choices=GreenlistChoice.choices, default=GreenlistChoice.NONE)
     url = models.CharField(max_length=255)
 
     class Meta:
