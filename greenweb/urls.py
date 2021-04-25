@@ -14,7 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
-from django.urls import path, include
+from django.urls import path, include, reverse_lazy
+from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 
 
@@ -47,6 +48,11 @@ urlpatterns += [
     # admin views
     path("", include(accounts_urls)),
     path("accounts/", include("django.contrib.auth.urls")),
+    path(
+        "green-urls",
+        RedirectView.as_view(url=reverse_lazy("greenweb_admin:green_urls")),
+        name="green_urls_redirect",
+    ),
     path("admin/", admin.urls),
     # API
     path("api/v3/", include(router.urls)),
