@@ -28,8 +28,8 @@ class ApprovalMixin:
             hosting_provider = self.instance.hostingprovider
 
             # changed here represents an
-            action = ActionChoice.update if self.changed else ActionChoice.new
-            status = StatusApproval.update if self.changed else StatusApproval.new
+            action = ActionChoice.UPDATE if self.changed else ActionChoice.NEW
+            status = StatusApproval.UPDATE if self.changed else StatusApproval.NEW
             kwargs = {
                 "action": action,
                 "status": status,
