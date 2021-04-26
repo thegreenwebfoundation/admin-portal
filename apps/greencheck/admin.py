@@ -26,12 +26,12 @@ class ApprovalFieldMixin:
         approve_url = reverse_admin_name(
             Hostingprovider,
             name=name,
-            params={"action": StatusApproval.approved, "approval_id": obj.pk},
+            params={"action": StatusApproval.APPROVED, "approval_id": obj.pk},
         )
         reject_url = reverse_admin_name(
             Hostingprovider,
             name=name,
-            params={"action": StatusApproval.removed, "approval_id": obj.pk},
+            params={"action": StatusApproval.REMOVED, "approval_id": obj.pk},
         )
 
         approve = f'<a href="{approve_url}">Approve</a>'
@@ -39,9 +39,9 @@ class ApprovalFieldMixin:
         link = f"{approve} / {reject}"
         action_taken = any(
             [
-                obj.status == StatusApproval.deleted,
-                obj.status == StatusApproval.removed,
-                obj.status == StatusApproval.approved,
+                obj.status == StatusApproval.DELETED,
+                obj.status == StatusApproval.REMOVED,
+                obj.status == StatusApproval.APPROVED,
             ]
         )
         if action_taken:
