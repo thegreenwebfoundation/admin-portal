@@ -275,7 +275,7 @@ class HostingAdmin(admin.ModelAdmin):
         obj.status = action
         obj.save()
 
-        if action == StatusApproval.approved:
+        if action == StatusApproval.APPROVED:
             GreencheckASN.objects.create(
                 active=True, hostingprovider=obj.hostingprovider, asn=obj.asn
             )
@@ -291,7 +291,7 @@ class HostingAdmin(admin.ModelAdmin):
         obj.status = action
         obj.save()
 
-        if action == StatusApproval.approved:
+        if action == StatusApproval.APPROVED:
             GreencheckIp.objects.create(
                 active=True,
                 hostingprovider=obj.hostingprovider,
