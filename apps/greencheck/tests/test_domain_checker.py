@@ -66,6 +66,18 @@ class TestDomainChecker:
         assert isinstance(res, legacy_workers.SiteCheck)
         assert res.hosting_provider_id == green_asn.hostingprovider.id
 
+    def test_with_green_domain_by_non_resolving_asn(self, green_asn, checker):
+        """
+        Sometimes the service we use for resolving ASNs returns
+        an empty result.
+        """
+        green_asn.save()
+        checker.asn_from_ip = mock.MagicMock(return_value=None)
+
+        res = checker.check_domain("100.113.75.254")
+
+        assert isinstance(res, legacy_workers.SiteCheck)
+
 
 class TestDomainCheckerOrderBySize:
     """

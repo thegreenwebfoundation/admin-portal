@@ -192,7 +192,7 @@ class GreenDomainChecker:
         if isinstance(asn_result, int):
             return GreencheckASN.objects.filter(asn=asn_result).first()
 
-        if asn_result == "NA":
+        if asn_result == "NA" or asn_result is None:
             logger.info("Received a result we can't match to an ASN. Skipping")
             # we can't process this IP address. Skip it.
             return False
