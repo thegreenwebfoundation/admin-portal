@@ -148,9 +148,14 @@ def greencheck_multi(request, url_list: str):
     Return a JSON object for the multichecks, like the API
     """
     urls = None
+
     try:
         urls = json.loads(url_list)
     except Exception:
+        urls = []
+
+    # fallback if the url list is not usable
+    if urls is None:
         urls = []
 
     green_matches = GreenDomain.objects.filter(url__in=urls)
