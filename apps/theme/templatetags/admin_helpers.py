@@ -1,6 +1,8 @@
 import urllib
 from django import template
+from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
+
 
 import logging
 from apps.greencheck import domain_check
@@ -48,3 +50,13 @@ def link_to_ripe_stat(website_string: str) -> str:
             f"Check domain against RIPE stats"
             f"</a>"
         )
+
+
+@register.filter()
+def has_group(user, group_name) -> bool:
+    """
+    Check that a user has a specific group applied, and return
+    either True if so, or False.
+    """
+    group = Group.objects.get(name=group_name)
+    return True if group in user.groups.all() else False
