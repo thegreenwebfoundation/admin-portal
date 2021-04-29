@@ -36,14 +36,10 @@
 
                                   Visit site
                                 </a>
+                                {% if request.user.is_superuser  %}
+                                    {% link_to_ripe_stat field.field.value %}
+                                {% endif  %}
 
-                                <a
-                                  class="extra_url"
-                                  target="_blank"
-                                  href="{{ field.field.value|make_url }}">
-
-
-                                </a>
 
                             {% endif %}
 
