@@ -1,9 +1,13 @@
 import urllib
 from django import template
+from django.utils.safestring import mark_safe
 
 import logging
+from apps.greencheck import domain_check
 
 register = template.Library()
+
+checker = domain_check.GreenDomainChecker()
 
 console = logging.StreamHandler()
 logger = logging.getLogger(__name__)
@@ -26,10 +30,21 @@ def make_url(website_string: str) -> str:
     return website_string
 
 
-# def link_to_ripe_stat(website_string: str) -> str:
-#     """
-#     Add link to RIPE checker
-#     """
+@register.simple_tag
+def link_to_ripe_stat(website_string: str) -> str:
+    """
+    Add link to checker at stat.ripe.net for a domain
+    """
 
-#     logger.debug(f"RECIEVED THIS: {str}")
+    url = make_url(website_string)
+    domain = checker.validate_domain(url)
+    resolved_ip = checker.convert_domain_to_ip(domain)
 
+    if resolved_ip:
+        return mark_safe(
+            f"<a"
+            f" target='_blank'"
+            f" href='https://stat.ripe.net/{resolved_ip}'>"
+            f"Check domain against RIPE stats"
+            f"</a>"
+        )
