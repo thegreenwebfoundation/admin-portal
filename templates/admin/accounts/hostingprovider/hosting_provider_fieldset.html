@@ -36,7 +36,7 @@
                                   Visit site
                                 </a>
 
-                                {% if request.user.is_superuser  %}
+                                {% if request.user|has_group:"admin" %}
                                     {% link_to_ripe_stat field.field.value %}
                                 {% endif  %}
 
