@@ -2,8 +2,8 @@
 
 {% block field_sets %}
   {% for fieldset in adminform %}
-    {% if fieldset.name == "Hostingprovider info" %}
-      {% include "admin/accounts/hostingprovider/hosting_provider_fieldset.html" %}
+    {% if fieldset.name == "Datacenter info" %}
+      {% include "admin/accounts/datacenter/fieldset.html" %}
     {% else %}
       {% include "admin/includes/fieldset.html" %}
     {% endif %}

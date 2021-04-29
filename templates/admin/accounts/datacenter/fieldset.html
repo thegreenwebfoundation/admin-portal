@@ -33,7 +33,16 @@
                                   class="extra_url"
                                   target="_blank"
                                   href="{{ field.field.value|make_url }}">
+
                                   Visit site
+                                </a>
+
+                                <a
+                                  class="extra_url"
+                                  target="_blank"
+                                  href="{{ field.field.value|make_url }}">
+
+
                                 </a>
 
                             {% endif %}
@@ -48,57 +57,4 @@
         </div>
     {% endfor %}
 
-    <h2>Authorised hosting provider users</h2>
-    {% with original.user_set.all as users %}
-
-    {% if users %}
-      <div class="form-row">
-      <p>These are the users able to update this hosting provider:</p>
-      </div>
-      {% for user in users %}
-      <div class="form-row">
-        <div class="fieldBox">
-          <a href="{% url 'admin:accounts_user_change' user.id %}">{{  user }}</a>
-        </div>
-        {% if user.date_joined %}
-        <div class="fieldBox">
-          Date joined: {{  user.date_joined }}
-        </div>
-        {% endif %}
-        <div class="fieldBox">
-          Last login: {{  user.last_login }}
-        </div>
-      </div>
-      {% endfor%}
-    {% else %}
-      <div class="form-row">
-      <p>There are no users associated with hosting provider.:</p>
-      </div>
-    {% endif %}
-
-
-    {% endwith %}
-
-
-    <h2>Associated datacenters</h2>
-    {% with original.datacenter.all as datacenters %}
-
-    {% if datacenters %}
-      <div class="form-row">
-      <p>This hoster uses the following datacentres:</p>
-      </div>
-      {% for dc in datacenters %}
-        <div class="form-row">
-          <a href="{% url 'greenweb_admin:accounts_datacenter_change' dc.id %}">
-            {{ dc }}
-          </a>
-        </div>
-      {% endfor%}
-    {% else %}
-      <div class="form-row">
-        <p>There are no datacentres associated with this hosting provider.</p>
-      </div>
-    {% endif %}
-
-    {% endwith %}
 </fieldset>
