@@ -1,20 +1,15 @@
+import logging
 import urllib
+
+from apps.greencheck import domain_check
 from django import template
 from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
 
-
-import logging
-from apps.greencheck import domain_check
-
-register = template.Library()
-
-checker = domain_check.GreenDomainChecker()
-
-console = logging.StreamHandler()
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(console)
+register = template.Library()
+checker = domain_check.GreenDomainChecker()
+console = logging.StreamHandler()
 
 
 @register.filter
