@@ -1,14 +1,14 @@
+import logging
 import pytest
-from ... import gc_choices, gc_models
 
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 
-import logging
 
-# from typing import List
-
+from ... import models as gc_models
+from ... import choices as gc_choices
 from ... import factories as gc_factories
+
 
 logger = logging.getLogger(__name__)
 console = logging.StreamHandler()
