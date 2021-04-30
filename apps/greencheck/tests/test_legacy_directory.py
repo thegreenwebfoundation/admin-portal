@@ -9,7 +9,9 @@ from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 
 from ..api.legacy_views import fetch_providers_for_country
-from ..models import GreencheckIp, Hostingprovider
+from ..models import GreencheckIp
+from ...accounts import models as ac_models
+
 from apps.accounts.models import DatacenterCertificate
 from . import setup_domains
 
@@ -30,11 +32,11 @@ def green_dc_certificate(datacenter):
     )
 
 
-def named_hosting_provider(name: str) -> Hostingprovider:
+def named_hosting_provider(name: str) -> ac_models.Hostingprovider:
     """
     Return a hosting provider with the given name
     """
-    return Hostingprovider(
+    return ac_models.Hostingprovider(
         archived=False,
         country="US",
         customer=False,
@@ -59,7 +61,7 @@ def hosting_provider_z():
 
 
 def add_green_ip_to(
-    hosting_provider: Hostingprovider, ip_list: List[ipaddress.ip_address]
+    hosting_provider: ac_models.Hostingprovider, ip_list: List[ipaddress.ip_address]
 ) -> GreencheckIp:
     """
     Set a green ip for the given hosting provider, and associate it with it.

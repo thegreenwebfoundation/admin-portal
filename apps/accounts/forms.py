@@ -2,15 +2,17 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import User, Datacenter, Hostingprovider
+
 from taggit.forms import TagField
 from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 
+from . import models as ac_models
+
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
-        model = User
+        model = ac_models.User
         fields = ("username", "email")
 
 
@@ -22,7 +24,7 @@ class CustomUserChangeForm(UserChangeForm):
         del self.fields["password"]
 
     class Meta(UserChangeForm.Meta):
-        model = User
+        model = ac_models.User
         fields = ("username", "email")
 
 
@@ -37,7 +39,7 @@ class HostingAdminForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Hostingprovider
+        model = ac_models.Hostingprovider
         fields = "__all__"
         widgets = {
             "services": LabelWidget(model=Tag),
@@ -46,13 +48,15 @@ class HostingAdminForm(forms.ModelForm):
 
 class DatacenterAdminForm(forms.ModelForm):
     hostingproviders = forms.ModelMultipleChoiceField(
-        queryset=Hostingprovider.objects.all(),
+        queryset=ac_models.Hostingprovider.objects.all(),
         required=False,
-        widget=FilteredSelectMultiple(verbose_name="Hostingprovider", is_stacked=False),
+        widget=FilteredSelectMultiple(
+            verbose_name="ac_models.Hostingprovider", is_stacked=False
+        ),
     )
 
     class Meta:
-        model = Datacenter
+        model = ac_models.Datacenter
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):

@@ -10,7 +10,10 @@ from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
 from ..legacy_workers import LegacySiteCheckLogger
-from ..models import GreencheckIp, GreenDomain, Hostingprovider
+from ..models import GreencheckIp, GreenDomain
+
+from ...accounts import models as ac_models
+
 from ..viewsets import GreenDomainViewset
 from . import greencheck_sitecheck, setup_domains
 
@@ -45,7 +48,7 @@ class TestGreenDomainViewset:
 
     def test_check_single_url(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
@@ -79,7 +82,7 @@ class TestGreenDomainViewset:
 
     def test_check_multple_urls_get(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
@@ -117,7 +120,7 @@ class TestGreenDomainViewset:
 
     def test_check_multple_urls_post(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
@@ -153,7 +156,7 @@ class TestGreenDomainViewset:
 
     def test_check_single_url_new_domain(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
     ):
         """
@@ -189,7 +192,7 @@ class TestGreenDomainViewset:
 class TestGreenDomainBatchView:
     def test_check_multple_urls_via_post(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
         client,
     ):
@@ -217,7 +220,7 @@ class TestGreenDomainBatchView:
 
     def test_check_green_and_grey_urls(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
         client,
     ):
@@ -248,7 +251,7 @@ class TestGreenDomainBatchView:
 
     def test_check_green_and_grey_urls_csv(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
         client,
     ):

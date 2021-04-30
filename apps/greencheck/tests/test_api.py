@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework.authtoken import models, views
 from rest_framework.test import APIRequestFactory
 
-from ..models import Hostingprovider
+from ...accounts import models as ac_models
 
 User = get_user_model()
 
@@ -20,9 +20,7 @@ rf = APIRequestFactory()
 
 class TestUsingAuthToken:
     def test_fetching_auth_token(
-        self,
-        hosting_provider: Hostingprovider,
-        sample_hoster_user: User,
+        self, hosting_provider: ac_models.Hostingprovider, sample_hoster_user: User,
     ):
         """
         Anyone who is able to update an organisation is able to
@@ -51,7 +49,7 @@ class TestUsingAuthToken:
 
 class TestCORSforAPI:
     def test_requests_have_permissive_cors_enabled_for_api(
-        self, hosting_provider_with_sample_user: Hostingprovider, client
+        self, hosting_provider_with_sample_user: ac_models.Hostingprovider, client
     ):
         """
         Are we serving CORS enabled requests, so that browser extensions can

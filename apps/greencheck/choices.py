@@ -52,6 +52,7 @@ class ActionChoice(models.TextChoices):
     EMPTY = "empty", _("empty")
     NEW = "new", _("new")
     UPDATE = "update", _("update")
+    NONE = "none", _("none")
 
 
 class DailyStateChoices(models.TextChoices):

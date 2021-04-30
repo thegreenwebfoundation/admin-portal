@@ -19,11 +19,15 @@ from rest_framework_csv import renderers as drf_csv_rndr  # noqa
 from .api.ip_range_viewset import IPRangeViewSet  # noqa
 from .api.asn_viewset import ASNViewSet  # noqa
 
-from .models import GreenDomain, Hostingprovider
-from .serializers import (
-    GreenDomainBatchSerializer,
-    GreenDomainSerializer,
-)
+# from ...accounts.models import ac_models
+from . import models as gc_models
+from . import serializers as gc_serializers
+
+# import (
+# from .serializers import (
+#     gc_serializers.GreenDomainBatchSerializer,
+#     gc_serializers.GreenDomainSerializer,
+# )
 from .domain_check import GreenDomainChecker
 
 
@@ -51,8 +55,8 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
     # swagger_schema = None
 
-    queryset = GreenDomain.objects.all()
-    serializer_class = GreenDomainSerializer
+    queryset = gc_models.GreenDomain.objects.all()
+    serializer_class = gc_serializers.GreenDomainSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
     lookup_field = "url"
@@ -76,7 +80,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             urls = self.request.data.getlist("urls")
 
         if urls is not None:
-            queryset = GreenDomain.objects.filter(url__in=urls)
+            queryset = gc_models.GreenDomain.objects.filter(url__in=urls)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -122,7 +126,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
                 return response.Response(json.loads(cache_hit))
 
         # not in the cache, try the slower lookups
-        instance = GreenDomain.objects.filter(url=domain).first()
+        instance = gc_models.GreenDomain.objects.filter(url=domain).first()
 
         if skip_cache:
             # try to fetch domain, clearing it from the cache if already present
@@ -164,8 +168,8 @@ class GreenDomainBatchView(CreateAPIView):
     If you just want a list of green domains to check against, we publish a daily snapshot of all the green domains we have, for offline use and analysis, at https://datasets.thegreenwebfoundation.org
     """  # noqa
 
-    queryset = GreenDomain.objects.all()
-    serializer_class = GreenDomainBatchSerializer
+    queryset = gc_models.GreenDomain.objects.all()
+    serializer_class = gc_serializers.GreenDomainBatchSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
     pagination_class = pagination.PageNumberPagination
@@ -201,13 +205,15 @@ class GreenDomainBatchView(CreateAPIView):
         logger.debug(f"urls_list: {urls_list}")
 
         if urls_list:
-            queryset = GreenDomain.objects.filter(url__in=urls_list)
+            queryset = gc_models.GreenDomain.objects.filter(url__in=urls_list)
 
         grey_list = checker.grey_urls_only(urls_list, queryset)
 
         combined_batch_check_results = checker.build_green_greylist(grey_list, queryset)
 
-        serialized = GreenDomainSerializer(combined_batch_check_results, many=True)
+        serialized = gc_serializers.GreenDomainSerializer(
+            combined_batch_check_results, many=True
+        )
 
         headers = self.get_success_headers(serialized.data)
 

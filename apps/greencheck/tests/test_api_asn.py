@@ -5,8 +5,9 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
-from apps.greencheck.models import GreencheckASN, Hostingprovider
-from apps.greencheck.viewsets import ASNViewSet
+from .. import models as gc_models
+from .. import viewsets as gc_viewsets
+from ...accounts import models as ac_models
 
 User = get_user_model()
 
@@ -25,7 +26,9 @@ def another_host_user():
 
 
 class TestASNViewSetList:
-    def test_get_asn_empty(self, hosting_provider_with_sample_user: Hostingprovider):
+    def test_get_asn_empty(
+        self, hosting_provider_with_sample_user: ac_models.Hostingprovider
+    ):
         """
         Exercise the simplest happy path - we return an empty list for a hosting
         provider with no ASNS registered.
@@ -37,7 +40,7 @@ class TestASNViewSetList:
         request.user = hosting_provider_with_sample_user.user_set.first()
 
         # GET end point for IP Ranges
-        view = ASNViewSet.as_view({"get": "list"})
+        view = gc_viewsets.ASNViewSet.as_view({"get": "list"})
 
         response = view(request)
 
@@ -47,8 +50,8 @@ class TestASNViewSetList:
 
     def test_get_asn_list(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
-        green_asn: GreencheckASN,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_asn: gc_models.GreencheckASN,
     ):
         """
         Check that we can list the ASNs for given provider
@@ -61,7 +64,7 @@ class TestASNViewSetList:
         request.user = hosting_provider_with_sample_user.user_set.first()
 
         # GET end point for IP Ranges
-        view = ASNViewSet.as_view({"get": "list"})
+        view = gc_viewsets.ASNViewSet.as_view({"get": "list"})
 
         response = view(request)
 
@@ -75,8 +78,8 @@ class TestASNViewSetList:
 
     def test_get_asn_retrieve(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
-        green_asn: GreencheckASN,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_asn: gc_models.GreencheckASN,
     ):
         """
         Check that we can fetch an individual ASN for the provider
@@ -89,7 +92,7 @@ class TestASNViewSetList:
         request.user = hosting_provider_with_sample_user.user_set.first()
 
         # GET end point for IP Ranges
-        view = ASNViewSet.as_view({"get": "retrieve"})
+        view = gc_viewsets.ASNViewSet.as_view({"get": "retrieve"})
 
         response = view(request, pk=green_asn.id)
 
@@ -101,8 +104,7 @@ class TestASNViewSetList:
         response.data["hostingprovider"] == green_asn.hostingprovider.id
 
     def test_get_asn_create(
-        self,
-        hosting_provider_with_sample_user: Hostingprovider,
+        self, hosting_provider_with_sample_user: ac_models.Hostingprovider,
     ):
         """
         Can we create an new ASN over the API, for our hosting provider?
@@ -118,7 +120,7 @@ class TestASNViewSetList:
         request.user = user
 
         # GET end point for IP Ranges
-        view = ASNViewSet.as_view({"post": "create"})
+        view = gc_viewsets.ASNViewSet.as_view({"post": "create"})
 
         response = view(request)
 
@@ -127,13 +129,13 @@ class TestASNViewSetList:
         response.data["asn"] == 12345
         response.data["hostingprovider"] == hosting_provider_with_sample_user.id
 
-        green_asn, *_ = GreencheckASN.objects.filter(asn=12345)
+        green_asn, *_ = gc_models.GreencheckASN.objects.filter(asn=12345)
         response.data["id"] == green_asn.id
 
     def test_get_asn_delete(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
-        green_asn: GreencheckASN,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_asn: gc_models.GreencheckASN,
     ):
         """
         Can we delete an ASN via the API, marking it as 'inactive' in our database?
@@ -148,20 +150,20 @@ class TestASNViewSetList:
         request.user = user
 
         # GET end point for IP Ranges
-        view = ASNViewSet.as_view({"delete": "destroy"})
+        view = gc_viewsets.ASNViewSet.as_view({"delete": "destroy"})
 
         response = view(request, pk=green_asn.id)
 
         # check contents
         assert response.status_code == 204
-        assert GreencheckASN.objects.filter(asn=12345).count() == 1
+        assert gc_models.GreencheckASN.objects.filter(asn=12345).count() == 1
 
-        fetched_green_asn = GreencheckASN.objects.filter(asn=12345).first()
+        fetched_green_asn = gc_models.GreencheckASN.objects.filter(asn=12345).first()
         assert not fetched_green_asn.active
 
     def test_can_only_create_asns_for_own_hosting_provider(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         another_host_user: User,
     ):
         """
@@ -175,26 +177,26 @@ class TestASNViewSetList:
         request.user = another_host_user
 
         # GET end point for IP Ranges
-        view = ASNViewSet.as_view({"post": "create"})
+        view = gc_viewsets.ASNViewSet.as_view({"post": "create"})
 
         response = view(request)
 
         # check contents
         assert response.status_code == 405
-        assert GreencheckASN.objects.filter(asn=12345).count() == 0
+        assert gc_models.GreencheckASN.objects.filter(asn=12345).count() == 0
 
     def test_can_only_destroy_asns_for_own_hosting_provider(
         self,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         another_host_user: User,
-        green_asn: GreencheckASN,
+        green_asn: gc_models.GreencheckASN,
     ):
         """
         An user must be associated with a hosting provider to be able
          to create or destroy ASNs or IP Ranges for the provider
         """
         green_asn.save()
-        assert GreencheckASN.objects.filter(asn=12345).count() == 1
+        assert gc_models.GreencheckASN.objects.filter(asn=12345).count() == 1
 
         rf = APIRequestFactory()
         url_path = reverse("asn-detail", kwargs={"pk": green_asn.id})
@@ -203,10 +205,13 @@ class TestASNViewSetList:
         request.user = another_host_user
 
         # GET end point for IP Ranges
-        view = ASNViewSet.as_view({"delete": "destroy"})
+        view = gc_viewsets.ASNViewSet.as_view({"delete": "destroy"})
 
         response = view(request, pk=green_asn.id)
 
         # check contents
         assert response.status_code == 404
-        assert GreencheckASN.objects.filter(asn=12345, active=True).count() == 1
+        assert (
+            gc_models.GreencheckASN.objects.filter(asn=12345, active=True).count() == 1
+        )
+

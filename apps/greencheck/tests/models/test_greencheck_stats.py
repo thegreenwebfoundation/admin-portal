@@ -9,6 +9,7 @@ from ... import models as gc_models
 from ... import choices as gc_choices
 from ... import factories as gc_factories
 
+from ....accounts import models as ac_models
 
 logger = logging.getLogger(__name__)
 console = logging.StreamHandler()
@@ -28,7 +29,7 @@ class TestGreencheckStatsDaily:
     def test_count_daily_checks(
         self,
         db,
-        hosting_provider_with_sample_user: gc_models.Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: gc_models.GreencheckIp,
         client,
         date_to_check,
@@ -59,7 +60,7 @@ class TestGreencheckStatsDaily:
     def test_count_daily_by_provider(
         self,
         db,
-        hosting_provider_with_sample_user: gc_models.Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: gc_models.GreencheckIp,
         client,
         date_to_check,
@@ -87,7 +88,7 @@ class TestGreencheckStatsDaily:
     def test_count_daily_by_provider_green(
         self,
         db,
-        hosting_provider_with_sample_user: gc_models.Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: gc_models.GreencheckIp,
         client,
     ):

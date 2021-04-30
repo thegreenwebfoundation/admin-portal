@@ -10,7 +10,8 @@ from django.core.management import call_command, CommandError
 from django.utils import timezone
 from sqlite_utils import Database
 
-from ..models import Hostingprovider, SiteCheck
+from ..models import SiteCheck
+from ...accounts import models as ac_models
 from ..management.commands.dump_green_domains import GreenDomainExporter
 from ..models import GreencheckIp
 
@@ -18,7 +19,7 @@ from . import create_greendomain
 
 
 def greencheck_sitecheck(
-    domain, hosting_provider: Hostingprovider, green_ip: GreencheckIp
+    domain, hosting_provider: ac_models.Hostingprovider, green_ip: GreencheckIp
 ):
     return SiteCheck(
         url=domain,
@@ -57,7 +58,6 @@ def object_storage_bucket(settings):
     return object_storage.Bucket(settings.DOMAIN_SNAPSHOT_BUCKET)
 
 
-@pytest.mark.only
 class TestGreenDomainExporter:
     @pytest.mark.django_db(transaction=True)
     def test_dump_green_domains(self, hosting_provider, green_ip, settings):
