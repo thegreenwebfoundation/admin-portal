@@ -3,7 +3,8 @@ import json
 
 from django.urls import reverse
 
-from ..models import GreencheckIp, Hostingprovider
+from ..models import GreencheckIp
+from ...accounts import models as ac_models
 from . import setup_domains
 
 
@@ -12,7 +13,7 @@ class TestGreencheckMultiView:
         self,
         db,
         client,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
     ):
 
@@ -43,7 +44,7 @@ class TestGreencheckMultiView:
         self,
         db,
         client,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
     ):
 

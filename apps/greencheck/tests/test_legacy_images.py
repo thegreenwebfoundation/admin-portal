@@ -8,7 +8,8 @@ from urllib import parse
 from django.urls import reverse
 
 from ..api.legacy_image_view import annotate_img, fetch_template_image
-from ..models import GreencheckIp, Hostingprovider
+from ..models import GreencheckIp
+from ...accounts import models as ac_models
 from . import setup_domains
 
 
@@ -74,7 +75,7 @@ class TestGreencheckImageView:
     def test_download_greencheck_image_green(
         self,
         db,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
         client,
     ):
@@ -119,7 +120,7 @@ class TestGreencheckImageView:
         self,
         db,
         client,
-        hosting_provider_with_sample_user: Hostingprovider,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
     ):
         """

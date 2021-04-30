@@ -4,8 +4,10 @@ import logging
 import pytest
 from rest_framework import serializers
 
-from apps.greencheck.models import GreencheckIp, GreencheckASN, Hostingprovider
+from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.greencheck.serializers import GreenIPRangeSerializer, GreenASNSerializer
+
+from ...accounts import models as ac_models
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +25,7 @@ SAMPLE_IPS = [
 @pytest.fixture
 def new_hosting_provider():
 
-    return Hostingprovider(
+    return ac_models.Hostingprovider(
         archived=False,
         country="NL",
         customer=False,
@@ -124,10 +126,7 @@ class TestGreenIpRangeSerialiser:
         "ip_addy_start,ip_addy_end",
         [
             # ipv4
-            (
-                "240.0.0.245",
-                "240.0.0.1",
-            ),
+            ("240.0.0.245", "240.0.0.1",),
             # ipv6
             (
                 "3e5c:a68a:9dbe:c49a:6884:943f:7c71:27dd",
@@ -165,9 +164,7 @@ class TestGreenASNSerialiser:
         """
 
         gc_asn = GreencheckASN(
-            active=True,
-            asn=12345,
-            hostingprovider=hosting_provider,
+            active=True, asn=12345, hostingprovider=hosting_provider,
         )
         gc_asn_serialized = GreenASNSerializer(gc_asn)
         data = gc_asn_serialized.data

@@ -1,5 +1,6 @@
 import logging
-from apps.greencheck.models import Greencheck, GreenDomain, TopUrl, Hostingprovider
+from apps.greencheck.models import Greencheck, GreenDomain, TopUrl
+from ....accounts import models as ac_models
 
 from django.core.management.base import BaseCommand
 import datetime
@@ -50,9 +51,11 @@ class TopUrlUpdater:
                 if gc:
 
                     try:
-                        hp = Hostingprovider.objects.get(pk=gc.hostingprovider)
+                        hp = ac_models.Hostingprovider.objects.get(
+                            pk=gc.hostingprovider
+                        )
 
-                    except Hostingprovider.DoesNotExist:
+                    except ac_models.Hostingprovider.DoesNotExist:
                         logger.error(f"Missing hosting provider for greencheck {gc}")
                         continue
 
@@ -83,8 +86,10 @@ class TopUrlUpdater:
                 if gc:
 
                     try:
-                        hp = Hostingprovider.objects.get(pk=gc.hostingprovider)
-                    except Hostingprovider.DoesNotExist:
+                        hp = ac_models.Hostingprovider.objects.get(
+                            pk=gc.hostingprovider
+                        )
+                    except ac_models.Hostingprovider.DoesNotExist:
 
                         logger.error(f"Missing hosting provider for greencheck {gc}")
 

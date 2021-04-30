@@ -5,8 +5,8 @@ from apps.greencheck.models import (
     GreenDomain,
     Greencheck,
     TopUrl,
-    Hostingprovider,
 )
+from ...accounts import models as ac_models
 from apps.greencheck.management.commands.update_top_url_list import TopUrlUpdater
 
 tu_updater = TopUrlUpdater()
@@ -15,7 +15,7 @@ tu_updater = TopUrlUpdater()
 @pytest.fixture
 def hosting_provider():
 
-    return Hostingprovider(
+    return ac_models.Hostingprovider(
         archived=False,
         country="US",
         customer=False,
@@ -75,7 +75,9 @@ class TestUpdateList:
         # set up fixture
         top_url.save()
         greencheck.save()
-        hostingprovider = Hostingprovider.objects.get(pk=greencheck.hostingprovider)
+        hostingprovider = ac_models.Hostingprovider.objects.get(
+            pk=greencheck.hostingprovider
+        )
 
         gp = GreenDomain(
             green=True,

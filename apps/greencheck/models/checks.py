@@ -1,38 +1,22 @@
-from dataclasses import dataclass
 import decimal
-import datetime
 import ipaddress
 import logging
+from dataclasses import dataclass
 
 from dateutil.relativedelta import relativedelta
-
 from django import forms
-from django.core.serializers import json
+from django.core import exceptions, validators
 from django.db import models
-from django_mysql import models as mysql_models
 from django.db.models.fields import Field
-from django_mysql.models import EnumField
-from django.core import exceptions
-from django.core import validators
-from django.utils.text import capfirst
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import gettext as _
+from django.utils.text import capfirst
+from django_mysql import models as dj_mysql_models
+from django_mysql import models as mysql_models
+from model_utils import models as mu_models
 
-
-from model_utils.models import TimeStampedModel
-
-from apps.accounts.models import Hostingprovider
-
-
-from .choices import (
-    ActionChoice,
-    GreenlistChoice,
-    CheckedOptions,
-    BoolChoice,
-    StatusApproval,
-    DailyStateChoices,
-)
+from ...accounts import models as ac_models
+from .. import choices as gc_choices
 
 logger = logging.getLogger(__name__)
 """
@@ -159,7 +143,7 @@ class IpAddressField(Field):
         return form_class(**defaults)
 
 
-class GreencheckIp(TimeStampedModel):
+class GreencheckIp(mu_models.TimeStampedModel):
     """
     An IP Range associated with a hosting provider, to act as a way to
     link it to the sustainability claims by the company.
@@ -169,7 +153,7 @@ class GreencheckIp(TimeStampedModel):
     ip_end = IpAddressField(db_column="ip_eind")
     ip_start = IpAddressField()
     hostingprovider = models.ForeignKey(
-        Hostingprovider, db_column="id_hp", on_delete=models.CASCADE
+        ac_models.Hostingprovider, db_column="id_hp", on_delete=models.CASCADE
     )
 
     def ip_range_length(self) -> int:
@@ -206,7 +190,7 @@ class Greencheck(mysql_models.Model):
     # to at least track this properly.
     hostingprovider = models.IntegerField(db_column="id_hp", default=0)
     # hostingprovider = models.ForeignKey(
-    #     Hostingprovider,
+    #     ac_models.Hostingprovider,
     #     db_column="id_hp",
     #     on_delete=models.CASCADE,
     #     blank=True,
@@ -221,10 +205,12 @@ class Greencheck(mysql_models.Model):
     #     null=True,
     # )
     date = models.DateTimeField(db_column="datum")
-    green = EnumField(choices=BoolChoice.choices)
+    green = dj_mysql_models.EnumField(choices=gc_choices.BoolChoice.choices)
     ip = IpAddressField()
     tld = models.CharField(max_length=64)
-    type = EnumField(choices=GreenlistChoice.choices, default=GreenlistChoice.NONE)
+    type = dj_mysql_models.EnumField(
+        choices=gc_choices.ActionChoice.choices, default=gc_choices.ActionChoice.NONE
+    )
     url = models.CharField(max_length=255)
 
     class Meta:
@@ -234,23 +220,26 @@ class Greencheck(mysql_models.Model):
         return f"{self.url} - {self.ip}"
 
 
-class GreencheckIpApprove(TimeStampedModel):
+class GreencheckIpApprove(mu_models.TimeStampedModel):
     """
     An approval request for a given IP Range. These are submitted by hosting providers
     and once they are reviewed, and approved, a new IP Range with the same IP addresses
     is created.
     """
 
-    action = models.TextField(choices=ActionChoice.choices)
+    action = models.TextField(choices=gc_choices.ActionChoice.choices)
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column="id_hp", null=True
+        ac_models.Hostingprovider,
+        on_delete=models.CASCADE,
+        db_column="id_hp",
+        null=True,
     )
     greencheck_ip = models.ForeignKey(
         GreencheckIp, on_delete=models.CASCADE, db_column="idorig", null=True
     )
     ip_end = IpAddressField(db_column="ip_eind")
     ip_start = IpAddressField()
-    status = models.TextField(choices=StatusApproval.choices)
+    status = models.TextField(choices=gc_choices.StatusApproval.choices)
 
     def __str__(self):
         return f"{self.ip_start} - {self.ip_end}: {self.status}"
@@ -271,11 +260,11 @@ class GreenList(models.Model):
         Greencheck, on_delete=models.CASCADE, db_column="id_greencheck"
     )
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
+        ac_models.Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
     last_checked = models.DateTimeField()
     name = models.CharField(max_length=255, db_column="naam")
-    type = EnumField(choices=GreenlistChoice.choices)
+    type = dj_mysql_models.EnumField(choices=gc_choices.ActionChoice.choices)
     url = models.CharField(max_length=255)
     website = models.CharField(max_length=255)
 
@@ -301,7 +290,7 @@ class GreencheckTLD(models.Model):
         ]
 
 
-class GreencheckASN(TimeStampedModel):
+class GreencheckASN(mu_models.TimeStampedModel):
     """
     An AS Number to identify a hosting provider with, so we can link
     an IP address or ASN to the hosting provider's green claims.
@@ -311,7 +300,7 @@ class GreencheckASN(TimeStampedModel):
     # https://en.wikipedia.org/wiki/Autonomous_system_(Internet)
     asn = models.IntegerField(verbose_name="Autonomous system number")
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
+        ac_models.Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
 
     class Meta:
@@ -327,22 +316,22 @@ class GreencheckASN(TimeStampedModel):
         ]
 
 
-class GreencheckASNapprove(TimeStampedModel):
+class GreencheckASNapprove(mu_models.TimeStampedModel):
     """
     A greencheck ASN approve is a request, to register an AS Network
     with a given hosting provider. Once approved, associates the AS
     with the provider.
     """
 
-    action = models.TextField(choices=ActionChoice.choices)
+    action = models.TextField(choices=gc_choices.ActionChoice.choices)
     asn = models.IntegerField()
     hostingprovider = models.ForeignKey(
-        Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
+        ac_models.Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
     greencheck_asn = models.ForeignKey(
         GreencheckASN, on_delete=models.CASCADE, db_column="idorig", null=True
     )
-    status = models.TextField(choices=StatusApproval.choices)
+    status = models.TextField(choices=gc_choices.StatusApproval.choices)
 
     class Meta:
         db_table = "greencheck_as_approve"
@@ -350,167 +339,6 @@ class GreencheckASNapprove(TimeStampedModel):
 
     def __str__(self):
         return f"ASN: {self.asn} - Status: {self.status} Action: {self.action}"
-
-
-class Stats(models.Model):
-    checked_through = EnumField(choices=CheckedOptions.choices)
-    count = models.IntegerField()
-    ips = models.IntegerField()
-
-    class Meta:
-        abstract = True
-
-
-class DailyStat(TimeStampedModel):
-    """
-    Represents the counts of checks for each day
-    """
-
-    stat_date = models.DateField(
-        _("Date for stats"), auto_now=False, auto_now_add=False, default=yesterday
-    )
-    # we add this key
-    stat_key = models.CharField(_(""), max_length=256)
-    count = models.IntegerField()
-    green = EnumField(choices=BoolChoice.choices, default=BoolChoice.NO)
-
-    # Factories
-
-    @classmethod
-    def total_count(cls, date_to_check: datetime.date = None):
-        """
-        Create a total count for the given day
-        """
-        one_day_ahead = date_to_check + relativedelta(days=1)
-
-        qs = Greencheck.objects.filter(
-            date__gt=date_to_check.date(), date__lt=one_day_ahead.date()
-        )
-        stat = cls(
-            count=qs.count(),
-            stat_date=date_to_check.date(),
-            stat_key=DailyStateChoices.DAILY_TOTAL,
-            green=BoolChoice.YES,
-        )
-        green_stat = cls(
-            count=qs.count(),
-            stat_date=date_to_check.date(),
-            stat_key=DailyStateChoices.DAILY_TOTAL,
-            green=BoolChoice.YES,
-        )
-        grey_stat = cls(
-            count=qs.count(),
-            stat_date=date_to_check.date(),
-            stat_key=DailyStateChoices.DAILY_TOTAL,
-            green=BoolChoice.NO,
-        )
-        stats = [stat, green_stat, grey_stat]
-
-        # persist to db
-        [stat.save() for stat in stats]
-
-        return stats
-
-    @classmethod
-    def total_count_for_provider(
-        cls, date_to_check: datetime.date = None, provider_id: int = None
-    ):
-        """
-        Create a total count for given day for the provider.
-        """
-        one_day_ahead = date_to_check + relativedelta(days=1)
-
-        qs = Greencheck.objects.filter(
-            date__gt=date_to_check.date(),
-            date__lt=one_day_ahead.date(),
-            hostingprovider=provider_id,
-        )
-
-        green_qs = Greencheck.objects.filter(
-            date__gt=date_to_check.date(),
-            date__lt=one_day_ahead.date(),
-            hostingprovider=provider_id,
-            green=BoolChoice.YES,
-        )
-        grey_qs = Greencheck.objects.filter(
-            date__gt=date_to_check.date(),
-            date__lt=one_day_ahead.date(),
-            hostingprovider=provider_id,
-            green=BoolChoice.NO,
-        )
-        stat = cls(
-            count=qs.count(),
-            stat_date=date_to_check.date(),
-            stat_key=f"{DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
-        )
-
-        green_stat = cls(
-            count=green_qs.count(),
-            stat_date=date_to_check.date(),
-            green=BoolChoice.YES,
-            stat_key=f"{DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
-        )
-        grey_stat = cls(
-            count=grey_qs.count(),
-            stat_date=date_to_check.date(),
-            stat_key=f"{DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
-            green=BoolChoice.NO,
-        )
-
-        stats = [stat, green_stat, grey_stat]
-
-        # persist to db
-        [stat.save() for stat in stats]
-
-        return stats
-
-    # Mutators
-    # Queries
-
-    # Properties
-
-    def __str__(self):
-        title = f"{self.stat_key}-{self.stat_date}"
-
-        if self.green == BoolChoice.YES:
-            return f"{title}-green"
-        elif self.green == BoolChoice.NO:
-            return f"{title}-grey"
-        return title
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["stat_date", "stat_key"]),
-        ]
-
-
-class GreencheckStatsTotal(Stats):
-    class Meta:
-        # managed = False
-        db_table = "greencheck_stats_total"
-        indexes = [
-            models.Index(
-                fields=["checked_through"], name="stats_total_checked_through"
-            ),
-        ]
-
-
-class GreencheckWeeklyStats(models.Model):
-    checks_green = models.IntegerField()
-    checks_grey = models.IntegerField()
-    checks_perc = models.FloatField()
-    checks_total = models.IntegerField()
-
-    monday = models.DateField(db_column="maandag")
-    url_green = models.IntegerField()
-    url_grey = models.IntegerField()
-    url_perc = models.FloatField()
-    week = models.IntegerField()
-    year = models.PositiveSmallIntegerField()
-
-    class Meta:
-        # managed = False
-        db_table = "greencheck_weekly"
 
 
 class TopUrl(models.Model):
@@ -558,10 +386,10 @@ class GreenDomain(models.Model):
         """
         hosting_provider = None
         try:
-            hosting_provider = Hostingprovider.objects.get(
+            hosting_provider = ac_models.Hostingprovider.objects.get(
                 pk=sitecheck.hosting_provider_id
             )
-        except Hostingprovider.DoesNotExist:
+        except ac_models.Hostingprovider.DoesNotExist:
             logger.warning(
                 ("We expected to find a provider for this sitecheck, " "But didn't. ")
             )
@@ -586,7 +414,7 @@ class GreenDomain(models.Model):
         Accepts skip_cache option to perform a full DNS lookup
         instead of looking up a domain by key
         """
-        from .domain_check import GreenDomainChecker
+        from ..domain_check import GreenDomainChecker
 
         checker = GreenDomainChecker()
 

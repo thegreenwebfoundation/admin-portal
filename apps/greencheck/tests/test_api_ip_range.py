@@ -6,8 +6,11 @@ from django.test import RequestFactory
 from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
-from apps.greencheck.models import GreencheckIp, Hostingprovider
+from apps.greencheck.models import GreencheckIp
+
 from apps.greencheck.viewsets import IPRangeViewSet
+
+from ...accounts import models as ac_models
 
 User = get_user_model()
 
@@ -20,9 +23,7 @@ rf = APIRequestFactory()
 
 class TestIpRangeViewSetList:
     def test_get_ip_ranges_empty(
-        self,
-        hosting_provider: Hostingprovider,
-        sample_hoster_user: User,
+        self, hosting_provider: ac_models.Hostingprovider, sample_hoster_user: User,
     ):
         """
         Exercise the simplest happy path.
@@ -48,7 +49,7 @@ class TestIpRangeViewSetList:
 
     def test_get_ip_ranges_for_hostingprovider_with_active_range(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
@@ -77,7 +78,7 @@ class TestIpRangeViewSetList:
 
     def test_get_ip_ranges_for_hostingprovider_with_no_active_ones(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
@@ -100,9 +101,7 @@ class TestIpRangeViewSetList:
         assert len(response.data) == 0
 
     def test_get_ip_ranges_without_auth(
-        self,
-        hosting_provider: Hostingprovider,
-        sample_hoster_user: User,
+        self, hosting_provider: ac_models.Hostingprovider, sample_hoster_user: User,
     ):
         """
         We don't want to list all the IP ranges we have, so we just show an empty
@@ -126,9 +125,7 @@ class TestIpRangeViewSetList:
         assert len(response.data) == 0
 
     def test_get_ip_range_for_user_with_no_hosting_provider(
-        self,
-        sample_hoster_user: User,
-        rf: RequestFactory,
+        self, sample_hoster_user: User, rf: RequestFactory,
     ):
         sample_hoster_user.save()
 
@@ -153,7 +150,7 @@ class TestIpRangeViewSetRetrieve:
 
     def test_get_ip_range_for_hostingprovider_by_id(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
@@ -182,7 +179,7 @@ class TestIpRangeViewSetRetrieve:
 class TestIpRangeViewSetCreate:
     def test_create_new_ip_range(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
@@ -218,7 +215,7 @@ class TestIpRangeViewSetCreate:
     @pytest.mark.skip(reason="Pending. ")
     def test_skip_duplicate_ip_range(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
@@ -233,7 +230,7 @@ class TestIpRangeViewSetCreate:
 class TestIpRangeViewSetDelete:
     def test_delete_existing_ip_range(
         self,
-        hosting_provider: Hostingprovider,
+        hosting_provider: ac_models.Hostingprovider,
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
