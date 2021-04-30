@@ -18,6 +18,7 @@ pytest-cov = "*"
 pytest-xdist = "*"
 black = "*"
 iredis = "*"
+factory_boy = "*"
 
 [packages]
 django = {extras = ["bcrypt"],version = "==3.2"}
