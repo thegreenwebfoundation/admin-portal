@@ -52,3 +52,7 @@ class ActionChoice(models.TextChoices):
     EMPTY = "empty", _("empty")
     NEW = "new", _("new")
     UPDATE = "update", _("update")
+
+
+class DailyStateChoices(models.TextChoices):
+    DAILY_TOTAL = "total_daily_checks", _("Total daily checks")
