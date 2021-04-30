@@ -1,9 +1,13 @@
 from dataclasses import dataclass
 import decimal
+import datetime
 import ipaddress
 import logging
 
+from dateutil.relativedelta import relativedelta
+
 from django import forms
+from django.core.serializers import json
 from django.db import models
 from django_mysql import models as mysql_models
 from django.db.models.fields import Field
@@ -13,10 +17,13 @@ from django.core import validators
 from django.utils.text import capfirst
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.translation import gettext as _
+
 
 from model_utils.models import TimeStampedModel
 
 from apps.accounts.models import Hostingprovider
+
 
 from .choices import (
     ActionChoice,
@@ -36,6 +43,10 @@ logger = logging.getLogger(__name__)
 # wait for reply on these.
 - greenenergy - also an old table
 """
+
+
+now = timezone.now()
+yesterday = now - relativedelta(days=1)
 
 
 @dataclass
@@ -362,12 +373,41 @@ class Stats(models.Model):
         abstract = True
 
 
-class GreencheckStats(Stats):
+class DailyStat(TimeStampedModel):
+    """
+    Represents the counts of checks for each day
+    """
+
+    stat_date = models.DateField(
+        _("Date for stats"), auto_now=False, auto_now_add=False, default=yesterday
+    )
+    # we add this key
+    stat_key = models.CharField(_(""), max_length=256)
+    count = models.IntegerField()
+    # for stashing the results of extra queries
+    extra_data = models.JSONField(_(""), encoder=json.DjangoJSONEncoder)
+
+    # Factories
+
+    @classmethod
+    def total_count(cls, date_to_check: datetime.date = None) -> int:
+        """
+        Create a total count for the given day
+        """
+        one_day_ahead = date_to_check + relativedelta(days=1)
+        one_day_back = date_to_check - relativedelta(days=1)
+
+        return Greencheck.objects.filter(
+            date__gt=one_day_back, date__lt=one_day_ahead
+        ).count()
+
+    # Mutators
+    # Queries
+    # Properties
+
     class Meta:
-        # managed = False
-        db_table = "greencheck_stats"
         indexes = [
-            models.Index(fields=["checked_through"], name="stats_checked_through"),
+            models.Index(fields=["stat_date", "stat_key"]),
         ]
 
 

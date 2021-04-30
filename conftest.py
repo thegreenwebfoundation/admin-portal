@@ -9,30 +9,21 @@ from apps.accounts.models import Hostingprovider, Datacenter
 from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.greencheck.management.commands import update_aws_ip_ranges
 
+from apps.greencheck.factories import UserFactory, SiteCheckFactory
+
 User = get_user_model()
 
 
 @pytest.fixture
 def sample_hoster_user():
-    u = User(username="joebloggs", email="joe@example.com")
+    u = UserFactory.build(username="joebloggs", email="joe@example.com")
     u.set_password("topSekrit")
     return u
 
 
 @pytest.fixture
 def sample_sitecheck():
-
-    return SiteCheck(
-        url="somesite.berlin",
-        ip="192.30.252.153",
-        data=True,
-        green=True,
-        hosting_provider_id=595,
-        checked_at="2021-01-20 13:35:52",
-        match_type=None,
-        match_ip_range=None,
-        cached=True,
-    )
+    return SiteCheckFactory.build()
 
 
 @pytest.fixture
@@ -123,11 +114,7 @@ def green_ip(hosting_provider):
 @pytest.fixture
 def green_asn(hosting_provider):
     hosting_provider.save()
-    return GreencheckASN(
-        active=True,
-        asn=12345,
-        hostingprovider=hosting_provider,
-    )
+    return GreencheckASN(active=True, asn=12345, hostingprovider=hosting_provider,)
 
 
 @pytest.fixture
