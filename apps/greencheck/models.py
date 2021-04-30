@@ -31,6 +31,7 @@ from .choices import (
     CheckedOptions,
     BoolChoice,
     StatusApproval,
+    DailyStateChoices,
 )
 
 logger = logging.getLogger(__name__)
@@ -351,19 +352,6 @@ class GreencheckASNapprove(TimeStampedModel):
         return f"ASN: {self.asn} - Status: {self.status} Action: {self.action}"
 
 
-# class Tld(models.Model):
-#     # wait for confirmation
-#     pass
-
-
-# class MaxmindAsn(models.Model):
-#     # wait for confirmation
-#     pass
-
-
-# STATS and stuff
-
-
 class Stats(models.Model):
     checked_through = EnumField(choices=CheckedOptions.choices)
     count = models.IntegerField()
@@ -384,26 +372,111 @@ class DailyStat(TimeStampedModel):
     # we add this key
     stat_key = models.CharField(_(""), max_length=256)
     count = models.IntegerField()
-    # for stashing the results of extra queries
-    extra_data = models.JSONField(_(""), encoder=json.DjangoJSONEncoder)
+    green = EnumField(choices=BoolChoice.choices, default=BoolChoice.NO)
 
     # Factories
 
     @classmethod
-    def total_count(cls, date_to_check: datetime.date = None) -> int:
+    def total_count(cls, date_to_check: datetime.date = None):
         """
         Create a total count for the given day
         """
         one_day_ahead = date_to_check + relativedelta(days=1)
-        one_day_back = date_to_check - relativedelta(days=1)
 
-        return Greencheck.objects.filter(
-            date__gt=one_day_back, date__lt=one_day_ahead
-        ).count()
+        qs = Greencheck.objects.filter(
+            date__gt=date_to_check.date(), date__lt=one_day_ahead.date()
+        )
+        stat = cls(
+            count=qs.count(),
+            stat_date=date_to_check.date(),
+            stat_key=DailyStateChoices.DAILY_TOTAL,
+            green=BoolChoice.YES,
+        )
+        green_stat = cls(
+            count=qs.count(),
+            stat_date=date_to_check.date(),
+            stat_key=DailyStateChoices.DAILY_TOTAL,
+            green=BoolChoice.YES,
+        )
+        grey_stat = cls(
+            count=qs.count(),
+            stat_date=date_to_check.date(),
+            stat_key=DailyStateChoices.DAILY_TOTAL,
+            green=BoolChoice.NO,
+        )
+        stats = [stat, green_stat, grey_stat]
+
+        # persist to db
+        [stat.save() for stat in stats]
+
+        return stats
+
+    @classmethod
+    def total_count_for_provider(
+        cls, date_to_check: datetime.date = None, provider_id: int = None
+    ):
+        """
+        Create a total count for given day for the provider.
+        """
+        one_day_ahead = date_to_check + relativedelta(days=1)
+
+        qs = Greencheck.objects.filter(
+            date__gt=date_to_check.date(),
+            date__lt=one_day_ahead.date(),
+            hostingprovider=provider_id,
+        )
+
+        green_qs = Greencheck.objects.filter(
+            date__gt=date_to_check.date(),
+            date__lt=one_day_ahead.date(),
+            hostingprovider=provider_id,
+            green=BoolChoice.YES,
+        )
+        grey_qs = Greencheck.objects.filter(
+            date__gt=date_to_check.date(),
+            date__lt=one_day_ahead.date(),
+            hostingprovider=provider_id,
+            green=BoolChoice.NO,
+        )
+        stat = cls(
+            count=qs.count(),
+            stat_date=date_to_check.date(),
+            stat_key=f"{DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
+        )
+
+        green_stat = cls(
+            count=green_qs.count(),
+            stat_date=date_to_check.date(),
+            green=BoolChoice.YES,
+            stat_key=f"{DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
+        )
+        grey_stat = cls(
+            count=grey_qs.count(),
+            stat_date=date_to_check.date(),
+            stat_key=f"{DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
+            green=BoolChoice.NO,
+        )
+
+        stats = [stat, green_stat, grey_stat]
+
+        # persist to db
+        [stat.save() for stat in stats]
+
+        return stats
 
     # Mutators
     # Queries
+
     # Properties
+
+    def __str__(self):
+        title = f"{self.stat_key}-{self.stat_date}"
+
+        if self.green == BoolChoice.YES:
+            return f"{title}-green"
+        elif self.green == BoolChoice.NO:
+            return f"{title}-grey"
+        return title
 
     class Meta:
         indexes = [

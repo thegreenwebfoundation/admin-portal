@@ -7,7 +7,11 @@ import factory.django as dj_factory
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db.models.signals import post_save
+from django.db import models
 from django.utils import timezone
+
+from django_countries import fields as dj_countries
+
 
 # RelatedFactory,
 # SubFactory,
@@ -16,6 +20,11 @@ from django.utils import timezone
 
 from taggit.models import Tag
 from . import models as gc_models
+from . import choices as gc_choices
+
+from apps.accounts import models as ac_models
+from apps.accounts.models import choices as ac_choices
+
 import datetime
 
 
@@ -83,6 +92,44 @@ class GreencheckFactory(dj_factory.DjangoModelFactory):
 
     class Meta:
         model = gc_models.Greencheck
+
+
+class HostingProviderFactory(dj_factory.DjangoModelFactory):
+    """
+    Basic hosting provider, with no extra bits
+    """
+
+    archived = False
+    # country = dj_countries.CountryField(db_column="countrydomain")
+    country = "US"
+    customer = False
+    # icon = models.CharField(max_length=50, blank=True)
+    # iconurl = models.CharField(max_length=255, blank=True)
+    model = ac_choices.ModelType.COMPENSATION
+    name = factory.Faker("company")
+    # name = models.CharField(max_length=255, db_column="naam")
+    # partner = models.CharField(
+    #     max_length=255,
+    #     null=True,
+    #     default=gc_choicesPartnerChoice.NONE,
+    #     choices=gc_choices.PartnerChoice.choices,
+    #     blank=True,
+    # )
+    # services = TaggableManager(
+    #     verbose_name="Services Offered",
+    #     help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
+    # )
+    # showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
+    website = factory.Faker("domain_name")
+    # datacenter = models.ManyToManyField(
+    #     "Datacenter",
+    #     through="HostingproviderDatacenter",
+    #     through_fields=("hostingprovider", "datacenter"),
+    #     related_name="hostingproviders",
+    # )
+
+    class Meta:
+        model = ac_models.Hostingprovider
 
 
 # @factory.django.mute_signals(post_save)
