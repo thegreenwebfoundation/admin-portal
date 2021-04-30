@@ -1,6 +1,10 @@
 from datetime import date, timedelta
-
 from django.views.generic.base import TemplateView
+
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
+import waffle
 
 from . import object_storage
 
@@ -37,3 +41,14 @@ class GreenUrlsView(TemplateView):
         context = super().get_context_data(**kwargs)
         context["urls"] = self.urls
         return context
+
+
+class GreencheckStatsView(TemplateView):
+
+    template_name = "greencheck/stats_index.html"
+
+    def get(self, request, *args, **kwargs):
+        if waffle.flag_is_active(request, "greencheck-stats"):
+            return super().get(request, args, kwargs)
+        else:
+            return HttpResponseRedirect(reverse("greenweb_admin:index"))
