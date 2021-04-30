@@ -31,6 +31,7 @@ from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
 from apps.greencheck.api import legacy_views
+from apps.greencheck import urls as greencheck_urls
 
 urlpatterns = []
 
@@ -105,5 +106,5 @@ urlpatterns += [
         legacy_views.greencheck_multi,
         name="legacy-greencheck-multi",
     ),
+    path("stats/", include(greencheck_urls)),
 ]
-

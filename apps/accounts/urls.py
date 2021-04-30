@@ -9,8 +9,6 @@ from apps.accounts.views import (
     UserUpdateView,
 )
 
-urlpatterns = []
-
 urlpatterns = [
     path("", DashboardView.as_view(), name="dashboard",),
     path(
