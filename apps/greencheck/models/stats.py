@@ -2,6 +2,7 @@ import datetime
 import logging
 import dramatiq
 
+from typing import List
 from dateutil.relativedelta import relativedelta
 from django.db import models
 from django.utils import timezone
@@ -179,7 +180,7 @@ class DailyStat(TimeStampedModel):
         return stats
 
     @classmethod
-    def create_counts_for_date_range_async(cls, date_range, query):
+    def create_counts_for_date_range_async(cls, date_range: List, query_name=None):
         """
         Accept an iterable of dates, and add a job to create daily stats
         for every date in the iterable
@@ -189,10 +190,13 @@ class DailyStat(TimeStampedModel):
 
         for date in date_range:
 
-            res = tasks.create_stat_async.send(date_string=str(date))
+            res = tasks.create_stat_async.send(
+                date_string=str(date), query_name=query_name
+            )
             deferred_stats.append(res)
 
-        logger.info(deferred_stats)
+        logger.debug(deferred_stats)
+        return deferred_stats
 
     # Mutators
     # Queries

@@ -1,16 +1,23 @@
 import logging
 import pytest
+import io
 
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from dateutil import rrule
+from unittest import mock
 from dramatiq.brokers import stub
 import dramatiq
+
+
+from django.core import management
+
 
 from ... import models as gc_models
 from ... import choices as gc_choices
 from ... import factories as gc_factories
 from ... import tasks as gc_tasks
+from ...management.commands import backfill_stats
 
 from ....accounts import models as ac_models
 
@@ -118,7 +125,6 @@ class TestGreencheckStatsDaily:
         assert grey_stat.count == 0
 
 
-@pytest.mark.only
 class TestGreencheckStatsGeneration:
     def _set_up_dates_for_last_week(self):
 
@@ -266,4 +272,59 @@ class TestGreencheckStatsGeneration:
         assert green_daily_stat.count == 0
         assert grey_daily_stat.count == 1
         assert mixed_daily_stat.count == 1
+
+
+FIRST_OF_JAN = "2020-01-01"
+END_OF_JAN = "2020-01-31"
+
+
+class TestStatManagement:
+    @pytest.mark.parametrize(
+        "start_date, end_date, no_of_days",
+        [(FIRST_OF_JAN, END_OF_JAN, 31), (FIRST_OF_JAN, FIRST_OF_JAN, 1)],
+    )
+    def test_backfill_generate_dates(self, start_date, end_date, no_of_days):
+        """
+        Check that we can backfill our stats from our management commands.
+        """
+
+        sg = backfill_stats.StatGenerator()
+
+        dates = sg._generate_inclusive_date_list(start_date, end_date)
+
+        assert len(dates) == no_of_days
+
+    def test_backfill_generate_jobs(self):
+        """
+        Check that we generate the expected jobs to be
+        finished by a worker
+        """
+
+        # check if our mocked model received the calls
+        daily_stat = gc_models.DailyStat
+
+        # daily_stat.create_counts_for_date_range_async = mock.MagicMock(
+        #     return_value=True
+        # )
+
+        sg = backfill_stats.StatGenerator()
+
+        jobs = sg.generate_query_jobs_for_date_range(
+            start_date_string=FIRST_OF_JAN,
+            end_date_string=END_OF_JAN,
+            query_name="daily_total",
+        )
+
+        assert len(jobs) == 31
+
+    def test_calling_command(self):
+        out = io.StringIO()
+        management.call_command(
+            "backfill_stats", FIRST_OF_JAN, FIRST_OF_JAN, stdout=out
+        )
+
+        assert (
+            f"Queued up daily 'total_count' queries from {FIRST_OF_JAN} to {FIRST_OF_JAN}"
+            in out.getvalue()
+        )
 
