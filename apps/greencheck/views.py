@@ -52,3 +52,15 @@ class GreencheckStatsView(TemplateView):
             return super().get(request, args, kwargs)
         else:
             return HttpResponseRedirect(reverse("greenweb_admin:index"))
+
+    def get_context_data(self, **kwargs):
+        """
+        Fetch the contet for making our charts, and dashboards
+        """
+        context = super().get_context_data(**kwargs)
+
+        res = gc_models.DailyStat.objects.daily_stats()
+        # res = [{"count": 13345244, "stat_date": timezone.now().date()}]
+
+        context["stats"] = res
+        return context

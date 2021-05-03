@@ -57,3 +57,9 @@ class ActionChoice(models.TextChoices):
 
 class DailyStateChoices(models.TextChoices):
     DAILY_TOTAL = "total_daily_checks", _("Total daily checks")
+
+
+class GreenStatChoice(models.TextChoices):
+
+    YES = "yes"
+    NO = "no"
