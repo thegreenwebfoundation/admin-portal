@@ -1,15 +1,14 @@
+from datetime import datetime
+
 import pytest
 
-from datetime import datetime
-from apps.greencheck.models import (
-    GreenDomain,
-    Greencheck,
-    TopUrl,
-)
 from ...accounts import models as ac_models
-from apps.greencheck.management.commands.update_top_url_list import TopUrlUpdater
+from .. import choices as gc_choices
+from .. import factories as gc_factories
+from .. import models as gc_models
+from ..management.commands import update_top_url_list
 
-tu_updater = TopUrlUpdater()
+tu_updater = update_top_url_list.TopUrlUpdater()
 
 
 @pytest.fixture
@@ -31,39 +30,40 @@ def hosting_provider():
 
 @pytest.fixture
 def greencheck(hosting_provider, green_ip):
+
     now = datetime.now()
     hosting_provider.save()
-    return Greencheck(
-        hostingprovider=hosting_provider.id,
+
+    return gc_factories.GreencheckFactory.create(
         date=datetime(now.year, now.month, now.day, now.hour, now.second),
-        green="yes",
-        greencheck_ip=green_ip.id,
-        ip=12345,
-        tld="com",
-        type="as",
         url="google.com",
+        tld="com",
+        green=gc_choices.BoolChoice.YES,
+        hostingprovider=hosting_provider.id,
+        greencheck_ip=green_ip.id,
+        type=gc_choices.GreenlistChoice.ASN,
     )
 
 
 @pytest.fixture
 def top_url():
-    return TopUrl(url="google.com")
+    return gc_models.TopUrl(url="google.com")
 
 
 class TestUpdateList:
     def test_update_green_list(self, db, greencheck, top_url):
 
-        assert GreenDomain.objects.count() == 0
+        assert gc_models.GreenDomain.objects.count() == 0
 
         # set up fixture
         top_url.save()
         greencheck.save()
 
-        top_urls = TopUrl.objects.all()
+        top_urls = gc_models.TopUrl.objects.all()
         tu_updater.update_green_domains(top_urls)
 
         # check we have the value
-        gp_google = GreenDomain.objects.filter(url="google.com").first()
+        gp_google = gc_models.GreenDomain.objects.filter(url="google.com").first()
         assert gp_google.url == "google.com"
 
         assert gp_google.modified == greencheck.date
@@ -79,7 +79,7 @@ class TestUpdateList:
             pk=greencheck.hostingprovider
         )
 
-        gp = GreenDomain(
+        gp = gc_models.GreenDomain(
             green=True,
             hosted_by_id=greencheck.hostingprovider,
             hosted_by=hostingprovider,
@@ -90,12 +90,12 @@ class TestUpdateList:
         )
         gp.save()
 
-        top_urls = TopUrl.objects.all()
+        top_urls = gc_models.TopUrl.objects.all()
         tu_updater.update_green_domains(top_urls)
 
         # check we have the value
-        gp_google = GreenDomain.objects.filter(url="google.com").first()
+        gp_google = gc_models.GreenDomain.objects.filter(url="google.com").first()
         assert gp_google.url == "google.com"
 
         assert gp_google.modified == greencheck.date
-        assert GreenDomain.objects.filter(url="google.com").count() == 1
+        assert gc_models.GreenDomain.objects.filter(url="google.com").count() == 1
