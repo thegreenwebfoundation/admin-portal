@@ -1,5 +1,6 @@
 import dramatiq
 
+from django.utils import timezone
 import logging
 
 import MySQLdb
@@ -32,4 +33,21 @@ def process_log(domain):
         except Exception as err:
             logger.exception(err)
             return False
+
+
+@dramatiq.actor
+def create_stat_async(date_string: str = None, query_name: str = None, *args):
+
+    from .models.stats import DailyStat
+    import dateutil.parser as date_parser
+
+    allowed_queries = "total_count"
+
+    if query_name not in allowed_queries:
+        raise Exception("Unsupported query. Ignoring")
+
+    parsed_date = date_parser.parse(date_string)
+
+    query_function = getattr(DailyStat, query_name)
+    query_function(date_to_check=parsed_date)
 

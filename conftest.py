@@ -1,7 +1,7 @@
 import pathlib
 
 import pytest
-
+import dramatiq
 from apps.greencheck.legacy_workers import SiteCheck
 from django.contrib.auth import get_user_model
 
@@ -130,3 +130,19 @@ def csv_file():
     return this_file.parent.joinpath(
         "apps", "greencheck", "fixtures", "import_data.csv"
     )
+
+
+# test broker, so we don't need to rely on rabbit for tests
+@pytest.fixture
+def broker():
+    broker = dramatiq.get_broker()
+    broker.flush_all()
+    return broker
+
+
+@pytest.fixture
+def worker(broker):
+    worker = dramatiq.Worker(broker, worker_timeout=100)
+    worker.start()
+    yield worker
+    worker.stop()

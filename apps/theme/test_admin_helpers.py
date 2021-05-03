@@ -10,7 +10,6 @@ logger.addHandler(console)
 
 
 class TestAdminHelper:
-    @pytest.mark.only
     @pytest.mark.parametrize(
         "url_to_test, expected_url",
         [

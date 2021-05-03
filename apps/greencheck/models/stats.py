@@ -1,5 +1,6 @@
 import datetime
 import logging
+import dramatiq
 
 from dateutil.relativedelta import relativedelta
 from django.db import models
@@ -10,6 +11,7 @@ from model_utils.models import TimeStampedModel
 
 from .. import choices as gc_choices
 from . import checks
+from .. import tasks
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +28,17 @@ class Stats(models.Model):
         abstract = True
 
 
+class DailyStatQuerySet(models.QuerySet):
+    def daily_stats(self):
+        return self.objects.filter(stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL)
+
+
 class DailyStat(TimeStampedModel):
     """
     Represents the counts of checks for each day
     """
+
+    objects = DailyStatQuerySet.as_manager()
 
     stat_date = models.DateField(
         _("Date for stats"), auto_now=False, auto_now_add=False, default=yesterday
@@ -37,36 +46,59 @@ class DailyStat(TimeStampedModel):
     # we add this key
     stat_key = models.CharField(_(""), max_length=256)
     count = models.IntegerField()
-    green = EnumField(
-        choices=gc_choices.BoolChoice.choices, default=gc_choices.BoolChoice.NO,
-    )
+    green = EnumField(choices=gc_choices.GreenStatChoice.choices, blank=True, null=True)
 
     # Factories
-
     @classmethod
     def total_count(cls, date_to_check: datetime.date = None):
         """
         Create a total count for the given day
         """
+
         one_day_ahead = date_to_check + relativedelta(days=1)
+
+        logger.debug(f"\n\nall greenchecks = {checks.Greencheck.objects.count()}\n\n")
 
         qs = checks.Greencheck.objects.filter(
             date__gt=date_to_check.date(), date__lt=one_day_ahead.date()
         )
+
+        green_qs = checks.Greencheck.objects.filter(
+            date__gt=date_to_check.date(),
+            date__lt=one_day_ahead.date(),
+            green=gc_choices.BoolChoice.YES,
+        )
+        grey_qs = checks.Greencheck.objects.filter(
+            date__gt=date_to_check.date(),
+            date__lt=one_day_ahead.date(),
+            green=gc_choices.BoolChoice.NO,
+        )
+
+        logger.debug(f"date to check: {date_to_check}, qs count: {qs.count()}")
+        logger.debug(str(qs.query))
+
+        logger.debug(
+            f"date to check: {date_to_check}, green qs count: {grey_qs.count()}"
+        )
+        logger.debug(str(grey_qs.query))
+        logger.debug(
+            f"date to check: {date_to_check}, grey qs count: {green_qs.count()}"
+        )
+        logger.debug(str(green_qs.query))
+
         stat = cls(
             count=qs.count(),
             stat_date=date_to_check.date(),
             stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL,
-            green=gc_choices.BoolChoice.YES,
         )
         green_stat = cls(
-            count=qs.count(),
+            count=green_qs.count(),
             stat_date=date_to_check.date(),
             stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL,
             green=gc_choices.BoolChoice.YES,
         )
         grey_stat = cls(
-            count=qs.count(),
+            count=grey_qs.count(),
             stat_date=date_to_check.date(),
             stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL,
             green=gc_choices.BoolChoice.NO,
@@ -131,9 +163,39 @@ class DailyStat(TimeStampedModel):
 
         return stats
 
+    @classmethod
+    def create_counts_for_date_range(cls, date_range, query):
+        """
+        Accept an iterable of dates, and generate daily stats
+        for every date in the iterable
+        """
+        stats = []
+
+        for date in date_range:
+            stat_generation_function = getattr(cls, query)
+            stat = stat_generation_function(date)
+            stats.append(stat)
+
+        return stats
+
+    @classmethod
+    def create_counts_for_date_range_async(cls, date_range, query):
+        """
+        Accept an iterable of dates, and add a job to create daily stats
+        for every date in the iterable
+        """
+
+        deferred_stats = []
+
+        for date in date_range:
+
+            res = tasks.create_stat_async.send(date_string=str(date))
+            deferred_stats.append(res)
+
+        logger.info(deferred_stats)
+
     # Mutators
     # Queries
-
     # Properties
 
     def __str__(self):
