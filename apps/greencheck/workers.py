@@ -1,6 +1,8 @@
 from django.utils import dateparse, timezone
 from apps.greencheck.models import Greencheck, GreenDomain, SiteCheck
 from apps.accounts.models import Hostingprovider
+import django
+
 
 import socket
 import datetime
@@ -145,15 +147,21 @@ class SiteCheckLogger:
         Update the caches - namely the green domains table, and if running Redis
         """
 
-        saved_domain, created = GreenDomain.objects.get_or_create(
-            url=sitecheck.url,
-            hosted_by=hosting_provider.name,
-            hosted_by_id=sitecheck.hosting_provider_id,
-            hosted_by_website=hosting_provider.website,
-            partner=hosting_provider.partner,
-            modified=sitecheck.checked_at,
-            green=sitecheck.green,
-        )
+        try:
+            green_domain = GreenDomain.objects.get(url=sitecheck.url)
+        except GreenDomain.DoesNotExist:
+            green_domain = GreenDomain(url=sitecheck.url)
+
+        green_domain.hosted_by = hosting_provider.name
+        green_domain.hosted_by_id = sitecheck.hosting_provider_id
+        green_domain.hosted_by_website = hosting_provider.website
+        green_domain.partner = hosting_provider.partner
+        green_domain.modified = sitecheck.checked_at
+        green_domain.green = sitecheck.green
+        try:
+            green_domain.save()
+        except django.db.utils.IntegrityError:
+            logger.info(f"skipping update to the cache table for {sitecheck.url}")
 
     def update_redis_domain_cache(self, green_domain: GreenDomain):
         """
