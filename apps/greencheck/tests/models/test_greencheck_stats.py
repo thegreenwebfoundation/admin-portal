@@ -150,7 +150,7 @@ class TestGreencheckStatsGeneration:
 
     def test_create_range_for_stats_async(
         self,
-        db,
+        transactional_db,
         broker: stub.StubBroker,
         worker: dramatiq.Worker,
         hosting_provider_with_sample_user: ac_models.Hostingprovider,
@@ -158,7 +158,8 @@ class TestGreencheckStatsGeneration:
         client,
     ):
         """
-        Create a collection of daily stats, for a range of dates provided
+        Create a collection of daily stats, for a range of dates provided.
+
         """
         broker.declare_queue("default")
         generated_dates = self._set_up_dates_for_last_week()
@@ -167,7 +168,7 @@ class TestGreencheckStatsGeneration:
             gc = gc_factories.GreencheckFactory.create(
                 date=date + relativedelta(hours=2)
             )
-            logger.info(f"gc {date}: {gc.__dict__}")
+            # logger.info(f"gc {date}: {gc.__dict__}")
 
         logger.info(f"just this date: { generated_dates[0] }")
 
@@ -182,18 +183,26 @@ class TestGreencheckStatsGeneration:
         green_stats = gc_models.DailyStat.objects.filter(
             green=gc_choices.BoolChoice.YES
         )
-        grey_stats = gc_models.DailyStat.objects.filter(green=gc_choices.BoolChoice.YES)
+        grey_stats = gc_models.DailyStat.objects.filter(green=gc_choices.BoolChoice.NO)
         mixed_stats = gc_models.DailyStat.objects.exclude(
             green__in=[gc_choices.BoolChoice.YES, gc_choices.BoolChoice.NO]
         )
 
+        # have we generated the expected stats per day?
         assert green_stats.count() == 7
         assert grey_stats.count() == 7
         assert mixed_stats.count() == 7
 
+        # we should one count showing zero green checks for each day
+        assert [stat.count for stat in green_stats] == [0, 0, 0, 0, 0, 0, 0]
+
+        # mixed and grey should be the same
+        assert [stat.count for stat in grey_stats] == [1, 1, 1, 1, 1, 1, 1]
+        assert [stat.count for stat in grey_stats] == [1, 1, 1, 1, 1, 1, 1]
+
     def test_create_stat_async(
         self,
-        db,
+        transactional_db,
         broker: stub.StubBroker,
         worker: dramatiq.Worker,
         hosting_provider_with_sample_user: ac_models.Hostingprovider,
@@ -202,10 +211,11 @@ class TestGreencheckStatsGeneration:
     ):
         """
         Create a collection of daily stats, for a range of dates provided,
-        but have a worker create the stats asynchronously
+        but have a worker create the stats asynchronously.
         """
 
         broker.declare_queue("default")
+        assert gc_models.DailyStat.objects.count() == 0
         # set up our date range
         generated_dates = self._set_up_dates_for_last_week()
 
@@ -213,12 +223,27 @@ class TestGreencheckStatsGeneration:
             gc_factories.GreencheckFactory.create(date=date + relativedelta(hours=2))
 
         chosen_date = str(generated_dates[0].date())
-        # gc_tasks.create_stat_async.send(str(generated_dates[0]))
-        gc_tasks.create_stat_async(date_string=chosen_date, query_name="total_count")
+
+        # we use the 'send' with the 'transactional_db' fixture here instead of db
+        # because if we use the regular db fixture, the workers can not see what is
+        # happening 'inside' this test. TODO: check that this really is the
+        # explanation for this strange test behaviour
+
+        gc_tasks.create_stat_async.send(
+            date_string=chosen_date, query_name="total_count"
+        )
+
+        # import ipdb
+
+        # ipdb.set_trace()
 
         # Wait for all the tasks to be processed
-        broker.join("default")
+        broker.join(gc_tasks.create_stat_async.queue_name)
         worker.join()
+
+        # import ipdb
+
+        # ipdb.set_trace()
 
         # hae we generate the daily stats?
         assert gc_models.DailyStat.objects.count() == 3

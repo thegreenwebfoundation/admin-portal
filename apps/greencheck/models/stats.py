@@ -57,17 +57,17 @@ class DailyStat(TimeStampedModel):
 
         one_day_ahead = date_to_check + relativedelta(days=1)
 
-        logger.debug(f"\n\nall greenchecks = {checks.Greencheck.objects.count()}\n\n")
-
+        # return all the checks for the day
         qs = checks.Greencheck.objects.filter(
             date__gt=date_to_check.date(), date__lt=one_day_ahead.date()
         )
-
+        # return just the green ones
         green_qs = checks.Greencheck.objects.filter(
             date__gt=date_to_check.date(),
             date__lt=one_day_ahead.date(),
             green=gc_choices.BoolChoice.YES,
         )
+        # return just the grey ones
         grey_qs = checks.Greencheck.objects.filter(
             date__gt=date_to_check.date(),
             date__lt=one_day_ahead.date(),
@@ -86,7 +86,7 @@ class DailyStat(TimeStampedModel):
         )
         logger.debug(str(green_qs.query))
 
-        stat = cls(
+        mixed_stat = cls(
             count=qs.count(),
             stat_date=date_to_check.date(),
             stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL,
@@ -103,7 +103,7 @@ class DailyStat(TimeStampedModel):
             stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL,
             green=gc_choices.BoolChoice.NO,
         )
-        stats = [stat, green_stat, grey_stat]
+        stats = [mixed_stat, green_stat, grey_stat]
 
         # persist to db
         [stat.save() for stat in stats]

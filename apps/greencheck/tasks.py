@@ -36,7 +36,7 @@ def process_log(domain):
 
 
 @dramatiq.actor
-def create_stat_async(date_string: str = None, query_name: str = None, *args):
+def create_stat_async(date_string: str = None, query_name: str = "total_count", *args):
 
     from .models.stats import DailyStat
     import dateutil.parser as date_parser

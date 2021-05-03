@@ -209,8 +209,10 @@ class Greencheck(mysql_models.Model):
     ip = IpAddressField()
     tld = models.CharField(max_length=64)
     type = dj_mysql_models.EnumField(
-        choices=gc_choices.ActionChoice.choices, default=gc_choices.ActionChoice.NONE
+        choices=gc_choices.GreenlistChoice.choices,
+        default=gc_choices.GreenlistChoice.NONE,
     )
+
     url = models.CharField(max_length=255)
 
     class Meta:
