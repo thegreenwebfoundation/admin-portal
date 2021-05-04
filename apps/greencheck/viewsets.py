@@ -222,7 +222,7 @@ class GreenDomainBatchView(CreateAPIView):
     def finalize_response(self, request, response, *args, **kwargs):
         """
         Override the default, so if we see a filename requested, send the
-        header. This tells the client to treat it ike a file to download,
+        header. This tells the client to treat it like a file to download,
         rather than trying to display it inline if using a browser.
         """
         filename = request.data.get("response_filename")
