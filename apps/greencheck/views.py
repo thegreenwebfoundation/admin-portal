@@ -3,6 +3,9 @@ from django.views.generic.base import TemplateView
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils import timezone
+from . import models as gc_models
+from .tests import dummy_greencheck_stat_data as dummy_data
 
 import waffle
 
@@ -55,12 +58,20 @@ class GreencheckStatsView(TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Fetch the contet for making our charts, and dashboards
+        Fetch the context for making our charts, and dashboards
         """
         context = super().get_context_data(**kwargs)
 
-        res = gc_models.DailyStat.objects.daily_stats()
-        # res = [{"count": 13345244, "stat_date": timezone.now().date()}]
+        # XX.X %
+        percentage_green = f"{dummy_data.day_green /  dummy_data.day_total:.{1}%}"
+
+        dummy_data.day_totals["percentage_green"] = percentage_green
+
+        res = {
+            "headline_stats": dummy_data.day_totals,
+            "chart_data": dummy_data.counts_by_day,
+        }
 
         context["stats"] = res
+
         return context
