@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tailwind_filters %}
+{% block content %}
+
+
+<div class="container mx-auto">
+  <section class="mx-auto max-w-6xl bg-white border-2 border-dark-gray rounded-md  h-100-l mt-8 py-8">
+
+  {% block stats %}
+    <section class="main-content">
+
+      <section class="description m-3 px-8">
+        <h2 class="text-2xl">
+          Currently showing green check results for the
+          <em>last 24hrs</em>,
+          showing the results for
+          <strong><em>🌍  entire world</em></strong>
+        </h2>
+      </section>
+
+      <section
+        class="headline-stats mx-auto bg-green-50 h-100-l mt-8 p-8 flex px-8"
+      >
+      <div class="hero-stat flex-1">
+          <div class="h-32">
+            <h3 class="text-8xl">
+              {{ stats.headline_stats.percentage_green }}
+            </h3>
+          </div>
+
+          <p>
+            {{ stats.headline_stats.percentage_green }} of our checks show websites running on servers powered by green energy. 
+          </p>
+      </div>
+      <div class="green-results flex-1">
+          <div class="h-32">
+            <h3 class="text-4xl mb-8">
+              {{ stats.headline_stats.day_green | intcomma }} 
+            </h3>
+          </div>
+          <p class="max-w-xs">
+          {{ stats.headline_stats.day_green | intcomma }} checks where we could find evidence of servers running on green energy.
+          </p>
+      </div>
+      <div class="grey-results flex-1">
+          <div class="h-32">
+            <h3 class="text-4xl mb-8">
+            {{ stats.headline_stats.day_grey | intcomma }} 
+            </h3>
+          </div>
+
+          <p class="max-w-xs">
+              {{ stats.headline_stats.day_grey | intcomma }} checks where we couldn't find evidence of running on green energy.
+          </p>
+      
+      </div>
+      </section>
+
+    </section>
+
+
+  {% endblock %}
+  </section>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/dist/app.bundle.js' %}"> </script>
+{% endblock %}
