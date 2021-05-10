@@ -56,6 +56,8 @@ class DailyStat(TimeStampedModel):
         Create a total count for the given day
         """
 
+        logger.info(f"Generating stats for {date_to_check.date()}")
+
         one_day_ahead = date_to_check + relativedelta(days=1)
 
         # return all the checks for the day
@@ -108,6 +110,7 @@ class DailyStat(TimeStampedModel):
 
         # persist to db
         [stat.save() for stat in stats]
+        logger.info(f"Saved stats: {mixed_stat}, {green_stat}, {grey_stat}")
 
         return stats
 
@@ -160,6 +163,9 @@ class DailyStat(TimeStampedModel):
         stats = [stat, green_stat, grey_stat]
 
         # persist to db
+        import ipdb
+
+        ipdb.set_trace()
         [stat.save() for stat in stats]
 
         return stats
@@ -216,6 +222,15 @@ class DailyStat(TimeStampedModel):
         cls.objects.filter(stat_key=query_name, stat_date__in=date_strings).delete()
 
     # Queries
+    @classmethod
+    def stats_by_day_since(cls, start_date=None):
+        return DailyStat.objects.daily_stats().filter(
+            stat_date__gte=start_date,
+            green__in=['yes', 'no']
+        ).order_by('-stat_date')
+
+
+
     # Properties
 
     def __str__(self):

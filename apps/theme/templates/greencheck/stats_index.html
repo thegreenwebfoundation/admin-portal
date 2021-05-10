@@ -14,15 +14,20 @@
 
       <section class="description m-3 px-8">
         <h2 class="text-2xl">
-          Currently showing green check results for the
+          Currently showing results for the
           <em>last 24hrs</em>,
-          showing the results for
-          <strong><em>🌍  entire world</em></strong>
+          and
+          <strong>🌍  the entire world</strong>
+          <span class="text-sm text-red-500 underline hover:no-underline">
+            <a href="">
+              (change)
+            </a>
+          </span
         </h2>
       </section>
 
       <section
-        class="headline-stats mx-auto bg-green-50 h-100-l mt-8 p-8 flex px-8"
+        class="headline-stats mx-auto bg-tgwf-green-900 h-100-l mt-8 p-8 flex px-8"
       >
       <div class="hero-stat flex-1">
           <div class="h-32">
@@ -59,8 +64,80 @@
       </div>
       </section>
 
-    </section>
+      <section class="last-30-days m-3 px-8 mt-6">
+      
+        <script>
+          window.chartData = {{ stats.chart_data|safe }}
+        </script>
 
+
+        <h3 class="text-xl my-4">Green check summary of the last 30 days</h3>
+
+        <p>
+          The chart below shows the daily summaries of checks for 'green' domains, showing as uring infrastructure powered by green energy, versus grey domains - infrastructure running on conventional, often fossil energy.
+        </p>
+
+        <div class="mx-auto w-full h-96 mt-4">
+          <canvas id="chart-last-30-days" width="1200" height="400">
+            
+          
+          </canvas>
+        </div>
+
+        <h3 class="text-xl my-4">Most popular green domains globally </h3>
+
+        <p>
+          The table below shows the most commonly checked domains, along with the organsations running their infrastructure, based on usage data from 1) our  green web foundation browser extension, 2) our green check service, and 3) third party users of our API services,
+        </p>
+
+        <table class="table-auto my-8 mx-auto w-full">
+          <thead>
+            <tr class="border-b border-b-gray-900">
+              <th class="p-2 text-left">Domain</th>
+              <th class="p-2 text-left">Hosted By</th>
+              <th class="p-2 text-right">No. of checks</th>
+
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in top_green_domains %}
+            <tr class="border-b">
+              <td class="text-sm p-2 text-left">{{ line.domain }}</td>
+              <td class="text-sm p-2 text-left"><a href="{{ line.hosted_by }}">{{ line.hosted_by }}</a>  </td>
+              <td class="text-sm p-2 text-right">{{ line.count|intcomma }}</td>
+
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+
+        <h3 class="text-xl my-4">Most popular green hosting providers globally</h3>
+
+        <p>
+          Below are top ten green hosting providers, again from the same aggregated sourrces - again based on usage data from 1) our green web foundation browser extension, 2) our green check service, and 3) third party users of our API services.
+        </p>
+      
+         <table class="table-auto mt-8 mx-auto w-full">
+          <thead>
+            <tr class="border-b">
+              <th class="p-2 text-left">Provider</th>
+              <th class="p-2 text-left">Link</th>
+              <th class="p-2 text-right">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in top_green_hosters %}
+            <tr class="border-b">
+              <td class="text-sm p-2 text-left">{{ line.provider.name }}</td>
+              <td class="text-sm p-2 text-left">{{ line.provider.website }}</td>
+              <td class="text-sm p-2 text-right">{{ line.count|intcomma }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    </section>
 
   {% endblock %}
   </section>
@@ -71,4 +148,5 @@
 
 {% block extra_js %}
   <script src="{% static 'js/dist/app.bundle.js' %}"> </script>
+  
 {% endblock %}

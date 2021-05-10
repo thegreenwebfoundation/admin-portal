@@ -17,9 +17,4 @@ class Migration(migrations.Migration):
             name='stat_date',
             field=models.DateField(default=datetime.datetime(2021, 5, 2, 15, 2, 57, 945674), verbose_name='Date for stats'),
         ),
-        migrations.AlterField(
-            model_name='greencheck',
-            name='type',
-            field=django_mysql.models.EnumField(choices=[('as', 'as'), ('ip', 'ip'), ('none', 'none'), ('url', 'url'), ('whois', 'whois')], default='none'),
-        ),
     ]

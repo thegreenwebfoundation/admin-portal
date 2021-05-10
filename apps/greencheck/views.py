@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from . import models as gc_models
 from . import choices as gc_choices
+from ..accounts import models as ac_models
 from .tests import dummy_greencheck_stat_data as dummy_data
 
 import waffle
@@ -71,20 +72,31 @@ class GreencheckStatsView(TemplateView):
 
         now = timezone.now()
         last_thirty_days = now - relativedelta(days=30)
-        last_thirty_days_of_stats = gc_models.DailyStat.objects.daily_stats().filter(
-            stat_date__gte=last_thirty_days.date()
+        last_thirty_days_of_stats = (
+            gc_models.DailyStat.objects.daily_stats()
+            .filter(stat_date__gte=last_thirty_days.date())
+            .order_by("-stat_date")
         )
         yesterday_stats = last_thirty_days_of_stats.filter(
-            stat_date__gte=now - relativedelta(days=1)
+            stat_date=now - relativedelta(days=1)
         )
-        last_green = yesterday_stats.get(green='yes')
-        last_grey = yesterday_stats.get(green='no')
-        last_total = yesterday_stats.get(green=None)
+        # import ipdb ; ipdb.set_trace()
+        last_green = yesterday_stats.get(green="yes")
+        last_grey = yesterday_stats.get(green="no")
+        # import ipdb ; ipdb.set_trace()
 
-        # XX.X %
-        percentage_green = f"{last_green.count /  last_total.count:.{1}%}"
+        total_count = last_grey.count + last_green.count
+        if total_count == 0:
+            percentage_green = f"{0:.{1}%}"
+        else:
+            percentage_green = (
+                f"{last_green.count /  (last_grey.count + last_green.count):.{1}%}"
+            )
 
-        dummy_data.day_totals["percentage_green"] = percentage_green
+        chart_data = [
+            {"x": str(datum.stat_date), "y": datum.count}
+            for datum in last_thirty_days_of_stats
+        ]
 
         res = {
             "headlines": {
@@ -92,11 +104,23 @@ class GreencheckStatsView(TemplateView):
                 "day_green": last_green.count,
                 "day_grey": last_grey.count,
             },
-            # "chart_data": dummy_data.counts_by_day,
+            "chart_data": chart_data,
         }
+        top_green_hosters = []
+        for row in dummy_data.top_green_hosters:
+            top_green_hosters.append(
+                {
+                    "provider": ac_models.Hostingprovider.objects.get(
+                        pk=row["hoster_id"]
+                    ),
+                    "count": row["count"],
+                }
+            )
 
         context["stats"] = res
+        context["top_green_domains"] = dummy_data.top_green_domains
+        context["top_green_hosters"] = top_green_hosters
 
-        import ipdb ; ipdb.set_trace()
+        # import ipdb ; ipdb.set_trace()
 
         return context
