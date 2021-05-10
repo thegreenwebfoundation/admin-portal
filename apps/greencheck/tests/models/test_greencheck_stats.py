@@ -154,6 +154,39 @@ class TestGreencheckStatsGeneration:
         )
         assert len(generated_stats) == len(generated_dates)
 
+    def test_clear_range_for_stats(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: gc_models.GreencheckIp,
+        client,
+    ):
+        """
+        Create a collection of daily stats, for a range of dates provided
+        """
+
+        generated_dates = self._set_up_dates_for_last_week()
+        generated_stats = gc_models.DailyStat.create_counts_for_date_range(
+            generated_dates, "total_count"
+        )
+
+        # do we have the stats generated?
+        assert len(generated_stats) == len(generated_dates)
+
+        # flatten our nested list of stats
+        import functools
+
+        daily_stats = functools.reduce(lambda x, y: x + y, generated_stats, [])
+        daily_stats_query = [stat for stat in gc_models.DailyStat.objects.all()]
+
+        assert daily_stats == daily_stats_query
+
+        gc_models.DailyStat.clear_counts_for_date_range(
+            generated_dates, query_name="total_daily_checks"
+        )
+
+        assert gc_models.DailyStat.objects.all().count() == 0
+
     def test_create_range_for_stats_async(
         self,
         transactional_db,

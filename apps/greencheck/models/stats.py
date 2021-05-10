@@ -51,7 +51,7 @@ class DailyStat(TimeStampedModel):
 
     # Factories
     @classmethod
-    def total_count(cls, date_to_check: datetime.date = None):
+    def total_count(cls, date_to_check: datetime.datetime = None):
         """
         Create a total count for the given day
         """
@@ -113,7 +113,7 @@ class DailyStat(TimeStampedModel):
 
     @classmethod
     def total_count_for_provider(
-        cls, date_to_check: datetime.date = None, provider_id: int = None
+        cls, date_to_check: datetime.datetime = None, provider_id: int = None
     ):
         """
         Create a total count for given day for the provider.
@@ -180,7 +180,9 @@ class DailyStat(TimeStampedModel):
         return stats
 
     @classmethod
-    def create_counts_for_date_range_async(cls, date_range: List, query_name=None):
+    def create_counts_for_date_range_async(
+        cls, date_range: List[datetime.datetime], query_name=None
+    ):
         """
         Accept an iterable of dates, and add a job to create daily stats
         for every date in the iterable
@@ -188,10 +190,10 @@ class DailyStat(TimeStampedModel):
 
         deferred_stats = []
 
-        for date in date_range:
+        for stat_date in date_range:
 
             res = tasks.create_stat_async.send(
-                date_string=str(date), query_name=query_name
+                date_string=str(stat_date), query_name=query_name
             )
             deferred_stats.append(res)
 
@@ -199,6 +201,20 @@ class DailyStat(TimeStampedModel):
         return deferred_stats
 
     # Mutators
+    @classmethod
+    def clear_counts_for_date_range(
+        cls, date_range: List[datetime.datetime] = None, query_name: str = None
+    ):
+        """
+        Accept an iterable of dates, and query_name, then delete all the Daily stats
+        matching this combination of dates and query.
+
+        Used to clear out duplicates, before generating new stats.
+        """
+
+        date_strings = [str(date_at.date()) for date_at in date_range]
+        cls.objects.filter(stat_key=query_name, stat_date__in=date_strings).delete()
+
     # Queries
     # Properties
 
