@@ -44,10 +44,21 @@ module.exports = {
     ],
     darkMode: false, // or 'media' or 'class'
     theme: {
-        extend: {},
-    },
-    variants: {
-        extend: {},
+        extend: {
+            colors: {
+                "tgwf-green": {
+                    900: "#EAF5E0",
+                    800: "#D1E9B9",
+                    700: "#C3E3A6",
+                    600: "#8AC850",
+                    500: "#8AC850",
+                    400: "#5A8C2C",
+                    300: "#476F22",
+                    200: "#37561A",
+                    100: "#1E320C"
+                }
+            }
+        },
     },
     plugins: [
         /**

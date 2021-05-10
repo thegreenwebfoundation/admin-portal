@@ -160,6 +160,7 @@ class SiteCheckLogger:
         green_domain.green = sitecheck.green
         try:
             green_domain.save()
+            self.update_redis_domain_cache(green_domain)
         except django.db.utils.IntegrityError:
             logger.info(f"skipping update to the cache table for {sitecheck.url}")
 
