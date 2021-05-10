@@ -33,6 +33,8 @@ class StatGenerator:
         )
         return [date.date() for date in days_between_dates]
 
+
+
     def generate_query_jobs_for_date_range(
         self,
         start_date_string: str = None,
@@ -42,6 +44,10 @@ class StatGenerator:
 
         inclusive_day_list = self._generate_inclusive_date_list(
             start_date_string, end_date_string
+        )
+
+        jobs = gc_models.DailyStat.clear_counts_for_date_range(
+            inclusive_day_list, query_name=query_name
         )
 
         jobs = gc_models.DailyStat.create_counts_for_date_range_async(
