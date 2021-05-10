@@ -17,12 +17,7 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomUserChangeForm(UserChangeForm):
-    def __init__(self, *args, **kwargs):
-        """
-        """
-        super().__init__(*args, **kwargs)
-        del self.fields["password"]
-
+    
     class Meta(UserChangeForm.Meta):
         model = ac_models.User
         fields = ("username", "email")
