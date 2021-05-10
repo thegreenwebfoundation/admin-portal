@@ -27,33 +27,33 @@
       <div class="hero-stat flex-1">
           <div class="h-32">
             <h3 class="text-8xl">
-              {{ stats.headline_stats.percentage_green }}
+              {{ stats.headlines.percentage_green }}
             </h3>
           </div>
 
           <p>
-            {{ stats.headline_stats.percentage_green }} of our checks show websites running on servers powered by green energy. 
+            {{ stats.headlines.percentage_green }} of our checks show websites running on servers powered by green energy. 
           </p>
       </div>
       <div class="green-results flex-1">
           <div class="h-32">
             <h3 class="text-4xl mb-8">
-              {{ stats.headline_stats.day_green | intcomma }} 
+              {{ stats.headlines.day_green | intcomma }}
             </h3>
           </div>
           <p class="max-w-xs">
-          {{ stats.headline_stats.day_green | intcomma }} checks where we could find evidence of servers running on green energy.
+          {{ stats.headlines.day_green | intcomma }} checks where we could find evidence of servers running on green energy.
           </p>
       </div>
       <div class="grey-results flex-1">
           <div class="h-32">
             <h3 class="text-4xl mb-8">
-            {{ stats.headline_stats.day_grey | intcomma }} 
+            {{ stats.headlines.day_grey | intcomma }} 
             </h3>
           </div>
 
           <p class="max-w-xs">
-              {{ stats.headline_stats.day_grey | intcomma }} checks where we couldn't find evidence of running on green energy.
+              {{ stats.headlines.day_grey | intcomma }} checks where we couldn't find evidence of running on green energy.
           </p>
       
       </div>

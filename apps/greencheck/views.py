@@ -1,10 +1,12 @@
 from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
 from django.views.generic.base import TemplateView
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
 from . import models as gc_models
+from . import choices as gc_choices
 from .tests import dummy_greencheck_stat_data as dummy_data
 
 import waffle
@@ -62,16 +64,39 @@ class GreencheckStatsView(TemplateView):
         """
         context = super().get_context_data(**kwargs)
 
+        query_name = self.request.GET.get("query_name")
+
+        if query_name is None:
+            query_name = gc_choices.DailyStatChoices.DAILY_TOTAL
+
+        now = timezone.now()
+        last_thirty_days = now - relativedelta(days=30)
+        last_thirty_days_of_stats = gc_models.DailyStat.objects.daily_stats().filter(
+            stat_date__gte=last_thirty_days.date()
+        )
+        yesterday_stats = last_thirty_days_of_stats.filter(
+            stat_date__gte=now - relativedelta(days=1)
+        )
+        last_green = yesterday_stats.get(green='yes')
+        last_grey = yesterday_stats.get(green='no')
+        last_total = yesterday_stats.get(green=None)
+
         # XX.X %
-        percentage_green = f"{dummy_data.day_green /  dummy_data.day_total:.{1}%}"
+        percentage_green = f"{last_green.count /  last_total.count:.{1}%}"
 
         dummy_data.day_totals["percentage_green"] = percentage_green
 
         res = {
-            "headline_stats": dummy_data.day_totals,
-            "chart_data": dummy_data.counts_by_day,
+            "headlines": {
+                "percentage_green": percentage_green,
+                "day_green": last_green.count,
+                "day_grey": last_grey.count,
+            },
+            # "chart_data": dummy_data.counts_by_day,
         }
 
         context["stats"] = res
+
+        import ipdb ; ipdb.set_trace()
 
         return context

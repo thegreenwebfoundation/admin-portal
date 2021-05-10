@@ -55,7 +55,7 @@ class ActionChoice(models.TextChoices):
     NONE = "none", _("none")
 
 
-class DailyStateChoices(models.TextChoices):
+class DailyStatChoices(models.TextChoices):
     DAILY_TOTAL = "total_daily_checks", _("Total daily checks")
 
 
