@@ -1,22 +1,19 @@
 import waffle
-
-from django.contrib.auth.models import Group
 from django.contrib import messages
+from django.contrib.auth.models import Group
 from django.http import HttpResponseRedirect
-from django.utils.encoding import force_text
 from django.urls import reverse
-
-
-from django_registration.backends.activation.views import RegistrationView
-from django_registration.backends.activation.views import ActivationView
+from django.utils.encoding import force_text
 from django.views.generic import UpdateView
-from django_registration.forms import RegistrationFormCaseInsensitive
-from django_registration import signals
-from django_registration.exceptions import ActivationError
 from django.views.generic.base import TemplateView
+from django_registration import signals
+from django_registration.backends.activation.views import (ActivationView,
+                                                           RegistrationView)
+from django_registration.exceptions import ActivationError
+from django_registration.forms import RegistrationFormCaseInsensitive
 
+from .forms import UserUpdateForm
 from .models import User
-from .forms import CustomUserChangeForm
 
 
 class RegistrationForm(RegistrationFormCaseInsensitive):
@@ -105,7 +102,7 @@ class UserUpdateView(UpdateView):
     """
 
     model = User
-    form_class = CustomUserChangeForm
+    form_class = UserUpdateForm
 
     def get(self, request, *args, **kwargs):
         """Handle GET requests: instantiate a blank version of the form."""
