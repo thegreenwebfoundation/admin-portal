@@ -21,11 +21,29 @@ class CustomUserChangeForm(UserChangeForm):
         """
         """
         super().__init__(*args, **kwargs)
+
+    class Meta(UserChangeForm.Meta):
+        model = ac_models.User
+        fields = ("username", "email")
+
+
+class UserUpdateForm(UserChangeForm):
+    """
+    A form to show to users outside of the django admin.
+
+    We don't show the password, but we do link to the update form.
+
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        super().__init__(*args, **kwargs)
         del self.fields["password"]
 
     class Meta(UserChangeForm.Meta):
         model = ac_models.User
         fields = ("username", "email")
+
 
 
 class HostingAdminForm(forms.ModelForm):

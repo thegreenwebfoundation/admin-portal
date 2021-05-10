@@ -16,7 +16,7 @@ from django_registration.exceptions import ActivationError
 from django.views.generic.base import TemplateView
 
 from .models import User
-from .forms import CustomUserChangeForm
+from .forms import UserUpdateForm
 
 
 class RegistrationForm(RegistrationFormCaseInsensitive):
@@ -105,7 +105,7 @@ class UserUpdateView(UpdateView):
     """
 
     model = User
-    form_class = CustomUserChangeForm
+    form_class = UserUpdateForm
 
     def get(self, request, *args, **kwargs):
         """Handle GET requests: instantiate a blank version of the form."""
