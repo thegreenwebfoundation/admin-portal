@@ -327,7 +327,7 @@ class TestStatManagement:
 
         assert len(dates) == no_of_days
 
-    def test_backfill_generate_jobs(self):
+    def test_backfill_generate_jobs(self, db):
         """
         Check that we generate the expected jobs to be
         finished by a worker
@@ -350,7 +350,7 @@ class TestStatManagement:
 
         assert len(jobs) == 31
 
-    def test_calling_command(self):
+    def test_calling_command(self, db):
         out = io.StringIO()
         management.call_command(
             "backfill_stats", FIRST_OF_JAN, FIRST_OF_JAN, stdout=out

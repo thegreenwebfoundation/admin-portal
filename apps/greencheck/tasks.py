@@ -1,8 +1,7 @@
-import dramatiq
-
-from django.utils import timezone
 import logging
 
+import dateutil.parser as date_parser
+import dramatiq
 import MySQLdb
 
 logger = logging.getLogger(__name__)
@@ -37,9 +36,10 @@ def process_log(domain):
 
 @dramatiq.actor
 def create_stat_async(date_string: str = None, query_name: str = "total_count", *args):
+    """
+    """
 
     from .models.stats import DailyStat
-    import dateutil.parser as date_parser
 
     allowed_queries = "total_count"
 
