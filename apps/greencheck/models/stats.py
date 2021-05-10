@@ -31,7 +31,7 @@ class Stats(models.Model):
 
 class DailyStatQuerySet(models.QuerySet):
     def daily_stats(self):
-        return self.objects.filter(stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL)
+        return self.filter(stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL)
 
 
 class DailyStat(TimeStampedModel):
@@ -90,18 +90,18 @@ class DailyStat(TimeStampedModel):
         mixed_stat = cls(
             count=qs.count(),
             stat_date=date_to_check.date(),
-            stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL,
+            stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL,
         )
         green_stat = cls(
             count=green_qs.count(),
             stat_date=date_to_check.date(),
-            stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL,
+            stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL,
             green=gc_choices.BoolChoice.YES,
         )
         grey_stat = cls(
             count=grey_qs.count(),
             stat_date=date_to_check.date(),
-            stat_key=gc_choices.DailyStateChoices.DAILY_TOTAL,
+            stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL,
             green=gc_choices.BoolChoice.NO,
         )
         stats = [mixed_stat, green_stat, grey_stat]
@@ -141,19 +141,19 @@ class DailyStat(TimeStampedModel):
         stat = cls(
             count=qs.count(),
             stat_date=date_to_check.date(),
-            stat_key=f"{gc_choices.DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
+            stat_key=f"{gc_choices.DailyStatChoices.DAILY_TOTAL}:provider:{provider_id}",
         )
 
         green_stat = cls(
             count=green_qs.count(),
             stat_date=date_to_check.date(),
             green=gc_choices.BoolChoice.YES,
-            stat_key=f"{gc_choices.DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
+            stat_key=f"{gc_choices.DailyStatChoices.DAILY_TOTAL}:provider:{provider_id}",
         )
         grey_stat = cls(
             count=grey_qs.count(),
             stat_date=date_to_check.date(),
-            stat_key=f"{gc_choices.DailyStateChoices.DAILY_TOTAL}:provider:{provider_id}",
+            stat_key=f"{gc_choices.DailyStatChoices.DAILY_TOTAL}:provider:{provider_id}",
             green=gc_choices.BoolChoice.NO,
         )
 

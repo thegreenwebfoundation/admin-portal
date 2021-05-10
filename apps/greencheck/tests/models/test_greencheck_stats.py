@@ -1,6 +1,9 @@
 import logging
 import pytest
 import io
+import datetime
+from typing import List
+from django import urls
 
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
@@ -9,6 +12,7 @@ from unittest import mock
 from dramatiq.brokers import stub
 import dramatiq
 
+from waffle.testutils import override_flag
 
 from django.core import management
 
@@ -25,6 +29,19 @@ logger = logging.getLogger(__name__)
 console = logging.StreamHandler()
 logger.setLevel(logging.DEBUG)
 logger.addHandler(console)
+
+
+def range_of_dates(
+    start_datetime: datetime.datetime = None, end_datetime: datetime.datetime = None
+) -> List[datetime.date]:
+    """
+    Return the a range dates, given a start and end datetime
+    """
+    # gemerate dates for last month
+    date_range = rrule.rrule(
+        freq=rrule.DAILY, dtstart=start_datetime.date(), until=end_datetime.date()
+    )
+    return [date for date in date_range]
 
 
 class TestGreencheckStatsDaily:
@@ -360,4 +377,71 @@ class TestStatManagement:
             f"Queued up daily 'total_count' queries from {FIRST_OF_JAN} to {FIRST_OF_JAN}"
             in out.getvalue()
         )
+
+
+class TestDailyStatsView:
+    """
+    Check that we render the right templates
+    """
+
+    @override_flag("greencheck-stats", active=True)
+    def test_stat_view(self, db, client):
+        """
+        Test that we render successfully and the write template
+        """
+
+        stat_path = urls.reverse("greencheck-stats-index")
+        res = client.get(stat_path)
+
+        assert res.status_code == 200
+        assert "greencheck/stats_index.html" in [tmpl.name for tmpl in res.templates]
+
+    @override_flag("greencheck-stats", active=True)
+    def test_stat_view_query(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: gc_models.GreencheckIp,
+        client,
+    ):
+        """
+        Test that we fetch the last 30 days of stats
+        """
+
+        # for each date, add one green and two grey checks for every day
+        now = timezone.now()
+        thirty_days_back = now - relativedelta(days=30)
+        yesterday = now - relativedelta(days=1)
+        last_30_days = range_of_dates(thirty_days_back, yesterday)
+
+        for given_datetime in last_30_days:
+            green_gc = gc_factories.GreencheckFactory.create(
+                date=given_datetime + relativedelta(hours=2),
+                hostingprovider=hosting_provider_with_sample_user.id,
+                greencheck_ip=green_ip.id,
+                ip=green_ip.ip_end,
+                green=gc_choices.BoolChoice.YES,
+            )
+
+            grey_gcs = gc_factories.GreencheckFactory.create_batch(size=2,
+                date=given_datetime + relativedelta(hours=2),
+            )
+
+            # stat, green_stat, grey_stat = gc_models.DailyStat.total_count_for_provider(
+            #     date_to_check=date_to_check,
+            #     provider_id=hosting_provider_with_sample_user.id,
+            # )
+
+        generated_stats = gc_models.DailyStat.create_counts_for_date_range(
+            last_30_days, "total_count"
+        )
+
+        stat_path = urls.reverse("greencheck-stats-index")
+        res = client.get(stat_path)
+
+        assert res.status_code == 200
+
+        import ipdb ; ipdb.set_trace()
+        assert "headlines" in res.context['stats']
+
 
