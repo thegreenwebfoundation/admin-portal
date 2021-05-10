@@ -31,9 +31,7 @@ class StatGenerator:
         days_between_dates = rrule.rrule(
             freq=rrule.DAILY, dtstart=parsed_start_date, until=parsed_end_date
         )
-        return [date.date() for date in days_between_dates]
-
-
+        return [date for date in days_between_dates]
 
     def generate_query_jobs_for_date_range(
         self,
@@ -41,6 +39,10 @@ class StatGenerator:
         end_date_string: str = None,
         query_name: str = None,
     ):
+        """
+        Accept the start date_string, end date_string, and the corresponding query
+        method name on DailyStat to generate the requested stats.
+        """
 
         inclusive_day_list = self._generate_inclusive_date_list(
             start_date_string, end_date_string

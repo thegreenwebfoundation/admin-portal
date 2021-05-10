@@ -190,10 +190,10 @@ class DailyStat(TimeStampedModel):
 
         deferred_stats = []
 
-        for stat_date in date_range:
+        for stat_datetime in date_range:
 
             res = tasks.create_stat_async.send(
-                date_string=str(stat_date), query_name=query_name
+                date_string=str(stat_datetime.date()), query_name=query_name
             )
             deferred_stats.append(res)
 
@@ -212,7 +212,7 @@ class DailyStat(TimeStampedModel):
         Used to clear out duplicates, before generating new stats.
         """
 
-        date_strings = [str(date_at.date()) for date_at in date_range]
+        date_strings = [str(stat_datetime.date()) for stat_datetime in date_range]
         cls.objects.filter(stat_key=query_name, stat_date__in=date_strings).delete()
 
     # Queries
