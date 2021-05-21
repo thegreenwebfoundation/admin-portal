@@ -7,8 +7,10 @@ from django.utils.encoding import force_text
 from django.views.generic import UpdateView
 from django.views.generic.base import TemplateView
 from django_registration import signals
-from django_registration.backends.activation.views import (ActivationView,
-                                                           RegistrationView)
+from django_registration.backends.activation.views import (
+    ActivationView,
+    RegistrationView,
+)
 from django_registration.exceptions import ActivationError
 from django_registration.forms import RegistrationFormCaseInsensitive
 
