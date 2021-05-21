@@ -353,11 +353,11 @@ class TopUrl(models.Model):
 class GreenDomain(models.Model):
 
     url = models.CharField(max_length=255)
+    hosted_by_id = models.IntegerField()
     hosted_by = models.CharField(max_length=255)
     hosted_by_website = models.CharField(max_length=255)
     partner = models.CharField(max_length=255)
     green = models.BooleanField()
-    hosted_by_id = models.IntegerField()
     modified = models.DateTimeField()
 
     def __str__(self):

@@ -6,8 +6,8 @@ import MySQLdb
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-console = logging.StreamHandler()
-logger.addHandler(console)
+# console = logging.StreamHandler()
+# logger.addHandler(console)
 
 
 @dramatiq.actor
@@ -41,7 +41,7 @@ def create_stat_async(date_string: str = None, query_name: str = "total_count", 
 
     from .models.stats import DailyStat
 
-    allowed_queries = "total_count"
+    allowed_queries = ["total_count", "total_count_for_providers"]
 
     if query_name not in allowed_queries:
         raise Exception("Unsupported query. Ignoring")

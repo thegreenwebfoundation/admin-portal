@@ -1,4 +1,7 @@
+from apps.greencheck.models.checks import GreenDomain
 from typing import Any, Sequence
+import ipaddress
+import random
 
 import factory
 import factory.fuzzy as facfuzzy
@@ -129,39 +132,63 @@ class HostingProviderFactory(dj_factory.DjangoModelFactory):
 
     class Meta:
         model = ac_models.Hostingprovider
+        django_get_or_create = ("name",)
 
 
-# @factory.django.mute_signals(post_save)
-# class ProfileFactory(DjangoModelFactory):
+class GreenIpFactory(dj_factory.DjangoModelFactory):
 
-#     # make a profile tied to a user
-#     user = SubFactory(UserFactory)
-#     phone = Faker("phone_number")
-#     website = factory.LazyFunction(url_factory)
-#     twitter = Faker("user_name")
-#     facebook = Faker("user_name")
-#     linkedin = Faker("user_name")
-#     organisation = Faker("company")
-#     bio = Faker("paragraph")
-#     # tags = SubFactory(TagFactory)
+    active = True
+    ip_start = factory.Faker("ipv4_public")
+    ip_end = factory.Faker("ipv4_public")
+    hostingprovider = factory.SubFactory(HostingProviderFactory)
 
-#     user = factory.SubFactory("backend.users.tests.factories.UserFactory", profile=None)
+    @classmethod
+    def _adjust_kwargs(cls, **kwargs):
+        """
+        We make sure IP start is lower than the ip_end,
+        so we have a valid ip range
+        """
+        # parse the ips
+        start_ip = ipaddress.ip_address(kwargs["ip_start"])
+        end_ip = start_ip + random.randint(0, 20)
+        kwargs["ip_end"] = str(end_ip)
 
-#     class Meta:
-#         model = Profile
+        return kwargs
+
+    class Meta:
+        model = gc_models.GreencheckIp
 
 
-# @factory.django.mute_signals(post_save)
-# class FakePhotoProfileFactory(ProfileFactory):
+class GreenDomainFactory(dj_factory.DjangoModelFactory):
 
-#     photo = factory.LazyAttribute(
-#         lambda o: ContentFile(
-#             ImageFieldFactory()._make_data(
-#                 {"width": 400, "height": 400, "format": "jpeg"}
-#             ),
-#             "test_pic.jpg",
-#         )
-#     )
+    url = factory.Faker("domain_name")
+    green = True
+    hosted_by = factory.SubFactory(HostingProviderFactory)
 
-#     class Meta:
-#         model = Profile
+    # we need to update these later in the
+    # `_adjust_kwargs` step
+    hosted_by_id = factory.SelfAttribute("hosted_by")
+    hosted_by_website = factory.SelfAttribute("hosted_by")
+    modified = timezone.now()
+
+    @classmethod
+    def _adjust_kwargs(cls, **kwargs):
+
+        hosting_provider = kwargs["hosted_by"]
+        kwargs["hosted_by"] = hosting_provider.name
+        kwargs["hosted_by_id"] = hosting_provider.id
+        kwargs["hosted_by_website"] = hosting_provider.website
+
+        return kwargs
+
+    class Meta:
+        model = GreenDomain
+        django_get_or_create = ("url",)
+
+
+class DailyStatFactory(dj_factory.DjangoModelFactory):
+
+    # count = ra
+
+    class Meta:
+        model = gc_models.DailyStat

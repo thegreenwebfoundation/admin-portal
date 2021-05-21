@@ -1,9 +1,13 @@
+from apps.greencheck.models.stats import DailyStat
 import logging
 import pytest
 import io
 import datetime
 from typing import List
 from django import urls
+
+import faker
+
 
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
@@ -16,7 +20,6 @@ from waffle.testutils import override_flag
 
 from django.core import management
 
-
 from ... import models as gc_models
 from ... import choices as gc_choices
 from ... import factories as gc_factories
@@ -27,21 +30,10 @@ from ....accounts import models as ac_models
 
 logger = logging.getLogger(__name__)
 console = logging.StreamHandler()
-logger.setLevel(logging.DEBUG)
-logger.addHandler(console)
+# logger.setLevel(logging.DEBUG)
+# logger.addHandler(console)
 
-
-def range_of_dates(
-    start_datetime: datetime.datetime = None, end_datetime: datetime.datetime = None
-) -> List[datetime.date]:
-    """
-    Return the a range dates, given a start and end datetime
-    """
-    # gemerate dates for last month
-    date_range = rrule.rrule(
-        freq=rrule.DAILY, dtstart=start_datetime.date(), until=end_datetime.date()
-    )
-    return [date for date in date_range]
+fake = faker.Faker()
 
 
 class TestGreencheckStatsDaily:
@@ -117,7 +109,6 @@ class TestGreencheckStatsDaily:
         db,
         hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: gc_models.GreencheckIp,
-        client,
     ):
         """
         We should see greem checks
@@ -140,6 +131,105 @@ class TestGreencheckStatsDaily:
         assert stat.count == 1
         assert green_stat.count == 1
         assert grey_stat.count == 0
+
+    def test_create_top_domains_by_date(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: gc_models.GreencheckIp,
+    ):
+        """
+        Check that we can create the rankings of domains we want, from a
+        set of greenchecks on a given day
+        """
+        two_am_yesterday = timezone.now() + relativedelta(hours=2, days=-1)
+        date_to_check = timezone.now() - relativedelta(days=1)
+        domains_to_check = []
+
+        for x in range(10):
+            fake_domain = fake.domain_name()
+            domains_to_check.append(fake_domain)
+            no_of_checks = int(fake.numerify())
+
+            for y in range(no_of_checks):
+                gc_factories.GreencheckFactory.create(
+                    url=fake_domain,
+                    date=two_am_yesterday,
+                    hostingprovider=hosting_provider_with_sample_user.id,
+                    greencheck_ip=green_ip.id,
+                    ip=green_ip.ip_end,
+                    green=gc_choices.BoolChoice.YES,
+                )
+
+        res = DailyStat.create_top_domains_for_day(chosen_date=date_to_check.date())
+
+        assert len(res) == 10
+
+        assert DailyStat.objects.count() == 10
+        stat_keys = [
+            stat.stat_key.replace("total_daily_checks:domain:", "")
+            for stat in DailyStat.objects.all()
+        ]
+
+        for dom in domains_to_check:
+            assert dom in stat_keys
+
+    def test_create_top_providers_by_date(
+        self, db,
+    ):
+        """
+        Check that we can create the rankings of providers we want, from a
+        set of greenchecks on a given day
+        """
+
+        two_am_yesterday = timezone.now() + relativedelta(hours=2, days=-1)
+        date_to_check = timezone.now() - relativedelta(days=1)
+        providers = []
+
+        # we need a factory for creating a hosting provider, and then a factory
+        # for the corresponding user
+
+        for x in range(10):
+            provider = gc_factories.HostingProviderFactory()
+            green_ip = gc_factories.GreenIpFactory(hostingprovider=provider)
+
+            fake_domain = fake.domain_name()
+            providers.append(provider)
+            no_of_checks = int(fake.numerify())
+
+            for y in range(no_of_checks):
+                gc_factories.GreencheckFactory.create(
+                    url=fake_domain,
+                    date=two_am_yesterday,
+                    hostingprovider=provider.id,
+                    greencheck_ip=green_ip.id,
+                    ip=green_ip.ip_end,
+                    green=gc_choices.BoolChoice.YES,
+                )
+
+        res = DailyStat.create_top_hosting_providers_for_day(
+            chosen_date=date_to_check.date()
+        )
+
+        assert len(res) == 10
+
+        assert DailyStat.objects.count() == 10
+        stat_keys = [
+            stat.stat_key.replace("total_daily_checks:provider:", "")
+            for stat in DailyStat.objects.all()
+        ]
+
+        for provider_id in [provider.id for provider in providers]:
+            # we need to coerce so we are checking strings against strings,
+            # not 1234 against '1234'
+            assert str(provider_id) in stat_keys
+
+        # making aggregate figures over a time range
+
+        # we now need to start creating the top tens for each day, so we
+        # can show monthly rollups
+        # we do this by testing management commands that generate top ten lists
+        # for a range of dates
 
 
 class TestGreencheckStatsGeneration:
@@ -322,126 +412,4 @@ class TestGreencheckStatsGeneration:
         assert green_daily_stat.count == 0
         assert grey_daily_stat.count == 1
         assert mixed_daily_stat.count == 1
-
-
-FIRST_OF_JAN = "2020-01-01"
-END_OF_JAN = "2020-01-31"
-
-
-class TestStatManagement:
-    @pytest.mark.parametrize(
-        "start_date, end_date, no_of_days",
-        [(FIRST_OF_JAN, END_OF_JAN, 31), (FIRST_OF_JAN, FIRST_OF_JAN, 1)],
-    )
-    def test_backfill_generate_dates(self, start_date, end_date, no_of_days):
-        """
-        Check that we can backfill our stats from our management commands.
-        """
-
-        sg = backfill_stats.StatGenerator()
-
-        dates = sg._generate_inclusive_date_list(start_date, end_date)
-
-        assert len(dates) == no_of_days
-
-    def test_backfill_generate_jobs(self, db):
-        """
-        Check that we generate the expected jobs to be
-        finished by a worker
-        """
-
-        # check if our mocked model received the calls
-        daily_stat = gc_models.DailyStat
-
-        # daily_stat.create_counts_for_date_range_async = mock.MagicMock(
-        #     return_value=True
-        # )
-
-        sg = backfill_stats.StatGenerator()
-
-        jobs = sg.generate_query_jobs_for_date_range(
-            start_date_string=FIRST_OF_JAN,
-            end_date_string=END_OF_JAN,
-            query_name="daily_total",
-        )
-
-        assert len(jobs) == 31
-
-    def test_calling_command(self, db):
-        out = io.StringIO()
-        management.call_command(
-            "backfill_stats", FIRST_OF_JAN, FIRST_OF_JAN, stdout=out
-        )
-
-        assert (
-            f"Queued up daily 'total_count' queries from {FIRST_OF_JAN} to {FIRST_OF_JAN}"
-            in out.getvalue()
-        )
-
-
-class TestDailyStatsView:
-    """
-    Check that we render the right templates
-    """
-
-    @override_flag("greencheck-stats", active=True)
-    def test_stat_view(self, db, client):
-        """
-        Test that we render successfully and the write template
-        """
-
-        stat_path = urls.reverse("greencheck-stats-index")
-        res = client.get(stat_path)
-
-        assert res.status_code == 200
-        assert "greencheck/stats_index.html" in [tmpl.name for tmpl in res.templates]
-
-    @override_flag("greencheck-stats", active=True)
-    def test_stat_view_query(
-        self,
-        db,
-        hosting_provider_with_sample_user: ac_models.Hostingprovider,
-        green_ip: gc_models.GreencheckIp,
-        client,
-    ):
-        """
-        Test that we fetch the last 30 days of stats
-        """
-
-        # for each date, add one green and two grey checks for every day
-        now = timezone.now()
-        thirty_days_back = now - relativedelta(days=30)
-        yesterday = now - relativedelta(days=1)
-        last_30_days = range_of_dates(thirty_days_back, yesterday)
-
-        for given_datetime in last_30_days:
-            green_gc = gc_factories.GreencheckFactory.create(
-                date=given_datetime + relativedelta(hours=2),
-                hostingprovider=hosting_provider_with_sample_user.id,
-                greencheck_ip=green_ip.id,
-                ip=green_ip.ip_end,
-                green=gc_choices.BoolChoice.YES,
-            )
-
-            grey_gcs = gc_factories.GreencheckFactory.create_batch(size=2,
-                date=given_datetime + relativedelta(hours=2),
-            )
-
-            # stat, green_stat, grey_stat = gc_models.DailyStat.total_count_for_provider(
-            #     date_to_check=date_to_check,
-            #     provider_id=hosting_provider_with_sample_user.id,
-            # )
-
-        generated_stats = gc_models.DailyStat.create_counts_for_date_range(
-            last_30_days, "total_count"
-        )
-
-        stat_path = urls.reverse("greencheck-stats-index")
-        res = client.get(stat_path)
-
-        assert res.status_code == 200
-
-        import ipdb ; ipdb.set_trace()
-        assert "headlines" in res.context['stats']
-
 

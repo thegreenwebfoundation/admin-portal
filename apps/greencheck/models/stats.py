@@ -1,18 +1,18 @@
 import datetime
 import logging
-import dramatiq
-
 from typing import List
+
+from dateutil import parser as date_parser
 from dateutil.relativedelta import relativedelta
-from django.db import models
+from django.db import connection, models
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_mysql.models import EnumField
 from model_utils.models import TimeStampedModel
 
 from .. import choices as gc_choices
-from . import checks
 from .. import tasks
+from . import checks
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,45 @@ class Stats(models.Model):
 
 
 class DailyStatQuerySet(models.QuerySet):
+    """
+    Table level queries for DailyStats
+    """
+
     def daily_stats(self):
         return self.filter(stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL)
+
+    def daily_stats_for_provider(self, provider_id: int = None):
+        """
+        Return all the daily counts for a given provider
+        """
+        daily_total = gc_choices.DailyStatChoices.DAILY_TOTAL
+
+        # exit early if no provider
+        if not provider_id:
+            domain_key = f"{daily_total}:provider"
+            return self.filter(stat_key__icontains=domain_key)
+
+        # otherwise be more
+        provider_key = f"{daily_total}:provider:{provider_id}"
+        return self.filter(stat_key=provider_key)
+
+    def daily_stats_for_domain(self, domain: str = None):
+        """
+        Return all the daily counts for a given domain
+        """
+
+        # validate domain
+
+        daily_total = gc_choices.DailyStatChoices.DAILY_TOTAL
+
+        # return early if we're not filtering to specific domain
+        if not domain:
+            domain_key = f"{daily_total}:domain"
+            return self.filter(stat_key__icontains=domain_key)
+
+        # otherwise use the domain too
+        domain_key = f"{daily_total}:domain:{domain}"
+        return self.filter(stat_key=domain_key)
 
 
 class DailyStat(TimeStampedModel):
@@ -163,9 +200,6 @@ class DailyStat(TimeStampedModel):
         stats = [stat, green_stat, grey_stat]
 
         # persist to db
-        import ipdb
-
-        ipdb.set_trace()
         [stat.save() for stat in stats]
 
         return stats
@@ -206,6 +240,122 @@ class DailyStat(TimeStampedModel):
         logger.debug(deferred_stats)
         return deferred_stats
 
+    @classmethod
+    def create_top_domains_for_day(
+        cls, chosen_date: str = None, green: str = gc_choices.GreenStatChoice.YES
+    ):
+        """
+        Create a top N listing of domains grouped by count, and ordered
+        by number of checks, for the dates given.
+        We drop down to raw SQL to generate this, because the greencheck
+        table is some integrity issues that prevent us from using
+        foreign keys.
+        """
+        from .checks import Greencheck
+
+        greencheck_table = Greencheck._meta.db_table
+
+        logger.info(f"provided chosen date: {chosen_date}")
+
+        date_start, date_end = cls._single_day_date_range(chosen_date=str(chosen_date))
+
+        logger.info(f"sending these dates: {date_start}, {date_end}")
+
+        results = []
+        with connection.cursor() as cursor:
+            # passing in greencheck table to execute below, escapes the
+            # table name, making mysql crash, so we need to add it like so
+            raw_query = (
+                "SELECT url , count(id) AS popularity "
+                f"FROM {greencheck_table} "
+                "WHERE datum BETWEEN %s AND %s "
+                "AND green = %s "
+                "GROUP BY url "
+                "ORDER BY popularity DESC"
+            )
+            logger.info(raw_query)
+            cursor.execute(raw_query, [date_start, date_end, green])
+
+            results = cursor.fetchall()
+        logger.info(results)
+
+        for res in results:
+            domain, count = res
+            daily_total = gc_choices.DailyStatChoices.DAILY_TOTAL
+            domain_key = f"{daily_total}:domain:{domain}"
+
+            # save our results as DailyStats
+            DailyStat.objects.create(
+                count=count,
+                green=green,
+                stat_key=domain_key,
+                stat_date=str(chosen_date),
+            )
+        return results
+
+    @classmethod
+    def create_top_hosting_providers_for_day(
+        cls, chosen_date: str = None, green: str = gc_choices.GreenStatChoice.YES
+    ):
+        """
+        Create a top N listing of hosting providers grouped by count, and ordered
+        by number of checks, for the dates given.
+        We drop down to raw SQL to generate this, because the greencheck
+        table is some integrity issues that prevent us from using
+        foreign keys.
+        """
+        from .checks import Greencheck
+
+        greencheck_table = Greencheck._meta.db_table
+        logger.info(f"provided chosen date: {chosen_date}")
+
+        date_start, date_end = cls._single_day_date_range(chosen_date=str(chosen_date))
+
+        logger.info(f"sending these dates: {date_start}, {date_end}")
+
+        results = []
+        with connection.cursor() as cursor:
+            # passing in greencheck table to execute below, escapes the
+            # table name, making mysql crash, so we need to add it like so
+            raw_query = (
+                "SELECT id_hp , count(id) AS popularity "
+                f"FROM {greencheck_table} "
+                "WHERE datum BETWEEN %s AND %s "
+                "AND green = %s "
+                "GROUP BY id_hp "
+                "ORDER BY popularity DESC"
+            )
+            cursor.execute(raw_query, [date_start, date_end, green])
+            results = cursor.fetchall()
+
+        for res in results:
+            hosting_provider_id, count = res
+            daily_total = gc_choices.DailyStatChoices.DAILY_TOTAL
+            provider_key = f"{daily_total}:provider:{hosting_provider_id}"
+
+            # save our results as DailyStats
+            DailyStat.objects.create(
+                count=count,
+                green=green,
+                stat_key=provider_key,
+                stat_date=str(chosen_date),
+            )
+        return results
+
+    @classmethod
+    def _single_day_date_range(self, chosen_date: str = None):
+        """
+        Accept a datestring, and return start and end datestrings
+        suitable for using in day calculations
+        """
+        logger.info(f"chosen date: {chosen_date}")
+        if chosen_date is None:
+            chosen_date = str(timezone.now().date())
+
+        following_day = date_parser.parse(chosen_date) + relativedelta(days=1)
+
+        return [chosen_date, str(following_day.date())]
+
     # Mutators
     @classmethod
     def clear_counts_for_date_range(
@@ -224,12 +374,21 @@ class DailyStat(TimeStampedModel):
     # Queries
     @classmethod
     def stats_by_day_since(cls, start_date=None):
-        return DailyStat.objects.daily_stats().filter(
-            stat_date__gte=start_date,
-            green__in=['yes', 'no']
-        ).order_by('-stat_date')
+        """
+        """
+        return (
+            cls.objects.daily_stats()
+            .filter(stat_date__gte=start_date, green__in=["yes", "no"])
+            .order_by("-stat_date")
+        )
 
-
+    @classmethod
+    def stats_by_day_(cls, start_date=None):
+        return (
+            cls.objects.daily_stats()
+            .filter(stat_date__gte=start_date, green__in=["yes", "no"])
+            .order_by("-stat_date")
+        )
 
     # Properties
 
