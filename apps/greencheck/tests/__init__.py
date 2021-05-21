@@ -1,4 +1,7 @@
 from typing import List
+import datetime
+from dateutil import rrule
+import webbrowser
 
 from django.utils import timezone
 
@@ -56,3 +59,26 @@ def setup_domains(
 
     # assert gc_models.GreenDomain.objects.all().count() == len(domains)
 
+
+def range_of_dates(
+    start_datetime: datetime.datetime = None, end_datetime: datetime.datetime = None
+) -> List[datetime.date]:
+    """
+    Return the a range dates, given a start and end datetime
+    """
+    # gemerate dates for last month
+    date_range = rrule.rrule(
+        freq=rrule.DAILY, dtstart=start_datetime.date(), until=end_datetime.date()
+    )
+    return [date for date in date_range]
+
+
+def view_in_browser(content):
+    """
+    Accepts a bytestring and render it
+    with the system browser
+    """
+    with open("webpage.html", "w") as page:
+        page.write(content.decode("utf-8"))
+
+    webbrowser.open("webpage.html")

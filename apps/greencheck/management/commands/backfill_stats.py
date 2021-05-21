@@ -48,7 +48,7 @@ class StatGenerator:
             start_date_string, end_date_string
         )
 
-        jobs = gc_models.DailyStat.clear_counts_for_date_range(
+        gc_models.DailyStat.clear_counts_for_date_range(
             inclusive_day_list, query_name=query_name
         )
 
@@ -100,5 +100,5 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(
-            f"Queued up daily '{query_name}' queries from {start_date} to {end_date}"
+            f"OK. Queued up daily '{query_name}' queries from {start_date} to {end_date}"
         )

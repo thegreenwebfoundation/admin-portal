@@ -41,6 +41,10 @@ class BoolChoice(models.TextChoices):
 
 
 class StatusApproval(models.TextChoices):
+    """
+    Choices to describe the status of an IP range or ASN request.
+    """
+
     APPROVED = "approved", _("Approved")
     DELETED = "deleted", _("Deleted")
     NEW = "new", _("New")
@@ -56,10 +60,19 @@ class ActionChoice(models.TextChoices):
 
 
 class DailyStatChoices(models.TextChoices):
+    """
+    Choices for assigning to a DailyStat's stat_key.
+    Used to quickly identify certain aggregate queries.
+    """
+
     DAILY_TOTAL = "total_daily_checks", _("Total daily checks")
 
 
 class GreenStatChoice(models.TextChoices):
+    """
+    Options to use when querying for green, or non green domains.
 
-    YES = "yes"
-    NO = "no"
+    """
+
+    YES = "yes"  #  for green domains
+    NO = "no"  #  for grey domains
