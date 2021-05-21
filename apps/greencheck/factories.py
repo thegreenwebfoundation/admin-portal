@@ -8,12 +8,7 @@ import factory.fuzzy as facfuzzy
 import factory.django as dj_factory
 
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
-from django.db.models.signals import post_save
-from django.db import models
 from django.utils import timezone
-
-from django_countries import fields as dj_countries
 
 
 # RelatedFactory,
@@ -165,14 +160,20 @@ class GreenDomainFactory(dj_factory.DjangoModelFactory):
     green = True
     hosted_by = factory.SubFactory(HostingProviderFactory)
 
-    # we need to update these later in the
-    # `_adjust_kwargs` step
+    # see the `_adjust_kwargs` step, for checking that
+    # hosting provider info is realistic
     hosted_by_id = factory.SelfAttribute("hosted_by")
     hosted_by_website = factory.SelfAttribute("hosted_by")
     modified = timezone.now()
 
     @classmethod
     def _adjust_kwargs(cls, **kwargs):
+        """
+        Override the `hosted_by` property, based on
+        the values we pull out from the hosting provider
+        object. We need to do this, because we don't have a proper
+        foreign key to hosting providers.
+        """
 
         hosting_provider = kwargs["hosted_by"]
         kwargs["hosted_by"] = hosting_provider.name
@@ -187,8 +188,5 @@ class GreenDomainFactory(dj_factory.DjangoModelFactory):
 
 
 class DailyStatFactory(dj_factory.DjangoModelFactory):
-
-    # count = ra
-
     class Meta:
         model = gc_models.DailyStat

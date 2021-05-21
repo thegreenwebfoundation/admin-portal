@@ -43,22 +43,22 @@
       <div class="green-results flex-1">
           <div class="h-32">
             <h3 class="text-4xl mb-8">
-              {{ stats.headlines.day_green | intcomma }}
+              {{ stats.headlines.green | intcomma }}
             </h3>
           </div>
           <p class="max-w-xs">
-          {{ stats.headlines.day_green | intcomma }} checks where we could find evidence of servers running on green energy.
+          {{ stats.headlines.green | intcomma }} checks where we could find evidence of servers running on green energy.
           </p>
       </div>
       <div class="grey-results flex-1">
           <div class="h-32">
             <h3 class="text-4xl mb-8">
-            {{ stats.headlines.day_grey | intcomma }} 
+            {{ stats.headlines.grey | intcomma }}
             </h3>
           </div>
 
           <p class="max-w-xs">
-              {{ stats.headlines.day_grey | intcomma }} checks where we couldn't find evidence of running on green energy.
+              {{ stats.headlines.grey | intcomma }} checks where we couldn't find evidence of running on green energy.
           </p>
       
       </div>
@@ -100,7 +100,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for line in top_green_domains %}
+            {% for line in stats.top_green_domains %}
             <tr class="border-b">
               <td class="text-sm p-2 text-left">{{ line.domain }}</td>
               <td class="text-sm p-2 text-left"><a href="{{ line.hosted_by }}">{{ line.hosted_by }}</a>  </td>
@@ -117,7 +117,7 @@
         <p>
           Below are top ten green hosting providers, again from the same aggregated sourrces - again based on usage data from 1) our green web foundation browser extension, 2) our green check service, and 3) third party users of our API services.
         </p>
-      
+      2
          <table class="table-auto mt-8 mx-auto w-full">
           <thead>
             <tr class="border-b">
@@ -127,7 +127,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for line in top_green_hosters %}
+            {% for line in stats.top_green_hosters %}
             <tr class="border-b">
               <td class="text-sm p-2 text-left">{{ line.provider.name }}</td>
               <td class="text-sm p-2 text-left">{{ line.provider.website }}</td>

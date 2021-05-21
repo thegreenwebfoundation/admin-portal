@@ -8,8 +8,8 @@ from apps.accounts.models import Hostingprovider
 
 console = logging.StreamHandler()
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(console)
+# logger.setLevel(logging.DEBUG)
+# logger.addHandler(console)
 
 
 @pytest.fixture
