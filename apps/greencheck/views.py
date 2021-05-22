@@ -58,6 +58,7 @@ class GreenUrlsView(TemplateView):
         return context
 
 
+@method_decorator(cache_page(60 * 5), name="dispatch")
 class GreencheckStatsView(TemplateView):
 
     template_name = "greencheck/stats_index.html"
@@ -82,6 +83,11 @@ class GreencheckStatsView(TemplateView):
             total=Sum("count")
         )["total"]
 
+        if not green_count:
+            green_count = 0
+        if not grey_count:
+            grey_count = 0
+
         total_count = grey_count + green_count
 
         if total_count == 0:
@@ -95,10 +101,10 @@ class GreencheckStatsView(TemplateView):
             "percentage_green": percentage_green,
         }
 
-    def _get_top_green_hosters(self, begin_at, end_at) -> typing.List:
+    def _get_top_green_hosters(self, begin_at, end_at) -> typing.List[typing.Dict]:
         """
-        Return a list of hosts, the count of checks in this time period
-
+        Return a list of hosts, with a count of checks in this time period
+        defined by the start and end dates
         """
 
         hosters = (
@@ -108,35 +114,53 @@ class GreencheckStatsView(TemplateView):
         )
 
         enriched_hosters = []
+        counter = collections.Counter()
 
-        for hoster_stat in hosters:
-            hoster_id = hoster_stat.stat_key.replace("total_daily_checks:provider:", "")
-            hp = Hostingprovider.objects.get(pk=hoster_id)
-            enriched_hosters.append({"provider": hp, "count": hoster_stat.count})
+        # aggregated_hoster_counts = (
+        #     hosters.values("stat_key").annotate(total=Sum("count")).order_by("-count")
+        # )[:10]
+
+        for host in hosters:
+            counter[host.stat_key] = host.count
+
+        for hoster_stat in counter.most_common(10):
+            stat_key, total = hoster_stat
+            hoster_id = stat_key.replace("total_daily_checks:provider:", "")
+            if hoster_id != "None":
+                provider = Hostingprovider.objects.get(pk=hoster_id)
+            else:
+                provider = None
+            enriched_hosters.append({"provider": provider, "count": total})
 
         return enriched_hosters
 
     def _get_top_green_domains(self, begin_at, end_at) -> typing.List[DailyStat]:
         """
         Return a list of domains, with the count of checks in this time period.
-
         """
-        domains = (
-            gc_models.DailyStat.objects.daily_stats_for_domain()
-            .filter(stat_date__gte=begin_at.date(), stat_date__lte=end_at.date())
-            .order_by("-count")
+        domains = gc_models.DailyStat.objects.daily_stats_for_domain().filter(
+            stat_date__gte=begin_at.date(), stat_date__lte=end_at.date()
         )
 
         enriched_domains = []
+        domain_counter = collections.Counter()
 
-        for domain in domains:
-            domain_name = domain.stat_key.replace("total_daily_checks:domain:", "")
+        # we use a counter instead of aggregating in the database query, because
+        # django's annotation framework was adding a second group by clause, so we
+        # didn't get grouping by domains
+        for dom in domains:
+            domain_counter[dom.stat_key] += dom.count
+
+        for dom_count in domain_counter.most_common(10):
+            stat_key, total = dom_count
+            domain_name = stat_key.replace("total_daily_checks:domain:", "")
+
             # go from the domain to the provider
-            green_dom = gc_models.GreenDomain.objects.get(url=domain_name)
+            green_domain = gc_models.GreenDomain.objects.get(url=domain_name)
+            provider = green_domain.hosting_provider
 
-            hp = ac_models.Hostingprovider.objects.get(pk=green_dom.hosted_by_id)
             enriched_domains.append(
-                {"domain": domain_name, "provider": hp, "count": domain.count}
+                {"domain": domain_name, "hosted_by": provider, "count": total}
             )
 
         return enriched_domains
@@ -183,8 +207,8 @@ class GreencheckStatsView(TemplateView):
                 "grey": headline_counts["grey_count"],
             },
             "chart_data": chart_data,
-            "top_green_hosters": self._get_top_green_hosters(now, thirty_days_ago),
-            "top_green_domains": self._get_top_green_domains(now, thirty_days_ago),
+            "top_green_hosters": self._get_top_green_hosters(thirty_days_ago, now),
+            "top_green_domains": self._get_top_green_domains(thirty_days_ago, now),
         }
 
         context["stats"] = res
