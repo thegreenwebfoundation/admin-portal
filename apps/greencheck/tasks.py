@@ -37,11 +37,18 @@ def process_log(domain):
 @dramatiq.actor
 def create_stat_async(date_string: str = None, query_name: str = "total_count", *args):
     """
+    Accept a date_string, and a query name then execute the query. Used to carry out
+    expensive aggregation queries outside the request cycle.
     """
 
     from .models.stats import DailyStat
 
-    allowed_queries = ["total_count", "total_count_for_providers"]
+    allowed_queries = [
+        "total_count",
+        "total_count_for_providers",
+        "top_domains_for_day",
+        "top_hosting_providers_for_day",
+    ]
 
     if query_name not in allowed_queries:
         raise Exception("Unsupported query. Ignoring")

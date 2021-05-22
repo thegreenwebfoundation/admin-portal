@@ -86,6 +86,42 @@ class DailyStat(TimeStampedModel):
     count = models.IntegerField()
     green = EnumField(choices=gc_choices.GreenStatChoice.choices, blank=True, null=True)
 
+    @classmethod
+    def create_counts_for_date_range(cls, date_range, query):
+        """
+        Accept an iterable of dates, and generate daily stats
+        for every date in the iterable
+        """
+        stats = []
+
+        for date in date_range:
+            stat_generation_function = getattr(cls, query)
+            stat = stat_generation_function(date)
+            stats.append(stat)
+
+        return stats
+
+    @classmethod
+    def create_counts_for_date_range_async(
+        cls, date_range: List[datetime.datetime], query_name=None
+    ):
+        """
+        Accept an iterable of dates, and add a job to create daily stats
+        for every date in the iterable
+        """
+
+        deferred_stats = []
+
+        for stat_datetime in date_range:
+
+            res = tasks.create_stat_async.send(
+                date_string=str(stat_datetime.date()), query_name=query_name
+            )
+            deferred_stats.append(res)
+
+        logger.debug(deferred_stats)
+        return deferred_stats
+
     # Factories
     @classmethod
     def total_count(cls, date_to_check: datetime.datetime = None):
@@ -205,44 +241,10 @@ class DailyStat(TimeStampedModel):
         return stats
 
     @classmethod
-    def create_counts_for_date_range(cls, date_range, query):
-        """
-        Accept an iterable of dates, and generate daily stats
-        for every date in the iterable
-        """
-        stats = []
-
-        for date in date_range:
-            stat_generation_function = getattr(cls, query)
-            stat = stat_generation_function(date)
-            stats.append(stat)
-
-        return stats
-
-    @classmethod
-    def create_counts_for_date_range_async(
-        cls, date_range: List[datetime.datetime], query_name=None
-    ):
-        """
-        Accept an iterable of dates, and add a job to create daily stats
-        for every date in the iterable
-        """
-
-        deferred_stats = []
-
-        for stat_datetime in date_range:
-
-            res = tasks.create_stat_async.send(
-                date_string=str(stat_datetime.date()), query_name=query_name
-            )
-            deferred_stats.append(res)
-
-        logger.debug(deferred_stats)
-        return deferred_stats
-
-    @classmethod
-    def create_top_domains_for_day(
-        cls, chosen_date: str = None, green: str = gc_choices.GreenStatChoice.YES
+    def top_domains_for_day(
+        cls,
+        date_to_check: datetime.datetime = None,
+        green: str = gc_choices.GreenStatChoice.YES,
     ):
         """
         Create a top N listing of domains grouped by count, and ordered
@@ -255,6 +257,8 @@ class DailyStat(TimeStampedModel):
 
         greencheck_table = Greencheck._meta.db_table
 
+        chosen_date = date_to_check.date()
+
         logger.info(f"provided chosen date: {chosen_date}")
 
         date_start, date_end = cls._single_day_date_range(chosen_date=str(chosen_date))
@@ -264,20 +268,22 @@ class DailyStat(TimeStampedModel):
         results = []
         with connection.cursor() as cursor:
             # passing in greencheck table to execute below, escapes the
-            # table name, making mysql crash, so we need to add it like so
+            # table name, making mysql crash, so we need to add it like so.
+            # it isn't user input anyway, so it should be safe to do so.
             raw_query = (
                 "SELECT url , count(id) AS popularity "
                 f"FROM {greencheck_table} "
                 "WHERE datum BETWEEN %s AND %s "
                 "AND green = %s "
                 "GROUP BY url "
-                "ORDER BY popularity DESC"
+                "ORDER BY popularity DESC "
+                "LIMIT 20"
             )
             logger.info(raw_query)
             cursor.execute(raw_query, [date_start, date_end, green])
 
             results = cursor.fetchall()
-        logger.info(results)
+        logger.info("results: {results}")
 
         for res in results:
             domain, count = res
@@ -291,22 +297,27 @@ class DailyStat(TimeStampedModel):
                 stat_key=domain_key,
                 stat_date=str(chosen_date),
             )
+
         return results
 
     @classmethod
-    def create_top_hosting_providers_for_day(
-        cls, chosen_date: str = None, green: str = gc_choices.GreenStatChoice.YES
+    def top_hosting_providers_for_day(
+        cls,
+        date_to_check: datetime.datetime = None,
+        green: str = gc_choices.GreenStatChoice.YES,
     ):
         """
         Create a top N listing of hosting providers grouped by count, and ordered
         by number of checks, for the dates given.
         We drop down to raw SQL to generate this, because the greencheck
-        table is some integrity issues that prevent us from using
+        table has some integrity issues that prevent us from using
         foreign keys.
         """
         from .checks import Greencheck
 
         greencheck_table = Greencheck._meta.db_table
+
+        chosen_date = date_to_check.date()
         logger.info(f"provided chosen date: {chosen_date}")
 
         date_start, date_end = cls._single_day_date_range(chosen_date=str(chosen_date))
@@ -323,7 +334,8 @@ class DailyStat(TimeStampedModel):
                 "WHERE datum BETWEEN %s AND %s "
                 "AND green = %s "
                 "GROUP BY id_hp "
-                "ORDER BY popularity DESC"
+                "ORDER BY popularity DESC "
+                "LIMIT 20 "
             )
             cursor.execute(raw_query, [date_start, date_end, green])
             results = cursor.fetchall()
@@ -343,7 +355,7 @@ class DailyStat(TimeStampedModel):
         return results
 
     @classmethod
-    def _single_day_date_range(self, chosen_date: str = None):
+    def _single_day_date_range(cls, chosen_date: str = None):
         """
         Accept a datestring, and return start and end datestrings
         suitable for using in day calculations
