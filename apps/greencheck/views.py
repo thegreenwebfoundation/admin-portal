@@ -58,7 +58,6 @@ class GreenUrlsView(TemplateView):
         return context
 
 
-@method_decorator(cache_page(60 * 5), name="dispatch")
 class GreencheckStatsView(TemplateView):
 
     template_name = "greencheck/stats_index.html"
