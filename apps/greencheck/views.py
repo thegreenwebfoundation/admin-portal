@@ -11,7 +11,6 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic.base import TemplateView
-from rich import inspect
 
 from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.models.checks import GreenDomain
