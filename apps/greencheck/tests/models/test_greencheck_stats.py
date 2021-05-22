@@ -155,14 +155,14 @@ class TestGreencheckStatsDaily:
                     green=gc_choices.BoolChoice.YES,
                 )
 
-        res =gc_models.DailyStat.top_domains_for_day(date_to_check=date_to_check)
+        res = gc_models.DailyStat.top_domains_for_day(date_to_check=date_to_check)
 
         assert len(res) == 10
 
-        assertgc_models.DailyStat.objects.count() == 10
+        assert gc_models.DailyStat.objects.count() == 10
         stat_keys = [
             stat.stat_key.replace("total_daily_checks:domain:", "")
-            for stat ingc_models.DailyStat.objects.all()
+            for stat in gc_models.DailyStat.objects.all()
         ]
 
         for dom in domains_to_check:
@@ -201,14 +201,16 @@ class TestGreencheckStatsDaily:
                     green=gc_choices.BoolChoice.YES,
                 )
 
-        res =gc_models.DailyStat.top_hosting_providers_for_day(date_to_check=date_to_check)
+        res = gc_models.DailyStat.top_hosting_providers_for_day(
+            date_to_check=date_to_check
+        )
 
         assert len(res) == 10
 
-        assertgc_models.DailyStat.objects.count() == 10
+        assert gc_models.DailyStat.objects.count() == 10
         stat_keys = [
             stat.stat_key.replace("total_daily_checks:provider:", "")
-            for stat ingc_models.DailyStat.objects.all()
+            for stat in gc_models.DailyStat.objects.all()
         ]
 
         for provider_id in [provider.id for provider in providers]:
