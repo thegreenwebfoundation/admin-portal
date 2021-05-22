@@ -1,6 +1,7 @@
 import decimal
 import ipaddress
 import logging
+import typing
 from dataclasses import dataclass
 
 from dateutil.relativedelta import relativedelta
@@ -408,6 +409,25 @@ class GreenDomain(models.Model):
         )
 
     # Queries
+    @property
+    def hosting_provider(self) -> typing.Union[ac_models.Hostingprovider, None]:
+        """
+        Try to find the corresponding hosting provider for this url.
+        Return either the hosting providr
+        """
+        try:
+            return ac_models.Hostingprovider.objects.get(pk=self.hosted_by_id)
+        except ValueError:
+            return None
+        except Exception as err:
+            logger.error(
+                (
+                    f"Couldn't find a hosting provider for url: {self.url}, "
+                    "and hosted_by_id: {hosted_by_id}."
+                )
+            )
+            logger.exception(err)
+            return None
 
     @classmethod
     def check_for_domain(cls, domain, skip_cache=False):
