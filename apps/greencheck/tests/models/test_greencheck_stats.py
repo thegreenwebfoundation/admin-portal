@@ -1,32 +1,26 @@
-from apps.greencheck.models.stats import DailyStat
-import logging
-import pytest
-import io
 import datetime
+import io
+import logging
 from typing import List
-from django import urls
-
-import faker
-
-
-from django.utils import timezone
-from dateutil.relativedelta import relativedelta
-from dateutil import rrule
 from unittest import mock
-from dramatiq.brokers import stub
-import dramatiq
 
+import dramatiq
+import faker
+import pytest
+from dateutil import rrule
+from dateutil.relativedelta import relativedelta
+from django import urls
+from django.core import management
+from django.utils import timezone
+from dramatiq.brokers import stub
 from waffle.testutils import override_flag
 
-from django.core import management
-
-from ... import models as gc_models
+from ....accounts import models as ac_models
 from ... import choices as gc_choices
 from ... import factories as gc_factories
+from ... import models as gc_models
 from ... import tasks as gc_tasks
 from ...management.commands import backfill_stats
-
-from ....accounts import models as ac_models
 
 logger = logging.getLogger(__name__)
 console = logging.StreamHandler()
@@ -161,14 +155,14 @@ class TestGreencheckStatsDaily:
                     green=gc_choices.BoolChoice.YES,
                 )
 
-        res = DailyStat.create_top_domains_for_day(chosen_date=date_to_check.date())
+        res =gc_models.DailyStat.top_domains_for_day(date_to_check=date_to_check)
 
         assert len(res) == 10
 
-        assert DailyStat.objects.count() == 10
+        assertgc_models.DailyStat.objects.count() == 10
         stat_keys = [
             stat.stat_key.replace("total_daily_checks:domain:", "")
-            for stat in DailyStat.objects.all()
+            for stat ingc_models.DailyStat.objects.all()
         ]
 
         for dom in domains_to_check:
@@ -207,16 +201,14 @@ class TestGreencheckStatsDaily:
                     green=gc_choices.BoolChoice.YES,
                 )
 
-        res = DailyStat.create_top_hosting_providers_for_day(
-            chosen_date=date_to_check.date()
-        )
+        res =gc_models.DailyStat.top_hosting_providers_for_day(date_to_check=date_to_check)
 
         assert len(res) == 10
 
-        assert DailyStat.objects.count() == 10
+        assertgc_models.DailyStat.objects.count() == 10
         stat_keys = [
             stat.stat_key.replace("total_daily_checks:provider:", "")
-            for stat in DailyStat.objects.all()
+            for stat ingc_models.DailyStat.objects.all()
         ]
 
         for provider_id in [provider.id for provider in providers]:
@@ -224,12 +216,11 @@ class TestGreencheckStatsDaily:
             # not 1234 against '1234'
             assert str(provider_id) in stat_keys
 
-        # making aggregate figures over a time range
 
-        # we now need to start creating the top tens for each day, so we
-        # can show monthly rollups
-        # we do this by testing management commands that generate top ten lists
-        # for a range of dates
+class TestDailyStatQuerySet:
+    """
+    Tests that the queries we run
+    """
 
 
 class TestGreencheckStatsGeneration:
