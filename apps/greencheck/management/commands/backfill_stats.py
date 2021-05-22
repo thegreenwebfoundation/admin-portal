@@ -1,7 +1,6 @@
 import logging
 
-import dateutil.parser as date_parser
-from dateutil import rrule
+from dateutil import parser, rrule
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -25,8 +24,8 @@ class StatGenerator:
         Generate a list of dates from two given date strings, inclusive of the
         dates provided
         """
-        parsed_start_date = date_parser.parse(start_date)
-        parsed_end_date = date_parser.parse(end_date)
+        parsed_start_date = parser.parse(start_date)
+        parsed_end_date = parser.parse(end_date)
 
         days_between_dates = rrule.rrule(
             freq=rrule.DAILY, dtstart=parsed_start_date, until=parsed_end_date

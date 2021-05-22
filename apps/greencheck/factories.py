@@ -1,29 +1,25 @@
-from apps.greencheck.models.checks import GreenDomain
-from typing import Any, Sequence
+import datetime
 import ipaddress
 import random
+from typing import Any, Sequence
 
 import factory
-import factory.fuzzy as facfuzzy
 import factory.django as dj_factory
-
+import factory.fuzzy as facfuzzy
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from taggit.models import Tag
 
+from apps.accounts import models as ac_models
+from apps.accounts.models import choices as ac_choices
+from apps.greencheck.models.checks import GreenDomain
+
+from . import choices as gc_choices
+from . import models as gc_models
 
 # RelatedFactory,
 # SubFactory,
 # post_generation,
-
-
-from taggit.models import Tag
-from . import models as gc_models
-from . import choices as gc_choices
-
-from apps.accounts import models as ac_models
-from apps.accounts.models import choices as ac_choices
-
-import datetime
 
 
 class UserFactory(dj_factory.DjangoModelFactory):

@@ -1,21 +1,17 @@
+import functools
 import logging
 
-from django import urls
-
 import faker
-import functools
-
-from django.utils import timezone
 from dateutil.relativedelta import relativedelta
-
+from django import urls
+from django.utils import timezone
 from waffle.testutils import override_flag
 
-from .. import range_of_dates, view_in_browser
-from ... import models as gc_models
+from ....accounts import models as ac_models
 from ... import choices as gc_choices
 from ... import factories as gc_factories
-
-from ....accounts import models as ac_models
+from ... import models as gc_models
+from .. import range_of_dates, view_in_browser
 
 logger = logging.getLogger(__name__)
 console = logging.StreamHandler()
@@ -210,7 +206,7 @@ class TestDailyStatsView:
         assert len(top_green_domains) == 10
 
     @override_flag("greencheck-stats", active=True)
-    def test_stat_view_top_providers(self, db, client, live_server):
+    def test_stat_view_top_providers(self, db, client):
         """
         Test that we can display a list of the top domains
         """

@@ -1,23 +1,27 @@
-from apps.greencheck.models.checks import GreenDomain
-from apps.accounts.models.hosting import Hostingprovider
-from apps.greencheck.models.stats import DailyStat
+import collections
 import typing
 from datetime import date, timedelta
-from dateutil.relativedelta import relativedelta
-from django.views.generic.base import TemplateView
 
+import waffle
+from dateutil.relativedelta import relativedelta
 from django.db.models import Sum
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
-from . import models as gc_models
-from . import choices as gc_choices
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.generic.base import TemplateView
+from rich import inspect
+
+from apps.accounts.models.hosting import Hostingprovider
+from apps.greencheck.models.checks import GreenDomain
+from apps.greencheck.models.stats import DailyStat
+
 from ..accounts import models as ac_models
-from .tests import dummy_greencheck_stat_data as dummy_data
-
-import waffle
-
+from . import choices as gc_choices
+from . import models as gc_models
 from . import object_storage
+from .tests import dummy_greencheck_stat_data as dummy_data
 
 bucket = object_storage.green_domains_bucket()
 
