@@ -223,6 +223,9 @@ DRAMATIQ_BROKER = {
     ],
 }
 
+# For some jobs, we want workers dedicated to that queue only
+# this is where we list them.
+DRAMATIQ_EXTRA_QUEUES = {"stats": "stats"}
 
 LOGGING = {
     "version": 1,

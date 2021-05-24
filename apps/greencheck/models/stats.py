@@ -4,6 +4,7 @@ from typing import List
 
 from dateutil import parser as date_parser
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.db import connection, models
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -89,8 +90,9 @@ class DailyStat(TimeStampedModel):
     @classmethod
     def create_counts_for_date_range(cls, date_range, query):
         """
-        Accept an iterable of dates, and generate daily stats
-        for every date in the iterable
+        Accept an iterable of dates, and generate a daily stat
+        for every date in the iterable, by running through them one
+        at a time in a loop, using the provided query.
         """
         stats = []
 
@@ -102,20 +104,28 @@ class DailyStat(TimeStampedModel):
         return stats
 
     @classmethod
-    def create_counts_for_date_range_async(
+    def create_jobs_for_date_range_async(
         cls, date_range: List[datetime.datetime], query_name=None
     ):
         """
-        Accept an iterable of dates, and add a job to create daily stats
-        for every date in the iterable
+        Accept an iterable of dates, and add a job for a worker to pick up
+        to create daily stat for every date in the iterable, running the
+        named query.
         """
 
         deferred_stats = []
 
         for stat_datetime in date_range:
 
-            res = tasks.create_stat_async.send(
-                date_string=str(stat_datetime.date()), query_name=query_name
+            # We default to running these on a separate queue, but
+            # if we use the "default" queue, they'll be picked up by
+            # regular workers too
+            res = tasks.create_stat_async.send_with_options(
+                queue=settings.DRAMATIQ_EXTRA_QUEUES.get("stats", "stats"),
+                kwargs={
+                    "date_string": str(stat_datetime.date()),
+                    "query_name": query_name,
+                },
             )
             deferred_stats.append(res)
 
@@ -129,7 +139,7 @@ class DailyStat(TimeStampedModel):
         Create a total count for the given day
         """
 
-        logger.info(f"Generating stats for {date_to_check.date()}")
+        logger.info(f"Generating stats for {date_to_check.date()}, with 'total_count'")
 
         one_day_ahead = date_to_check + relativedelta(days=1)
 

@@ -51,7 +51,7 @@ class StatGenerator:
             inclusive_day_list, query_name=query_name
         )
 
-        jobs = gc_models.DailyStat.create_counts_for_date_range_async(
+        jobs = gc_models.DailyStat.create_jobs_for_date_range_async(
             inclusive_day_list, query_name=query_name
         )
 

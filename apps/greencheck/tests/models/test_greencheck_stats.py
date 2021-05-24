@@ -311,7 +311,7 @@ class TestGreencheckStatsGeneration:
 
         logger.info(f"just this date: { generated_dates[0] }")
 
-        gc_models.DailyStat.create_counts_for_date_range_async(
+        gc_models.DailyStat.create_jobs_for_date_range_async(
             generated_dates, "total_count"
         )
 
