@@ -34,7 +34,7 @@ def process_log(domain):
             return False
 
 
-@dramatiq.actor
+@dramatiq.actor(queue_name="stats")
 def create_stat_async(date_string: str = None, query_name: str = "total_count", *args):
     """
     Accept a date_string, and a query name then execute the query. Used to carry out
