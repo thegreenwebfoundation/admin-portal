@@ -74,6 +74,11 @@
       args:
         chdir: "{{ project_root }}/current"
 
+  - name: build javascript bundle with rollup, using the local config file
+      shell: "npx rollup --config"
+      args:
+        chdir: "{{ project_root }}/current/apps/theme/static_src"
+
     - name: collect static files for django
       shell: "pipenv run ./manage.py collectstatic --no-input"
       args:
