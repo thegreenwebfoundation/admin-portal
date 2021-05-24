@@ -3,6 +3,7 @@ import io
 import logging
 from typing import List
 from unittest import mock
+import pytest
 
 import dramatiq
 import faker
@@ -287,6 +288,7 @@ class TestGreencheckStatsGeneration:
 
         assert gc_models.DailyStat.objects.all().count() == 0
 
+    @pytest.mark.flaky
     def test_create_range_for_stats_async(
         self,
         transactional_db,
