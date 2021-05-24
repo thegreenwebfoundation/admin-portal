@@ -74,7 +74,7 @@
       args:
         chdir: "{{ project_root }}/current"
 
-  - name: build javascript bundle with rollup, using the local config file
+    - name: build javascript bundle with rollup, using the local config file
       shell: "npx rollup --config"
       args:
         chdir: "{{ project_root }}/current/apps/theme/static_src"
