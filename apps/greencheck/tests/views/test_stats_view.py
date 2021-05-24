@@ -2,6 +2,7 @@ import functools
 import logging
 
 import faker
+import pytest
 from dateutil.relativedelta import relativedelta
 from django import urls
 from django.utils import timezone
@@ -185,6 +186,7 @@ class TestDailyStatsView:
         assert len(chart_data["green"]) == 30
         assert len(chart_data["grey"]) == 30
 
+    @pytest.mark.flaky
     @override_flag("greencheck-stats", active=True)
     def test_stat_view_top_domains(
         self, db, client,

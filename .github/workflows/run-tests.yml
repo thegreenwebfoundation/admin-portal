@@ -64,7 +64,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pipenv run "pytest -m 'not smoke_test' -m 'not dramatiq'"
+          pipenv run pytest
         env:
           PIPENV_DOTENV_LOCATION: .env.test
           DOMAIN_SNAPSHOT_BUCKET: ${{ secrets.TESTING_DOMAIN_SNAPSHOT_BUCKET }}
