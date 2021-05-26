@@ -311,6 +311,11 @@ class HostingAdmin(admin.ModelAdmin):
             post = request.POST.copy()
             post["is_staff"] = request.user.is_staff
             request.POST = post
+
+        extra_context = extra_context or {}
+        extra_context["bulk_edit_link"] = reverse_admin_name(
+            GreencheckIpApprove, "changelist", params={"hostingprovider": object_id}
+        )
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
     @mark_safe
