@@ -244,6 +244,34 @@ class GreencheckIpApprove(mu_models.TimeStampedModel):
     ip_start = IpAddressField()
     status = models.TextField(choices=gc_choices.StatusApproval.choices)
 
+    # Factories
+    def process_approval(self, action):
+        """
+        Accept an action, and if the action was one of approval
+        return the created Green Ip range, corresponding to this
+        Green Ip approval request.
+        """
+        self.status = action
+        created_ip_range = None
+
+        if action == gc_choices.StatusApproval.APPROVED:
+
+            created_ip_range = GreencheckIp.objects.create(
+                active=True,
+                hostingprovider=self.hostingprovider,
+                ip_start=self.ip_start,
+                ip_end=self.ip_end,
+            )
+            self.green_ip = created_ip_range
+
+        self.save()
+        if created_ip_range:
+            return created_ip_range
+
+    # Mutators
+    # Queries
+    # Properties
+
     def __str__(self):
         return f"{self.ip_start} - {self.ip_end}: {self.status}"
 
@@ -336,12 +364,29 @@ class GreencheckASNapprove(mu_models.TimeStampedModel):
     )
     status = models.TextField(choices=gc_choices.StatusApproval.choices)
 
-    class Meta:
-        db_table = "greencheck_as_approve"
-        verbose_name = "Greencheck ASN Submissions"
+    def process_approval(self, action):
+        """
+        Accept an action, and if the action was one of approval
+        return the created the GreenASN, corresponding to this
+        approval request
+        """
+        self.status = action
+        created_asn = None
+
+        if action == gc_choices.StatusApproval.APPROVED:
+            created_asn = GreencheckASN.objects.create(
+                active=True, hostingprovider=self.hostingprovider, asn=self.asn,
+            )
+        self.save()
+        if created_asn:
+            return created_asn
 
     def __str__(self):
         return f"ASN: {self.asn} - Status: {self.status} Action: {self.action}"
+
+    class Meta:
+        db_table = "greencheck_as_approve"
+        verbose_name = "Greencheck ASN Submissions"
 
 
 class TopUrl(models.Model):
