@@ -1,5 +1,6 @@
 from django.utils.safestring import mark_safe
 from django.contrib import admin
+from django.contrib import messages
 
 from apps.accounts.models import Hostingprovider
 from .models import (
@@ -194,9 +195,37 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
         "created",
         "modified",
     ]
+
+    actions = ["approve_selected"]
+
     list_display_links = None
     list_filter = [StatusIpFilter]
     readonly_fields = ["link"]
+
+    @admin.action(description="Approve selected green ip ranges")
+    def approve_selected(self, request, queryset):
+        """
+        Accept a set of Green IP approval requests to
+        process, and approve them.
+        """
+        approved_ips = [
+            ip_range.process_approval(StatusApproval.APPROVED) for ip_range in queryset
+        ]
+        hosting_provider_names = set([ip.hostingprovider.name for ip in approved_ips])
+
+        printable_names = ", ".join([name for name in hosting_provider_names])
+
+        self.message_user(
+            request,
+            (
+                f"OK. {len(approved_ips)} green IP ranges have "
+                "been successfully updated for the following "
+                f"providers: {printable_names}"
+            ),
+            messages.SUCCESS,
+        )
+
+        return approved_ips
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
