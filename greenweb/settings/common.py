@@ -215,7 +215,8 @@ DRAMATIQ_BROKER = {
     "BROKER": "dramatiq.brokers.rabbitmq.RabbitmqBroker",
     "OPTIONS": {"url": RABBITMQ_URL,},  # noqa
     "MIDDLEWARE": [
-        "dramatiq.middleware.Prometheus",
+        # remove until we are actually using it
+        # "dramatiq.middleware.Prometheus"
         "dramatiq.middleware.AgeLimit",
         "dramatiq.middleware.TimeLimit",
         "dramatiq.middleware.Callbacks",
