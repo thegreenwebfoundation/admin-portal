@@ -8,6 +8,7 @@ from django.utils.safestring import mark_safe
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from apps.greencheck.admin import (
+    GreencheckASNApprove,
     GreencheckIpApproveInline,
     GreencheckIpInline,
     GreencheckAsnInline,
@@ -21,6 +22,7 @@ from waffle.admin import FlagAdmin
 from apps.greencheck.models import GreencheckASN
 from apps.greencheck.models import GreencheckIp
 from apps.greencheck.models import GreencheckIpApprove
+from apps.greencheck.models import GreencheckASNapprove
 from apps.greencheck.choices import StatusApproval
 
 from .utils import get_admin_name, reverse_admin_name
@@ -265,39 +267,23 @@ class HostingAdmin(admin.ModelAdmin):
         return redirect(name, obj.pk)
 
     def approve_asn(self, request, *args, **kwargs):
-        # TODO it would be ideal if this was more re-usable
-        from apps.greencheck.models import GreencheckASNapprove
 
         pk = request.GET.get("approval_id")
         action = request.GET.get("action")
-
         obj = GreencheckASNapprove.objects.get(pk=pk)
-        obj.status = action
-        obj.save()
 
-        if action == StatusApproval.APPROVED:
-            GreencheckASN.objects.create(
-                active=True, hostingprovider=obj.hostingprovider, asn=obj.asn
-            )
+        approved_asn = obj.process_approval(action)
+
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.hostingprovider_id)
 
     def approve_ip(self, request, *args, **kwargs):
-        # TODO it would be ideal if this was more re-usable
         pk = request.GET.get("approval_id")
         action = request.GET.get("action")
-
         obj = GreencheckIpApprove.objects.get(pk=pk)
-        obj.status = action
-        obj.save()
 
-        if action == StatusApproval.APPROVED:
-            GreencheckIp.objects.create(
-                active=True,
-                hostingprovider=obj.hostingprovider,
-                ip_start=obj.ip_start,
-                ip_end=obj.ip_end,
-            )
+        approved_ip_range = obj.process_approval(action)
+
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.hostingprovider_id)
 
