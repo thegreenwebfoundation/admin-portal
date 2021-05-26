@@ -1,20 +1,15 @@
+from django.contrib import admin, messages
 from django.utils import translation
 from django.utils.safestring import mark_safe
-from django.contrib import admin
-from django.contrib import messages
 
-from apps.accounts.models import Hostingprovider
-from .models import (
-    GreencheckIp,
-    GreencheckIpApprove,
-)
 from apps.accounts.admin_site import greenweb_admin
+from apps.accounts.models import Hostingprovider
 from apps.accounts.utils import reverse_admin_name
-from . import forms
-from . import models
-from .forms import GreencheckIpForm
-from .forms import GreecheckIpApprovalForm
+
+from . import forms, models
 from .choices import StatusApproval
+from .forms import GreecheckIpApprovalForm, GreencheckIpForm
+from .models import GreencheckIp, GreencheckIpApprove
 
 
 class ApprovalFieldMixin:
@@ -218,10 +213,6 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
 
         self.message_user(
             request,
-            (
-                f"OK. {len(approved_ips)} green IP ranges have "
-                "been successfully updated for the following "
-                f"providers: {printable_names}"
             translation.ngettext(
                 (
                     f"OK. {len(approved_ips)} green IP range have "
@@ -232,6 +223,8 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
                     f"OK. {len(approved_ips)} green IP ranges have "
                     "been successfully updated for the following "
                     f"providers: {printable_names}"
+                ),
+                len(approved_ips),
             ),
             messages.SUCCESS,
         )
