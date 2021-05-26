@@ -71,6 +71,40 @@ class TestGreencheckStatsDaily:
             (timezone.now() - relativedelta(days=0), 0),
         ],
     )
+    def test_count_daily_checks_is_idempotent(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: gc_models.GreencheckIp,
+        client,
+        date_to_check,
+        expected_count,
+    ):
+        """
+        Do we run a count of all the checks for the last day?
+        """
+        two_am_yesterday = timezone.now() + relativedelta(hours=2, days=-1)
+
+        gc = gc_factories.GreencheckFactory.create(date=two_am_yesterday)
+        logger.info(f"logger date: {gc.date}")
+
+        stat, green_stat, grey_stat = gc_models.DailyStat.total_count(
+            date_to_check=date_to_check
+        )
+        stat, green_stat, grey_stat = gc_models.DailyStat.total_count(
+            date_to_check=date_to_check
+        )
+
+        assert stat.count == expected_count
+
+    @pytest.mark.parametrize(
+        "date_to_check, expected_count",
+        [
+            (timezone.now() - relativedelta(days=1), 1),
+            (timezone.now() - relativedelta(days=2), 0),
+            (timezone.now() - relativedelta(days=0), 0),
+        ],
+    )
     def test_count_daily_by_provider(
         self,
         db,
@@ -91,6 +125,46 @@ class TestGreencheckStatsDaily:
 
         logger.info(f"logger date: {gc.date}")
 
+        stat, green_stat, grey_stat = gc_models.DailyStat.total_count_for_provider(
+            date_to_check=date_to_check,
+            provider_id=hosting_provider_with_sample_user.id,
+        )
+        assert stat.count == expected_count
+        assert grey_stat.count == expected_count
+        assert green_stat.count == 0
+
+    @pytest.mark.parametrize(
+        "date_to_check, expected_count",
+        [
+            (timezone.now() - relativedelta(days=1), 1),
+            (timezone.now() - relativedelta(days=2), 0),
+            (timezone.now() - relativedelta(days=0), 0),
+        ],
+    )
+    def test_count_daily_by_provider_is_idempotent(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: gc_models.GreencheckIp,
+        client,
+        date_to_check,
+        expected_count,
+    ):
+        """
+        Do we run a count of all the checks for the last day?
+        """
+        two_am_yesterday = timezone.now() + relativedelta(hours=2, days=-1)
+
+        gc = gc_factories.GreencheckFactory.create(
+            date=two_am_yesterday, hostingprovider=hosting_provider_with_sample_user.id
+        )
+
+        logger.info(f"logger date: {gc.date}")
+
+        gc_models.DailyStat.total_count_for_provider(
+            date_to_check=date_to_check,
+            provider_id=hosting_provider_with_sample_user.id,
+        )
         stat, green_stat, grey_stat = gc_models.DailyStat.total_count_for_provider(
             date_to_check=date_to_check,
             provider_id=hosting_provider_with_sample_user.id,
@@ -169,6 +243,48 @@ class TestGreencheckStatsDaily:
         for dom in domains_to_check:
             assert dom in stat_keys
 
+    def test_create_top_domains_by_date_is_idempotent(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: gc_models.GreencheckIp,
+    ):
+        """
+            Check running our generation commands is idempotent, and that we don't make duplicate stats for a given day.
+            """
+        two_am_yesterday = timezone.now() + relativedelta(hours=2, days=-1)
+        date_to_check = timezone.now() - relativedelta(days=1)
+        domains_to_check = []
+
+        for x in range(10):
+            fake_domain = fake.domain_name()
+            domains_to_check.append(fake_domain)
+            no_of_checks = int(fake.numerify())
+
+            for y in range(no_of_checks):
+                gc_factories.GreencheckFactory.create(
+                    url=fake_domain,
+                    date=two_am_yesterday,
+                    hostingprovider=hosting_provider_with_sample_user.id,
+                    greencheck_ip=green_ip.id,
+                    ip=green_ip.ip_end,
+                    green=gc_choices.BoolChoice.YES,
+                )
+
+        res = gc_models.DailyStat.top_domains_for_day(date_to_check=date_to_check)
+        res = gc_models.DailyStat.top_domains_for_day(date_to_check=date_to_check)
+
+        assert len(res) == 10
+
+        assert gc_models.DailyStat.objects.count() == 10
+        stat_keys = [
+            stat.stat_key.replace("total_daily_checks:domain:", "")
+            for stat in gc_models.DailyStat.objects.all()
+        ]
+
+        for dom in domains_to_check:
+            assert dom in stat_keys
+
     def test_create_top_providers_by_date(
         self, db,
     ):
@@ -201,6 +317,58 @@ class TestGreencheckStatsDaily:
                     ip=green_ip.ip_end,
                     green=gc_choices.BoolChoice.YES,
                 )
+
+        res = gc_models.DailyStat.top_hosting_providers_for_day(
+            date_to_check=date_to_check
+        )
+
+        assert len(res) == 10
+
+        assert gc_models.DailyStat.objects.count() == 10
+        stat_keys = [
+            stat.stat_key.replace("total_daily_checks:provider:", "")
+            for stat in gc_models.DailyStat.objects.all()
+        ]
+
+        for provider_id in [provider.id for provider in providers]:
+            # we need to coerce so we are checking strings against strings,
+            # not 1234 against '1234'
+            assert str(provider_id) in stat_keys
+
+    def test_create_top_providers_by_date_is_idempotent(
+        self, db,
+    ):
+        """
+        Check that we can create the rankings of providers we want, from a
+        set of greenchecks on a given day
+        """
+
+        two_am_yesterday = timezone.now() + relativedelta(hours=2, days=-1)
+        date_to_check = timezone.now() - relativedelta(days=1)
+        providers = []
+
+        # we need a factory for creating a hosting provider, and then a factory
+        # for the corresponding user
+
+        for x in range(10):
+            provider = gc_factories.HostingProviderFactory()
+            green_ip = gc_factories.GreenIpFactory(hostingprovider=provider)
+
+            fake_domain = fake.domain_name()
+            providers.append(provider)
+            no_of_checks = int(fake.numerify())
+
+            for y in range(no_of_checks):
+                gc_factories.GreencheckFactory.create(
+                    url=fake_domain,
+                    date=two_am_yesterday,
+                    hostingprovider=provider.id,
+                    greencheck_ip=green_ip.id,
+                    ip=green_ip.ip_end,
+                    green=gc_choices.BoolChoice.YES,
+                )
+
+        gc_models.DailyStat.top_hosting_providers_for_day(date_to_check=date_to_check)
 
         res = gc_models.DailyStat.top_hosting_providers_for_day(
             date_to_check=date_to_check

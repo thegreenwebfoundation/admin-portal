@@ -172,30 +172,34 @@ class DailyStat(TimeStampedModel):
         )
         logger.debug(str(green_qs.query))
 
-        mixed_stat = cls(
+        # clear out older examples
+        cls.objects.filter(
+            stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL,
+            stat_date=date_to_check.date(),
+        ).delete()
+
+        # persist new versions to db
+        mixed_stat = cls.objects.create(
             count=qs.count(),
             stat_date=date_to_check.date(),
             stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL,
         )
-        green_stat = cls(
+        green_stat = cls.objects.create(
             count=green_qs.count(),
             stat_date=date_to_check.date(),
             stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL,
             green=gc_choices.BoolChoice.YES,
         )
-        grey_stat = cls(
+        grey_stat = cls.objects.create(
             count=grey_qs.count(),
             stat_date=date_to_check.date(),
             stat_key=gc_choices.DailyStatChoices.DAILY_TOTAL,
             green=gc_choices.BoolChoice.NO,
         )
-        stats = [mixed_stat, green_stat, grey_stat]
 
-        # persist to db
-        [stat.save() for stat in stats]
         logger.info(f"Saved stats: {mixed_stat}, {green_stat}, {grey_stat}")
 
-        return stats
+        return [mixed_stat, green_stat, grey_stat]
 
     @classmethod
     def total_count_for_provider(
@@ -224,31 +228,34 @@ class DailyStat(TimeStampedModel):
             hostingprovider=provider_id,
             green=gc_choices.BoolChoice.NO,
         )
-        stat = cls(
+
+        # clear out any earlier duplicate results
+        cls.objects.filter(
+            stat_date=date_to_check.date(),
+            stat_key=f"{gc_choices.DailyStatChoices.DAILY_TOTAL}:provider:{provider_id}",
+        ).delete()
+
+        # persist to db
+        stat = cls.objects.create(
             count=qs.count(),
             stat_date=date_to_check.date(),
             stat_key=f"{gc_choices.DailyStatChoices.DAILY_TOTAL}:provider:{provider_id}",
         )
 
-        green_stat = cls(
+        green_stat = cls.objects.create(
             count=green_qs.count(),
             stat_date=date_to_check.date(),
             green=gc_choices.BoolChoice.YES,
             stat_key=f"{gc_choices.DailyStatChoices.DAILY_TOTAL}:provider:{provider_id}",
         )
-        grey_stat = cls(
+        grey_stat = cls.objects.create(
             count=grey_qs.count(),
             stat_date=date_to_check.date(),
             stat_key=f"{gc_choices.DailyStatChoices.DAILY_TOTAL}:provider:{provider_id}",
             green=gc_choices.BoolChoice.NO,
         )
 
-        stats = [stat, green_stat, grey_stat]
-
-        # persist to db
-        [stat.save() for stat in stats]
-
-        return stats
+        return [stat, green_stat, grey_stat]
 
     @classmethod
     def top_domains_for_day(
@@ -300,8 +307,13 @@ class DailyStat(TimeStampedModel):
             daily_total = gc_choices.DailyStatChoices.DAILY_TOTAL
             domain_key = f"{daily_total}:domain:{domain}"
 
+            # if we have any matching results, we want to delete them
+            cls.objects.filter(
+                green=green, stat_key=domain_key, stat_date=str(chosen_date),
+            ).delete()
+
             # save our results as DailyStats
-            DailyStat.objects.create(
+            cls.objects.create(
                 count=count,
                 green=green,
                 stat_key=domain_key,
@@ -354,6 +366,11 @@ class DailyStat(TimeStampedModel):
             hosting_provider_id, count = res
             daily_total = gc_choices.DailyStatChoices.DAILY_TOTAL
             provider_key = f"{daily_total}:provider:{hosting_provider_id}"
+
+            # if we have any matching results, we want to delete any dupes
+            DailyStat.objects.filter(
+                green=green, stat_key=provider_key, stat_date=str(chosen_date),
+            ).delete()
 
             # save our results as DailyStats
             DailyStat.objects.create(
