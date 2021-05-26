@@ -263,6 +263,13 @@ class GreencheckIpApprove(mu_models.TimeStampedModel):
             )
             self.greencheck_ip = created_ip_range
 
+            # some IP approvals historically do not
+            # have a 'created' value, so we add
+            # something here. Without
+            # it, the database won't let us save the changes
+            if not self.created:
+                self.created = timezone.now()
+
         self.save()
         if created_ip_range:
             return created_ip_range
