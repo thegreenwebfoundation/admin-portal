@@ -1,3 +1,4 @@
+from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.contrib import admin
 from django.contrib import messages
@@ -221,6 +222,16 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
                 f"OK. {len(approved_ips)} green IP ranges have "
                 "been successfully updated for the following "
                 f"providers: {printable_names}"
+            translation.ngettext(
+                (
+                    f"OK. {len(approved_ips)} green IP range have "
+                    "been successfully updated for the following "
+                    f"provider: {printable_names}"
+                ),
+                (
+                    f"OK. {len(approved_ips)} green IP ranges have "
+                    "been successfully updated for the following "
+                    f"providers: {printable_names}"
             ),
             messages.SUCCESS,
         )
