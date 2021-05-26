@@ -68,6 +68,36 @@ class TestGreenCheckIP:
         assert gcip.ip_range_length() == range_length
 
 
+class TestGreencheckIPApproval:
+    def test_process_approval_creates_greencheck_ip(
+        self, db, green_ip_range_approval_request
+    ):
+        """
+        Check that we can create a greencheck from the submitted request
+        """
+
+        green_ip = green_ip_range_approval_request.process_approval(
+            choices.StatusApproval.APPROVED
+        )
+
+        assert green_ip_range_approval_request.greencheck_ip == green_ip
+
+
+class TestGreencheckASNApproval:
+    def test_process_approval_creates_greencheck_asn(
+        self, db, green_asn_approval_request
+    ):
+        """
+        Check that we can create a greencheck from the submitted request
+        """
+
+        green_asn = green_asn_approval_request.process_approval(
+            choices.StatusApproval.APPROVED
+        )
+
+        assert green_asn_approval_request.greencheck_asn == green_asn
+
+
 class TestHostingProviderASNApprovalNeedsReview:
     """
     We want to know when a hosting provider has an outstanding ASN that needs review.

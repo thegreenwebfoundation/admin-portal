@@ -255,14 +255,13 @@ class GreencheckIpApprove(mu_models.TimeStampedModel):
         created_ip_range = None
 
         if action == gc_choices.StatusApproval.APPROVED:
-
             created_ip_range = GreencheckIp.objects.create(
                 active=True,
                 hostingprovider=self.hostingprovider,
                 ip_start=self.ip_start,
                 ip_end=self.ip_end,
             )
-            self.green_ip = created_ip_range
+            self.greencheck_ip = created_ip_range
 
         self.save()
         if created_ip_range:
@@ -377,6 +376,7 @@ class GreencheckASNapprove(mu_models.TimeStampedModel):
             created_asn = GreencheckASN.objects.create(
                 active=True, hostingprovider=self.hostingprovider, asn=self.asn,
             )
+            self.greencheck_asn = created_asn
         self.save()
         if created_asn:
             return created_asn
