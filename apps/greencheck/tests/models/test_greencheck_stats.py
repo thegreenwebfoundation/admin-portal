@@ -201,6 +201,12 @@ class TestGreencheckStatsDaily:
         assert green_stat.count == 1
         assert grey_stat.count == 0
 
+    # this test flickers, most likely because of our use of
+    # fake and factories. See this issue here for discussion
+    # and fixes
+    # https://github.com/thegreenwebfoundation/admin-portal/issues/163
+    @pytest.mark.flaky
+    @pytest.mark.skip(reason="an intermittent flaky test")
     def test_create_top_domains_by_date(
         self,
         db,
