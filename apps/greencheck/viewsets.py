@@ -120,7 +120,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
         # try our cache first before hitting the database
         if not skip_cache:
-            cache_hit = redis_cache.get(f"domains:{domain}")
+            cache_hit = redis_cache.get(f"domain:{domain}")
             if cache_hit:
                 process_log.send(domain)
                 return response.Response(json.loads(cache_hit))
