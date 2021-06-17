@@ -20,3 +20,23 @@ class TestAdminHelper:
     )
     def test_make_url(self, url_to_test, expected_url):
         assert admin_helpers.make_url(url_to_test) == expected_url
+
+    def test_link_to_ripe_stat_returns_ip(self, mocker):
+        # we don't want to do an network call every time we run this test
+        # if we don't mock `convert_domain_to_ip`, then end up doing a
+        # dns lookup each time we run this test.
+        mock_method = mocker.patch(
+            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+            return_value="8.8.8.8",
+        )
+        assert "8.8.8.8" in admin_helpers.link_to_ripe_stat("https://google.com")
+        # sanity check to see we're actually using the mock_method in the test
+        assert mock_method.call_count == 1
+
+    def test_link_to_ripe_stat_handles_empty(self, mocker):
+        mock_method = mocker.patch(
+            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip"
+        )
+        assert admin_helpers.link_to_ripe_stat(None) is None
+        # are we calling convert_domain_to_ip at all? We shouldn't be any more
+        assert mock_method.call_count == 0

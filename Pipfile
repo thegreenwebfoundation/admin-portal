@@ -21,6 +21,7 @@ black = "*"
 iredis = "*"
 factory_boy = "*"
 rich = "*"
+pytest-mock = "*"
 
 [packages]
 django = {extras = ["bcrypt"],version = "==3.2"}
@@ -64,7 +65,6 @@ django-tailwind = "*"
 django-widget-tweaks = "*"
 crispy-tailwind = "*"
 django-crispy-forms = "*"
-
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
