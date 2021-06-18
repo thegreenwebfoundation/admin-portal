@@ -33,7 +33,7 @@ def link_to_ripe_stat(website_string: str) -> str:
     Add link to checker at stat.ripe.net for a domain
     """
     # check and return early we have nothing to check
-    if website_string is None:
+    if not website_string:
         return
 
     url = make_url(website_string)

@@ -14,26 +14,26 @@ from django.views.generic.edit import FormView
 from django import forms
 
 from apps.greencheck.views import GreenUrlsView
-
+from ..greencheck import domain_check
 
 URL_RE = re.compile(r"https?:\/\/(.*)")
 BASE_URL = "https://api.thegreenwebfoundation.org/greencheck"
 
+checker = domain_check.GreenDomainChecker()
+
 
 class CheckUrlForm(forms.Form):
     url = forms.URLField()
+    green_status = False
 
     def clean_url(self):
         url = self.cleaned_data["url"]
-        cleaned_url = URL_RE.match(url).group(1)
-        resp = requests.get(f"{BASE_URL}/{cleaned_url}")
-        try:
-            resp.raise_for_status()
-            self.green_status = resp.json().get("green", False)
-            return url
-        except HTTPError:
-            msg = "The request couldn't be completed, please try again later"
-            raise ValidationError(msg)
+
+        domain_to_check = checker.validate_domain(url)
+
+        res = checker.perform_full_lookup(domain_to_check)
+
+        self.green_status = res.green
 
 
 class CheckUrlView(FormView):
