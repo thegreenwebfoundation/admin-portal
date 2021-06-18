@@ -7,30 +7,36 @@ from django.urls import path
 from django.urls import reverse
 from django.shortcuts import render
 
-import requests
-from requests.exceptions import HTTPError
-
 from django.views.generic.edit import FormView
 from django import forms
 
 from apps.greencheck.views import GreenUrlsView
 from ..greencheck import domain_check
 
-URL_RE = re.compile(r"https?:\/\/(.*)")
-BASE_URL = "https://api.thegreenwebfoundation.org/greencheck"
-
 checker = domain_check.GreenDomainChecker()
 
 
 class CheckUrlForm(forms.Form):
+    """
+    A form for checking a url against the database and surfacing
+    what other the information we can see from third part services.
+    """
+
     url = forms.URLField()
     green_status = False
 
     def clean_url(self):
+        """
+        Check the submitted url against the TGWF green
+        domain database.
+        """
+        # TODO: decided if we should split this into a
+        # separate method. clean_field typically doesn't make
+        # other requests
+
         url = self.cleaned_data["url"]
 
         domain_to_check = checker.validate_domain(url)
-
         res = checker.perform_full_lookup(domain_to_check)
 
         self.green_status = res.green
