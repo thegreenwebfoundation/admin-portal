@@ -15,11 +15,11 @@ from model_utils.models import TimeStampedModel
 
 from .choices import (
     EnergyType,
-    TempType,
-    ModelType,
-    PartnerChoice,
-    ClassificationChoice,
     CoolingChoice,
+    ModelType,
+    TempType,
+    ClassificationChoice,
+    PartnerChoice,
 )
 from apps.greencheck.choices import StatusApproval
 
@@ -331,7 +331,7 @@ class AbstractSupportingDocument(models.Model):
         verbose_name = "Supporting Document"
 
 
-class DatacentreSupportingDocument(AbstractSupportingDocument):
+class DatacenterSupportingDocument(AbstractSupportingDocument):
     """
     The concrete class for datacentre providers.
     """

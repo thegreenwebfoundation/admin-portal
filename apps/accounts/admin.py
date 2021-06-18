@@ -39,7 +39,7 @@ from .models import (
     HostingproviderCertificate,
     Hostingprovider,
     User,
-    DatacentreSupportingDocument,
+    DatacenterSupportingDocument,
     HostingProviderSupportingDocument,
 )
 
@@ -108,6 +108,11 @@ class HostingCertificateInline(admin.StackedInline):
 class HostingProviderSupportingDocumentInline(admin.StackedInline):
     extra = 0
     model = HostingProviderSupportingDocument
+
+
+class DataCenterSupportingDocumentInline(admin.StackedInline):
+    extra = 0
+    model = DatacenterSupportingDocument
 
 
 @admin.register(Tag, site=greenweb_admin)
@@ -374,9 +379,10 @@ class DatacenterCoolingInline(admin.TabularInline):
 class DatacenterAdmin(admin.ModelAdmin):
     form = forms.DatacenterAdminForm
     inlines = [
-        DatacenterCertificateInline,
-        DatacenterClassificationInline,
-        DatacenterCoolingInline,
+        # DatacenterCertificateInline,
+        # DatacenterClassificationInline,
+        # DatacenterCoolingInline,
+        DataCenterSupportingDocumentInline,
     ]
     search_fields = ("name",)
 
