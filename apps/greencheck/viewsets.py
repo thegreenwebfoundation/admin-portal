@@ -90,19 +90,79 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return response.Response(serializer.data)
 
-    def legacy_grey_response(self, domain: str):
+    def legacy_grey_response(self, domain: str, log_check=True):
         """
         Return the response we historically send when
         a check doesn't return a green result.
         """
+        from .tasks import process_log
+
+        if log_check:
+            process_log.send(domain)
         return response.Response({"green": False, "url": domain, "data": False})
+
+    def return_green_response(self, instance, log_check=True):
+        """
+        Return the response we historically made when returning
+        a green result
+        """
+        from .tasks import process_log
+
+        if log_check:
+            process_log.send(instance.url)
+        serializer = self.get_serializer(instance)
+        return response.Response(serializer.data)
+
+    def build_response_from_cache(self, instance, log_check=True):
+        """
+        Return the response we historically made when returning
+        a green result
+        """
+        from .tasks import process_log
+
+        if log_check:
+            process_log.send(instance.url)
+        serializer = self.get_serializer(instance)
+        return response.Response(serializer.data)
+
+    def build_response_from_full_network_lookup(self, domain):
+        """
+        Build a response
+        """
+        try:
+            res = checker.perform_full_lookup(domain)
+            if res.green:
+                return self.return_green_response(res)
+        except socket.gaierror:
+            return self.legacy_grey_response(domain)
+        except UnicodeError:
+            return self.legacy_grey_response(domain)
+
+    def build_response_from_database_lookup(self, domain):
+        instance = gc_models.GreenDomain.objects.filter(url=domain).first()
+        if instance:
+            return self.return_green_response(instance)
+
+    def build_response_from_redis(self, domain):
+        # try our cache first before hitting the database
+        from .tasks import process_log
+
+        cache_hit = redis_cache.get(f"domain:{domain}")
+        if cache_hit:
+            process_log.send(domain)
+            return response.Response(json.loads(cache_hit))
+
+    def clear_from_caches(self, domain):
+        """
+        Clear any trace of a domain from local caches.
+        """
+        redis_cache.delete(f"domains:{domain}")
+        gc_models.GreenDomain.objects.filter(url=domain).delete()
 
     def retrieve(self, request, *args, **kwargs):
         """
         Fetch entry matching the provided URL, like a 'detail' view
         """
-        from .tasks import process_log
-
         url = self.kwargs.get("url")
         domain = None
 
@@ -116,47 +176,31 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         except Exception:
             # not a valid domain, OR a valid IP. Get rid of it.
             logger.warning(f"unable to extract domain from {url}")
-            return self.legacy_grey_response(url)
-
-        # try our cache first before hitting the database
-        if not skip_cache:
-            cache_hit = redis_cache.get(f"domain:{domain}")
-            if cache_hit:
-                process_log.send(domain)
-                return response.Response(json.loads(cache_hit))
-
-        # not in the cache, try the slower lookups
-        instance = gc_models.GreenDomain.objects.filter(url=domain).first()
+            return self.legacy_grey_response(url, log_check=False)
 
         if skip_cache:
-            # try to fetch domain, clearing it from the cache if already present
-            redis_cache.delete(f"domain:{domain}")
-            try:
-                res = checker.perform_full_lookup(domain)
-                if res.green:
-                    instance = res
-            except socket.gaierror:
-                process_log.send(domain)
-                return self.legacy_grey_response(domain)
-            except UnicodeError:
-                return self.legacy_grey_response(domain)
+            # try to fetch domain the long way, clearing it from the
+            # any caches if already present
+            self.clear_from_caches(domain)
+            if http_response := self.build_response_from_full_network_lookup(domain):
+                return http_response
 
-        if not instance:
-            try:
-                instance = self.checker.perform_full_lookup(domain)
-            except socket.gaierror:
-                process_log.send(domain)
-                return self.legacy_grey_response(domain)
-            except UnicodeError:
-                return self.legacy_grey_response(domain)
+        # try from redis cache first:
+        if http_response := self.build_response_from_redis(domain):
+            return http_response
 
-        # log_the_check asynchronously
-        if not instance.green:
-            return self.legacy_grey_response(url)
+        # not in the cache. Try the database instead:
+        if http_response := self.build_response_from_database_lookup(domain):
+            return http_response
 
-        process_log.send(domain)
-        serializer = self.get_serializer(instance)
-        return response.Response(serializer.data)
+        # not in database or the cache, try full lookup using network
+        if http_response := self.build_response_from_full_network_lookup(domain):
+            return http_response
+
+        # not in database or the cache, nor can we see find it with
+        # any third party lookups. Fall back to saying we couldn't find anything,
+        # the way the API used to work.
+        return self.legacy_grey_response(url)
 
 
 class GreenDomainBatchView(CreateAPIView):
