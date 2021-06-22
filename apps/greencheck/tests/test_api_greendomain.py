@@ -53,7 +53,7 @@ class TestGreenDomainViewset:
         green_ip: GreencheckIp,
     ):
         """
-        Check single URL, hitting.
+        Check single URL, hitting the database, rather than doing a full lookup.
         """
 
         hosting_provider.save()
@@ -158,18 +158,28 @@ class TestGreenDomainViewset:
         self,
         hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
+        mocker,
     ):
         """
-        Exercise the checking code, when we don't have our domain cached already.
+        Exercise the checking code, when we don't have our domain cached already,
+        and the domain resolves to an IP range associated with a green
+        hosting provider.
         We don't persist the newly discovered green domain here to the database, but
-        in prod, we'd delegate it to a worker.
+        in prod, we would do so via delegating this work to another worker process.
         """
+
+        # mock our network lookup, so we get a consistent response when
+        # looking up our domains
+        mocked_network_function = mocker.patch(
+            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+            return_value="172.217.168.238",
+        )
 
         setup_domains(["google.com"], hosting_provider_with_sample_user, green_ip)
 
         # this serves as a url that corresponds to the green IP
         # but isn't a domain we already have listed
-        new_domain = str(green_ip.ip_start)
+        new_domain = "a-new-domain-that-resolves-to-our-green-ip.com"
 
         rf = APIRequestFactory()
         url_path = reverse("green-domain-detail", kwargs={"url": new_domain})
@@ -183,6 +193,9 @@ class TestGreenDomainViewset:
 
         assert response.status_code == 200
         assert response.data["green"] is True
+
+        # did we really do a network lookup
+        assert mocked_network_function.call_count == 1
 
         # do we still have the same number of green domains listed? We defer
         # persistence til later, typically outside the request/response lifecycle
