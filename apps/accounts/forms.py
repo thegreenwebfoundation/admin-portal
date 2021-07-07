@@ -34,6 +34,7 @@ class UserUpdateForm(UserChangeForm):
     We don't show the password, but we do link to the update form.
 
     """
+
     def __init__(self, *args, **kwargs):
         """
         """
@@ -43,7 +44,6 @@ class UserUpdateForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = ac_models.User
         fields = ("username", "email")
-
 
 
 class HostingAdminForm(forms.ModelForm):
@@ -97,3 +97,23 @@ class DatacenterAdminForm(forms.ModelForm):
             self.save_m2m()
 
         return datacenter
+
+
+class HostingProviderNoteForm(forms.ModelForm):
+    """
+    A custom form for listing comments on hosting providers
+    """
+
+    class Meta:
+        model = ac_models.HostingProviderNote
+        fields = ["body_text"]
+
+
+class DatacenterNoteNoteForm(forms.ModelForm):
+    """
+    A custom form for listing comments on datacenters.
+    """
+
+    class Meta:
+        model = ac_models.DatacenterNote
+        fields = ["body_text"]
