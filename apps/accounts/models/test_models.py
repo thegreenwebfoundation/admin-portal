@@ -1,6 +1,10 @@
 import pytest
 
 from apps.accounts.models.choices import ModelType
+from apps.accounts import models as ac_models
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta
+from django.core.files import base as dj_files
 
 # TODO these hit the database, when they probably don't need to, and
 #  this will make tests slow. If we can test that these objects are
@@ -60,6 +64,42 @@ class TestHostingProvider:
         datacenter.save()
 
         assert datacenter.model == accounting_model
+
+
+class TestHostingProviderEvidence:
+    """
+    Tests to check that we save files with scaleway
+    """
+
+    @pytest.mark.smoke_test
+    def test_upload_hosting_evidence(self, db, sample_hoster_user, hosting_provider):
+        """
+        This exercises the API, so we can check that working with files
+        when we use the object storage for file attachments instead of the
+        server file system behaves as expected
+        """
+
+        now = timezone.now()
+        one_year_from_now = now + relativedelta(years=1)
+
+        evidence = ac_models.HostingProviderSupportingDocument(
+            valid_from=now,
+            valid_to=one_year_from_now,
+            description="some description",
+            title="Title",
+            public=True,
+        )
+        evidence.save()
+        hosting_provider.save()
+        hosting_provider.hostingprovider_evidence.add(evidence)
+
+        attachment_contents = b"text-content"
+        evidence.attachment.save(
+            "django_test.txt", dj_files.ContentFile(attachment_contents)
+        )
+
+        # can we read the file again?
+        assert evidence.attachment.read() == attachment_contents
 
 
 class TestUser:

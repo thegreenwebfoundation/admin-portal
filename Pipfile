@@ -65,6 +65,7 @@ django-tailwind = "*"
 django-widget-tweaks = "*"
 crispy-tailwind = "*"
 django-crispy-forms = "*"
+django-storages = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
