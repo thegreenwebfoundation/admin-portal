@@ -349,6 +349,19 @@ class HostingAdmin(admin.ModelAdmin):
             return read_only + ["partner"]
         return read_only
 
+    def get_inlines(self, request, obj):
+        """
+        A dynamic check for inlines so we only show some inlines
+        to groups with the correct permissions.
+        """
+        inlines = self.inlines
+        is_admin = request.user.groups.filter(name="admin").exists()
+
+        if not is_admin:
+            inlines.remove(HostingProviderNoteInline)
+
+        return inlines
+
     def _changeform_view(self, request, object_id, form_url, extra_context):
         """Include whether current user is staff, so it can be picked up by a form"""
         if request.method == "POST":
@@ -490,6 +503,19 @@ class DatacenterAdmin(admin.ModelAdmin):
             (None, {"fields": ("hostingproviders",)}),
         ]
         return fieldset
+
+    def get_inlines(self, request, obj):
+        """
+        A dynamic check for inlines so we only show some inlines
+        to groups with the correct permissions.
+        """
+        inlines = self.inlines
+        is_admin = request.user.groups.filter(name="admin").exists()
+
+        if not is_admin:
+            inlines.remove(DatacenterNoteInline)
+
+        return inlines
 
     @mark_safe
     def html_website(self, obj):
