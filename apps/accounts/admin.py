@@ -29,15 +29,22 @@ from .utils import get_admin_name, reverse_admin_name
 from .admin_site import greenweb_admin
 from . import filters
 from . import forms
-from .forms import CustomUserChangeForm, CustomUserCreationForm
+from .forms import (
+    CustomUserChangeForm,
+    CustomUserCreationForm,
+    HostingProviderNoteForm,
+    DatacenterNoteNoteForm,
+)
 from .models import (
     Datacenter,
     DatacenterCertificate,
     DatacenterClassification,
     DatacenterCooling,
+    DatacenterNote,
     HostingCommunication,
     HostingproviderCertificate,
     Hostingprovider,
+    HostingProviderNote,
     User,
     DatacenterSupportingDocument,
     HostingProviderSupportingDocument,
@@ -110,6 +117,26 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
     model = HostingProviderSupportingDocument
 
 
+class HostingProviderNoteInline(admin.StackedInline):
+    """
+
+    """
+
+    extra = 1
+    model = HostingProviderNote
+    form = HostingProviderNoteForm
+
+
+class DatacenterNoteInline(admin.StackedInline):
+    """
+    A data
+    """
+
+    extra = 0
+    model = DatacenterNote
+    form = DatacenterNoteNoteForm
+
+
 class DataCenterSupportingDocumentInline(admin.StackedInline):
     extra = 0
     model = DatacenterSupportingDocument
@@ -141,6 +168,7 @@ class HostingAdmin(admin.ModelAdmin):
         GreencheckIpInline,
         GreencheckAsnApproveInline,
         GreencheckIpApproveInline,
+        HostingProviderNoteInline,
     ]
     search_fields = ("name",)
     list_display = [
@@ -187,13 +215,6 @@ class HostingAdmin(admin.ModelAdmin):
         if request.user.is_staff:
             fieldset.append(admin_editable)
         return fieldset
-
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        if not change:
-            user = request.user
-            user.hostingprovider = obj
-            user.save()
 
     def get_urls(self):
         from django.urls import path
@@ -292,15 +313,33 @@ class HostingAdmin(admin.ModelAdmin):
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.hostingprovider_id)
 
+    def save_model(self, request, obj, form, change):
+
+        super().save_model(request, obj, form, change)
+
+        if not change:
+            user = request.user
+            user.hostingprovider = obj
+            user.save()
+
     def save_formset(self, request, form, formset, change):
         """
-        We need to let the form know if this an addition or a change
-        so that approval record is saved correctly in case of a
-        non-staff user.
+        Save the child objects in this form, and account for the special cases.
         """
+        # assign the current user to the
+        # newly created comments
+        instances = formset.save(commit=False)
+        if formset.new_objects:
+            for new_obj in formset.new_objects:
+                if isinstance(new_obj, HostingProviderNote):
+                    new_obj.added_by = request.user
+                    new_obj.save()
 
-        # A bit of a hack, we need to let the form know that it has changed
+        # A bit of a hack. We need to let the form know that it has changed
         # somehow, this was the easiest way of doing it.
+        # We need to let the form know if this an addition or a change
+        # so that approval record is saved correctly in case of a
+        # non-staff user.
         formset.form.changed = change
         formset.save()
 
@@ -383,6 +422,7 @@ class DatacenterAdmin(admin.ModelAdmin):
         # DatacenterClassificationInline,
         # DatacenterCoolingInline,
         DataCenterSupportingDocumentInline,
+        DatacenterNoteInline,
     ]
     search_fields = ("name",)
 
@@ -404,6 +444,21 @@ class DatacenterAdmin(admin.ModelAdmin):
         if not change:
             obj.user = request.user
         super().save_model(request, obj, form, change)
+
+    def save_formset(self, request, form, formset, change):
+        """
+        Assign the current user to any notes added to a datacenter
+        in the current request
+        """
+        instances = formset.save(commit=False)
+
+        if formset.new_objects:
+            for new_obj in formset.new_objects:
+                if isinstance(new_obj, DatacenterNote):
+                    new_obj.added_by = request.user
+                    new_obj.save()
+
+        formset.save()
 
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)

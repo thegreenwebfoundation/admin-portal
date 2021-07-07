@@ -246,6 +246,48 @@ class Hostingprovider(models.Model):
         ]
 
 
+class AbstractNote(TimeStampedModel):
+    """
+    Notes around domain objects, to allow admin
+    staff to add unstructured data, and links, and commentary
+    add commentary or link to other information relating to
+    """
+
+    added_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True
+    )
+    body_text = models.TextField(blank=True)
+
+    def __str__(self):
+        added_at = self.created.strftime("%Y-%m-%d, %H:%M")
+        return f"Note, added by {self.added_by} at {added_at}"
+
+    class Meta:
+        abstract = True
+
+
+class HostingProviderNote(AbstractNote):
+    """
+    A note model for information about a hosting provider.
+    This is intended to be something internal staff use,
+    but any content added should be considered as content
+    you would be prepared to share with the provider as well.
+    """
+
+    provider = models.ForeignKey(Hostingprovider, null=True, on_delete=models.PROTECT)
+
+
+class DatacenterNote(AbstractNote):
+    """
+    A note model for information about a datacentre - like the hosting note,
+    but for annotating datacenters in the admin.
+    """
+
+    provider = models.ForeignKey(
+        Datacenter, null=True, on_delete=models.PROTECT, db_column="id_dc"
+    )
+
+
 class DataCenterLocation(models.Model):
     """
     A join table linking datacentre cities
@@ -423,7 +465,7 @@ class HostingproviderStats(models.Model):
         Hostingprovider,
         on_delete=models.CASCADE,
         db_column="id_hp",
-        # this column is the foreigh key for hosting providers
+        # this column is the foreign key for hosting providers
         # AND considered the primary key. Without this extra keyword,
         # we get crashes when deleting hosting providers
         primary_key=True,
