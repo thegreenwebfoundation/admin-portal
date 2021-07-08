@@ -6,6 +6,8 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from taggit.forms import TagField
 from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
+from dal_select2_taggit import widgets as dal_widgets
+
 
 from . import models as ac_models
 
@@ -61,6 +63,7 @@ class HostingAdminForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             "services": LabelWidget(model=Tag),
+            "staff_labels": dal_widgets.TaggitSelect2("label-autocomplete"),
         }
 
 
