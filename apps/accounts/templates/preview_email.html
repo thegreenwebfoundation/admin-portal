@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+
+{% block pretitle %}
+<h1>Email preview</h1>
+{% endblock %}
+
+{% block content %}
+
+<style>
+
+.submit-row {
+    text-align: left;
+    overflow: hidden;
+}
+
+form.email label {
+  min-width: 10rem;
+  display: inline-block;
+}
+form.email input[type="text"],
+form.email input[type="email"] {
+  min-width: 40rem;
+}
+
+a.cancel {
+  margin-left: 3rem;
+}
+
+</style>
+
+<p>Below is the email that will be sent to this hosting provider.</p>
+<p>You can make any last minute changes before sending, or choose cancel to return to the previous screen.</p>
+
+<form action="{{ form_url }}" method="post" class="email">
+    {% csrf_token %}
+    {{ form.url.errors }}
+    {{ form.as_p }}
+
+    <div class="submit-row">
+
+      <input type="submit" value="Send Email">
+
+      <a href="{{ cancel_link }}" class="cancel">cancel</a>
+
+    </div>
+
+</form>
+
+{% endblock content %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}"/>
+{% endblock %}

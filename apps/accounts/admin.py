@@ -3,9 +3,10 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
 from django.contrib import admin
+from django.urls import reverse
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 from django.utils.safestring import mark_safe
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from apps.greencheck.admin import (
     GreencheckASNApprove,
@@ -215,7 +216,9 @@ class HostingAdmin(admin.ModelAdmin):
         "ip_addresses",
         "services",
     ]
-    readonly_fields = ["send_button"]
+    # these are not really fields, but buttons
+    # see the corresponding methods
+    readonly_fields = ["preview_email_button", "send_button"]
     ordering = ("name",)
 
     # Factories
@@ -227,12 +230,62 @@ class HostingAdmin(admin.ModelAdmin):
         """
 
         # workout which email template to start with
+        email_name = request.GET.get("email")
+        email_template = f"emails/{email_name}"
+        redirect_name = "admin:" + get_admin_name(self.model, "change")
+
+        obj = Hostingprovider.objects.get(pk=kwargs["provider"])
+        subject = {
+            "additional-info.txt": (
+                "Additional information needed to approve "
+                "your listing in the Green Web Directory."
+            ),
+            "pending-removal.txt": (
+                "Pending removal from the Green Web Directory due "
+                f"to questions around the green hosting of {obj.name}"
+            ),
+        }
+        user = obj.user_set.all().first()
+        email = None
+
+        if user:
+            email = user.email
+        if not user:
+            messages.add_message(
+                request,
+                messages.WARNING,
+                "No user exists for this host, so you will need to add an email manually",
+            )
+
+        context = {
+            "host": obj,
+            "recipient": user,
+        }
+
+        message = render_to_string(email_template, context=context)
+
+        cancel_link = reverse(
+            "admin:" + get_admin_name(self.model, "change"), args=[obj.pk]
+        )
+
+        context = {
+            "form": forms.PreviewEmailForm(
+                initial={
+                    "recipient": email or None,
+                    "title": subject[email_name],
+                    "body": message,
+                }
+            ),
+            "cancel_link": cancel_link,
+        }
 
         # generate the form to use
+        return render(request, "preview_email.html", context)
 
     def send_email(self, request, *args, **kwargs):
         """
-        Send the given email
+        Send the given email, log the outbound request in the admin, and
+        then tag with email sent
         """
         email_name = request.GET.get("email")
         email_template = f"emails/{email_name}"
@@ -375,9 +428,14 @@ class HostingAdmin(admin.ModelAdmin):
                 name=get_admin_name(self.model, "approval_ip"),
             ),
             path(
-                "send_email/<provider>/",
+                "<provider>/send_email",
                 self.send_email,
                 name=get_admin_name(self.model, "send_email"),
+            ),
+            path(
+                "<provider>/preview_email",
+                self.preview_email,
+                name=get_admin_name(self.model, "preview_email"),
             ),
         ]
         # order is important !!
@@ -410,7 +468,7 @@ class HostingAdmin(admin.ModelAdmin):
                     ("archived", "showonwebsite", "customer",),
                     ("partner", "model"),
                     ("staff_labels",),
-                    ("email_template", "send_button"),
+                    ("email_template", "preview_email_button", "send_button"),
                 )
             },
         )
@@ -481,6 +539,16 @@ class HostingAdmin(admin.ModelAdmin):
         return link
 
     send_button.short_description = "Send email"
+
+    @mark_safe
+    def preview_email_button(self, obj):
+        url = reverse_admin_name(
+            Hostingprovider, name="preview_email", kwargs={"provider": obj.pk},
+        )
+        link = f'<a href="{url}" class="sendEmail previewEmail">Preview email</a>'
+        return link
+
+    preview_email_button.short_description = "Preview email"
 
     @mark_safe
     def html_website(self, obj):
