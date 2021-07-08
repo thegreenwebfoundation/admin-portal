@@ -16,6 +16,9 @@ from apps.greencheck.admin import (
 )
 from taggit.models import Tag
 
+
+from dal_select2 import views as dal_select2_views
+
 from waffle.models import Flag
 from waffle.admin import FlagAdmin
 
@@ -158,6 +161,22 @@ class LabelAdmin(admin.ModelAdmin):
 
     class Meta:
         verbose_name = "Provider Label"
+
+
+class LabelAutocompleteView(dal_select2_views.Select2QuerySetView):
+    def get_queryset(self):
+        """
+        Return our list of labels, only serving them to internal staff members"""
+
+        if not self.request.user.groups.filter(name="admin").exists():
+            return Label.objects.none()
+
+        qs = Label.objects.all()
+
+        if self.q:
+            qs = qs.filter(name__istartswith=self.q)
+
+        return qs
 
 
 @admin.register(Hostingprovider, site=greenweb_admin)

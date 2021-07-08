@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.conf import settings
 from django.urls import path, include, reverse_lazy
 from django.views.generic.base import RedirectView
@@ -28,10 +29,13 @@ from apps.greencheck.viewsets import (
 from apps.greencheck.swagger import TGWFSwaggerView
 
 from apps.accounts.admin_site import greenweb_admin as admin
+from apps.accounts.admin import LabelAutocompleteView
+
 from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
 from apps.greencheck.api import legacy_views
 from apps.greencheck import urls as greencheck_urls
+
 
 urlpatterns = []
 
@@ -55,6 +59,11 @@ urlpatterns += [
         name="green_urls_redirect",
     ),
     path("admin/", admin.urls),
+    path(
+        "label-autocomplete",
+        LabelAutocompleteView.as_view(),
+        name="label-autocomplete",
+    ),
     # API
     path("api/v3/", include(router.urls)),
     path(

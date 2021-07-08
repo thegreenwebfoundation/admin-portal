@@ -50,6 +50,11 @@ ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
 # Application definition
 INSTALLED_APPS = [
     "django_dramatiq",
+    # these need to go before django contrib, as described in the below docs
+    # for DAL
+    # https://django-autocomplete-light.readthedocs.io/en/master/install.html
+    "dal",
+    "dal_select2",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
