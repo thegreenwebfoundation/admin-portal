@@ -24,8 +24,8 @@ rich = "*"
 pytest-mock = "*"
 
 [packages]
-django = {extras = ["bcrypt"],version = "==3.2"}
-django-anymail = {extras = ["mailgun"],version = "==7.0.0"}
+django = { extras = ["bcrypt"], version = "==3.2" }
+django-anymail = { extras = ["mailgun"], version = "==7.0.0" }
 django-countries = "*"
 django-environ = "==0.4.5"
 django-extensions = "==2.2.5"
@@ -36,11 +36,11 @@ django-unixdatetimefield = "==1.0.3"
 gunicorn = "==19.9.0"
 mysqlclient = "*"
 requests = ">=2"
-whitenoise = {extras = ["brotli"],version = "==4.1.4"}
+whitenoise = { extras = ["brotli"], version = "==4.1.4" }
 db-to-sqlite = "*"
 sqlite-utils = "*"
 sentry-sdk = "*"
-dramatiq = {extras = ["rabbitmq"], version = "*"}
+dramatiq = { extras = ["rabbitmq"], version = "*" }
 django-dramatiq = "*"
 phpserialize = "*"
 tld = "*"
@@ -66,8 +66,9 @@ django-widget-tweaks = "*"
 crispy-tailwind = "*"
 django-crispy-forms = "*"
 django-storages = "*"
-django-autocomplete-light = "*"
 django-taggit-serializer = "*"
+# https://github.com/yourlabs/django-autocomplete-light/issues/1248
+django-autocomplete-light = "==3.8.2"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.

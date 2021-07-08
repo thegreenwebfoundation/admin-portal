@@ -120,3 +120,16 @@ class DatacenterNoteNoteForm(forms.ModelForm):
     class Meta:
         model = ac_models.DatacenterNote
         fields = ["body_text"]
+
+
+class PreviewEmailForm(forms.Form):
+    """
+    An email for sending our form
+    """
+
+    title = forms.CharField(label="Email title", max_length=255)
+    recipient = forms.EmailField()
+    body = forms.CharField(widget=forms.Textarea(attrs={"rows": 20, "cols": 90}))
+
+    # TODO
+    # check that we have an email before trying to forwarding to an email service
