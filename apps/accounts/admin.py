@@ -44,6 +44,8 @@ from .models import (
     HostingCommunication,
     HostingproviderCertificate,
     Hostingprovider,
+    Label,
+    ProviderLabel,
     HostingProviderNote,
     User,
     DatacenterSupportingDocument,
@@ -150,10 +152,19 @@ class ServiceAdmin(admin.ModelAdmin):
         verbose_name = "Services Offered"
 
 
+@admin.register(Label, site=greenweb_admin)
+class LabelAdmin(admin.ModelAdmin):
+    model = Label
+
+    class Meta:
+        verbose_name = "Provider Label"
+
+
 @admin.register(Hostingprovider, site=greenweb_admin)
 class HostingAdmin(admin.ModelAdmin):
     form = forms.HostingAdminForm
     list_filter = [
+        filters.LabelFilter,
         filters.YearDCFilter,
         filters.YearASNFilter,
         filters.YearIPFilter,
@@ -181,79 +192,46 @@ class HostingAdmin(admin.ModelAdmin):
         "certificates_amount",
         "datacenter_amount",
         "ip_addresses",
+        "services",
     ]
     readonly_fields = ["send_button"]
     ordering = ("name",)
 
-    def get_queryset(self, request, *args, **kwargs):
-        qs = super().get_queryset(request, *args, **kwargs)
-        qs = qs.prefetch_related(
-            "hostingprovider_certificates", "datacenter", "greencheckip_set"
-        ).annotate(models.Count("greencheckip"))
-        if not request.user.is_staff:
-            qs = qs.filter(user=request.user)
-        return qs
+    # Factories
 
-    def get_fieldsets(self, request, obj=None):
-        fieldset = [
-            (
-                "Hostingprovider info",
-                {"fields": (("name", "website",), "country", "services")},
-            )
-        ]
+    def preview_email(self, request, *args, **kwargs):
+        """
+        Create and preview a sample email asking for further information from a hosting
+        provider to support their claims.
+        """
 
-        admin_editable = (
-            "Admin only",
-            {
-                "fields": (
-                    ("archived", "showonwebsite", "customer",),
-                    ("partner", "model"),
-                    ("email_template", "send_button"),
-                )
-            },
-        )
-        if request.user.is_staff:
-            fieldset.append(admin_editable)
-        return fieldset
+        # workout which email template to start with
 
-    def get_urls(self):
-        from django.urls import path
-
-        urls = super().get_urls()
-        added = [
-            path(
-                "approval_asn/",
-                self.approve_asn,
-                name=get_admin_name(self.model, "approval_asn"),
-            ),
-            path(
-                "approval_ip/",
-                self.approve_ip,
-                name=get_admin_name(self.model, "approval_ip"),
-            ),
-            path(
-                "send_email/<provider>/",
-                self.send_email,
-                name=get_admin_name(self.model, "send_email"),
-            ),
-        ]
-        # order is important !!
-        return added + urls
-
-    @mark_safe
-    def send_button(self, obj):
-        url = reverse_admin_name(
-            Hostingprovider, name="send_email", kwargs={"provider": obj.pk},
-        )
-        link = f'<a href="{url}" class="sendEmail">Send email</a>'
-        return link
-
-    send_button.short_description = "Send email"
+        # generate the form to use
 
     def send_email(self, request, *args, **kwargs):
+        """
+        Send the given email
+        """
         email_name = request.GET.get("email")
         email_template = f"emails/{email_name}"
         redirect_name = "admin:" + get_admin_name(self.model, "change")
+
+        # greenweb_admin:accounts_hostingprovider_change
+        # /admin/accounts/hostingprovider/<path:object_id>/change/
+
+        # greenweb_admin:accounts_hostingprovider_send_email
+        # was
+        # /admin/accounts/hostingprovider/send_email/<provider>/
+
+        # should be like this instead, so we can preview and set the actual text in a session
+        # /admin/accounts/hostingprovider/<provider>/preview_email
+        # and this for sending the email properly
+        # /admin/accounts/hostingprovider/<provider>/send_email
+
+        # import ipdb
+
+        # ipdb.set_trace()
 
         obj = Hostingprovider.objects.get(pk=kwargs["provider"])
         subject = {
@@ -292,26 +270,7 @@ class HostingAdmin(admin.ModelAdmin):
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.pk)
 
-    def approve_asn(self, request, *args, **kwargs):
-
-        pk = request.GET.get("approval_id")
-        action = request.GET.get("action")
-        obj = GreencheckASNapprove.objects.get(pk=pk)
-
-        approved_asn = obj.process_approval(action)
-
-        name = "admin:" + get_admin_name(self.model, "change")
-        return redirect(name, obj.hostingprovider_id)
-
-    def approve_ip(self, request, *args, **kwargs):
-        pk = request.GET.get("approval_id")
-        action = request.GET.get("action")
-        obj = GreencheckIpApprove.objects.get(pk=pk)
-
-        approved_ip_range = obj.process_approval(action)
-
-        name = "admin:" + get_admin_name(self.model, "change")
-        return redirect(name, obj.hostingprovider_id)
+    # Mutators
 
     def save_model(self, request, obj, form, change):
 
@@ -342,6 +301,97 @@ class HostingAdmin(admin.ModelAdmin):
         # non-staff user.
         formset.form.changed = change
         formset.save()
+
+    def approve_asn(self, request, *args, **kwargs):
+
+        pk = request.GET.get("approval_id")
+        action = request.GET.get("action")
+        obj = GreencheckASNapprove.objects.get(pk=pk)
+
+        approved_asn = obj.process_approval(action)
+
+        name = "admin:" + get_admin_name(self.model, "change")
+        return redirect(name, obj.hostingprovider_id)
+
+    def approve_ip(self, request, *args, **kwargs):
+        pk = request.GET.get("approval_id")
+        action = request.GET.get("action")
+        obj = GreencheckIpApprove.objects.get(pk=pk)
+
+        approved_ip_range = obj.process_approval(action)
+
+        name = "admin:" + get_admin_name(self.model, "change")
+        return redirect(name, obj.hostingprovider_id)
+
+    # Queries
+
+    def get_urls(self):
+        """
+        Define the urls for extra functionality related to operations on
+        this hosting provider
+        """
+        from django.urls import path
+
+        urls = super().get_urls()
+        added = [
+            path(
+                "approval_asn/",
+                self.approve_asn,
+                name=get_admin_name(self.model, "approval_asn"),
+            ),
+            path(
+                "approval_ip/",
+                self.approve_ip,
+                name=get_admin_name(self.model, "approval_ip"),
+            ),
+            path(
+                "send_email/<provider>/",
+                self.send_email,
+                name=get_admin_name(self.model, "send_email"),
+            ),
+        ]
+        # order is important !!
+        return added + urls
+
+    def get_queryset(self, request, *args, **kwargs):
+        qs = super().get_queryset(request, *args, **kwargs)
+        qs = qs.prefetch_related(
+            "hostingprovider_certificates",
+            "datacenter",
+            "greencheckip_set",
+            "services",
+        ).annotate(models.Count("greencheckip"))
+        if not request.user.is_staff:
+            qs = qs.filter(user=request.user)
+        return qs
+
+    def get_fieldsets(self, request, obj=None):
+        fieldset = [
+            (
+                "Hostingprovider info",
+                {"fields": (("name", "website",), "country", "services")},
+            )
+        ]
+
+        admin_editable = (
+            "Admin only",
+            {
+                "fields": (
+                    ("archived", "showonwebsite", "customer",),
+                    ("partner", "model"),
+                    ("staff_labels",),
+                    ("email_template", "send_button"),
+                )
+            },
+        )
+        if request.user.is_staff:
+            fieldset.append(admin_editable)
+        return fieldset
+
+    # Properties
+
+    def services(self, obj):
+        return ", ".join(o.name for o in obj.services.all())
 
     def get_readonly_fields(self, request, obj=None):
         read_only = super().get_readonly_fields(request, obj)
@@ -374,6 +424,16 @@ class HostingAdmin(admin.ModelAdmin):
             GreencheckIpApprove, "changelist", params={"hostingprovider": object_id}
         )
         return super()._changeform_view(request, object_id, form_url, extra_context)
+
+    @mark_safe
+    def send_button(self, obj):
+        url = reverse_admin_name(
+            Hostingprovider, name="send_email", kwargs={"provider": obj.pk},
+        )
+        link = f'<a href="{url}" class="sendEmail">Send email</a>'
+        return link
+
+    send_button.short_description = "Send email"
 
     @mark_safe
     def html_website(self, obj):

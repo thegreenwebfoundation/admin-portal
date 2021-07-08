@@ -118,3 +118,19 @@ class CountryFilter(SimpleListFilter):
         if self.value() is None:
             return queryset
         return queryset.filter(country=self.value())
+
+
+class LabelFilter(SimpleListFilter):
+    title = "Label"
+    parameter_name = "label"
+
+    def lookups(self, request, queryset):
+        from apps.accounts.models import Label
+
+        return [(label.slug, label.name) for label in Label.objects.all()]
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return queryset.filter(staff_labels__slug__in=[self.value()])
+

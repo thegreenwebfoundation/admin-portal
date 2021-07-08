@@ -9,7 +9,8 @@ from anymail.message import AnymailMessage
 from django.utils import timezone
 from django.template.loader import render_to_string
 from taggit.managers import TaggableManager
-
+from taggit import models as tag_models
+from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
@@ -133,6 +134,34 @@ class DatacenterCooling(models.Model):
         # managed = False
 
 
+class Label(tag_models.TagBase):
+    """
+    The base tag class we need in order to create a separate set of
+    tags to use as internal labels
+    """
+
+    class Meta:
+        verbose_name = _("Label")
+        verbose_name_plural = _("Labels")
+
+
+class ProviderLabel(tag_models.TaggedItemBase):
+    """
+    A different through model for listing internally facing tags,
+    to help us categorise and segment providers.
+    """
+
+    content_object = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+        related_name="labels",
+        related_query_name="label",
+    )
+    tag = models.ForeignKey(
+        Label, related_name="%(app_label)s_%(class)s_items", on_delete=models.CASCADE,
+    )
+
+
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
@@ -151,6 +180,19 @@ class Hostingprovider(models.Model):
     services = TaggableManager(
         verbose_name="Services Offered",
         help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
+        blank=True,
+    )
+    # this should not be exposed publicly
+    staff_labels = TaggableManager(
+        verbose_name="Staff labels",
+        help_text=(
+            "Labels to apply to providers to make it easier to flag for follow up "
+            "by staff or other categorisation to support internal admin. "
+            "Internally facing.",
+        ),
+        through=ProviderLabel,
+        blank=True,
+        related_name="labels",
     )
     showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
     website = models.CharField(max_length=255)
