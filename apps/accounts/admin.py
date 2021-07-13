@@ -427,7 +427,16 @@ class HostingAdmin(admin.ModelAdmin):
         is_admin = request.user.groups.filter(name="admin").exists()
 
         if not is_admin:
-            inlines.remove(HostingProviderNoteInline)
+            # they're not an admin, remove HostingProviderNoteInline
+            # from the list so we don't show it
+            admin_inlines = (
+                GreencheckAsnApproveInline,
+                GreencheckIpApproveInline,
+                HostingProviderNoteInline,
+            )
+            for inline in admin_inlines:
+                if inline in inlines:
+                    inlines.remove(inline)
 
         return inlines
 

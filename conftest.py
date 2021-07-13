@@ -5,6 +5,8 @@ import dramatiq
 from apps.greencheck.legacy_workers import SiteCheck
 from django.contrib.auth import get_user_model
 
+from django.contrib.auth import models as auth_models
+
 from apps.accounts.models import Hostingprovider, Datacenter
 from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.greencheck.management.commands import update_aws_ip_ranges
@@ -15,10 +17,84 @@ User = get_user_model()
 
 
 @pytest.fixture
-def sample_hoster_user():
+def sample_hoster_user(default_user_groups):
     u = UserFactory.build(username="joebloggs", email="joe@example.com")
     u.set_password("topSekrit")
+    admin, hostingprovider = default_user_groups
+    u.save()
+    u.groups.add(hostingprovider)
+
     return u
+
+
+@pytest.fixture
+def default_user_groups():
+    """
+    Set up the different groups we assume a user can
+    be part of as an external user.
+    """
+    admin, admin_created = auth_models.Group.objects.get_or_create(
+        name="hostingprovider"
+    )
+    hostingprovider, hp_created = auth_models.Group.objects.get_or_create(
+        name="hostingprovider"
+    )
+    hp_per_codenames = [
+        "add_datacenter",
+        "change_datacenter",
+        "view_datacenter",
+        "add_datacentercertificate",
+        "change_datacentercertificate",
+        "delete_datacentercertificate",
+        "view_datacentercertificate",
+        "add_datacenterclassification",
+        "change_datacenterclassification",
+        "delete_datacenterclassification",
+        "view_datacenterclassification",
+        "add_datacentercooling",
+        "change_datacentercooling",
+        "delete_datacentercooling",
+        "view_datacentercooling",
+        "add_datacentresupportingdocument",
+        "change_datacentresupportingdocument",
+        "delete_datacentresupportingdocument",
+        "view_datacentresupportingdocument",
+        "add_hostingprovider",
+        "change_hostingprovider",
+        "view_hostingprovider",
+        "add_hostingprovidercertificate",
+        "change_hostingprovidercertificate",
+        "delete_hostingprovidercertificate",
+        "view_hostingprovidercertificate",
+        "add_hostingproviderdatacenter",
+        "change_hostingproviderdatacenter",
+        "delete_hostingproviderdatacenter",
+        "view_hostingproviderdatacenter",
+        "add_hostingprovidersupportingdocument",
+        "change_hostingprovidersupportingdocument",
+        "delete_hostingprovidersupportingdocument",
+        "view_hostingprovidersupportingdocument",
+        "change_user",
+        "view_user",
+        "add_greencheckasn",
+        "change_greencheckasn",
+        "view_greencheckasn",
+        "view_greencheckasnapprove",
+        "add_greencheckip",
+        "change_greencheckip",
+        "view_greencheckip",
+        "view_greencheckipapprove",
+    ]
+
+    hp_perms = [
+        perm
+        for perm in auth_models.Permission.objects.filter(codename__in=hp_per_codenames)
+    ]
+
+    for perm in hp_perms:
+        hostingprovider.permissions.add(perm)
+    hostingprovider.save()
+    return [admin, hostingprovider]
 
 
 @pytest.fixture
