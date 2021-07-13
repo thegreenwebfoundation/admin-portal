@@ -56,5 +56,9 @@ def has_group(user, group_name) -> bool:
     Check that a user has a specific group applied, and return
     either True if so, or False.
     """
-    group = Group.objects.get(name=group_name)
-    return True if group in user.groups.all() else False
+    group = Group.objects.filter(name=group_name)
+
+    if not group:
+        return False
+
+    return True if group[0] in user.groups.all() else False
