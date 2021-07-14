@@ -15,7 +15,7 @@ from apps.greencheck.admin import (
     GreencheckAsnApproveInline,
 )
 from taggit.models import Tag
-
+import logging
 
 from dal_select2 import views as dal_select2_views
 
@@ -54,6 +54,8 @@ from .models import (
     DatacenterSupportingDocument,
     HostingProviderSupportingDocument,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(Group, site=greenweb_admin)
@@ -302,23 +304,32 @@ class HostingAdmin(admin.ModelAdmin):
 
     def save_formset(self, request, form, formset, change):
         """
-        Save the child objects in this form, and account for the special cases.
+        Save the child objects in this form, and account for the special cases
+        for each of the formset being iterated through.
+        
+        Called multiple times - once for each formset on an model.
         """
-        # assign the current user to the
-        # newly created comments
-        instances = formset.save(commit=False)
-        if formset.new_objects:
-            for new_obj in formset.new_objects:
-                if isinstance(new_obj, HostingProviderNote):
-                    new_obj.added_by = request.user
-                    new_obj.save()
 
-        # A bit of a hack. We need to let the form know that it has changed
-        # somehow, this was the easiest way of doing it.
         # We need to let the form know if this an addition or a change
         # so that approval record is saved correctly in case of a
         # non-staff user.
+
+        # We set the 'changed' property on the formset form, so that our
+        # ApprovalMixin._save_approval()_can pick up whether a change
+        # # has taken place.
         formset.form.changed = change
+
+        #
+        if formset.form.__name__ == "HostingProviderNoteForm":
+            # assign the current user to the
+            # newly created comments
+            instances = formset.save(commit=False)
+            if formset.new_objects:
+                for new_obj in formset.new_objects:
+                    if isinstance(new_obj, HostingProviderNote):
+                        new_obj.added_by = request.user
+                        new_obj.save()
+
         formset.save()
 
     def approve_asn(self, request, *args, **kwargs):
@@ -426,17 +437,25 @@ class HostingAdmin(admin.ModelAdmin):
         inlines = self.inlines
         is_admin = request.user.groups.filter(name="admin").exists()
 
+        logger.info(f"{request.user}, is_admin: {is_admin}")
+
         if not is_admin:
-            # they're not an admin, remove HostingProviderNoteInline
-            # from the list so we don't show it
+            # they're not an admin, return a
+            # from the list filtered to remove the 'admin'
+            # inlines.
+            # We return a filtered list, because changing the state of
+            # `inlines` sometimes returns a list to admin users with the
+            # admin inlines removed.
             admin_inlines = (
-                GreencheckAsnApproveInline,
-                GreencheckIpApproveInline,
+                # GreencheckAsnApproveInline,
+                # GreencheckIpApproveInline,
                 HostingProviderNoteInline,
             )
-            for inline in admin_inlines:
-                if inline in inlines:
-                    inlines.remove(inline)
+            filtered_inlines = []
+            for inline in inlines:
+                if inline not in admin_inlines:
+                    filtered_inlines.append(inline)
+            return filtered_inlines
 
         return inlines
 
