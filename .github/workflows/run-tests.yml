@@ -52,8 +52,8 @@ jobs:
           python -m pip install --upgrade pipenv wheel
 
       - name: Set up a cache-key for installations of dependencies, in .venv
-      - id: cache-pipenv
-        uses: actions/cache@v1
+        id: cache-pipenv
+        uses: actions/cache@v2
         with:
           path: ./.venv
           key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
