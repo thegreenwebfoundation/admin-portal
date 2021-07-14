@@ -7,9 +7,12 @@ import pytest
 
 
 class TestHostingProviderAdminInlineRendering:
-    """Test that we can visit new provider pages"""
+    """
+    Test that we can visit new provider pages. This exercises
+    any logic for deciding which inlines to show.
+    """
 
-    def test_add_new_provider(
+    def test_visit_new_provider(
         self, db, client, sample_hoster_user, default_user_groups
     ):
         """
@@ -19,9 +22,6 @@ class TestHostingProviderAdminInlineRendering:
         provider in the admin.
         """
         sample_hoster_user.save()
-
-        _, hp = default_user_groups
-
         client.force_login(sample_hoster_user)
 
         new_provider_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
