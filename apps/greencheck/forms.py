@@ -1,3 +1,5 @@
+import logging
+
 from django import forms
 from django.forms import ModelForm
 from django.contrib.auth import get_user_model
@@ -11,15 +13,56 @@ from .models import GreencheckASN, GreencheckASNapprove
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
+
+
+class ChangeStateRequiredError(Exception):
+    """
+    An exception to catch the case when the approval mixin us used,
+    but the `changed` attribute is not being set by a subclass.
+    """
+
+    pass
+
 
 class ApprovalMixin:
+    """
+    A mixin to hold the logic for IP and ASN approval forms.
+
+    Contains the logic for our 'admin hack' to make approval requests
+    as new or updates
+    """
+
     ApprovalModel = None
+
+    def check_if_changed(self):
+        """
+        Check if we have a changed attribute, otherwise raise an meaningful
+        helpful exception
+        """
+
+        # add our sanity check
+        if not hasattr(self, "changed"):
+            raise ChangeStateRequiredError(
+                (
+                    "the 'changed' attribute needs to be set on a form for "
+                    "approval checking to work properly"
+                )
+            )
+
+        return self.changed
 
     def _save_approval(self):
         """
-        Save the approval request, be it an IP Range or an AS Network
-        from a
+        Save the approval request, be it an IP Range or an AS Network.
+
+        We expect the form to have the attirbute 'changed' before any call to
+        save() - usually after passing values in, but before calling is_valid()
+
         """
+
+        changed = self.check_if_changed()
+
         if self.ApprovalModel is None:
             raise NotImplementedError("Approval model missing")
 
@@ -27,9 +70,11 @@ class ApprovalMixin:
         if not self.cleaned_data["is_staff"]:
             hosting_provider = self.instance.hostingprovider
 
-            # changed here represents an
-            action = ActionChoice.UPDATE if self.changed else ActionChoice.NEW
-            status = StatusApproval.UPDATE if self.changed else StatusApproval.NEW
+            # changed here is set in the formset and
+            # represents whether we are updating an existing ip range or ASN,
+            # or creating a totally new one.
+            action = ActionChoice.UPDATE if changed else ActionChoice.NEW
+            status = StatusApproval.UPDATE if changed else StatusApproval.NEW
             kwargs = {
                 "action": action,
                 "status": status,
@@ -71,14 +116,16 @@ class GreencheckAsnForm(ModelForm, ApprovalMixin):
         )
 
     def save(self, commit=True):
+        """
+        """
+        # Like the GreencheckIpForm, we non-staff user creates an ip, instead of saving
         self._save_approval()
         return super().save(commit=True)
 
 
 class GreencheckIpForm(ModelForm, ApprovalMixin):
-    """This form is meant for admin
-
-    If a non staff user fills in the form it would return
+    """
+    If a non staff user fills in the form, we return an unsaved
     an unsaved approval record instead of greencheckip record
     """
 
@@ -98,13 +145,12 @@ class GreencheckIpForm(ModelForm, ApprovalMixin):
     def save(self, commit=True):
         """
         If a non-staff user creates an ip, instead of saving
-        the ip record directly, it will save an approval record.
+        the ip record directly, we save an approval record.
 
-        Only when it has been approved the record will actually
-        be created.
+        Once the IP range approval request is a approved, we create the
+        IP.
 
-        So we return an approval instance instead of Greencheck instance
-        which in turn will get saved a bit later.
+        If a staff user saves, we create it directly.
         """
         self._save_approval()
         return super().save(commit=commit)
@@ -140,6 +186,8 @@ class GreecheckIpApprovalForm(ModelForm):
         fields = "__all__"
 
     def save(self, commit=True):
+        """
+        """
         ip_instance = self.instance.greencheck_ip
         if commit is True:
             if ip_instance:

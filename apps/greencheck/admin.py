@@ -114,13 +114,6 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
 
     readonly_fields = ("action", "status", "approval", "created")
 
-    class Media:
-        js = (
-            "admin/js/vendor/jquery/jquery.js",
-            "admin/js/jquery.init.js",
-            "greencheck/js/email.js",
-        )
-
     def get_fieldsets(self, request, obj=None):
         fields = (
             "created",
@@ -142,6 +135,13 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
         if not request.user.is_staff:
             read_only = ("ip_start", "ip_end") + read_only
         return read_only
+
+    class Media:
+        js = (
+            "admin/js/vendor/jquery/jquery.js",
+            "admin/js/jquery.init.js",
+            "greencheck/js/email.js",
+        )
 
 
 class StatusIpFilter(admin.SimpleListFilter):
