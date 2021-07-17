@@ -1,5 +1,7 @@
 from apps.accounts.models.hosting import Hostingprovider
 from typing import List
+import io
+
 import pytest
 import markdown
 from django import urls
@@ -340,3 +342,82 @@ class TestHostingProviderAdmin:
         assert len(labels) == 1
         assert labels[0].name == "welcome-email sent"
 
+
+SAMPLE_CSV_CONTENT = """Ip,Zone,Ipv6,
+10.133.104.128,AMS3,
+10.166.105.151,Amsterdam,
+85.159.208.206,London,
+85.159.210.118,London,"""
+
+
+class TestHostingProviderCSVImport:
+    """
+    Test that the screens for uploading IP ranges in
+    bulk work as expected in django admin
+    """
+
+    def _setup_hosting_provider(self, client, hosting_provider, user):
+        hosting_provider.save()
+        user.hostingprovider = hosting_provider
+        user.save()
+        client.force_login(user)
+
+    def test_start_import_csv(self, db, client, sample_hoster_user, hosting_provider):
+        """
+        Can we see our page to begin the process of uploading our CSV
+        file for the user?
+        """
+        self._setup_hosting_provider(client, hosting_provider, sample_hoster_user)
+
+        import_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_start_import_from_csv",
+            args=[hosting_provider.id],
+        )
+        resp = client.get(import_url)
+        assert resp.status_code == 200
+
+    def test_preview_import_csv(self, db, client, sample_hoster_user, hosting_provider):
+        """
+        Can we see our page to begin the process of uploading our CSV
+        file for the user?
+        """
+        self._setup_hosting_provider(client, hosting_provider, sample_hoster_user)
+
+        import_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_preview_import_from_csv",
+            args=[hosting_provider.id],
+        )
+        csv_file = io.StringIO(SAMPLE_CSV_CONTENT)
+
+        resp = client.post(
+            import_url, {"provider": hosting_provider.id, "csv_file": csv_file},
+        )
+
+        assert resp.status_code == 200
+        assert resp.context["provider"] == hosting_provider
+        assert len(resp.context["ip_ranges"]) == 4  # as many lines in our CSV
+
+    def test_save_import_csv(self, db, client, sample_hoster_user, hosting_provider):
+        """
+        Can we see our page to begin the process of uploading our CSV
+        file for the user?
+        """
+        self._setup_hosting_provider(client, hosting_provider, sample_hoster_user)
+
+        assert len(hosting_provider.greencheckip_set.all()) == 0
+
+        import_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_save_import_from_csv",
+            args=[hosting_provider.id],
+        )
+        csv_file = io.StringIO(SAMPLE_CSV_CONTENT)
+
+        resp = client.post(
+            import_url, {"provider": hosting_provider.id, "csv_file": csv_file},
+        )
+
+        assert resp.status_code == 200
+
+        hosting_provider.refresh_from_db()
+
+        assert len(hosting_provider.greencheckip_set.all()) == 4

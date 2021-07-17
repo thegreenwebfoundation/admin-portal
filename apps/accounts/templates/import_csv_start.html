@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block pretitle %}
+<h1>Import IP Ranges from a CSV file for {{ provider }}</h1>
+
+<p> If you have a large number of Ip addresses or IP ranges, you can import them in bulk.</p>
+
+<p>Make sure the uploaded file follows the sample format</p>
+
+<table>
+<th>IP Range start</th><th>Ip Range End</th>
+<tr>
+  <td>104.21.2.197</td>
+  <td>104.21.2.199</td>
+
+</tr>
+</table>
+
+<p>If no end range is provided in the second column, the first IP is used to represent an IP Range of a single IP address.</p>
+<p>So, uploading a CSV file with a single column IP addresses would be the equivalent to:</p>
+
+<table>
+<th>IP Range start</th><th>Ip Range End</th>
+<tr>
+  <td>104.21.2.197</td>
+  <td>104.21.2.197</td>
+
+</tr>
+</table>
+
+{% endblock %}
+
+
+{% block content %}
+
+<hr / style="margin-top:3rem; margin-bottom:3rem;">
+
+<form enctype="multipart/form-data" action="{% url 'greenweb_admin:accounts_hostingprovider_preview_import_from_csv' provider.id %}" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Submit"
+        style="margin-top: 0px; padding: 6px 15px">
+</form>
+
+{% if ip_ranges %}
+
+<hr / style="margin-top:3rem; margin-bottom:3rem;">
+
+<h2>IP Range Import Preview</h2>
+
+<p>The following IP ranges would be imported for <strong>{{ provider }}</strong>:</p>
+
+<table>
+<th>IP Range start</th><th>Ip Range End</th><th>Created / Updated</th>
+
+{% for ip in ip_ranges %}
+
+  <tr>
+    <td>{{ ip.ip_start }}</td>
+    <td>{{ ip.ip_end }}</td>
+    <td>
+      {% if ip.id  %}
+          Updated
+      {% else %}
+          Created
+      {% endif %}
+    </td>
+  </tr>
+
+{% endfor %}
+</table>
+
+{% endif %}
+
+{% endblock content %}

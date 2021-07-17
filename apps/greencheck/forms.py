@@ -1,4 +1,8 @@
+from django.db.models.fields import CharField
+from django.forms.fields import FileField, IntegerField
+from apps.accounts.models.hosting import ProviderLabel
 import logging
+import io
 
 from django import forms
 from django.forms import ModelForm
@@ -10,6 +14,8 @@ from .choices import StatusApproval
 from .models import GreencheckIp
 from .models import GreencheckIpApprove
 from .models import GreencheckASN, GreencheckASNapprove
+from . import bulk_importers
+from ..accounts import models as ac_models
 
 User = get_user_model()
 
@@ -203,3 +209,55 @@ class GreecheckIpApprovalForm(ModelForm):
                 )
         self.instance.greencheck_ip = ip_instance
         return super().save(commit=commit)
+
+
+class ImporterCSVForm(forms.Form):
+    """
+    A form for handling bulk IP range submissions in the django admin.
+    Uses the ImporterCSV class to handle imports
+
+    """
+
+    provider = forms.ModelChoiceField(
+        empty_label="Choose a Provider",
+        queryset=ac_models.Hostingprovider.objects.all(),
+    )
+    csv_file = FileField(required=False)
+
+    ip_ranges = []
+    importer = None
+
+    def initialize_importer(self):
+        """clean our form, and return our importer with the
+        """
+
+        self.is_valid()
+
+        uploaded_csv_string = self.cleaned_data["csv_file"].read().decode("utf-8")
+        csv_file = io.StringIO(uploaded_csv_string)
+
+        importer = bulk_importers.ImporterCSV(self.cleaned_data["provider"])
+        importer.ips_from_file(csv_file)
+
+        self.importer = importer
+        return importer
+
+    def get_ip_ranges(self):
+        """
+        Return a list of the P Ranges, showing which ones would be updated, and
+        which ones would be created with this submission.
+        """
+        importer = self.initialize_importer()
+        provider = self.cleaned_data["provider"]
+        # make preview of generated ips
+        ips = importer.preview(provider)
+        return ips
+
+    def save(self):
+        """Save our list of IP ranges to the database"""
+
+        if self.importer is None:
+            self.initialize_importer()
+
+        self.importer.run()
+        return self.importer

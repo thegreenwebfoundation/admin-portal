@@ -1,10 +1,12 @@
 from django.db import models
+
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
 from django.contrib import admin
 from django.urls import reverse
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
+import django.forms as dj_forms
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
@@ -20,6 +22,7 @@ from taggit.models import Tag
 import logging
 import markdown
 
+import rich
 from dal_select2 import views as dal_select2_views
 
 from waffle.models import Flag
@@ -31,6 +34,7 @@ from apps.greencheck.models import GreencheckIpApprove
 from apps.greencheck.models import GreencheckASNapprove
 from apps.greencheck.choices import StatusApproval
 
+from apps.greencheck.forms import ImporterCSVForm
 
 from .utils import get_admin_name, reverse_admin_name
 from .admin_site import greenweb_admin
@@ -42,6 +46,9 @@ from .forms import (
     HostingProviderNoteForm,
     DatacenterNoteNoteForm,
 )
+import django.forms as dj_forms
+
+
 from .models import (
     Datacenter,
     DatacenterCertificate,
@@ -91,31 +98,31 @@ class CustomUserAdmin(UserAdmin):
 
     def get_fieldsets(self, request, *args, **kwargs):
 
-        if request.user.is_superuser:
-            return (
-                (None, {"fields": ("username", "password")}),
-                ("Personal info", {"fields": ("email",)}),
-                (
-                    "Permissions",
-                    {
-                        "fields": (
-                            "is_active",
-                            "is_staff",
-                            "is_superuser",
-                            "groups",
-                            "user_permissions",
-                        ),
-                    },
-                ),
-                ("Important dates", {"fields": ("last_login", "date_joined")}),
-            )
-        # TODO DRY this up, once the security hole is plugged
-
-        return (
+        regular_fieldsets = (
             (None, {"fields": ("username", "password")}),
             ("Personal info", {"fields": ("email",)}),
+        )
+        admin_editable = (
+            (
+                "Permissions",
+                {
+                    "fields": (
+                        "is_active",
+                        "is_staff",
+                        "is_superuser",
+                        "groups",
+                        "user_permissions",
+                    ),
+                },
+            ),
             ("Important dates", {"fields": ("last_login", "date_joined")}),
         )
+
+        if request.user.is_superuser:
+            # destructure our default_fieldsets to make a new tuple
+            # with the extra fieldsets appended
+            return (*regular_fieldsets, *admin_editable)
+        return regular_fieldsets
 
 
 class HostingCertificateInline(admin.StackedInline):
@@ -222,10 +229,81 @@ class HostingAdmin(admin.ModelAdmin):
     ]
     # these are not really fields, but buttons
     # see the corresponding methods
-    readonly_fields = ["preview_email_button"]
+    readonly_fields = ["preview_email_button", "start_csv_import_button"]
     ordering = ("name",)
 
     # Factories
+
+    def start_import_from_csv(self, request, *args, **kwargs):
+        """
+        Show the form, and preview required formate for the importer
+        for the given hosting provider.
+        """
+
+        # get our provider
+        provider = Hostingprovider.objects.get(pk=kwargs["provider"])
+
+        # get our document
+        data = {"provider": provider.id}
+        form = ImporterCSVForm(data)
+        form.fields["provider"].widget = dj_forms.widgets.HiddenInput()
+
+        return render(
+            request,
+            "import_csv_start.html",
+            {"form": form, "ip_ranges": [], "provider": provider},
+        )
+
+    def preview_import_from_csv(self, request, *args, **kwargs):
+        """
+        Show the form, and preview the set of IP Ranges to be created
+        using the ImporterCSV, for the given hosting provider.
+        """
+        provider = Hostingprovider.objects.get(pk=kwargs["provider"])
+
+        if request.method == "POST":
+            # get our provider
+            data = {"provider": provider.id}
+
+            # try to get our document
+            form = ImporterCSVForm(data, request.FILES)
+
+            form.fields["provider"].widget = dj_forms.widgets.HiddenInput()
+            if form.is_valid():
+                ip_ranges = form.get_ip_ranges()
+            else:
+                ip_ranges = []
+
+            return render(
+                request,
+                "import_csv_preview.html",
+                {"form": form, "ip_ranges": ip_ranges, "provider": provider},
+            )
+
+        return redirect("greenweb_admin:accounts_hostingprovider_change", provider.id)
+
+    def save_import_from_csv(self, request, *args, **kwargs):
+        # get our provider
+        provider = Hostingprovider.objects.get(pk=kwargs["provider"])
+
+        if request.method == "POST":
+
+            # try to get our uploaded files
+            data = {"provider": provider.id}
+            form = ImporterCSVForm(data, request.FILES)
+
+            form.fields["provider"].widget = dj_forms.widgets.HiddenInput()
+            form.save()
+
+            ip_ranges = form.get_ip_ranges()
+
+            return render(
+                request,
+                "import_csv_results.html",
+                {"ip_ranges": ip_ranges, "provider": provider},
+            )
+
+        return redirect("greenweb_admin:accounts_hostingprovider_change", provider.id)
 
     def preview_email(self, request, *args, **kwargs):
         """
@@ -423,6 +501,21 @@ class HostingAdmin(admin.ModelAdmin):
                 self.preview_email,
                 name=get_admin_name(self.model, "preview_email"),
             ),
+            path(
+                "<provider>/start_import_from_csv",
+                self.start_import_from_csv,
+                name=get_admin_name(self.model, "start_import_from_csv"),
+            ),
+            path(
+                "<provider>/preview_import_from_csv",
+                self.preview_import_from_csv,
+                name=get_admin_name(self.model, "preview_import_from_csv"),
+            ),
+            path(
+                "<provider>/save_import_from_csv",
+                self.save_import_from_csv,
+                name=get_admin_name(self.model, "save_import_from_csv"),
+            ),
         ]
         # order is important !!
         return added + urls
@@ -440,12 +533,12 @@ class HostingAdmin(admin.ModelAdmin):
         return qs
 
     def get_fieldsets(self, request, obj=None):
-        fieldset = [
+        default_fieldset = (
             (
                 "Hostingprovider info",
                 {"fields": (("name", "website",), "country", "services")},
-            )
-        ]
+            ),
+        )
 
         admin_editable = (
             "Admin only",
@@ -455,12 +548,16 @@ class HostingAdmin(admin.ModelAdmin):
                     ("partner", "model"),
                     ("staff_labels",),
                     ("email_template", "preview_email_button"),
+                    ("start_csv_import_button"),
                 )
             },
         )
+
         if request.user.is_staff:
-            fieldset.append(admin_editable)
-        return fieldset
+            return (*default_fieldset, *admin_editable)
+
+        # otherwise show the regular ones
+        return default_fieldset
 
     # Properties
 
@@ -535,6 +632,19 @@ class HostingAdmin(admin.ModelAdmin):
         return link
 
     preview_email_button.short_description = "Support Messages"
+
+    def start_csv_import_button(self, obj):
+        """
+        Create clickable link to begin process of bulk import
+        of IP ranges.
+        """
+        url = reverse_admin_name(
+            Hostingprovider, name="start_import_from_csv", kwargs={"provider": obj.pk},
+        )
+        link = f'<a href="{url}" class="start_csv_import">Import IP Ranges from CSV</a>'
+        return link
+
+    send_button.short_description = "Import IP Ranges from a CSV file"
 
     @mark_safe
     def html_website(self, obj):
