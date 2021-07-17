@@ -28,11 +28,14 @@ class Command(BaseCommand):
         logger.info(f"Adding ip addresses for {hosting_provider}")
 
         res = importer.run()
-        green_ipv4s = res["ipv4"]
+        created_green_ipv4s = res["ipv4"]["created"]
+        updated_green_ipv4s = res["ipv4"]["updated"]
 
         self.stdout.write(
             (
-                f"Import Complete: Added {len(green_ipv4s)} "
-                f"new IPV4 addresses for {hosting_provider}"
+                f"Import Complete: Added {len(created_green_ipv4s)}, "
+                "new IPV4 addresses, and "
+                f"and updated {len(updated_green_ipv4s)} for "
+                f"{hosting_provider}"
             )
         )

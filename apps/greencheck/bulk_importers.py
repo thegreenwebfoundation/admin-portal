@@ -17,12 +17,18 @@ class MissingPath(Exception):
 
 
 class ImporterCSV:
-    def __init__(self, hoster: Hostingprovider, path):
+    def __init__(self, hoster: Hostingprovider):
         self.ips = []
 
         if not isinstance(hoster, Hostingprovider):
             raise MissingHoster("Expected a hosting provider")
         self.hoster = hoster
+
+    def ips_from_path(self, path):
+        """
+        Accept a path to a file, and read it, adding IP
+        ranges in the file to the local ips array
+        """
 
         if not path:
             raise MissingPath("Expected path to a CSV file")
@@ -31,9 +37,13 @@ class ImporterCSV:
             rows = csv.reader(csvfile)
             self.fetch_ips(rows)
 
+    def ips_from_file(self, fileObj):
+        rows = csv.reader(fileObj)
+        self.fetch_ips(rows)
+
     def fetch_ips(self, rows):
         for row in rows:
-            if row[0] == "IP":
+            if "IP" in row[0].upper():
                 continue
 
             try:
@@ -47,14 +57,41 @@ class ImporterCSV:
 
                 ipdb.set_trace()
 
+    def preview(self, provider):
+        """
+        Return a list of the GreencheckIPs that would be updated
+        or created based on the current provided file.
+        """
+
+        green_ip_list = []
+        # try to find a GreenIP
+        for ip in self.ips:
+            try:
+                green_ip = GreencheckIp.objects.get(
+                    ip_start=ip, ip_end=ip, active=True, hostingprovider=provider
+                )
+                green_ip_list.append(green_ip)
+            except GreencheckIp.DoesNotExist:
+                green_ip = GreencheckIp(
+                    active=True, ip_start=ip, ip_end=ip, hostingprovider=provider
+                )
+                green_ip_list.append(green_ip)
+
+        # or make a new one, in memory
+        return green_ip_list
+
     def run(self):
 
-        green_ips = []
+        created_ips = []
+        updated_ips = []
         for ip in self.ips:
             gcip, created = GreencheckIp.objects.update_or_create(
                 active=True, ip_start=ip, ip_end=ip, hostingprovider=self.hoster
             )
             gcip.save()
-            green_ips.append(gcip)
+            if created:
+                created_ips.append(gcip)
+            if gcip and not created:
+                updated_ips.append(gcip)
 
-        return {"ipv4": green_ips}
+        return {"ipv4": {"created": created_ips, "updated": updated_ips}}
