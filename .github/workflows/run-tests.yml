@@ -59,7 +59,9 @@ jobs:
           key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
 
       - name: Install dependencies
-        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        # skipping this check to see if we have a collision between cache keys
+        # when deploying versus running tests
+        # if: steps.cache-pipenv.outputs.cache-hit != 'true'
         run: |
           pipenv install --deploy --dev --verbose
 
