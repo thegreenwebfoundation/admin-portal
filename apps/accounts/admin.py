@@ -619,8 +619,21 @@ class DatacenterAdmin(admin.ModelAdmin):
         inlines = self.inlines
         is_admin = request.user.groups.filter(name="admin").exists()
 
+        logger.info(f"{request.user}, is_admin: {is_admin}")
+
         if not is_admin:
-            inlines.remove(DatacenterNoteInline)
+            # they're not an admin, return a
+            # from the list filtered to remove the 'admin'
+            # inlines.
+            # We return a filtered list, because changing the state of
+            # `inlines` sometimes returns a list to admin users with the
+            # admin inlines removed.
+            admin_inlines = (DatacenterNoteInline,)
+            filtered_inlines = []
+            for inline in inlines:
+                if inline not in admin_inlines:
+                    filtered_inlines.append(inline)
+            return filtered_inlines
 
         return inlines
 
