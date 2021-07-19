@@ -384,7 +384,7 @@ class TestHostingProviderCSVImport:
         self._setup_hosting_provider(client, hosting_provider, sample_hoster_user)
 
         import_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_preview_import_from_csv",
+            "greenweb_admin:accounts_hostingprovider_save_import_from_csv",
             args=[hosting_provider.id],
         )
         csv_file = io.StringIO(SAMPLE_CSV_CONTENT)
@@ -413,7 +413,12 @@ class TestHostingProviderCSVImport:
         csv_file = io.StringIO(SAMPLE_CSV_CONTENT)
 
         resp = client.post(
-            import_url, {"provider": hosting_provider.id, "csv_file": csv_file},
+            import_url,
+            {
+                "provider": hosting_provider.id,
+                "csv_file": csv_file,
+                "skip_preview": True,
+            },
         )
 
         assert resp.status_code == 200

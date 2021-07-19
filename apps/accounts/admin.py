@@ -122,6 +122,7 @@ class CustomUserAdmin(UserAdmin):
             # destructure our default_fieldsets to make a new tuple
             # with the extra fieldsets appended
             return (*regular_fieldsets, *admin_editable)
+
         return regular_fieldsets
 
 
@@ -254,10 +255,11 @@ class HostingAdmin(admin.ModelAdmin):
             {"form": form, "ip_ranges": [], "provider": provider},
         )
 
-    def preview_import_from_csv(self, request, *args, **kwargs):
+    def save_import_from_csv(self, request, *args, **kwargs):
         """
-        Show the form, and preview the set of IP Ranges to be created
-        using the ImporterCSV, for the given hosting provider.
+        Process the contents of the uploaded file, and either
+        show a preview of the IP ranges that would be created, or
+        create them, based on submitted form value
         """
         provider = Hostingprovider.objects.get(pk=kwargs["provider"])
 
@@ -266,42 +268,46 @@ class HostingAdmin(admin.ModelAdmin):
             data = {"provider": provider.id}
 
             # try to get our document
-            form = ImporterCSVForm(data, request.FILES)
-
+            form = ImporterCSVForm(request.POST, request.FILES)
             form.fields["provider"].widget = dj_forms.widgets.HiddenInput()
-            if form.is_valid():
+
+            valid = form.is_valid()
+            skip_preview = form.cleaned_data["skip_preview"]
+
+            rich.inspect(request.POST)
+            rich.inspect(form.cleaned_data)
+            if valid and skip_preview:
+                # not doing preview. Run the import
+                form.save()
+
                 ip_ranges = form.get_ip_ranges()
-            else:
-                ip_ranges = []
+                context = {
+                    "ip_ranges": ip_ranges,
+                    "provider": provider,
+                }
+                return render(request, "import_csv_preview.html", context,)
 
-            return render(
-                request,
-                "import_csv_preview.html",
-                {"form": form, "ip_ranges": ip_ranges, "provider": provider},
-            )
+            if valid:
+                # the save default we don't save the contents
+                # just showing what would happen
+                ip_ranges = form.get_ip_ranges()
+                context = {
+                    "form": form,
+                    "ip_ranges": ip_ranges,
+                    "provider": provider,
+                }
+                return render(request, "import_csv_preview.html", context,)
 
-        return redirect("greenweb_admin:accounts_hostingprovider_change", provider.id)
+            # otherwise fallback to showing the form with errors,
+            # ready for another attempted submission
 
-    def save_import_from_csv(self, request, *args, **kwargs):
-        # get our provider
-        provider = Hostingprovider.objects.get(pk=kwargs["provider"])
+            context = {
+                "form": form,
+                "ip_ranges": None,
+                "provider": provider,
+            }
 
-        if request.method == "POST":
-
-            # try to get our uploaded files
-            data = {"provider": provider.id}
-            form = ImporterCSVForm(data, request.FILES)
-
-            form.fields["provider"].widget = dj_forms.widgets.HiddenInput()
-            form.save()
-
-            ip_ranges = form.get_ip_ranges()
-
-            return render(
-                request,
-                "import_csv_results.html",
-                {"ip_ranges": ip_ranges, "provider": provider},
-            )
+            return render(request, "import_csv_preview.html", context,)
 
         return redirect("greenweb_admin:accounts_hostingprovider_change", provider.id)
 
@@ -505,11 +511,6 @@ class HostingAdmin(admin.ModelAdmin):
                 "<provider>/start_import_from_csv",
                 self.start_import_from_csv,
                 name=get_admin_name(self.model, "start_import_from_csv"),
-            ),
-            path(
-                "<provider>/preview_import_from_csv",
-                self.preview_import_from_csv,
-                name=get_admin_name(self.model, "preview_import_from_csv"),
             ),
             path(
                 "<provider>/save_import_from_csv",

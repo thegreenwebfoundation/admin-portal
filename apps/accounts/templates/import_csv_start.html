@@ -36,7 +36,7 @@
 
 <hr / style="margin-top:3rem; margin-bottom:3rem;">
 
-<form enctype="multipart/form-data" action="{% url 'greenweb_admin:accounts_hostingprovider_preview_import_from_csv' provider.id %}" method="post">
+<form enctype="multipart/form-data" action="{% url 'greenweb_admin:accounts_hostingprovider_save_import_from_csv' provider.id %}" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Submit"
