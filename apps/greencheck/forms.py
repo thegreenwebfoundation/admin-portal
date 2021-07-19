@@ -1,5 +1,5 @@
 from django.db.models.fields import CharField
-from django.forms.fields import FileField, IntegerField
+from django.forms.fields import BooleanField, FileField, IntegerField
 from apps.accounts.models.hosting import ProviderLabel
 import logging
 import io
@@ -223,6 +223,9 @@ class ImporterCSVForm(forms.Form):
         queryset=ac_models.Hostingprovider.objects.all(),
     )
     csv_file = FileField(required=False)
+    skip_preview = BooleanField(
+        required=False, help_text=("Do not show the preview of what would happen. "),
+    )
 
     ip_ranges = []
     importer = None
@@ -244,7 +247,7 @@ class ImporterCSVForm(forms.Form):
 
     def get_ip_ranges(self):
         """
-        Return a list of the P Ranges, showing which ones would be updated, and
+        Return a list of the IP Ranges, showing which ones would be updated, and
         which ones would be created with this submission.
         """
         importer = self.initialize_importer()
@@ -255,9 +258,8 @@ class ImporterCSVForm(forms.Form):
 
     def save(self):
         """Save our list of IP ranges to the database"""
-
         if self.importer is None:
             self.initialize_importer()
-
+        logger.info("Skipping preview, running import")
         self.importer.run()
         return self.importer
