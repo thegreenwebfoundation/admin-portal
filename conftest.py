@@ -33,13 +33,11 @@ def default_user_groups():
     Set up the different groups we assume a user can
     be part of as an external user.
     """
-    admin, admin_created = auth_models.Group.objects.get_or_create(
-        name="hostingprovider"
-    )
+    admin, admin_created = auth_models.Group.objects.get_or_create(name="admin")
     hostingprovider, hp_created = auth_models.Group.objects.get_or_create(
         name="hostingprovider"
     )
-    hp_per_codenames = [
+    hp_perm_codenames = [
         "add_datacenter",
         "change_datacenter",
         "view_datacenter",
@@ -88,12 +86,31 @@ def default_user_groups():
 
     hp_perms = [
         perm
-        for perm in auth_models.Permission.objects.filter(codename__in=hp_per_codenames)
+        for perm in auth_models.Permission.objects.filter(
+            codename__in=hp_perm_codenames
+        )
     ]
 
     for perm in hp_perms:
         hostingprovider.permissions.add(perm)
     hostingprovider.save()
+
+    admin_perm_codenames = []
+
+    # TODO: see the idiomatic way to track these perms and groups in django
+    # we currently check for group membership, _not_ permissions, and we
+    # likely should
+    admin_perms = [
+        perm
+        for perm in auth_models.Permission.objects.filter(
+            codename__in=admin_perm_codenames
+        )
+    ]
+
+    for perm in admin_perms:
+        admin.permissions.add(perm)
+    hostingprovider.save()
+
     return [admin, hostingprovider]
 
 
