@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "taggit",
     "taggit_labels",
+    "taggit_serializer",
     "waffle",
     # UI
     "tailwind",
