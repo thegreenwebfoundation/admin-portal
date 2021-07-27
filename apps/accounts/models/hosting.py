@@ -451,11 +451,16 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
     def parent(self):
         return self.hostingprovider
 
+    @property
     def link(self) -> str:
         """
         Return either the hyperlink to the attachment url, or the plain url.
         If an item has both, we assume the attachment takes priority.
         """
+
+        # NOTE this shouldn't trigger any more db queries, so it
+        # ought to be okay as a property. We probably should
+        # change if it does trigger them.
         if self.attachment:
             return self.attachment.url
 

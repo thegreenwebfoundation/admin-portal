@@ -124,6 +124,14 @@ class GreenDomainBatchSerializer(serializers.Serializer):
 
 
 class HostingDocumentSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+
+        return {
+            "id": instance.id,
+            "title": instance.title,
+            "link": instance.link,
+        }
+
     class Meta:
         model = HostingProviderSupportingDocument
         fields = ["link", "title", "id"]
