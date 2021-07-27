@@ -140,15 +140,57 @@ class TestGreenDomainViewset:
         assert response_doc["link"] == supporting_doc.link
         assert response_doc["title"] == supporting_doc.title
 
+    def test_check_single_url_with_supporting_private_evidence(
+        self,
+        hosting_provider: ac_models.Hostingprovider,
+        sample_hoster_user: User,
+        green_ip: GreencheckIp,
+    ):
+        """
+        When we show responses, do we only the ones that are public?
+        """
+        hosting_provider.save()
+        sample_hoster_user.hostingprovider = hosting_provider
+        sample_hoster_user.save()
+        sitecheck_logger = LegacySiteCheckLogger()
 
-def test_check_single_url_with_supporting_private_evidence(
-    self,
-    hosting_provider: ac_models.Hostingprovider,
-    sample_hoster_user: User,
-    green_ip: GreencheckIp,
-):
-    """When we show repsonses, do we only the ones that are public?"""
-    pass
+        domain = "google.com"
+        now = timezone.now()
+
+        a_year_from_now = now + relativedelta(years=1)
+
+        # create a sample piece of evidence
+        supporting_doc = ac_models.HostingProviderSupportingDocument.objects.create(
+            hostingprovider=hosting_provider,
+            title="Carbon free energy for Google Cloud regions",
+            url="https://cloud.google.com/sustainability/region-carbon",
+            description="Google's guidance on understanding how they power each region, how they acheive carbon free energy, and how to report it",
+            valid_from=now,
+            valid_to=a_year_from_now,
+            public=False,
+        )
+
+        sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+
+        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+
+        # assume we just have a link to a url, no uploading of files
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-detail", kwargs={"url": domain})
+        logger.info(f"url_path: {url_path}")
+
+        request = rf.get(url_path)
+
+        view = GreenDomainViewset.as_view({"get": "retrieve"})
+
+        response = view(request, url=domain)
+
+        assert response.status_code == 200
+        assert response.data["green"] is True
+
+        # check for extra evidence
+        assert "supporting_documents" in response.data
+        assert len(response.data["supporting_documents"]) == 0
 
     def test_check_multple_urls_get(
         self,
