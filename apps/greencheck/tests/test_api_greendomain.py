@@ -105,7 +105,7 @@ class TestGreenDomainViewset:
         a_year_from_now = now + relativedelta(years=1)
 
         # create a sample piece of evidence
-        ac_models.HostingProviderSupportingDocument.objects.create(
+        supporting_doc = ac_models.HostingProviderSupportingDocument.objects.create(
             hostingprovider=hosting_provider,
             title="Carbon free energy for Google Cloud regions",
             url="https://cloud.google.com/sustainability/region-carbon",
@@ -120,10 +120,6 @@ class TestGreenDomainViewset:
         sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
 
         # assume we just have a link to a url, no uploading of files
-        # import ipdb
-
-        # ipdb.set_trace()
-
         rf = APIRequestFactory()
         url_path = reverse("green-domain-detail", kwargs={"url": domain})
         logger.info(f"url_path: {url_path}")
@@ -136,8 +132,13 @@ class TestGreenDomainViewset:
 
         assert response.status_code == 200
         assert response.data["green"] is True
-        assert "supportingEvidence" in response.data
-        assert len(response.data["supportingEvidence"]) == 1
+
+        # check for extra evidence
+        assert "supporting_documents" in response.data
+        assert len(response.data["supporting_documents"]) == 1
+        response_doc = response.data["supporting_documents"][0]
+        assert response_doc["link"] == supporting_doc.link
+        assert response_doc["title"] == supporting_doc.title
 
 
 def test_check_single_url_with_supporting_private_evidence(
