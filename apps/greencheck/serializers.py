@@ -172,7 +172,8 @@ class GreenDomainSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         provider = instance.hosting_provider
         if provider:
-            docs = provider.supporting_documents.all()
+            # we only want to show public supporting docs
+            docs = provider.supporting_documents.filter(public=True)
             ret["supporting_documents"] = HostingDocumentSerializer(
                 docs, many=True
             ).data
