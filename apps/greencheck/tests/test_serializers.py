@@ -1,7 +1,6 @@
 import ipaddress
 import logging
 
-import json
 import pytest
 import rich
 
@@ -11,7 +10,6 @@ from django.utils import timezone
 from rest_framework import serializers
 
 
-from ...accounts.models.hosting import ProviderLabel
 from ...accounts import models as ac_models
 from .. import legacy_workers
 from .. import models as gc_models
@@ -243,10 +241,9 @@ class TestGreenDomainSerialiser:
         self, db, hosting_provider, green_ip
     ):
         """
-        Can we get a usable JSON representation of a greeon domain, with supporting evidence included?
+        Can we get a usable JSON representation of a green domain,
+        with supporting evidence included?
         """
-        hosting_provider.save()  # hosting_provider.services = ["virtual_private_servers"]
-        hosting_provider.services.add("VPS")
         hosting_provider.save()
         domain = "google.com"
         sitecheck_logger = legacy_workers.LegacySiteCheckLogger()
@@ -259,7 +256,11 @@ class TestGreenDomainSerialiser:
             hostingprovider=hosting_provider,
             title="Carbon free energy for Google Cloud regions",
             url="https://cloud.google.com/sustainability/region-carbon",
-            description="Google's guidance on understanding how they power each region, how they acheive carbon free energy, and how to report it",
+            description=(
+                "Google's guidance on understanding how they "
+                "power each region, how they acheive carbon free "
+                "energy, and how to report it"
+            ),
             valid_from=now,
             valid_to=a_year_from_now,
             public=True,
@@ -268,17 +269,9 @@ class TestGreenDomainSerialiser:
         sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
         sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
 
-        # try serialising the hosting provider
-        serialized_provider = gc_serializers.HostingProviderSerializer(hosting_provider)
-
-        # rich.inspect(serialized_provider.data)
-
         # save a doamin as belonging to a provider
         green_dom = gc_models.GreenDomain.objects.all().first()
         serialized_green_dom = gc_serializers.GreenDomainSerializer(green_dom)
-        # rich.inspect(serialized_green_dom)
-        # rich.inspect(serialized_green_dom.data)
-        # rich.print(json.dumps(serialized_green_dom.data))
 
         # check that the domain, if it has hosting provider
         # also lists the public evidence
