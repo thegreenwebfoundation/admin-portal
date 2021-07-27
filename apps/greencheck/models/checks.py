@@ -472,13 +472,13 @@ class GreenDomain(models.Model):
         except ValueError:
             return None
         except Exception as err:
-            logger.error(
+            logger.warn(
                 (
                     f"Couldn't find a hosting provider for url: {self.url}, "
                     "and hosted_by_id: {hosted_by_id}."
                 )
             )
-            logger.exception(err)
+            logger.warn(err)
             return None
 
     @classmethod
