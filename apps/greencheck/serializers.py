@@ -1,10 +1,15 @@
 import ipaddress
+import ipdb
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from apps.accounts.models import Hostingprovider
+from apps.accounts.models import Hostingprovider, HostingProviderSupportingDocument
 
 from .models import GreencheckIp, GreenDomain, GreencheckASN
+
+from taggit import models as tag_models
+from taggit_serializer import serializers as tag_serializer
+
 
 HIGHEST_ASN_POSSIBLE = 4294967295
 LOWEST_ASN_POSSIBLE = 1
@@ -100,24 +105,6 @@ class GreenASNSerializer(serializers.ModelSerializer):
         ref_name = "AS Network"
 
 
-class GreenDomainSerializer(serializers.ModelSerializer):
-    """
-    The serialiser for our green domains checking table.
-    """
-
-    class Meta:
-        model = GreenDomain
-        fields = [
-            "url",
-            "hosted_by",
-            "hosted_by_website",
-            "partner",
-            "green",
-            "hosted_by_id",
-            "modified",
-        ]
-
-
 class GreenDomainBatchSerializer(serializers.Serializer):
     """"""
 
@@ -134,3 +121,65 @@ class GreenDomainBatchSerializer(serializers.Serializer):
 
     class Meta:
         ref_name = "Batch Greencheck"
+
+
+class HostingDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HostingProviderSupportingDocument
+        fields = ["link", "title", "id"]
+
+
+class HostingProviderSerializer(
+    tag_serializer.TaggitSerializer, serializers.ModelSerializer
+):
+    """The JSON serialised representation of a hosting provider"""
+
+    supporting_documents = HostingDocumentSerializer(many=True, read_only=True)
+
+    services = tag_serializer.TagListSerializerField()
+
+    class Meta:
+        model = Hostingprovider
+        fields = [
+            "name",
+            "id",
+            "country",
+            "model",
+            "website",
+            "services",
+            "supporting_documents",
+        ]
+
+
+class GreenDomainSerializer(serializers.ModelSerializer):
+    """
+    The serialiser for our green domains checking table.
+    """
+
+    def to_representation(self, instance):
+        """
+        Return the domain, but if we have a provider, refer to the hosting provider
+        """
+
+        ret = super().to_representation(instance)
+        provider = instance.hosting_provider
+        if provider:
+            docs = provider.supporting_documents.all()
+            ret["supporting_documents"] = HostingDocumentSerializer(
+                docs, many=True
+            ).data
+
+        return ret
+
+    class Meta:
+        model = GreenDomain
+        fields = [
+            "url",
+            "hosted_by",
+            "hosted_by_website",
+            "partner",
+            "green",
+            "hosted_by_id",
+            "modified",
+        ]
+

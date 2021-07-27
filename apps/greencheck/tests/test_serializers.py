@@ -1,13 +1,22 @@
 import ipaddress
 import logging
 
+import json
 import pytest
+import rich
+
+
+from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 from rest_framework import serializers
 
-from apps.greencheck.models import GreencheckIp, GreencheckASN
-from apps.greencheck.serializers import GreenIPRangeSerializer, GreenASNSerializer
 
+from ...accounts.models.hosting import ProviderLabel
 from ...accounts import models as ac_models
+from .. import legacy_workers
+from .. import models as gc_models
+from .. import serializers as gc_serializers
+from . import greencheck_sitecheck
 
 logger = logging.getLogger(__name__)
 
@@ -52,13 +61,13 @@ class TestGreenIpRangeSerialiser:
         # uncomment this to check ip ranges we're generating and testing
         # logger.info(f"start_ip:  {ip_addy_start}, end_ip: {ip_addy_end}")
 
-        gcip = GreencheckIp(
+        gcip = gc_models.GreencheckIp(
             active=True,
             ip_start=str(ip_addy_start),
             ip_end=str(ip_addy_end),
             hostingprovider=hosting_provider,
         )
-        gipr = GreenIPRangeSerializer(gcip)
+        gipr = gc_serializers.GreenIPRangeSerializer(gcip)
         data = gipr.data
         keys = data.keys()
 
@@ -78,14 +87,14 @@ class TestGreenIpRangeSerialiser:
         """
         hosting_provider.save()
 
-        gcip = GreencheckIp.objects.create(
+        gcip = gc_models.GreencheckIp.objects.create(
             active=True,
             ip_start=ip_addy_start,
             ip_end=ip_addy_end,
             hostingprovider=hosting_provider,
         )
         gcip.save()
-        gipr = GreenIPRangeSerializer(gcip)
+        gipr = gc_serializers.GreenIPRangeSerializer(gcip)
         data = gipr.data
         keys = data.keys()
 
@@ -105,7 +114,7 @@ class TestGreenIpRangeSerialiser:
         our database?
         """
 
-        assert GreencheckIp.objects.count() == 0
+        assert gc_models.GreencheckIp.objects.count() == 0
         hosting_provider.save()
 
         sample_json = {
@@ -114,7 +123,7 @@ class TestGreenIpRangeSerialiser:
             "ip_end": str(ip_addy_end),
         }
 
-        gipr = GreenIPRangeSerializer(data=sample_json)
+        gipr = gc_serializers.GreenIPRangeSerializer(data=sample_json)
         gipr.is_valid()
         data = gipr.save()
 
@@ -150,7 +159,7 @@ class TestGreenIpRangeSerialiser:
             "ip_end": str(ip_addy_end),
         }
 
-        gipr = GreenIPRangeSerializer(data=sample_json)
+        gipr = gc_serializers.GreenIPRangeSerializer(data=sample_json)
 
         with pytest.raises(serializers.ValidationError):
             gipr.is_valid(raise_exception=True)
@@ -163,10 +172,10 @@ class TestGreenASNSerialiser:
         API representation?
         """
 
-        gc_asn = GreencheckASN(
+        gc_asn = gc_models.GreencheckASN(
             active=True, asn=12345, hostingprovider=hosting_provider,
         )
-        gc_asn_serialized = GreenASNSerializer(gc_asn)
+        gc_asn_serialized = gc_serializers.GreenASNSerializer(gc_asn)
         data = gc_asn_serialized.data
         keys = data.keys()
 
@@ -187,11 +196,13 @@ class TestGreenASNSerialiser:
             "hostingprovider": hosting_provider.id,
         }
 
-        gcn = GreenASNSerializer(data=sample_data)
+        gcn = gc_serializers.GreenASNSerializer(data=sample_data)
         assert gcn.is_valid()
 
         gcn.save()
-        created_asn, *_ = GreencheckASN.objects.filter(hostingprovider=hosting_provider)
+        created_asn, *_ = gc_models.GreencheckASN.objects.filter(
+            hostingprovider=hosting_provider
+        )
 
         created_asn.asn == sample_data["asn"]
         created_asn.hostingprovider.id == sample_data["hostingprovider"]
@@ -214,7 +225,7 @@ class TestGreenASNSerialiser:
             "hostingprovider": hosting_provider.id,
         }
 
-        gcn = GreenASNSerializer(data=sample_data)
+        gcn = gc_serializers.GreenASNSerializer(data=sample_data)
         assert gcn.is_valid()
 
         gcn.save()
@@ -223,5 +234,57 @@ class TestGreenASNSerialiser:
             "asn": 12345,
             "hostingprovider": new_hosting_provider.id,
         }
-        second_gcn = GreenASNSerializer(data=second_sample_data)
+        second_gcn = gc_serializers.GreenASNSerializer(data=second_sample_data)
         assert not second_gcn.is_valid()
+
+
+class TestGreenDomainSerialiser:
+    def test_serialising_green_domain_with_evidence(
+        self, db, hosting_provider, green_ip
+    ):
+        """
+        Can we get a usable JSON representation of a greeon domain, with supporting evidence included?
+        """
+        hosting_provider.save()  # hosting_provider.services = ["virtual_private_servers"]
+        hosting_provider.services.add("VPS")
+        hosting_provider.save()
+        domain = "google.com"
+        sitecheck_logger = legacy_workers.LegacySiteCheckLogger()
+
+        now = timezone.now()
+        a_year_from_now = now + relativedelta(years=1)
+
+        #  create supporting evidence for hosting provider
+        supporting_doc = ac_models.HostingProviderSupportingDocument.objects.create(
+            hostingprovider=hosting_provider,
+            title="Carbon free energy for Google Cloud regions",
+            url="https://cloud.google.com/sustainability/region-carbon",
+            description="Google's guidance on understanding how they power each region, how they acheive carbon free energy, and how to report it",
+            valid_from=now,
+            valid_to=a_year_from_now,
+            public=True,
+        )
+
+        sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+
+        # try serialising the hosting provider
+        serialized_provider = gc_serializers.HostingProviderSerializer(hosting_provider)
+
+        # rich.inspect(serialized_provider.data)
+
+        # save a doamin as belonging to a provider
+        green_dom = gc_models.GreenDomain.objects.all().first()
+        serialized_green_dom = gc_serializers.GreenDomainSerializer(green_dom)
+        # rich.inspect(serialized_green_dom)
+        # rich.inspect(serialized_green_dom.data)
+        # rich.print(json.dumps(serialized_green_dom.data))
+
+        # check that the domain, if it has hosting provider
+        # also lists the public evidence
+        assert len(serialized_green_dom.data["supporting_documents"])
+
+        docs = serialized_green_dom.data["supporting_documents"]
+        assert docs[0]["link"] == supporting_doc.url
+        assert docs[0]["title"] == supporting_doc.title
+

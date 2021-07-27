@@ -443,12 +443,23 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         db_column="id_hp",
         null=True,
         on_delete=models.CASCADE,
-        related_name="hostingprovider_evidence",
+        related_name="supporting_documents",
+        # related_name="hostingprovider_evidence",
     )
 
     @property
     def parent(self):
         return self.hostingprovider
+
+    def link(self) -> str:
+        """
+        Return either the hyperlink to the attachment url, or the plain url.
+        If an item has both, we assume the attachment takes priority.
+        """
+        if self.attachment:
+            return self.attachment.url
+
+        return self.url
 
 
 class Certificate(models.Model):
