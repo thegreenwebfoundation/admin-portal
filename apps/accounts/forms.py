@@ -49,13 +49,9 @@ class UserUpdateForm(UserChangeForm):
 
 
 class HostingAdminForm(forms.ModelForm):
-    email_template = forms.ChoiceField(
-        choices=[
-            ("additional-info.txt", "I need more information"),
-            ("pending-removal.txt", "Pending removal"),
-        ],
-        required=False,
-        label="email",
+
+    email_template = forms.ModelChoiceField(
+        queryset=ac_models.SupportMessage.objects.all(), required=False, label="email",
     )
 
     class Meta:
@@ -130,6 +126,8 @@ class PreviewEmailForm(forms.Form):
     title = forms.CharField(label="Email title", max_length=255)
     recipient = forms.EmailField()
     body = forms.CharField(widget=forms.Textarea(attrs={"rows": 20, "cols": 90}))
+    message_type = forms.CharField(widget=forms.HiddenInput())
+    provider = forms.IntegerField(widget=forms.HiddenInput())
 
     # TODO
     # check that we have an email before trying to forwarding to an email service

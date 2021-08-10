@@ -8,6 +8,7 @@ from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
+from django import template as dj_template
 from apps.greencheck.admin import (
     GreencheckASNApprove,
     GreencheckIpApproveInline,
@@ -28,6 +29,7 @@ from apps.greencheck.models import GreencheckIp
 from apps.greencheck.models import GreencheckIpApprove
 from apps.greencheck.models import GreencheckASNapprove
 from apps.greencheck.choices import StatusApproval
+
 
 from .utils import get_admin_name, reverse_admin_name
 from .admin_site import greenweb_admin
@@ -54,6 +56,7 @@ from .models import (
     User,
     DatacenterSupportingDocument,
     HostingProviderSupportingDocument,
+    SupportMessage,
 )
 
 logger = logging.getLogger(__name__)
@@ -225,26 +228,20 @@ class HostingAdmin(admin.ModelAdmin):
 
     def preview_email(self, request, *args, **kwargs):
         """
-        Create and preview a sample email asking for further information from a hosting
-        provider to support their claims.
+        Create and preview a sample email asking for further information
+        from a hosting provider to support their claims.
         """
 
         # workout which email template to start with
         email_name = request.GET.get("email")
-        email_template = f"emails/{email_name}"
-        redirect_name = "admin:" + get_admin_name(self.model, "change")
 
         obj = Hostingprovider.objects.get(pk=kwargs["provider"])
-        subject = {
-            "additional-info.txt": (
-                "Additional information needed to approve "
-                "your listing in the Green Web Directory."
-            ),
-            "pending-removal.txt": (
-                "Pending removal from the Green Web Directory due "
-                f"to questions around the green hosting of {obj.name}"
-            ),
-        }
+
+        support_message = SupportMessage.objects.get(pk=email_name)
+        message_type = support_message.category
+        message_body_template = dj_template.Template(support_message.body)
+        message_subject_template = dj_template.Template(support_message.subject)
+
         user = obj.user_set.all().first()
         email = None
 
@@ -254,32 +251,41 @@ class HostingAdmin(admin.ModelAdmin):
             messages.add_message(
                 request,
                 messages.WARNING,
-                "No user exists for this host, so you will need to add an email manually",
+                (
+                    "No user exists for this host, so you will need to "
+                    "add an email manually"
+                ),
             )
 
-        context = {
-            "host": obj,
-            "recipient": user,
-        }
+        context = dj_template.Context({"host": obj, "recipient": user})
 
-        message = render_to_string(email_template, context=context)
+        rendered_subject: str = message_subject_template.render(context)
+        rendered_message: str = message_body_template.render(context)
 
         cancel_link = reverse(
             "admin:" + get_admin_name(self.model, "change"), args=[obj.pk]
         )
+        send_email_url = reverse(
+            "greenweb_admin:accounts_hostingprovider_send_email", args=[obj.id]
+        )
+        logger.info(f"send_email_url - {send_email_url}")
+
+        prepopulated_form = forms.PreviewEmailForm(
+            initial={
+                "recipient": email or None,
+                "title": rendered_subject,
+                "body": rendered_message,
+                "message_type": message_type,
+                "provider": obj.id,
+            }
+        )
 
         context = {
-            "form": forms.PreviewEmailForm(
-                initial={
-                    "recipient": email or None,
-                    "title": subject[email_name],
-                    "body": message,
-                }
-            ),
+            "form": prepopulated_form,
+            "form_url": send_email_url,
             "cancel_link": cancel_link,
         }
 
-        # generate the form to use
         return render(request, "preview_email.html", context)
 
     def send_email(self, request, *args, **kwargs):
@@ -287,58 +293,22 @@ class HostingAdmin(admin.ModelAdmin):
         Send the given email, log the outbound request in the admin, and
         then tag with email sent
         """
-        email_name = request.GET.get("email")
-        email_template = f"emails/{email_name}"
-        redirect_name = "admin:" + get_admin_name(self.model, "change")
 
-        # greenweb_admin:accounts_hostingprovider_change
-        # /admin/accounts/hostingprovider/<path:object_id>/change/
+        subject = request.POST.get("title")
+        # TODO find a better way to go from a comma separated list
+        # to a list of email recipients
+        recipients = request.POST.get("recipient").split(",")
+        message = request.POST.get("body")
+        message_type = request.POST.get("message_type")
+        provider_id = request.POST.get("provider")
+        obj = Hostingprovider.objects.get(pk=provider_id)
 
-        # greenweb_admin:accounts_hostingprovider_send_email
-        # was
-        # /admin/accounts/hostingprovider/send_email/<provider>/
-
-        # should be like this instead, so we can preview and set the actual text in a session
-        # /admin/accounts/hostingprovider/<provider>/preview_email
-        # and this for sending the email properly
-        # /admin/accounts/hostingprovider/<provider>/send_email
-
-        # import ipdb
-
-        # ipdb.set_trace()
-
-        obj = Hostingprovider.objects.get(pk=kwargs["provider"])
-        subject = {
-            "additional-info.txt": (
-                "Additional information needed to approve "
-                "your listing in the Green Web Directory."
-            ),
-            "pending-removal.txt": (
-                "Pending removal from the Green Web Directory due "
-                f"to questions around the green hosting of {obj.name}"
-            ),
-        }
-        user = obj.user_set.all().first()
-        if not user:
-            messages.add_message(
-                request,
-                messages.WARNING,
-                "No user exists for this host, so no email was sent",
-            )
-            return redirect(redirect_name, obj.pk)
-        context = {
-            "host": obj,
-            "user": user,
-        }
-        message = render_to_string(email_template, context=context)
-        send_mail(
-            subject[email_name], message, settings.DEFAULT_FROM_EMAIL, [user.email]
-        )
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipients)
 
         messages.add_message(request, messages.INFO, "Email sent to user")
 
         HostingCommunication.objects.create(
-            template=email_template, hostingprovider=obj
+            template=message_type, hostingprovider=obj, message_content=message
         )
 
         name = "admin:" + get_admin_name(self.model, "change")
@@ -468,7 +438,7 @@ class HostingAdmin(admin.ModelAdmin):
                     ("archived", "showonwebsite", "customer",),
                     ("partner", "model"),
                     ("staff_labels",),
-                    ("email_template", "preview_email_button", "send_button"),
+                    ("email_template", "preview_email_button"),
                 )
             },
         )
@@ -548,7 +518,7 @@ class HostingAdmin(admin.ModelAdmin):
         link = f'<a href="{url}" class="sendEmail previewEmail">Preview email</a>'
         return link
 
-    preview_email_button.short_description = "Preview email"
+    preview_email_button.short_description = "Compose email"
 
     @mark_safe
     def html_website(self, obj):
@@ -738,6 +708,13 @@ class DatacenterAdmin(admin.ModelAdmin):
         return len(obj.hostingproviders.all())
 
     hostingproviders_amount.short_description = "Hosters"
+
+
+@admin.register(SupportMessage, site=greenweb_admin)
+class SupportMessageAdmin(admin.ModelAdmin):
+
+    # only staff should see this
+    pass
 
 
 greenweb_admin.register(Flag, FlagAdmin)
