@@ -308,6 +308,33 @@ class AbstractNote(TimeStampedModel):
         abstract = True
 
 
+class SupportMessage(TimeStampedModel):
+    """
+    A model to represent the different kind of support messages we use when
+    corresponding with providers and end users.
+    """
+
+    category = models.CharField(
+        max_length=255,
+        help_text="A category for this kind of message. For internal use",
+    )
+    subject = models.CharField(
+        max_length=255,
+        help_text=(
+            "The default subject of the email message. This is what "
+            "the user sees in their inbox"
+        ),
+    )
+    body = models.TextField(
+        help_text=(
+            "The default content of the message sent to the user. Supports markdown."
+        ),
+    )
+
+    def __str__(self):
+        return self.category
+
+
 class HostingProviderNote(AbstractNote):
     """
     A note model for information about a hosting provider.
@@ -355,6 +382,9 @@ class HostingCommunication(TimeStampedModel):
     hostingprovider = models.ForeignKey(
         Hostingprovider, null=True, on_delete=models.SET_NULL
     )
+    # a store of the outbound messages we send, so we have a record
+    # for future reference
+    message_content = models.TextField(blank=True)
 
 
 class HostingproviderDatacenter(models.Model):

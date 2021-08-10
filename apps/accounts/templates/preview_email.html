@@ -33,10 +33,13 @@ a.cancel {
 <p>Below is the email that will be sent to this hosting provider.</p>
 <p>You can make any last minute changes before sending, or choose cancel to return to the previous screen.</p>
 
-<form action="{{ form_url }}" method="post" class="email">
+<form action="{{ form_url }}" method="POST" class="email">
     {% csrf_token %}
     {{ form.url.errors }}
     {{ form.as_p }}
+    {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+    {% endfor %}
 
     <div class="submit-row">
 
