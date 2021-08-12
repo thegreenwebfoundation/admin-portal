@@ -52,7 +52,7 @@ def log_domain_safely(domain):
         pika.exceptions.AMQPConnectionError,
         dramatiq.errors.ConnectionClosed,
     ):
-        logger.error("RabbitMQ not available, not logging to RabbitMQ")
+        logger.warn("RabbitMQ not available, not logging to RabbitMQ")
     except Exception as err:
         logger.exception(f"Unexpected error of type {err}")
 
