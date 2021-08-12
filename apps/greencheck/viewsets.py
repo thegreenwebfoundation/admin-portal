@@ -43,6 +43,20 @@ redis_cache = redis.Redis(host="localhost", port=6379, db=0)
 checker = GreenDomainChecker()
 
 
+def log_domain_safely(domain):
+    from .tasks import process_log
+
+    try:
+        process_log.send(domain)
+    except (
+        pika.exceptions.AMQPConnectionError,
+        dramatiq.errors.ConnectionClosed,
+    ):
+        logger.error("RabbitMQ not available, not logging to RabbitMQ")
+    except Exception as err:
+        logger.exception(f"Unexpected error of type {err}")
+
+
 class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
     """
     The greencheck service to replicate the older PHP API for checking domains.
@@ -97,18 +111,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         Return the response we historically send when
         a check doesn't return a green result.
         """
-        from .tasks import process_log
 
         if log_check:
-            try:
-                process_log.send(domain)
-            except (
-                pika.exceptions.AMQPConnectionError,
-                dramatiq.errors.ConnectionClosed,
-            ):
-                logger.error("RabbitMQ not available")
-            except Exception as err:
-                logger.exception("Unexpected error")
+            log_domain_safely(domain)
         return response.Response({"green": False, "url": domain, "data": False})
 
     def return_green_response(self, instance, log_check=True):
@@ -116,10 +121,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         Return the response we historically made when returning
         a green result
         """
-        from .tasks import process_log
 
         if log_check:
-            process_log.send(instance.url)
+            log_domain_safely(instance.url)
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
 
@@ -128,10 +132,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         Return the response we historically made when returning
         a green result
         """
-        from .tasks import process_log
 
         if log_check:
-            process_log.send(instance.url)
+            log_domain_safely(instance.url)
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
 
@@ -155,11 +158,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
     def build_response_from_redis(self, domain):
         # try our cache first before hitting the database
-        from .tasks import process_log
-
         cache_hit = redis_cache.get(f"domain:{domain}")
         if cache_hit:
-            process_log.send(domain)
+            log_domain_safely(domain)
             return response.Response(json.loads(cache_hit))
 
     def clear_from_caches(self, domain):
