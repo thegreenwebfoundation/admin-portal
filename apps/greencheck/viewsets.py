@@ -2,6 +2,8 @@ import csv
 import logging
 import socket
 import json
+import pika
+import dramatiq
 from io import TextIOWrapper
 
 import tld
@@ -98,7 +100,15 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         from .tasks import process_log
 
         if log_check:
-            process_log.send(domain)
+            try:
+                process_log.send(domain)
+            except (
+                pika.exceptions.AMQPConnectionError,
+                dramatiq.errors.ConnectionClosed,
+            ):
+                logger.error("RabbitMQ not available")
+            except Exception as err:
+                logger.exception("Unexpected error")
         return response.Response({"green": False, "url": domain, "data": False})
 
     def return_green_response(self, instance, log_check=True):
