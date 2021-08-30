@@ -192,11 +192,26 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
         "modified",
     ]
 
-    actions = ["approve_selected"]
-
     list_display_links = None
     list_filter = [StatusIpFilter]
     readonly_fields = ["link"]
+
+    actions = ["approve_selected"]
+
+    def get_actions(self, request):
+        """
+        Return a list of the bulk actions the user should be able to do.
+        """
+        default_actions = super().get_actions(request)
+
+        # only staff users should be able to to bulk updates
+
+        if request.user and request.user.is_staff:
+
+            return default_actions
+        else:
+            del default_actions["approve_selected"]
+            return default_actions
 
     @admin.action(description="Approve selected green ip ranges")
     def approve_selected(self, request, queryset):
@@ -232,8 +247,15 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
         return approved_ips
 
     def get_queryset(self, request):
+
         qs = super().get_queryset(request)
         qs = qs.select_related("hostingprovider")
+
+        # only show a normal user's own requests
+        if not request.user.is_staff:
+            res = qs.filter(hostingprovider=request.user.hostingprovider)
+            return res
+
         return qs
 
     @mark_safe
