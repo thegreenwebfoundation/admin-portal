@@ -1,4 +1,5 @@
 import pytest
+import markdown
 from django import urls
 
 from .. import admin as ac_admin
@@ -133,3 +134,164 @@ class TestDatacenterAdmin:
 
         assert ac_admin.DatacenterNoteInline not in inlines
 
+
+class TestHostingProviderAdmin:
+    """
+    A test class for testing we can access the hosting provider
+    page use the custom features
+    """
+
+    def test_visit_admin_create_page_for_user(
+        self, db, client, sample_hoster_user, default_user_groups
+    ):
+        """
+        Sign in, and visit new hosting page.
+        Simulate the journey for a new user visiting the page to
+        create a hosting provider
+        """
+        admin_grp, provider_grp = default_user_groups
+        sample_hoster_user.save()
+        sample_hoster_user.groups.add(provider_grp)
+        sample_hoster_user.save()
+        provider_grp.save()
+        client.force_login(sample_hoster_user)
+
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
+        resp = client.get(admin_url)
+        assert resp.status_code == 200
+
+    def test_visit_admin_create_for_user_with_one_provider(
+        self, db, client, hosting_provider_with_sample_user, default_user_groups
+    ):
+        """
+        Simulate the journey for a user visiting the page to create
+        a second hosting provider
+        """
+        admin_grp, provider_grp = default_user_groups
+        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
+        sample_hoster_user.save()
+        sample_hoster_user.groups.add(provider_grp)
+        sample_hoster_user.save()
+        provider_grp.save()
+        client.force_login(sample_hoster_user)
+
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
+        resp = client.get(admin_url)
+        assert resp.status_code == 200
+
+    def test_visit_admin_change_page_for_user_with_one_provider(
+        self, db, client, hosting_provider_with_sample_user, default_user_groups
+    ):
+        """
+        Simulate the user visiting a page to update their own provider
+        """
+        admin_grp, provider_grp = default_user_groups
+        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
+        sample_hoster_user.save()
+        sample_hoster_user.groups.add(provider_grp)
+        sample_hoster_user.save()
+        provider_grp.save()
+        client.force_login(sample_hoster_user)
+        admin_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_change",
+            args=[hosting_provider_with_sample_user.id],
+        )
+        resp = client.get(admin_url)
+        assert resp.status_code == 200
+
+    def test_preview_email_page_for_user_with_provider(
+        self, db, client, hosting_provider_with_sample_user, default_user_groups
+    ):
+        """
+        Test that we can visit an email preview page from the a provider admin page
+        """
+
+        # log in
+
+        # make sure we have one email template to refer to
+        msg = ac_models.SupportMessage.objects.create(
+            category="welcome-email",
+            subject="hello, {{user}}",
+            body="""
+                Some content here, including the {{ user }}
+            """,
+        )
+
+        # choose the correct preview page
+        # greenweb_admin:accounts_hostingprovider_preview_email
+        # http://localhost:8000/admin/accounts/hostingprovider/792/preview_email?email=1
+        admin_grp, provider_grp = default_user_groups
+        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
+        sample_hoster_user.save()
+        sample_hoster_user.groups.add(provider_grp)
+        sample_hoster_user.save()
+        provider_grp.save()
+        client.force_login(sample_hoster_user)
+        admin_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_preview_email",
+            args=[hosting_provider_with_sample_user.id],
+        )
+        resp = client.get(admin_url, {"email": msg.id})
+        assert resp.status_code == 200
+
+        # TODO check that we have our host and user present in the form
+
+    @pytest.mark.only
+    def test_send_created_email_for_user_with_provider(
+        self,
+        db,
+        client,
+        hosting_provider_with_sample_user,
+        default_user_groups,
+        mailoutbox,
+    ):
+        """Test that an email can be sent with the information we submit in the form"""
+
+        # create template email
+        msg = ac_models.SupportMessage.objects.create(
+            category="welcome-email",
+            subject="hello, {{user}}",
+            body="""
+                Some content here, including the {{ user }}
+            """,
+        )
+
+        admin_grp, provider_grp = default_user_groups
+        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
+        sample_hoster_user.save()
+        sample_hoster_user.groups.add(provider_grp)
+        sample_hoster_user.save()
+        provider_grp.save()
+        client.force_login(sample_hoster_user)
+        admin_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_send_email",
+            args=[hosting_provider_with_sample_user.id],
+        )
+
+        resp = client.post(
+            admin_url,
+            {
+                "title": "A sample email subject",
+                "recipient": [sample_hoster_user.email],
+                "body": "Some content goes here",
+                "message_type": msg.category,
+                "provider": hosting_provider_with_sample_user.id,
+            },
+            follow=True,
+        )
+        assert resp.status_code == 200
+
+        # check email exists
+        assert len(mailoutbox) == 1
+        eml = mailoutbox[0]
+
+        # check our email looks how we expect
+        assert eml.body == "Some content goes here"
+        assert eml.subject == "A sample email subject"
+
+        # do we have the markdown representation too?
+        html_alternative, *rest = [
+            message for message in eml.alternatives if message[1] == "text/html"
+        ]
+
+        assert html_alternative[0] == markdown.markdown("Some content goes here")

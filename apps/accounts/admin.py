@@ -18,6 +18,7 @@ from apps.greencheck.admin import (
 )
 from taggit.models import Tag
 import logging
+import markdown
 
 from dal_select2 import views as dal_select2_views
 
@@ -299,11 +300,18 @@ class HostingAdmin(admin.ModelAdmin):
         # to a list of email recipients
         recipients = request.POST.get("recipient").split(",")
         message = request.POST.get("body")
+        message_mkdn = markdown.markdown(message)
         message_type = request.POST.get("message_type")
         provider_id = request.POST.get("provider")
         obj = Hostingprovider.objects.get(pk=provider_id)
 
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipients)
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            recipients,
+            html_message=message_mkdn,
+        )
 
         messages.add_message(request, messages.INFO, "Email sent to user")
 

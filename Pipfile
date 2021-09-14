@@ -49,8 +49,6 @@ djangorestframework-csv = "*"
 pyyaml = "*"
 uritemplate = "*"
 drf-yasg = "*"
-awscli = "*"
-awscli-plugin-endpoint = "*"
 boto3 = "*"
 ipwhois = "*"
 django-cors-headers = "*"
@@ -69,6 +67,7 @@ django-storages = "*"
 django-taggit-serializer = "*"
 # https://github.com/yourlabs/django-autocomplete-light/issues/1248
 django-autocomplete-light = "==3.8.2"
+markdown = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
