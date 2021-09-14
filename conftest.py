@@ -28,6 +28,16 @@ def sample_hoster_user(default_user_groups):
 
 
 @pytest.fixture
+def sample_user(default_user_groups):
+    u = UserFactory.build(username="joebloggs", email="joe@example.com")
+    u.set_password("topSekrit")
+    admin, hostingprovider = default_user_groups
+    u.save()
+
+    return u
+
+
+@pytest.fixture
 def default_user_groups():
     """
     Set up the different groups we assume a user can
