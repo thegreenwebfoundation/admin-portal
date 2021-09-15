@@ -542,16 +542,18 @@ class HostingAdmin(admin.ModelAdmin):
         )
 
         admin_editable = (
-            "Admin only",
-            {
-                "fields": (
-                    ("archived", "showonwebsite", "customer",),
-                    ("partner", "model"),
-                    ("staff_labels",),
-                    ("email_template", "preview_email_button"),
-                    ("start_csv_import_button"),
-                )
-            },
+            (
+                "Admin only",
+                {
+                    "fields": (
+                        ("archived", "showonwebsite", "customer",),
+                        ("partner", "model"),
+                        ("staff_labels",),
+                        ("email_template", "preview_email_button"),
+                        ("start_csv_import_button"),
+                    )
+                },
+            ),
         )
 
         if request.user.is_staff:
@@ -634,6 +636,7 @@ class HostingAdmin(admin.ModelAdmin):
 
     preview_email_button.short_description = "Support Messages"
 
+    @mark_safe
     def start_csv_import_button(self, obj):
         """
         Create clickable link to begin process of bulk import
