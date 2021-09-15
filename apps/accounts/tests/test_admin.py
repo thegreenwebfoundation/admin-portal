@@ -1,7 +1,9 @@
+from apps.accounts.models.hosting import Hostingprovider
+from typing import List
 import pytest
 import markdown
 from django import urls
-
+from django.contrib.auth import models as auth_models
 from .. import admin as ac_admin
 from .. import admin_site
 from .. import models as ac_models
@@ -140,6 +142,20 @@ class TestHostingProviderAdmin:
     A test class for testing we can access the hosting provider
     page use the custom features
     """
+
+    def _setup_hosting_provider(
+        self, provider: Hostingprovider, default_user_groups: List[auth_models.Group]
+    ) -> List:
+        """
+        Accept a  user linked to this provider with the correct groups
+        """
+        admin_grp, provider_grp = default_user_groups
+        provider_user = provider.user_set.first()
+        provider_user.save()
+        provider_user.groups.add(provider_grp)
+        provider_user.save()
+        provider_grp.save()
+        return [provider, provider_user]
 
     def test_visit_admin_create_page_for_user(
         self, db, client, sample_hoster_user, default_user_groups
@@ -315,34 +331,30 @@ class TestHostingProviderAdmin:
                 Some content here, including the {{ user }}
             """,
         )
+        provider, provider_user = self._setup_hosting_provider(
+            hosting_provider_with_sample_user, default_user_groups
+        )
 
-        admin_grp, provider_grp = default_user_groups
-        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
-        sample_hoster_user.save()
-        sample_hoster_user.groups.add(provider_grp)
-        sample_hoster_user.save()
-        provider_grp.save()
-        client.force_login(sample_hoster_user)
+        client.force_login(provider_user)
         admin_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_send_email",
-            args=[hosting_provider_with_sample_user.id],
+            "greenweb_admin:accounts_hostingprovider_send_email", args=[provider.id],
         )
 
         resp = client.post(
             admin_url,
             {
                 "title": "A sample email subject",
-                "recipient": [sample_hoster_user.email],
+                "recipient": [provider_user.email],
                 "body": "Some content goes here",
                 "message_type": msg.category,
-                "provider": hosting_provider_with_sample_user.id,
+                "provider": provider.id,
             },
             follow=True,
         )
         assert resp.status_code == 200
 
         # check that we have our note for this provider
-        labels = hosting_provider_with_sample_user.staff_labels.all()
+        labels = provider.staff_labels.all()
         assert len(labels) == 1
         assert labels[0].name == "welcome-email sent"
 
