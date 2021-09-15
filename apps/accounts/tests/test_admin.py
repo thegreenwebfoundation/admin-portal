@@ -295,3 +295,54 @@ class TestHostingProviderAdmin:
         ]
 
         assert html_alternative[0] == markdown.markdown("Some content goes here")
+
+    @pytest.mark.only
+    def test_log_created_email_for_user_with_provider_as_note(
+        self,
+        db,
+        client,
+        hosting_provider_with_sample_user,
+        default_user_groups,
+        mailoutbox,
+    ):
+        """Test that an email can be sent with the information we submit in the form"""
+
+        # create template email
+        msg = ac_models.SupportMessage.objects.create(
+            category="welcome-email",
+            subject="hello, {{user}}",
+            body="""
+                Some content here, including the {{ user }}
+            """,
+        )
+
+        admin_grp, provider_grp = default_user_groups
+        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
+        sample_hoster_user.save()
+        sample_hoster_user.groups.add(provider_grp)
+        sample_hoster_user.save()
+        provider_grp.save()
+        client.force_login(sample_hoster_user)
+        admin_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_send_email",
+            args=[hosting_provider_with_sample_user.id],
+        )
+
+        resp = client.post(
+            admin_url,
+            {
+                "title": "A sample email subject",
+                "recipient": [sample_hoster_user.email],
+                "body": "Some content goes here",
+                "message_type": msg.category,
+                "provider": hosting_provider_with_sample_user.id,
+            },
+            follow=True,
+        )
+        assert resp.status_code == 200
+
+        # check that we have our note for this provider
+        labels = hosting_provider_with_sample_user.staff_labels.all()
+        assert len(labels) == 1
+        assert labels[0].name == "welcome-email sent"
+
