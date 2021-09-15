@@ -151,12 +151,7 @@ class ProviderLabel(tag_models.TaggedItemBase):
     to help us categorise and segment providers.
     """
 
-    content_object = models.ForeignKey(
-        "Hostingprovider",
-        on_delete=models.CASCADE,
-        related_name="labels",
-        related_query_name="label",
-    )
+    content_object = models.ForeignKey("Hostingprovider", on_delete=models.CASCADE,)
     tag = models.ForeignKey(
         Label, related_name="%(app_label)s_%(class)s_items", on_delete=models.CASCADE,
     )
@@ -182,13 +177,14 @@ class Hostingprovider(models.Model):
         help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
         blank=True,
     )
-    # this should not be exposed publicly
+    # this should not be exposed publicly to end users.
+    # It's for internal use
     staff_labels = TaggableManager(
         verbose_name="Staff labels",
         help_text=(
             "Labels to apply to providers to make it easier to flag for follow up "
             "by staff or other categorisation to support internal admin. "
-            "Internally facing.",
+            "Internally facing."
         ),
         through=ProviderLabel,
         blank=True,

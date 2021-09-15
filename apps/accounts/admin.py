@@ -222,7 +222,7 @@ class HostingAdmin(admin.ModelAdmin):
     ]
     # these are not really fields, but buttons
     # see the corresponding methods
-    readonly_fields = ["preview_email_button", "send_button"]
+    readonly_fields = ["preview_email_button"]
     ordering = ("name",)
 
     # Factories
@@ -296,8 +296,6 @@ class HostingAdmin(admin.ModelAdmin):
         """
 
         subject = request.POST.get("title")
-        # TODO find a better way to go from a comma separated list
-        # to a list of email recipients
         recipients = request.POST.get("recipient").split(",")
         message = request.POST.get("body")
         message_mkdn = markdown.markdown(message)
@@ -315,9 +313,19 @@ class HostingAdmin(admin.ModelAdmin):
 
         messages.add_message(request, messages.INFO, "Email sent to user")
 
+        # add hosting provider note, so we have a record of
+        # sending the request
+        HostingProviderNote.objects.create(
+            added_by=request.user, body_text=message, provider=obj
+        )
+
+        # TODO: is this needed any more?
         HostingCommunication.objects.create(
             template=message_type, hostingprovider=obj, message_content=message
         )
+        # add our internal label, so we know when they were last contacted
+        # and we don't keep sending requests
+        obj.staff_labels.add(f"{message_type} sent")
 
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.pk)
@@ -523,10 +531,10 @@ class HostingAdmin(admin.ModelAdmin):
         url = reverse_admin_name(
             Hostingprovider, name="preview_email", kwargs={"provider": obj.pk},
         )
-        link = f'<a href="{url}" class="sendEmail previewEmail">Preview email</a>'
+        link = f'<a href="{url}" class="sendEmail">Compose message</a>'
         return link
 
-    preview_email_button.short_description = "Compose email"
+    preview_email_button.short_description = "Support Messages"
 
     @mark_safe
     def html_website(self, obj):
