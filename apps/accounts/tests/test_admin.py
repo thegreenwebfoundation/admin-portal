@@ -183,13 +183,11 @@ class TestHostingProviderAdmin:
         Simulate the journey for a user visiting the page to create
         a second hosting provider
         """
-        admin_grp, provider_grp = default_user_groups
-        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
-        sample_hoster_user.save()
-        sample_hoster_user.groups.add(provider_grp)
-        sample_hoster_user.save()
-        provider_grp.save()
-        client.force_login(sample_hoster_user)
+        provider, provider_user = self._setup_hosting_provider(
+            hosting_provider_with_sample_user, default_user_groups
+        )
+
+        client.force_login(provider_user)
 
         admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
         resp = client.get(admin_url)
@@ -201,16 +199,14 @@ class TestHostingProviderAdmin:
         """
         Simulate the user visiting a page to update their own provider
         """
-        admin_grp, provider_grp = default_user_groups
-        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
-        sample_hoster_user.save()
-        sample_hoster_user.groups.add(provider_grp)
-        sample_hoster_user.save()
-        provider_grp.save()
-        client.force_login(sample_hoster_user)
+        provider, provider_user = self._setup_hosting_provider(
+            hosting_provider_with_sample_user, default_user_groups
+        )
+
+        client.force_login(provider_user)
+
         admin_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_change",
-            args=[hosting_provider_with_sample_user.id],
+            "greenweb_admin:accounts_hostingprovider_change", args=[provider.id],
         )
         resp = client.get(admin_url)
         assert resp.status_code == 200
@@ -222,8 +218,6 @@ class TestHostingProviderAdmin:
         Test that we can visit an email preview page from the a provider admin page
         """
 
-        # log in
-
         # make sure we have one email template to refer to
         msg = ac_models.SupportMessage.objects.create(
             category="welcome-email",
@@ -233,26 +227,19 @@ class TestHostingProviderAdmin:
             """,
         )
 
-        # choose the correct preview page
-        # greenweb_admin:accounts_hostingprovider_preview_email
-        # http://localhost:8000/admin/accounts/hostingprovider/792/preview_email?email=1
-        admin_grp, provider_grp = default_user_groups
-        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
-        sample_hoster_user.save()
-        sample_hoster_user.groups.add(provider_grp)
-        sample_hoster_user.save()
-        provider_grp.save()
-        client.force_login(sample_hoster_user)
+        provider, provider_user = self._setup_hosting_provider(
+            hosting_provider_with_sample_user, default_user_groups
+        )
+
+        client.force_login(provider_user)
         admin_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_preview_email",
-            args=[hosting_provider_with_sample_user.id],
+            "greenweb_admin:accounts_hostingprovider_preview_email", args=[provider.id],
         )
         resp = client.get(admin_url, {"email": msg.id})
         assert resp.status_code == 200
 
         # TODO check that we have our host and user present in the form
 
-    @pytest.mark.only
     def test_send_created_email_for_user_with_provider(
         self,
         db,
@@ -271,27 +258,23 @@ class TestHostingProviderAdmin:
                 Some content here, including the {{ user }}
             """,
         )
+        provider, provider_user = self._setup_hosting_provider(
+            hosting_provider_with_sample_user, default_user_groups
+        )
 
-        admin_grp, provider_grp = default_user_groups
-        sample_hoster_user = hosting_provider_with_sample_user.user_set.first()
-        sample_hoster_user.save()
-        sample_hoster_user.groups.add(provider_grp)
-        sample_hoster_user.save()
-        provider_grp.save()
-        client.force_login(sample_hoster_user)
+        client.force_login(provider_user)
         admin_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_send_email",
-            args=[hosting_provider_with_sample_user.id],
+            "greenweb_admin:accounts_hostingprovider_send_email", args=[provider.id],
         )
 
         resp = client.post(
             admin_url,
             {
                 "title": "A sample email subject",
-                "recipient": [sample_hoster_user.email],
+                "recipient": [provider_user.email],
                 "body": "Some content goes here",
                 "message_type": msg.category,
-                "provider": hosting_provider_with_sample_user.id,
+                "provider": provider.id,
             },
             follow=True,
         )
@@ -312,7 +295,6 @@ class TestHostingProviderAdmin:
 
         assert html_alternative[0] == markdown.markdown("Some content goes here")
 
-    @pytest.mark.only
     def test_log_created_email_for_user_with_provider_as_note(
         self,
         db,
