@@ -62,7 +62,6 @@ class TestCarbonTxtParser:
 
         # now check for the domains
         res = gc_models.GreenDomain.check_for_domain("www.hillbob.de")
-        rich.inspect(res)
         provider = ac_models.Hostingprovider.objects.get(id=res.hosted_by_id)
 
         # do we have a green result?
@@ -79,12 +78,21 @@ class TestCarbonTxtParser:
 
         # now check for the domains
         res = gc_models.GreenDomain.check_for_domain("valleytrek.co.uk")
-        rich.inspect(res)
         provider = ac_models.Hostingprovider.objects.get(id=res.hosted_by_id)
 
         # do we have a green result?
         assert res.green == True
         assert res.hosted_by_id == provider.id
+
+    @pytest.mark.only
+    def test_import_from_remote_carbon_text_file(self, db):
+        psr = carbon_txt.CarbonTxtParser()
+        result = psr.import_from_url("https://www.bergfreunde.it/carbon.txt")
+
+        providers = ac_models.Hostingprovider.objects.all()
+        assert len(providers) == 16
+        assert len(result["upstream"]["providers"]) == 2
+        assert len(result["org"]["providers"]) == 14
 
     @pytest.mark.skip(reason="pending")
     def test_creation_of_corporate_grouping(self):
@@ -98,7 +106,6 @@ class TestCarbonTxtParser:
     def test_referencing_corporate_grouping(self):
         """
         After parsing a carbon.txt file, can checking an alternative domain
-        areer able to refer to the corporate grouping from the alternative domain
-        too?
+        refer to the correct corporate grouping too?
         """
         pass

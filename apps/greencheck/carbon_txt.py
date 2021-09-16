@@ -3,6 +3,8 @@ from typing import Dict, Set, List
 import toml
 import rich
 import logging
+import requests
+from urllib import parse
 
 from dateutil import relativedelta
 
@@ -126,3 +128,15 @@ class CarbonTxtParser:
             "upstream": {"providers": [*upstream_providers]},
             "org": {"providers": [*org_providers]},
         }
+
+    def import_from_url(self, url: str):
+        """
+        Try to fetch a carbon.txt file at a given url, and
+        if successful, import the carbon.text file
+        """
+        res = requests.get(url)
+        domain = parse.urlparse(url).netloc
+        carbon_txt_string = res.content.decode("utf-8")
+
+        return self.parse_and_import(domain, carbon_txt_string)
+
