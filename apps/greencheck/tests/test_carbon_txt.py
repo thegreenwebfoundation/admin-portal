@@ -1,10 +1,24 @@
 import ipdb
 import pytest
 import pathlib
-
+import rich
 
 from .. import carbon_txt
 from ...accounts import models as ac_models
+from .. import models as gc_models
+
+
+@pytest.fixture
+def carbon_txt_string():
+    pth = pathlib.Path(__file__)
+
+    carbon_txt_path = pth.parent / "carbon-txt-test.toml"
+
+    carbon_txt_string = None
+    with open(carbon_txt_path) as carb_file:
+        carbon_txt_string = carb_file.read()
+
+    return carbon_txt_string
 
 
 class TestCarbonTxtParser:
@@ -12,27 +26,19 @@ class TestCarbonTxtParser:
     First tests to check that we can parse the carbon.txt file
     """
 
-    @pytest.mark.only
-    def test_parse_basic_provider(self, db):
+    def test_parse_basic_provider(self, db, carbon_txt_string):
         """
         Has this created the necessary organisations?
         i.e. one hosting provider and the two upstream providers?
         And do they have the supporting info?
         """
-        pth = pathlib.Path(__file__)
-
-        carbon_txt_path = pth.parent / "carbon-txt-test.toml"
-
-        carbon_txt_string = None
-        with open(carbon_txt_path) as carb_file:
-            carbon_txt_string = carb_file.read()
 
         psr = carbon_txt.CarbonTxtParser()
-
-        result = psr.parse_and_import("www.bergfreunde.de", carbon_txt_string)
+        result = psr.parse_and_import("www.hillbob.de", carbon_txt_string)
 
         # do we have the 16 providers listed now?
         providers = ac_models.Hostingprovider.objects.all()
+
         assert len(providers) == 16
         assert len(result["upstream"]["providers"]) == 2
         assert len(result["org"]["providers"]) == 14
@@ -46,19 +52,39 @@ class TestCarbonTxtParser:
             # from the carbon txt file?
             assert prov.supporting_documents.all()
 
-    @pytest.mark.skip(reason="pending")
-    def test_check_after_parsing_provider_txt_file(self):
+    @pytest.mark.only
+    def test_check_after_parsing_provider_txt_file(self, db, carbon_txt_string):
         """
         Does a check against the domain return a positive result?
         """
-        pass
+        psr = carbon_txt.CarbonTxtParser()
+        psr.parse_and_import("www.hillbob.de", carbon_txt_string)
 
-    @pytest.mark.skip(reason="pending")
-    def test_check_with_alternative_domain(self):
+        # now check for the domains
+        res = gc_models.GreenDomain.check_for_domain("www.hillbob.de")
+        rich.inspect(res)
+        provider = ac_models.Hostingprovider.objects.get(id=res.hosted_by_id)
+
+        # do we have a green result?
+        assert res.green == True
+        assert res.hosted_by_id == provider.id
+
+    @pytest.mark.only
+    def test_check_with_alternative_domain(self, db, carbon_txt_string):
         """
         Does a check against the domain return a positive result?
         """
-        pass
+        psr = carbon_txt.CarbonTxtParser()
+        psr.parse_and_import("www.hillbob.de", carbon_txt_string)
+
+        # now check for the domains
+        res = gc_models.GreenDomain.check_for_domain("valleytrek.co.uk")
+        rich.inspect(res)
+        provider = ac_models.Hostingprovider.objects.get(id=res.hosted_by_id)
+
+        # do we have a green result?
+        assert res.green == True
+        assert res.hosted_by_id == provider.id
 
     @pytest.mark.skip(reason="pending")
     def test_creation_of_corporate_grouping(self):
