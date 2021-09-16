@@ -8,6 +8,7 @@ from dateutil import relativedelta
 
 from django.utils import timezone
 from ..accounts import models as ac_models
+from . import models as gc_models
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,18 @@ class CarbonTxtParser:
                 )
                 logger.info(f"New supporting doc {doc} for {prov}")
 
+            res = gc_models.GreenDomain.objects.filter(url=provider["domain"]).first()
+            if not res:
+                gc_models.GreenDomain.objects.create(
+                    url=provider["domain"],
+                    hosted_by=prov.name,
+                    hosted_by_id=prov.id,
+                    hosted_by_website=prov.website,
+                    partner=prov.partner,
+                    modified=timezone.now(),
+                    green=True,
+                )
+
         # given a parsed carbon.txt object,  fetch the listed organisation
         org_domains = set()
 
@@ -99,6 +112,18 @@ class CarbonTxtParser:
                         valid_to=timezone.now() + relativedelta.relativedelta(years=1),
                     )
                     logger.info(f"New supporting doc {doc} for {prov}")
+
+            res = gc_models.GreenDomain.objects.filter(url=org["domain"]).first()
+            if not res:
+                gc_models.GreenDomain.objects.create(
+                    url=org["domain"],
+                    hosted_by=prov.name,
+                    hosted_by_id=prov.id,
+                    hosted_by_website=prov.website,
+                    partner=prov.partner,
+                    modified=timezone.now(),
+                    green=True,
+                )
 
             org_domains.add(org["domain"])
 
