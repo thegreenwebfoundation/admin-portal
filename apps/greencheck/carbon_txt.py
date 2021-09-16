@@ -1,4 +1,5 @@
-from typing import Dict
+from apps.accounts.models.hosting import Hostingprovider
+from typing import Dict, Set, List
 import toml
 import rich
 import logging
@@ -19,6 +20,60 @@ class CarbonTxtParser:
     we can use for updating information about provider organisations in
     the green web database.
     """
+
+    def _create_provider(self, provider_dict: dict, provider_set: Set) -> List:
+        """
+        Create a hosting provider from the provider dict passed
+        in, and return a dict of the created hosting provider, and
+        updated provider set
+        """
+        prov, created = ac_models.Hostingprovider.objects.get_or_create(
+            website=provider_dict["domain"]
+        )
+        if not prov.name:
+            prov.name = provider_dict["domain"]
+        if prov not in provider_set:
+            provider_set.add(prov)
+        SupportingDoc = ac_models.HostingProviderSupportingDocument
+
+        found_docs = SupportingDoc.objects.filter(
+            hostingprovider=prov, url=provider_dict["url"]
+        )
+        doc = None
+
+        if found_docs:
+            doc = found_docs[0]
+
+        if not found_docs:
+            title = f"{provider_dict['domain']} - {provider_dict['doctype']}"
+            doc = SupportingDoc.objects.create(
+                url=provider_dict["url"],
+                hostingprovider=prov,
+                title=title,
+                valid_from=timezone.now(),
+                valid_to=timezone.now() + relativedelta.relativedelta(years=1),
+            )
+            logger.info(f"New supporting doc {doc} for {prov}")
+
+        # rich.inspect({"provider": prov, "provider_set": provider_set})
+
+        return [prov, provider_set]
+
+    def _create_green_domain_for_provider(
+        self, provider_dict: dict, provider: Hostingprovider
+    ):
+        """
+        Create a Greendomain to match the newly created hosting provider
+        """
+        gc_models.GreenDomain.objects.create(
+            url=provider_dict["domain"],
+            hosted_by=provider.name,
+            hosted_by_id=provider.id,
+            hosted_by_website=provider.website,
+            partner=provider.partner,
+            modified=timezone.now(),
+            green=True,
+        )
 
     def parse_and_import(self, domain: str = None, carbon_txt: str = None) -> Dict:
         """
@@ -42,88 +97,25 @@ class CarbonTxtParser:
         # given a parsed carbon.txt object,
         # fetch the upstream providers
         for provider in providers:
-            prov, created = ac_models.Hostingprovider.objects.get_or_create(
-                website=provider["domain"]
+
+            prov, upstream_providers = self._create_provider(
+                provider, upstream_providers
             )
-            if not prov.name:
-                prov.name = provider["domain"]
-            if prov not in upstream_providers:
-                upstream_providers.add(prov)
-            SupportingDoc = ac_models.HostingProviderSupportingDocument
-
-            found_docs = SupportingDoc.objects.filter(
-                hostingprovider=prov, url=provider["url"]
-            )
-            doc = None
-
-            if found_docs:
-                doc = found_docs[0]
-
-            if not found_docs:
-                title = f"{provider['domain']} - {provider['doctype']}"
-                doc = SupportingDoc.objects.create(
-                    url=provider["url"],
-                    hostingprovider=prov,
-                    title=title,
-                    valid_from=timezone.now(),
-                    valid_to=timezone.now() + relativedelta.relativedelta(years=1),
-                )
-                logger.info(f"New supporting doc {doc} for {prov}")
 
             res = gc_models.GreenDomain.objects.filter(url=provider["domain"]).first()
             if not res:
-                gc_models.GreenDomain.objects.create(
-                    url=provider["domain"],
-                    hosted_by=prov.name,
-                    hosted_by_id=prov.id,
-                    hosted_by_website=prov.website,
-                    partner=prov.partner,
-                    modified=timezone.now(),
-                    green=True,
-                )
+                self._create_green_domain_for_provider(provider, prov)
 
         # given a parsed carbon.txt object,  fetch the listed organisation
         org_domains = set()
 
         for org in org_creds:
             if org["domain"] not in org_domains:
-                prov, created = ac_models.Hostingprovider.objects.get_or_create(
-                    website=org["domain"]
-                )
-                if not prov.name:
-                    prov.name = org["domain"]
-                org_providers.add(prov)
-
-                found_docs = SupportingDoc.objects.filter(
-                    hostingprovider=prov, url=provider["url"]
-                )
-                doc = None
-
-                if found_docs:
-                    doc = found_docs[0]
-
-                if not found_docs:
-                    title = f"{org['domain']} - {org['doctype']}"
-                    doc = SupportingDoc.objects.create(
-                        url=org["url"],
-                        hostingprovider=prov,
-                        title=title,
-                        valid_from=timezone.now(),
-                        valid_to=timezone.now() + relativedelta.relativedelta(years=1),
-                    )
-                    logger.info(f"New supporting doc {doc} for {prov}")
+                prov, org_providers = self._create_provider(org, org_providers)
 
             res = gc_models.GreenDomain.objects.filter(url=org["domain"]).first()
             if not res:
-                gc_models.GreenDomain.objects.create(
-                    url=org["domain"],
-                    hosted_by=prov.name,
-                    hosted_by_id=prov.id,
-                    hosted_by_website=prov.website,
-                    partner=prov.partner,
-                    modified=timezone.now(),
-                    green=True,
-                )
+                self._create_green_domain_for_provider(org, prov)
 
             org_domains.add(org["domain"])
 
