@@ -1,0 +1,25 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+
+{% block pretitle %}
+<h1>Enter the URL of the carbon.txt to see a preview of what it would import</h1>
+{% endblock %}
+
+{% block content %}
+<form action="{{ form_url }}" method="post">
+    {% csrf_token %}
+    {{ form.url.errors }}
+    <label for="{{ form.url.id_for_label }}">Url: </label>
+    {{ form.url }}
+    <input type="submit" value="Submit"
+        style="margin-top: 0px; padding: 6px 15px">
+</form>
+
+{% if parsed_carbon_txt %}
+<div>
+    <h2>Here's where you see what would happen</h2>
+</div>
+{% endif %}
+
+{% endblock content %}

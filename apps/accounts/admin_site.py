@@ -59,6 +59,30 @@ class CheckUrlView(FormView):
         return render(self.request, self.template_name, context)
 
 
+class CarbonTxtCheckForm(forms.Form):
+    """
+    A form to fetch a carbon.txt file at the provided URL, parse it,
+    and show what changes would be made if imported.
+    """
+
+    url = forms.URLField()
+
+
+class CarbonTxtCheckView(FormView):
+    template_name = "accounts/preview_carbon_txt.html"
+    form_class = CarbonTxtCheckForm
+    success_url = "/not/used"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form_url"] = reverse("admin:preview_carbon_txt")
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        return render(self.request, self.template_name, context)
+
+
 class GreenWebAdmin(AdminSite):
     # This is a standard authentication form that allows non-staff users
     login_form = AuthenticationForm
@@ -80,6 +104,11 @@ class GreenWebAdmin(AdminSite):
         patterns = [
             path("try_out/", CheckUrlView.as_view(), name="check_url"),
             path("green-urls", GreenUrlsView.as_view(), name="green_urls"),
+            path(
+                "preview-carbon-txt",
+                CarbonTxtCheckView.as_view(),
+                name="preview_carbon_txt",
+            ),
         ]
         return patterns + urls
 
@@ -95,6 +124,19 @@ class GreenWebAdmin(AdminSite):
                         "name": "Try out a url",
                         "object_name": "greencheck_url",
                         "admin_url": reverse("admin:check_url"),
+                        "view_only": True,
+                    }
+                ],
+            },
+            {
+                "name": "Preview a carbon.txt file",
+                "app_label": "greencheck",
+                "app_url": reverse("admin:preview_carbon_txt"),
+                "models": [
+                    {
+                        "name": "Preview a carbontxt file",
+                        "object_name": "greencheck_url",
+                        "admin_url": reverse("admin:preview_carbon_txt"),
                         "view_only": True,
                     }
                 ],
