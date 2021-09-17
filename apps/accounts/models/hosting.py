@@ -26,6 +26,8 @@ from apps.greencheck.choices import StatusApproval
 
 logger = logging.getLogger(__name__)
 
+GREEN_VIA_CARBON_TXT = "green:carbontxt"
+
 
 class Datacenter(models.Model):
     country = CountryField(db_column="countrydomain")
@@ -219,6 +221,14 @@ class Hostingprovider(models.Model):
             return True
 
         return False
+
+    def counts_as_green(self):
+        """
+        A convenience check, provide a simple to let us avoid
+        needing to implement the logic for determining
+        if a provider counts as green in multiple places
+        """
+        return GREEN_VIA_CARBON_TXT in self.staff_labels.names()
 
     def outstanding_approval_requests(self):
         """

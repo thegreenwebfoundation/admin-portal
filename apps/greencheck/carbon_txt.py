@@ -80,6 +80,8 @@ class CarbonTxtParser:
             modified=timezone.now(),
             green=True,
         )
+        # mark it as green using our label
+        provider.staff_labels.add(ac_models.GREEN_VIA_CARBON_TXT)
 
     def parse_and_import(self, domain: str = None, carbon_txt: str = None) -> Dict:
         """

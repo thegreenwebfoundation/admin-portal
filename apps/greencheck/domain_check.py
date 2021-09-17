@@ -134,7 +134,39 @@ class GreenDomainChecker:
             data=False,
             green=False,
             hosting_provider_id=None,
-            match_type=None,
+            match_type="ip",
+            match_ip_range=None,
+            cached=False,
+            checked_at=timezone.now(),
+        )
+
+    def check_via_carbon_txt(self, domain):
+        """
+        Check against existing set of providers with info
+        provided via carbon.txt.
+        """
+        try:
+            green_domain = GreenDomain.objects.get(url=domain)
+            provider = green_domain.hosting_provider
+            if provider.counts_as_green():
+                return green_domain
+        except GreenDomain.DoesNotExist:
+            return None
+
+    def green_sitecheck_by_carbontxt(
+        self, domain: str, matching_green_domain: GreenDomain
+    ):
+        """
+        Return a green site check, based the information we
+        are showing via a carbon.txt lookup
+        """
+        return SiteCheck(
+            url=domain,
+            ip=None,
+            data=True,
+            green=True,
+            hosting_provider_id=matching_green_domain.hosted_by_id,
+            match_type="carbontxt",
             match_ip_range=None,
             cached=False,
             checked_at=timezone.now(),
@@ -145,6 +177,9 @@ class GreenDomainChecker:
         Accept a domain name and return the either a GreenDomain Object,
         or the best matching IP range forip address it resolves to.
         """
+
+        if carbon_txt_match := self.check_via_carbon_txt(domain):
+            return self.green_sitecheck_by_carbontxt(domain, carbon_txt_match)
 
         ip_address = self.convert_domain_to_ip(domain)
 
