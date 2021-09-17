@@ -13,6 +13,7 @@ class GreenlistChoice(models.TextChoices):
     NONE = "none", _("none")
     URL = "url", _("url")
     WHOIS = "whois", _("whois")
+    CARBONTXT = "carbontxt", _("carbon.txt")
 
 
 class CheckedOptions(models.TextChoices):

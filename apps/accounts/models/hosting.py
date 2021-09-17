@@ -22,11 +22,12 @@ from .choices import (
     ClassificationChoice,
     PartnerChoice,
 )
-from apps.greencheck.choices import StatusApproval
+from apps.greencheck.choices import StatusApproval, GreenlistChoice
 
 logger = logging.getLogger(__name__)
 
-GREEN_VIA_CARBON_TXT = "green:carbontxt"
+
+GREEN_VIA_CARBON_TXT = f"green:{GreenlistChoice.CARBONTXT.value}"
 
 
 class Datacenter(models.Model):
