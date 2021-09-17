@@ -135,7 +135,7 @@ class GreenDomainChecker:
             data=False,
             green=False,
             hosting_provider_id=None,
-            match_type="ip",
+            match_type=GreenlistChoice.IP.value,
             match_ip_range=None,
             cached=False,
             checked_at=timezone.now(),
@@ -167,7 +167,12 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=matching_green_domain.hosted_by_id,
-            match_type=GreenlistChoice.CARBONTXT.value,
+            # NOTE: we use WHOIS for now, as a way to decouple
+            # an expensive and risky migration from the rest of
+            # this carbon.txt work. See this issue for more:
+            # https://github.com/thegreenwebfoundation/admin-portal/issues/198
+            # match_type=GreenlistChoice.CARBONTXT.value,
+            match_type=GreenlistChoice.WHOIS.value,
             match_ip_range=None,
             cached=False,
             checked_at=timezone.now(),
