@@ -119,9 +119,12 @@ class CarbonTxtParser:
 
         for org in org_creds:
             prov, org_providers = self._create_provider(org, org_providers)
-
+            logger.debug(f"Checking in green domains for {org['domain']}.")
             res = gc_models.GreenDomain.objects.filter(url=org["domain"]).first()
             if not res:
+                logger.debug(
+                    f"No green domain entry found for {org['domain']}. Creating one."
+                )
                 self._create_green_domain_for_provider(org, prov)
 
             org_domains.add(org["domain"])
