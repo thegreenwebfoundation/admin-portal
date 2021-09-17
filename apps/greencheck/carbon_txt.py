@@ -27,13 +27,17 @@ class CarbonTxtParser:
         """
         Create a hosting provider from the provider dict passed
         in, and return a dict of the created hosting provider, and
-        updated provider set
+        updated provider set.
+
+        The provider matching the domain already exists, add the supporting evidence
+        without creating a new provider.
         """
         prov, created = ac_models.Hostingprovider.objects.get_or_create(
             website=provider_dict["domain"]
         )
         if not prov.name:
             prov.name = provider_dict["domain"]
+            prov.save()
         if prov not in provider_set:
             provider_set.add(prov)
         SupportingDoc = ac_models.HostingProviderSupportingDocument
@@ -112,8 +116,7 @@ class CarbonTxtParser:
         org_domains = set()
 
         for org in org_creds:
-            if org["domain"] not in org_domains:
-                prov, org_providers = self._create_provider(org, org_providers)
+            prov, org_providers = self._create_provider(org, org_providers)
 
             res = gc_models.GreenDomain.objects.filter(url=org["domain"]).first()
             if not res:
@@ -128,6 +131,17 @@ class CarbonTxtParser:
             "upstream": {"providers": [*upstream_providers]},
             "org": {"providers": [*org_providers]},
         }
+
+    def parse_and_preview(self, url: str, carbon_txt: str = None) -> Dict:
+        """
+        Parses a carbon.txt string and returns a preview of the objects that would be created if it was imported.
+
+        Used to show a preview for an administrator to approve
+        before running an import.
+
+        """
+        # not implemented
+        pass
 
     def import_from_url(self, url: str):
         """

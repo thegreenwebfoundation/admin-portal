@@ -87,7 +87,7 @@ class TestCarbonTxtParser:
     @pytest.mark.only
     def test_import_from_remote_carbon_text_file(self, db):
         psr = carbon_txt.CarbonTxtParser()
-        result = psr.import_from_url("https://www.bergfreunde.it/carbon.txt")
+        result = psr.import_from_url("https://www.domain.com.it/carbon.txt")
 
         providers = ac_models.Hostingprovider.objects.all()
         assert len(providers) == 16
