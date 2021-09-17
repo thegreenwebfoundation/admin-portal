@@ -8,11 +8,13 @@ class GreenlistChoice(models.TextChoices):
     its result.
     """
 
-    ASN = "as", _("as")
-    IP = "ip", _("ip")
-    NONE = "none", _("none")
+    # source order matters here, because migrations are
+    # generated based on the order of these for building MySQL ENUMS
     URL = "url", _("url")
     WHOIS = "whois", _("whois")
+    IP = "ip", _("ip")
+    NONE = "none", _("none")
+    ASN = "as", _("as")
     CARBONTXT = "carbontxt", _("carbon.txt")
 
 
