@@ -1,24 +1,13 @@
-import logging
-import pytest
 import io
-from django.core import management
-from django.urls import reverse
+import logging
 
-import dramatiq
-import rich
-from dramatiq.brokers import stub
+import pytest
+from django.core import management
+
 from ....accounts import models as ac_models
-from ... import models as gc_models
-from ... import workers
 from ... import domain_check
 
-
 logger = logging.getLogger(__name__)
-console = logging.StreamHandler()
-# logger.setLevel(logging.DEBUG)
-# logger.addHandler(console)
-
-FIRST_OF_JAN = "2020-01-01"
 
 
 class TestImportFromCarbonTxt:
@@ -50,8 +39,6 @@ class TestImportFromCarbonTxt:
         information with our async lookup process.
         """
         out = io.StringIO()
-        # broker.declare_queue("default")
-
         url = "bergfreunde.it"
 
         # run an import
@@ -65,7 +52,8 @@ class TestImportFromCarbonTxt:
         sitecheck = checker.check_domain(url)
 
         # we use the sitecheck status to keep the GreenDomain
-        # table up to date, and our async workers update the status in the Greendomain table after each check.
+        # table up to date, and our async workers update the status
+        # in the Greendomain table after each check.
         # Checking the status here saves us needing to have all
         # the async checking infra with workers, and brokers in our
         # test
