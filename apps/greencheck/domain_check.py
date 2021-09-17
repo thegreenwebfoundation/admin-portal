@@ -25,6 +25,7 @@ import urllib
 import tld
 
 from .models import GreenDomain, SiteCheck
+from .choices import GreenlistChoice
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=ip_match.hostingprovider.id,
-            match_type="ip",
+            match_type=GreenlistChoice.IP.value,
             match_ip_range=ip_match.id,
             cached=False,
             checked_at=timezone.now(),
@@ -119,7 +120,7 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=matching_asn.hostingprovider.id,
-            match_type="as",
+            match_type=GreenlistChoice.ASN.value,
             match_ip_range=matching_asn.id,
             cached=False,
             checked_at=timezone.now(),
@@ -166,7 +167,7 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=matching_green_domain.hosted_by_id,
-            match_type="carbontxt",
+            match_type=GreenlistChoice.CARBONTXT.value,
             match_ip_range=None,
             cached=False,
             checked_at=timezone.now(),
