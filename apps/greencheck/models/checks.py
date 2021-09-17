@@ -404,6 +404,10 @@ class TopUrl(models.Model):
 
 
 class GreenDomain(models.Model):
+    """
+    The model we use for quick lookups against a domain.
+
+    """
 
     url = models.CharField(max_length=255)
     hosted_by_id = models.IntegerField()

@@ -68,7 +68,6 @@ class TestCarbonTxtParser:
         assert res.green == True
         assert res.hosted_by_id == provider.id
 
-    @pytest.mark.only
     def test_check_with_alternative_domain(self, db, carbon_txt_string):
         """
         Does a check against the domain return a positive result?
@@ -84,11 +83,9 @@ class TestCarbonTxtParser:
         assert res.green == True
         assert res.hosted_by_id == provider.id
 
-    @pytest.mark.only
     def test_import_from_remote_carbon_text_file(self, db):
         psr = carbon_txt.CarbonTxtParser()
-        result = psr.import_from_url("https://www.domain.com.it/carbon.txt")
-
+        result = psr.import_from_url("https://www.bergfreunde.de/carbon.txt")
         providers = ac_models.Hostingprovider.objects.all()
         assert len(providers) == 16
         assert len(result["upstream"]["providers"]) == 2
