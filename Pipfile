@@ -18,11 +18,14 @@ pytest-cov = "*"
 pytest-xdist = "*"
 hypothesis = "*"
 black = "*"
-iredis = "*"
 factory_boy = "*"
 rich = "*"
 pytest-mock = "*"
 pytest-factoryboy = "*"
+sphinx = "*"
+sphinx-autobuild = "*"
+furo = "*"
+myst-parser = "*"
 
 [packages]
 django = { extras = ["bcrypt"], version = "==3.2" }
