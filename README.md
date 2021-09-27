@@ -32,15 +32,9 @@ SECRET_KEY='my_useless_development_secret'
 DATABASE_URL=mysql://root@localhost:33060/greencheck
 ```
 
-### Authentication with google for using cloud services
+Datasets and backups are stored in object storage. You'll need credentials to access these services if you intend to work on them.
 
-Datasets and backups are stored on Google Cloud storage, and you'll need credentials to access these services if you intend to work on them.
-
-If you work with google cloud storage you need to set environment variable to where it can find the authentication json.
-
-```
-export GOOGLE_APPLICATION_CREDENTIALS="/path/to/json/cloud-auth.json"
-```
+See the notes in installation for more.
 
 # Deploying
 
