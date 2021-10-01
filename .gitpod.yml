@@ -15,9 +15,10 @@ tasks:
   - name: set up python dependencies and database
     init: |
       cp ./.env.gitpod ./.env
+      mysqladmin create greencheck
       gp sync-await backing-services
       pipenv install --dev
-    command: pipenv run ./manage runserver
+    command: pipenv run ./manage.py
 
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
