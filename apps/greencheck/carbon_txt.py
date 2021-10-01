@@ -66,13 +66,13 @@ class CarbonTxtParser:
         return [prov, provider_set]
 
     def _create_green_domain_for_provider(
-        self, provider_dict: dict, provider: Hostingprovider
+        self, domain: str, provider: Hostingprovider
     ):
         """
         Create a Greendomain to match the newly created hosting provider
         """
         gc_models.GreenDomain.objects.create(
-            url=provider_dict["domain"],
+            url=domain,
             hosted_by=provider.name,
             hosted_by_id=provider.id,
             hosted_by_website=provider.website,
@@ -109,20 +109,35 @@ class CarbonTxtParser:
             prov, upstream_providers = self._create_provider(
                 provider, upstream_providers
             )
+            domain = provider["domain"]
 
-            res = gc_models.GreenDomain.objects.filter(url=provider["domain"]).first()
+            res = gc_models.GreenDomain.objects.filter(url=domain).first()
             if not res:
-                self._create_green_domain_for_provider(provider, prov)
+                self._create_green_domain_for_provider(domain, prov)
+
+            aliases = provider.get('aliases')
+            if aliases:
+                for alias in aliases:
+                    logger.info(f"Adding alias domain {alias} for {domain}")
+                    self._create_green_domain_for_provider(alias, prov)
 
         # given a parsed carbon.txt object,  fetch the listed organisation
         org_domains = set()
 
         for org in org_creds:
             prov, org_providers = self._create_provider(org, org_providers)
+            domain =  org["domain"]
 
-            res = gc_models.GreenDomain.objects.filter(url=org["domain"]).first()
+            res = gc_models.GreenDomain.objects.filter(url=domain).first()
             if not res:
-                self._create_green_domain_for_provider(org, prov)
+                self._create_green_domain_for_provider(domain, prov)
+
+            aliases = org.get('aliases')
+            if aliases:
+                for alias in aliases:
+                    logger.info(f"Adding alias domain {alias} for {domain}")
+                    self._create_green_domain_for_provider(alias, prov)
+
 
             org_domains.add(org["domain"])
 

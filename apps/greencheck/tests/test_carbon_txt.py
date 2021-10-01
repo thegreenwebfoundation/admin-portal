@@ -91,6 +91,30 @@ class TestCarbonTxtParser:
         assert len(result["upstream"]["providers"]) == 2
         assert len(result["org"]["providers"]) == 14
 
+    def test_check_with_domain_aliases(self, db, carbon_txt_string):
+        """
+        Does 
+        """
+        psr = carbon_txt.CarbonTxtParser()
+        psr.parse_and_import("www.hillbob.de", carbon_txt_string)
+
+        # now check for the domains
+        primary_check = gc_models.GreenDomain.check_for_domain("www.hillbob.de")
+        secondary_check = gc_models.GreenDomain.check_for_domain("valleytrek.co.uk")
+        assert primary_check.green == True
+        assert secondary_check.green == True
+
+        # and the aliases
+        for domain_alias in ["www.sys-ten.com", "www.systen.com"]:
+            check = gc_models.GreenDomain.check_for_domain(domain_alias)
+            assert check.green == True
+
+        for domain_alias in ["hill-bob.ch", "www.hilbob.ch", "www.hill-bob.ch"]:
+            check = gc_models.GreenDomain.check_for_domain(domain_alias)
+            assert check.green == True
+
+
+
     @pytest.mark.skip(reason="pending")
     def test_creation_of_corporate_grouping(self):
         """
@@ -106,3 +130,8 @@ class TestCarbonTxtParser:
         refer to the correct corporate grouping too?
         """
         pass
+
+
+    
+        
+        

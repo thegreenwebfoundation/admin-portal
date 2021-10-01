@@ -1,12 +1,14 @@
 [upstream]
 providers = [
-  { domain = 'sys-ten.com', doctype = 'sustainability-page', url = 'https://www.sys-ten.de/en/about-us/our-data-centers/' },
+  { domain = 'sys-ten.com', doctype = 'sustainability-page', url = 'https://www.sys-ten.de/en/about-us/our-data-centers/', aliases = ["www.sys-ten.com", "www.systen.com"]},
   { domain = 'cdn.com', doctype = 'sustainability-page', url = 'https://cdn.com/company/corporate-responsibility/sustainability' },
 ]
 
 [org]
 credentials = [
-  { domain = 'www.hillbob.de', doctype = 'sustainability-page', url = 'https://www.hillbob.de/klimaneutral/' },
+  { domain = 'www.hillbob.de', doctype = 'sustainability-page', url = 'https://www.hillbob.de/klimaneutral/', aliases = [
+    "hillbob.de", "hill-bob.de"
+  ] },
   { domain = 'www.hillbob.de', doctype = 'carbon-compensation', url = 'https://fpm.climatepartner.com/tracking/13467-1912-1001/en' },
 
   { domain = 'valleytrek.co.uk', doctype = 'sustainability-page', url = 'https://www.alpinetrek.co.uk/climate-neutral/' },
@@ -24,7 +26,7 @@ credentials = [
   { domain = 'hillbob.at', doctype = 'sustainability-page', url = 'https://www.hillbob.at/klimaneutral/' },
   { domain = 'hillbob.at', doctype = 'carbon-compensation', url = 'https://fpm.climatepartner.com/tracking/13467-1912-1001/en' },
 
-  { domain = 'hillbob.ch', doctype = 'sustainability-page', url = 'https://www.hillbob.ch/klimaneutral/' },
+  { domain = 'hillbob.ch', doctype = 'sustainability-page', url = 'https://www.hillbob.ch/klimaneutral/', aliases = ["hill-bob.ch", "www.hilbob.ch", "www.hill-bob.ch"]},
   { domain = 'hillbob.ch', doctype = 'carbon-compensation', url = 'https://fpm.climatepartner.com/tracking/13467-1912-1001/en' },
 
   { domain = 'hillbob.dk', doctype = 'sustainability-page', url = 'https://www.hillbob.eu/climate-neutral/' },
