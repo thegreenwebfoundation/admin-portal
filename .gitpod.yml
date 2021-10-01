@@ -14,6 +14,7 @@ tasks:
 
   - name: set up python dependencies and database
     init: |
+      cp ./.env.gitpod ./.env
       gp sync-await backing-services
       pipenv install --dev
     command: pipenv run ./manage runserver
