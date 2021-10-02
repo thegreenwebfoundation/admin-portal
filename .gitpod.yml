@@ -38,7 +38,7 @@ tasks:
       rabbitmq:3
 
   - name: redis
-    command: |
+    command: >
       docker run  
       --rm  
       --name green-redis 
