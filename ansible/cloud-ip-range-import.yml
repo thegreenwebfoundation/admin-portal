@@ -1,5 +1,5 @@
 ---
-- name: Run the import tasks for the big cloud providers who expose IP-ranges
+- name: Run the import tasks for the big cloud providers who expose IP-ranges over an API
   hosts:
     - all
   remote_user: "deploy"
