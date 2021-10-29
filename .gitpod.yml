@@ -25,7 +25,8 @@ tasks:
       cp ./.env.gitpod ./.env
       mysqladmin create greencheck
       pipenv install --dev
-    command: pipenv run ./manage.py
+      pipenv run ./manage.py migrate
+    command: ls
 
   - name: rabbitmq
     command: >
@@ -39,21 +40,24 @@ tasks:
   - name: redis
     command: >
       docker run  
-      --rm  
-      --name green-redis 
+      --rm
+      --name green-redis
       -p 6379:6379
       redis:6
 
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 8000
-    onOpen: open-preview
-    # ignore redis
+    onOpen: ignore
+    # redis
   - port: 6379
     onOpen: ignore
-    # ignore postgres
-  - port: 5432
-    onOpen: ignore
-    # ignore rabbit
+    # rabbitmq
   - port: 5672
+    onOpen: ignore
+    # mysql
+  - port: 3306
+    onOpen: ignore
+    # debugging ports in vscode
+  - port: 30000-50000
     onOpen: ignore
