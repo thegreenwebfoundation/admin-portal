@@ -1,4 +1,5 @@
 import re
+import logging
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.forms import AuthenticationForm
@@ -10,11 +11,14 @@ from django.shortcuts import render
 from django.views.generic.edit import FormView
 from django import forms
 
+import ipwhois
+
 from apps.greencheck.views import GreenUrlsView
 from ..greencheck import domain_check
 
 checker = domain_check.GreenDomainChecker()
 
+logger = logging.getLogger(__name__)
 
 class CheckUrlForm(forms.Form):
     """
@@ -24,6 +28,7 @@ class CheckUrlForm(forms.Form):
 
     url = forms.URLField()
     green_status = False
+    whois_info = None
 
     def clean_url(self):
         """
@@ -37,7 +42,15 @@ class CheckUrlForm(forms.Form):
         url = self.cleaned_data["url"]
 
         domain_to_check = checker.validate_domain(url)
+        ip_address = checker.convert_domain_to_ip(domain_to_check)
+        logger.info(f"looking up whois for {ip_address}")
+
+        whois_lookup = ipwhois.IPWhois(ip_address)
+
         res = checker.perform_full_lookup(domain_to_check)
+        rdap = whois_lookup.lookup_rdap(depth=1)
+        import rich 
+        rich.inspect(rdap)
 
         self.green_status = res.green
 
@@ -48,15 +61,17 @@ class CheckUrlView(FormView):
     success_url = "/not/used"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["form_url"] = reverse("admin:check_url")
-        return context
+        ctx = super().get_context_data(**kwargs)
+        ctx["form_url"] = reverse("admin:check_url")
+        # import ipdb; ipdb.set_trace()
+        # ctx["who_info"] = self.whois_info
+        return ctx
 
     def form_valid(self, form):
         green_status = form.green_status
-        context = self.get_context_data()
-        context["green_status"] = "green" if green_status else "gray"
-        return render(self.request, self.template_name, context)
+        ctx = self.get_context_data()
+        ctx["green_status"] = "green" if green_status else "gray"
+        return render(self.request, self.template_name, ctx)
 
 
 class GreenWebAdmin(AdminSite):
