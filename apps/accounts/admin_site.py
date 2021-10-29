@@ -20,6 +20,7 @@ checker = domain_check.GreenDomainChecker()
 
 logger = logging.getLogger(__name__)
 
+
 class CheckUrlForm(forms.Form):
     """
     A form for checking a url against the database and surfacing
@@ -43,14 +44,16 @@ class CheckUrlForm(forms.Form):
 
         domain_to_check = checker.validate_domain(url)
         ip_address = checker.convert_domain_to_ip(domain_to_check)
-        logger.info(f"looking up whois for {ip_address}")
-
         whois_lookup = ipwhois.IPWhois(ip_address)
 
         res = checker.perform_full_lookup(domain_to_check)
         rdap = whois_lookup.lookup_rdap(depth=1)
-        import rich 
-        rich.inspect(rdap)
+
+        import json
+
+        radp_json_dump = open("radp.lookup.json", "w")
+        radp_json_dump.write(json.dumps(rdap))
+        radp_json_dump.close()
 
         self.green_status = res.green
 
@@ -60,10 +63,17 @@ class CheckUrlView(FormView):
     form_class = CheckUrlForm
     success_url = "/not/used"
 
+    def lookup_asn(self, domain: str) -> dict:
+        """Look up the corresponding ASN for this domain"""
+        pass
+
+    def lookup_whois(self, domain: str) -> dict:
+        """Lookup the structured"""
+        pass
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["form_url"] = reverse("admin:check_url")
-        # import ipdb; ipdb.set_trace()
         # ctx["who_info"] = self.whois_info
         return ctx
 
