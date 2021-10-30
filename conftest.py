@@ -2,7 +2,6 @@ import pathlib
 
 import pytest
 import dramatiq
-from apps.greencheck.legacy_workers import SiteCheck
 from django.contrib.auth import get_user_model
 
 from django.contrib.auth import models as auth_models
