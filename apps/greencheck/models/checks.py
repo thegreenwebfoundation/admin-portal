@@ -473,13 +473,15 @@ class GreenDomain(models.Model):
         """
         try:
             return ac_models.Hostingprovider.objects.get(pk=self.hosted_by_id)
+        except ac_models.Hostingprovider.DoesNotExist:
+            return None
         except ValueError:
             return None
         except Exception as err:
             logger.warn(
                 (
                     f"Couldn't find a hosting provider for url: {self.url}, "
-                    "and hosted_by_id: {hosted_by_id}."
+                    f"and hosted_by_id: {hosted_by_id}."
                 )
             )
             logger.warn(err)
