@@ -56,8 +56,7 @@ class TestDomainChecker:
         assert res.ip == "172.217.168.238"
 
     def test_with_green_domain_by_asn_double(self, green_asn, checker):
-        """
-        """
+        """ """
         green_asn.save()
         checker.asn_from_ip = mock.MagicMock(return_value=f"{green_asn.asn} 12345")
 
@@ -109,7 +108,8 @@ class TestDomainCheckerOrderBySize:
         large_ip_range.save()
 
         ip_matches = gc_models.GreencheckIp.objects.filter(
-            ip_end__gte="127.0.1.2", ip_start__lte="127.0.1.2",
+            ip_end__gte="127.0.1.2",
+            ip_start__lte="127.0.1.2",
         )
 
         res = checker.order_ip_range_by_size(ip_matches)
@@ -164,3 +164,29 @@ class TestDomainCheckerOrderBySize:
 
         assert res.hosting_provider_id == small_hosting_provider.id
 
+
+class TestDomainCheckByCarbonTxt:
+    """Test that lookups via carbon txt work as expected"""
+
+    def test_lookup_green_domain(
+        self,
+    ):
+
+        # check that we have a green domain for domain.com
+
+        # look up for domain.com
+
+        # check that we return the provider in the return value
+        pass
+
+    def test_lookup_green_domain_with_no_provider(self):
+        """
+        When a domain has no provider, do we still return none?
+        """
+
+        # check that we have a green domain for domain.com
+
+        # look up for domain.com
+
+        # check that we return None, without raising an exception
+        pass
