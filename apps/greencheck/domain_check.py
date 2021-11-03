@@ -88,13 +88,16 @@ class GreenDomainChecker:
 
     def convert_domain_to_ip(
         self, domain
-    ) -> ipaddress.IPv4Network or ipaddress.IPv6Network:
+    ) -> ipaddress.IPv4Network or ipaddress.IPv6Network or None:
         """
         Accepts a domain name or IP address, and returns an IPV4 or IPV6
         address
         """
-        ip_string = socket.gethostbyname(domain)
-        return ipaddress.ip_address(ip_string)
+        try:
+            ip_string = socket.gethostbyname(domain)
+            return ipaddress.ip_address(ip_string)
+        except socket.gaierror as err:
+            logger.warning(f"Unable to lookup domain: {err}")
 
     def green_sitecheck_by_ip_range(self, domain, ip_address, ip_match):
         """
@@ -148,6 +151,9 @@ class GreenDomainChecker:
         """
         try:
             green_domain = GreenDomain.objects.get(url=domain)
+            import ipdb
+
+            ipdb.set_trace()
             provider = green_domain.hosting_provider
             if provider.counts_as_green():
                 return green_domain
