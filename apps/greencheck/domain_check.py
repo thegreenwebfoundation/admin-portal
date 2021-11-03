@@ -192,6 +192,9 @@ class GreenDomainChecker:
 
         ip_address = self.convert_domain_to_ip(domain)
 
+        if not ip_address:
+            return self.grey_sitecheck(domain, ip_address)
+
         if ip_match := self.check_for_matching_ip_ranges(ip_address):
             return self.green_sitecheck_by_ip_range(domain, ip_address, ip_match)
 
