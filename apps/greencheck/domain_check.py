@@ -97,7 +97,7 @@ class GreenDomainChecker:
             ip_string = socket.gethostbyname(domain)
             return ipaddress.ip_address(ip_string)
         except socket.gaierror as err:
-            logger.warning(f"Unable to lookup domain: {err}")
+            logger.warning(f"Unable to lookup domain: {domain} - error: {err}")
 
     def green_sitecheck_by_ip_range(self, domain, ip_address, ip_match):
         """
