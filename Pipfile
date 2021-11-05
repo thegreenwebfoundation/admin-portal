@@ -25,7 +25,7 @@ pytest-mock = "*"
 pytest-factoryboy = "*"
 
 [packages]
-django = { extras = ["bcrypt"], version = "==3.2" }
+django = { extras = ["bcrypt"], version = "==3.2.5" }
 django-anymail = { extras = ["mailgun"], version = "==7.0.0" }
 django-countries = "*"
 django-environ = "==0.4.5"
