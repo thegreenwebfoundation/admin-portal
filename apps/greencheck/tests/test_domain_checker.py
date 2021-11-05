@@ -1,6 +1,8 @@
 import logging
 import pytest
 
+from conftest import hosting_provider
+
 
 from .. import legacy_workers
 from .. import domain_check
@@ -108,8 +110,7 @@ class TestDomainCheckerOrderBySize:
         large_ip_range.save()
 
         ip_matches = gc_models.GreencheckIp.objects.filter(
-            ip_end__gte="127.0.1.2",
-            ip_start__lte="127.0.1.2",
+            ip_end__gte="127.0.1.2", ip_start__lte="127.0.1.2",
         )
 
         res = checker.order_ip_range_by_size(ip_matches)
@@ -169,24 +170,50 @@ class TestDomainCheckByCarbonTxt:
     """Test that lookups via carbon txt work as expected"""
 
     def test_lookup_green_domain(
-        self,
+        self, green_domain_factory, green_ip_factory, mocker, checker
     ):
 
-        # check that we have a green domain for domain.com
+        # mock our network lookup, so we get a consistent response when
+        # looking up our domains
+        green_ip = green_ip_factory.create()
+
+        # mock our request to avoid the network call
+        mocker.patch(
+            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+            return_value=green_ip.ip_start,
+        )
+
+        domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
+        provider = domain.hosting_provider
 
         # look up for domain.com
+        res = checker.check_domain(domain.url)
 
         # check that we return the provider in the return value
-        pass
+        assert res.hosting_provider_id == provider.id
 
-    def test_lookup_green_domain_with_no_provider(self):
+    def test_lookup_green_domain_with_no_provider(
+        self, green_domain_factory, green_ip_factory, mocker, checker
+    ):
         """
         When a domain has no provider, do we still return none?
         """
+        green_ip = green_ip_factory.create()
 
-        # check that we have a green domain for domain.com
+        # mock our request to avoid the network call
+        mocker.patch(
+            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+            return_value=green_ip.ip_start,
+        )
+
+        domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
+        domain.hosting_provider.delete()
+        domain.save()
 
         # look up for domain.com
+        res = checker.check_domain(domain.url)
 
-        # check that we return None, without raising an exception
-        pass
+        # check that we get a response back and a grey result,
+        # as there is no evidence left to support the green result
+        assert res.green == False
+
