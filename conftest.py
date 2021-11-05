@@ -13,7 +13,19 @@ from apps.greencheck.management.commands import update_aws_ip_ranges
 
 from apps.greencheck.factories import UserFactory, SiteCheckFactory
 
+from pytest_factoryboy import register
+from apps.greencheck import factories as gc_factories
+
 User = get_user_model()
+
+register(gc_factories.UserFactory)
+register(gc_factories.SiteCheckFactory)
+register(gc_factories.TagFactory)
+register(gc_factories.GreencheckFactory)
+register(gc_factories.HostingProviderFactory)
+register(gc_factories.GreenIpFactory)
+register(gc_factories.GreenDomainFactory)
+register(gc_factories.DailyStatFactory)
 
 
 @pytest.fixture
