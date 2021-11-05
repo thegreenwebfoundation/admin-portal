@@ -152,7 +152,7 @@ class GreenDomainChecker:
         try:
             green_domain = GreenDomain.objects.get(url=domain)
             provider = green_domain.hosting_provider
-            if provider.counts_as_green():
+            if provider and provider.counts_as_green():
                 return green_domain
         except GreenDomain.DoesNotExist:
             return None
