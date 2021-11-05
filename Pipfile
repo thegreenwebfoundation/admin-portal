@@ -22,6 +22,7 @@ iredis = "*"
 factory_boy = "*"
 rich = "*"
 pytest-mock = "*"
+pytest-factoryboy = "*"
 
 [packages]
 django = { extras = ["bcrypt"], version = "==3.2" }
@@ -70,6 +71,7 @@ django-autocomplete-light = "==3.8.2"
 markdown = "*"
 toml = "*"
 python-dateutil = "*"
+
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
