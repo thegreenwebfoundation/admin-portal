@@ -429,6 +429,7 @@ class HostingAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
+        qs = qs.filter(archived=False)
         qs = qs.prefetch_related(
             "hostingprovider_certificates",
             "datacenter",
