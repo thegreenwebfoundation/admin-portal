@@ -340,3 +340,21 @@ class TestHostingProviderAdmin:
         assert len(labels) == 1
         assert labels[0].name == "welcome-email sent"
 
+    @pytest.mark.parametrize(
+        "archived", ((True, 0), (False, 1),),
+    )
+    def test_archived_users_hidden_by_default(
+        self, db, client, hosting_provider_with_sample_user, archived
+    ):
+        """Test that by default, archived users to not show up in our listings."""
+
+        hosting_provider_with_sample_user.archived = archived[0]
+        hosting_provider_with_sample_user.save()
+        client.force_login(hosting_provider_with_sample_user.user_set.first())
+
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
+        resp = client.get(admin_url, follow=True)
+
+        assert len(resp.context["results"]) == archived[1]
+        assert resp.status_code == 200
+
