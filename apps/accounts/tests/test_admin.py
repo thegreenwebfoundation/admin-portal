@@ -343,7 +343,7 @@ class TestHostingProviderAdmin:
     @pytest.mark.parametrize(
         "archived", ((True, 0), (False, 1),),
     )
-    def test_archived_users_hidden_by_default(
+    def test_archived_providers_are_hidden_by_default(
         self, db, client, hosting_provider_with_sample_user, archived
     ):
         """Test that by default, archived users to not show up in our listings."""
@@ -354,6 +354,27 @@ class TestHostingProviderAdmin:
 
         admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
         resp = client.get(admin_url, follow=True)
+
+        assert len(resp.context["results"]) == archived[1]
+        assert resp.status_code == 200
+
+    @pytest.mark.parametrize(
+        "archived", ((True, 1), (False, 0),),
+    )
+    def test_archived_providers_hidden_by_seen_with_override_params(
+        self, db, client, hosting_provider_with_sample_user, archived
+    ):
+        """
+        If we really need to see archived users, we can with a
+        special GET param, to override our view
+        """
+
+        hosting_provider_with_sample_user.archived = archived[0]
+        hosting_provider_with_sample_user.save()
+        client.force_login(hosting_provider_with_sample_user.user_set.first())
+
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
+        resp = client.get(admin_url, {"archived": True}, follow=True)
 
         assert len(resp.context["results"]) == archived[1]
         assert resp.status_code == 200
