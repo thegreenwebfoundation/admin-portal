@@ -165,9 +165,12 @@ def greencheck_multi(request, url_list: str):
     serialised_domains = GreenDomainSerializer(checked_domains, many=True)
 
     data = serialised_domains.data
+
     result_dict = {}
     for url in urls:
-        result_dict[url] = [datum for datum in data if datum["url"] == url]
+        result = [datum for datum in data if datum["url"] == url][0]
+        if result:
+            result_dict[url] = result
 
     return response.Response(result_dict)
 
