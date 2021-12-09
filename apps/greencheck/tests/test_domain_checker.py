@@ -1,3 +1,4 @@
+from ipaddress import _IPAddressBase
 import logging
 import pytest
 
@@ -217,3 +218,34 @@ class TestDomainCheckByCarbonTxt:
         # as there is no evidence left to support the green result
         assert res.green == False
 
+    def test_lookup_green_domain_with_no_ip_lookup(
+        self, green_domain_factory, green_ip_factory, mocker, checker
+    ):
+        """"""
+        green_ip = green_ip_factory.create()
+
+        # mock our request to avoid the network call
+        # mocker.patch(
+        #     "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+        #     return_value=green_ip.ip_start,
+        # )
+
+        # domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
+        # domain.hosting_provider.delete()
+        # domain.save()
+
+        # look up for domain.com
+        res = checker.check_domain("portail.numerique-educatif.fr")
+
+        from apps.greencheck.workers import SiteCheckLogger
+
+        # saving with None fails, as does "None", but passing 0 works,
+        # and we want to log the fact that a check took place, instead
+        # of silently erroring
+        # res.ip = 0
+
+        site_logger = SiteCheckLogger()
+        site_logger.log_sitecheck_to_database(res)
+        # check that we get a response back and a grey result,
+        # as there is no evidence left to support the green result
+        assert res.green == False
