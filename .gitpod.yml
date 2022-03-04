@@ -18,7 +18,6 @@ github:
     # add a "Review in Gitpod" button to the pull request's description (defaults to false)
     addBadge: false
 
-
 # List the start up tasks. Learn more https://www.gitpod.io/docs/config-start-tasks/
 tasks:
   - name: set up python dependencies and database
@@ -49,3 +48,12 @@ tasks:
 ports:
   - port: 8000
     onOpen: open-preview
+    # ignore redis
+  - port: 6379
+    onOpen: ignore
+    # ignore postgres
+  - port: 5432
+    onOpen: ignore
+    # ignore rabbit
+  - port: 5672
+    onOpen: ignore
