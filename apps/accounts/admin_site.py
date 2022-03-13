@@ -14,7 +14,9 @@ from django import forms
 import ipwhois
 
 from apps.greencheck.views import GreenUrlsView
+
 from ..greencheck import domain_check
+from ..greencheck import models as gc_models
 
 checker = domain_check.GreenDomainChecker()
 
@@ -30,6 +32,8 @@ class CheckUrlForm(forms.Form):
     url = forms.URLField()
     green_status = False
     whois_info = None
+    check_result = None
+    sitecheck = None
 
     def clean_url(self):
         """
@@ -46,16 +50,24 @@ class CheckUrlForm(forms.Form):
         ip_address = checker.convert_domain_to_ip(domain_to_check)
         whois_lookup = ipwhois.IPWhois(ip_address)
 
+        # returns a green domain object, not our sitecheck, which
+        # contains the kind of match we used
+        # TODO rewrite this. the sitecheck / greendomain thing is
+        # clumsy to use
         res = checker.perform_full_lookup(domain_to_check)
+        sitecheck = checker.check_domain(domain_to_check)
         rdap = whois_lookup.lookup_rdap(depth=1)
 
-        import json
+        # import json
+        # radp_json_dump = open(f"{domain_to_check}.radp.lookup.json", "w")
+        # radp_json_dump.write(json.dumps(rdap))
+        # radp_json_dump.close()
 
-        radp_json_dump = open("radp.lookup.json", "w")
-        radp_json_dump.write(json.dumps(rdap))
-        radp_json_dump.close()
-
+        self.whois_info = rdap
+        self.domain = domain_to_check
         self.green_status = res.green
+        self.check_result = res
+        self.sitecheck = sitecheck
 
 
 class CheckUrlView(FormView):
@@ -74,13 +86,35 @@ class CheckUrlView(FormView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["form_url"] = reverse("admin:check_url")
-        # ctx["who_info"] = self.whois_info
         return ctx
 
     def form_valid(self, form):
         green_status = form.green_status
         ctx = self.get_context_data()
+
+        if form.whois_info:
+            ctx["domain"] = form.domain
+            ctx["ip_lookup"] = form.whois_info["query"]
+            ctx["whois_info"] = form.whois_info
+
+        #
+        if form.sitecheck.green and form.sitecheck.match_type == "as":
+            # this is an AS match. Point to the ASN match
+            as_match = gc_models.GreencheckASN.objects.filter(
+                id=form.sitecheck.match_ip_range
+            )
+            if as_match:
+                ctx["matching_green_as"] = as_match[0]
+
+        if form.sitecheck.green and form.sitecheck.match_type == "ip":
+            ip_match = gc_models.GreencheckIp.objects.filter(
+                id=form.sitecheck.match_ip_range
+            )
+            if ip_match:
+                ctx["matching_green_ip"] = ip_match[0]
+
         ctx["green_status"] = "green" if green_status else "gray"
+
         return render(self.request, self.template_name, ctx)
 
 

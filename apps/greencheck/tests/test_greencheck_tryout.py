@@ -26,11 +26,12 @@ class TestGreencheckTryout:
     """
 
     def test_tryout_returns_green_ip_match(
-        self, hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        self,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: gc_models.GreencheckIp,
         client,
     ):
-    
+
         # do we have a green match?
         logger.info(green_ip)
 
@@ -38,7 +39,6 @@ class TestGreencheckTryout:
         tryout_path = reverse("admin:check_url")
         res = client.get(tryout_path, follow=True)
         assert res.status_code == 200
-        
 
         # can we see a positive match in the template?
-        
+
