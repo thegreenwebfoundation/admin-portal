@@ -19,9 +19,5 @@ This means, that ideally, for any domain or IP address that shows as green, we c
 
 Every time a domain or IP address is checked, the system logs when it was checked, and what the result was. Over time this makes it possible to track the transition of websites and digital services to using green energy.
 
-
-## How this works
-
-(insert flow chart diagram here, in another issue)
-
+For more details, please see [understanding checks for green websites](how-we-check-for-green.md)
 

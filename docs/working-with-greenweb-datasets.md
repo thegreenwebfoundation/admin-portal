@@ -1,6 +1,6 @@
-# Working with the Green Web Open Datasets
+# Working with the Green Web Open Data
 
-Every month The Green Web Foundation publishes a dataset of green domain names, and who hosts them, called `url2green`.
+Every day The Green Web Foundation publishes a dataset of green domain names, and who hosts them. We all this the `url2green` dataset, and it is available at [datasets.thegreenwebfoundation.org](https://datasets.thegreenwebfoundation.org)
 
 This data closely follows the data available over the Green Web API, and generally speaking, analysis you might use the green web API for, you can use the published datasets for, without needing to hit the API for each check.
 
@@ -8,7 +8,7 @@ This data closely follows the data available over the Green Web API, and general
 
 Every check of a website is recorded in a table called greenchecks. As of January 2020, this table is nearly 1.6 billion rows, so is rather unwieldy to work with.
 
-For this reason, the dataset we publish contains a smaller table, `green_presenting`, listing the urls, and their status, with the columns below.
+For this reason, the dataset we publish contains a smaller table, `green_domains`, listing the urls, and their status, with the columns below.
 
 | Column              |                              Description                               |
 | ------------------- | :--------------------------------------------------------------------: |
@@ -38,3 +38,5 @@ This dataset is releases under the [Open Database Licence](https://opendatacommo
 We provide limited, free support for using the Green Web Datasets we publish, and are happy to provide advice or answer questions about this data if you want to use it in classes or research.
 
 If you're interested in further analysis about the shift of the web away from fossil fuels, the Green Web Foundation has data going back to 2009, and we're happy to do collaborations.
+
+Get in touch via [our contact page](https://www.thegreenwebfoundation.org/contact/).
