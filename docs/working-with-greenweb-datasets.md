@@ -26,7 +26,7 @@ For this reason, the dataset we publish contains a smaller table, `green_domains
 Because this data provides similar data to the greencheck API, this dataset can work like an offline cache, where making API calls for each check either would either be too slow, or leak data about your users that you would not want to share.
 
 - _running local checks for privacy_ - a build of the [privacy protecting search engine searx](https://github.com/thegreenwebfoundation/searx/), uses this, to avoid needing to leak information
-- _checking domains as part of development workflow_ - tools which consume the green web foundation's green check API, like [Greenhouse](https://github.com/thegreenwebfoundation/lighthouse-plugin-greenhouse), or [Website Carbon](websitecarbon.com/), can use this to avoid being reliant on the Green Web API for running checks
+- _checking domains as part of development workflow_ - tools which consume the green web foundation's green check API, like [Greenhouse](https://github.com/thegreenwebfoundation/lighthouse-plugin-greenhouse), or [Website Carbon](https://websitecarbon.com/), can use this to avoid being reliant on the Green Web API for running checks
 - _running analysis to understand how centralisation of the web changes over time_ - because this dataset shows which organisations host each domain, you can get an idea of how the web is becoming more or less centralised, and flowing through fewer providers.
 
 ## Licensing of the data
