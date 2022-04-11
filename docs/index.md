@@ -13,12 +13,14 @@ Welcome to the documentation for the Green Web platform. This site project conta
 
 This site also provides a sumamry of the other main libraries maintained by the Green Web Foundation, namely `co2js`, a javascript library for understanding and managing the carbon emissions from software, and the green web `grid-intensity` libraries, designed to help design carbon aware digital services that respond to the carbon intensity conditions on the electricity grids the internet relies on.
 
-### Get started
+### Getting started
 
 Need to get going quickly? Start with [installation steps](installation.md), and if you need to push changes for review visit the [deployment instructions](deployment.md).
 
 ```{toctree}
+general.md
 installation.md
+how-to.md
 deployment.md
 key-concepts.md
 how-we-check-for-green.md

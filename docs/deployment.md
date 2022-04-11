@@ -1,3 +1,9 @@
-# Deployment
+## Deployment
+As a ... you probably want to deploy your work at some point.<br>
+The following steps will guide you through the process of deploying your work.
 
-Add information about ansible and github setup here.
+### Github conventions
+....
+
+### Using Ansible
+....
