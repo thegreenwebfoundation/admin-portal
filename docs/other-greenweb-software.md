@@ -12,7 +12,7 @@ It also provides a convenient API for performing lookups against the Green Web F
 
 For more, please visit [the CO2.js repo on github][co2js-repo], or view the [Calculating Digital Emissions page on Sustainable Web Design website][swd-site].
 
-[co2js-repo]: github.com/thegreenwebfoundation/co2.js/
+[co2js-repo]: https://github.com/thegreenwebfoundation/co2.js/
 [swd-site]:https://sustainablewebdesign.org/calculating-digital-emissions/
 
 ## Grid intensity libraries - golang and javascript
