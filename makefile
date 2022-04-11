@@ -34,3 +34,9 @@ black.check:
 	@ARGS="--check --color --diff" make black
 
 ci: | black.check flake
+
+docs:
+	sphinx-build ./docs _build/
+
+docs.watch:
+	sphinx-autobuild ./docs _build/
