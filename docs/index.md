@@ -11,7 +11,7 @@ Welcome to the documentation for the Green Web platform. This site project conta
 - the admin interface used by hosting provider, at admin.thegreenwebfoundation.org
 - the API that serves requests at api.thegreenwebfoundation.org
 
-This site also provides a sumamry of the other main libraries maintained by the Green Web Foundation, namely `co2js`, a javascript library for understanding and managing the carbon emissions from software, and the green web `grid-intensity` libraries, designed to help design carbon aware digital services that respond to the carbon intensity conditions on the electricity grids the internet relies on.
+This site also provides a summary of the other main libraries maintained by the Green Web Foundation, namely `co2js`, a javascript library for understanding and managing the carbon emissions from software, and the green web `grid-intensity` libraries, designed to help design carbon aware digital services that respond to the carbon intensity conditions on the electricity grids the internet relies on.
 
 ### Getting started
 
