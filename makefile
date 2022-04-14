@@ -18,6 +18,7 @@ dev.test:
 dev.test.only:
 	pytest -s --create-db --looponfail -m only -v  --ds=greenweb.settings.testing
 
+# Run a basic test(with pytest) that creates a database using the testing settings 
 test:
 	pytest -s --create-db --ds=greenweb.settings.testing
 
@@ -35,8 +36,10 @@ black.check:
 
 ci: | black.check flake
 
+# Build the documentation using Sphinx
 docs:
 	sphinx-build ./docs _build/
 
+# Build the documentation using Sphinx and keep updating it on every change
 docs.watch:
 	sphinx-autobuild ./docs _build/
