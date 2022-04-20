@@ -4,7 +4,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])  # noqa
 DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-test"
 
-AZURE_PROVIDER_ID = 111
+AZURE_PROVIDER_ID = 123
 
 # http://whitenoise.evans.io/en/stable/django.html#WHITENOISE_MANIFEST_STRICT
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
