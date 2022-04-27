@@ -8,96 +8,106 @@ from django.core.management import call_command
 from apps.greencheck.management.commands import update_azure_ip_ranges
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.models import GreencheckIp
-from apps.greencheck.management.commands.update_azure_ip_ranges import GREEN_REGIONS
 
 from django.conf import settings
 
 
 @pytest.fixture
 def hosting_provider():
-
-    # oregon, *rest = [region for region in GREEN_REGIONS if region[1] == "us-west-2"]
-    name, region, host_id = ("Azure US West", "az-west-2", 123)
+    """
+    Define necessary information of a hosting provider for testing.
+    Return: an initialization of a Hostingprovider object 
+    """
     return Hostingprovider(
-        archived=False,
-        country="US",
-        customer=False,
-        icon="",
-        iconurl="",
-        id=host_id,
-        model="groeneenergie",
-        name=name,
-        partner="",
-        showonwebsite=True,
-        website="http://azure.microsoft.com",
+        archived = False,
+        country = "US",
+        customer = False,
+        icon = "",
+        iconurl = "",
+        id = settings.AZURE_PROVIDER_ID, # host id
+        model = "groeneenergie",
+        name = "Azure US West",
+        partner = "",
+        showonwebsite = True,
+        website = "http://azure.microsoft.com",
     )
 
 
 @pytest.fixture
 def azure_cloud_provider(hosting_provider):
-    hosting_provider.save()
+    """
+    Prepare the cloud provider.
+    Return: an initialization of a MicrosoftCloudProvider object from file update_azure_ip_ranges.py
+    """
+    # Propperly initialize the hosting provider so it retrieves necessary values such as an id
+    hosting_provider.save() 
     return update_azure_ip_ranges.MicrosoftCloudProvider()
 
 
 @pytest.fixture
-def azure_json_ip_ranges():
+def azure_test_dataset():
+    """
+    Retrieve a locally saved sample from the population as dataset to use for this test
+    Return: JSON format of the test dataset
+    """
     this_file = pathlib.Path(__file__)
     json_path = this_file.parent.parent.joinpath("fixtures", "azure_ip_ranges.json")
     with open(json_path) as ipr:
-        ip_ranges = json.loads(ipr.read())
-        return ip_ranges
+        return json.loads(ipr.read())
 
 
 @pytest.mark.django_db
 class TestAZURECLoudImporter:
-    def test_fetch_ip(self, hosting_provider, azure_cloud_provider):
+    def test_dataset_structure(self, hosting_provider, azure_cloud_provider):
         """
-        Do we fetch the data from Azure?
+        Test if the structure of the JSON is as expected
         """
-        hosting_provider.save()
-        res = azure_cloud_provider.retrieve()
+        hosting_provider.save()  # Initialize hosting provider in database
+        dataset = azure_cloud_provider.retrieve_dataset()
 
-        assert len(res.keys()) == 3 # TODO: Figure out what value this should be
+        # Test: structure contains the main three keys
+        assert len(dataset.keys()) == 3
 
-    def pullout_green_regions(self, hosting_provider, azure_cloud_provider):
-        res = azure_cloud_provider.retrieve()
-
-        _, region, host_id = azure_cloud_provider.green_regions[0]
-
-        iprs = azure_cloud_provider.pullout_green_regions(res, region)
-
-        ip_ranges = azure_cloud_provider.ip_ranges_for_hoster(iprs)
-
-        assert isinstance(ip_ranges[0], ipaddress.IPv4Network)
-
-    def test_update_hoster(self, hosting_provider, azure_cloud_provider):
-
-        res = azure_cloud_provider.retrieve()
-        _, region, host_id = ("Azure US West", "az-west-2", settings.AZURE_PROVIDER_ID)
-        ip_ranges = azure_cloud_provider.convert_to_networks(res)
-
-        ip_start, ip_end = ip_ranges[0][0], ip_ranges[0][-1]
-        assert GreencheckIp.objects.all().count() == 0
-
-        hosting_provider.save()
-
-        # create one new green IP range
-        azure_cloud_provider.update_hoster(hosting_provider, ip_start, ip_end)
-
-        assert GreencheckIp.objects.all().count() == 1
-
-    def test_process(
-        self, hosting_provider, azure_cloud_provider, azure_json_ip_ranges
-    ):
-        assert GreencheckIp.objects.all().count() == 0
-        hosting_provider.save()
+        # Test: fields are available for traversing 
+        assert dataset['values'][0]['properties']['addressPrefixes']
         
-        res = azure_cloud_provider.process(azure_json_ip_ranges)
-        ipv4s = res["ipv4"]
-        ipv6s = res["ipv6"]
+    def test_inserting_range(self, hosting_provider, azure_cloud_provider):
+        """
+        Test the insertion of a new range
+        """
+        _, host_id = ("Azure", settings.AZURE_PROVIDER_ID)
+
+        dataset = azure_cloud_provider.retrieve_dataset()
+        ip_ranges = azure_cloud_provider.convert_to_networks(dataset)
+        ip_start, ip_end = ip_ranges[0][0], ip_ranges[0][-1]
+
+        assert GreencheckIp.objects.all().count() == 0 # Test: database is empty 
+        hosting_provider.save() # Initialize hosting provider in database
+
+        # As the database is empty, create new range
+        azure_cloud_provider.update_range_in_db(hosting_provider, ip_start, ip_end)
+        
+        assert GreencheckIp.objects.all().count() == 1 # Test: contains one value after insertion
+
+    def test_extract_ip_ranges(
+        self, hosting_provider, azure_cloud_provider, azure_test_dataset
+    ):
+        """
+        Test extracting ip ranges from dataset and saving in dataset.
+        """
+        assert GreencheckIp.objects.all().count() == 0 # Test: database is empty 
+        hosting_provider.save() # Initialize hosting provider in database
+
+        ip_ranges = azure_cloud_provider.extract_ip_ranges(azure_test_dataset)
+        ipv4s = ip_ranges["ipv4"]
+        ipv6s = ip_ranges["ipv6"]
+
+        # Test : correct number of ips are extracted from the test dataset
         assert len(ipv4s) == 649
         assert len(ipv6s) == 146
-        # we should have 795 ranges in total
+
+        # Test: database has equal altercation in comparison to the returned dataset
+        # This value should equate to 795 in total 
         assert GreencheckIp.objects.all().count() == len(ipv4s) + len(ipv6s)
 
 
