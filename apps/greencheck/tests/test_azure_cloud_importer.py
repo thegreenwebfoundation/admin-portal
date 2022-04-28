@@ -58,27 +58,25 @@ def azure_test_dataset():
 
 @pytest.mark.django_db
 class TestAZURECLoudImporter:
-    def test_dataset_structure(self, hosting_provider, azure_cloud_provider):
+    def test_dataset_structure(self, hosting_provider, azure_cloud_provider, azure_test_dataset):
         """
         Test if the structure of the JSON is as expected
         """
         hosting_provider.save()  # Initialize hosting provider in database
-        dataset = azure_cloud_provider.retrieve_dataset()
 
         # Test: structure contains the main three keys
-        assert len(dataset.keys()) == 3
+        assert len(azure_test_dataset.keys()) == 3
 
         # Test: fields are available for traversing 
-        assert dataset['values'][0]['properties']['addressPrefixes']
+        assert azure_test_dataset['values'][0]['properties']['addressPrefixes']
         
-    def test_inserting_range(self, hosting_provider, azure_cloud_provider):
+    def test_inserting_range(self, hosting_provider, azure_cloud_provider, azure_test_dataset):
         """
         Test the insertion of a new range
         """
         _, host_id = ("Azure", settings.AZURE_PROVIDER_ID)
 
-        dataset = azure_cloud_provider.retrieve_dataset()
-        ip_ranges = azure_cloud_provider.convert_to_networks(dataset)
+        ip_ranges = azure_cloud_provider.convert_to_networks(azure_test_dataset)
         ip_start, ip_end = ip_ranges[0][0], ip_ranges[0][-1]
 
         assert GreencheckIp.objects.all().count() == 0 # Test: database is empty 
