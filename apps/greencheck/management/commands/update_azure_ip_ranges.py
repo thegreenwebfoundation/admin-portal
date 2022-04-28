@@ -4,7 +4,7 @@ import logging
 import json
 from apps.greencheck.models import GreencheckIp
 from apps.accounts.models import Hostingprovider
-from pathlib import Path
+import pathlib
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -14,8 +14,15 @@ logger = logging.getLogger(__name__)
 
 class MicrosoftCloudProvider:
     def retrieve_dataset(self):
-        with open(Path('apps/greencheck/management/commands/azure-ip-ranges.json')) as json_file:
-            return json.load(json_file)
+        try:
+            return requests.get(settings.AZURE_IP_RANGE_JSON_FILE).json()
+        except requests.RequestException:
+            logger.warning("Unable to fetch file and parse json. Aborting early.")
+            return
+        except Exception:
+            logger.exception("Something really unexpected happened. Aborting")
+
+
 
     def extract_ip_ranges(self, raw_dataset):
         """
