@@ -96,9 +96,13 @@ AUTH_USER_MODEL = "accounts.User"
 
 LOGIN_REDIRECT_URL = "/"
 
-# We need this to account for providers with massive numbers of IP ranges
-# to update. The default limit it too low for django admin!
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
+# We need this to account for some providers that have numbers of IP
+# ranges that are greater than the default limit in django.
+# By setting this to None, we no longer check for the size of the form.
+# This is not ideal, but it at least means some hosting providers can
+# update their info while we rethink how people update IP range info.
+# https://docs.djangoproject.com/en/4.0/ref/settings/#data-upload-max-number-fields
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
