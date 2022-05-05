@@ -46,9 +46,11 @@ def equinix_test_dataset():
     Retrieve a locally saved sample from the population as dataset to use for this test
     Return: list format of the test dataset
     """
+    this_file = pathlib.Path(__file__)
+    path = this_file.parent.parent.joinpath("fixtures", "equinix_dataset.txt")
+    
     list_of_ips = []
-    local_file = pathlib.Path(settings.EQUINIX_SAMPLE_DATASET_DIR)
-    with open(local_file) as file:
+    with open(path) as file:
         for line in file.readlines():
             if (line.startswith("AS") or line[0].isdigit()):
                 list_of_ips.append(line.split(' ', 1)[0])
@@ -70,7 +72,6 @@ class TestEquinixCloudImporter:
         print(len(equinix_test_dataset))
 
         # Test: check for a list with a single dimension. If more dimensions exist (i.e. another list in the list), throw exception
-        # Test: check if dimensions are as expected: a list of single IP ranges/ASN
         assert not isinstance(equinix_test_dataset[0], list) and not isinstance(equinix_cloud_provider.retrieve_dataset()[0], list)
 
     def test_inserting_range(

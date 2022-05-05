@@ -268,7 +268,6 @@ SITE_URL = "https://admin.thegreenwebfoundation.org"
 
 EQUINIX_PROVIDER_ID = 1234
 EQUINIX_DATASET_ENDPOINT = "https://tgwf-web-app-live.s3.nl-ams.scw.cloud/data-imports/equinix.ips.and.asns.2022-02-25.txt"
-EQUINIX_SAMPLE_DATASET_DIR = "/workspace/admin-portal/apps/greencheck/fixtures/equinix_dataset.txt"
 
 TAGGIT_CASE_INSENSITIVE = True
 
