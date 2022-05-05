@@ -1,10 +1,8 @@
 import requests
 import ipaddress
 import logging
-import json
 from apps.greencheck.models import GreencheckIp
 from apps.accounts.models import Hostingprovider
-import pathlib
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -22,8 +20,6 @@ class MicrosoftCloudProvider:
         except Exception:
             logger.exception("Something really unexpected happened. Aborting")
 
-
-
     def extract_ip_ranges(self, raw_dataset):
         """
         Extract the ip ranges from the raw dataset.
@@ -34,39 +30,39 @@ class MicrosoftCloudProvider:
         ranges_IPv6 = self.convert_to_networks(raw_dataset, ipaddress.IPv6Network)
 
         try:
-            logger.info(f"Looking IPs for Microsoft (Azure)")
+            logger.info("Looking IPs for Microsoft (Azure)")
 
             # Retrieve hosting provider by ID from the database
-            hoster = Hostingprovider.objects.get(pk = settings.AZURE_PROVIDER_ID) 
-        except Hostingprovider.DoesNotExist as e:
-            logger.warning(f"Hoster Microsoft (Azure) not found")
-            raise e
-            
+            hoster = Hostingprovider.objects.get(pk=settings.AZURE_PROVIDER_ID)
+        except Hostingprovider.DoesNotExist:
+            logger.exception("Hoster Microsoft (Azure) not found")
+
         # Check if lists are not empty
         assert len(ranges_IPv4) > 0
         assert len(ranges_IPv6) > 0
 
-        return { 
-            "ipv4": self.update_ranges_in_db(hoster, ranges_IPv4), 
-            "ipv6": self.update_ranges_in_db(hoster, ranges_IPv6)
-            }
+        return {
+            "ipv4": self.update_ranges_in_db(hoster, ranges_IPv4),
+            "ipv6": self.update_ranges_in_db(hoster, ranges_IPv6),
+        }
 
-    def convert_to_networks(self, ips_with_mask, ip_version = None):
+    def convert_to_networks(self, ips_with_mask, ip_version=None):
         """
-        Convert ip addresses and subnets of the providers into networks (lib: ipaddress).
+        Convert ip addresses and subnets of the providers into networks.
         Return: List of networks extracted from the given dataset as parameter.
         """
         list_of_networks = set()
 
-        # Considering the specific JSON structure of this provider, extract the ip addresses and subnet masks
-        for services in ips_with_mask['values']:
-            for ip_with_mask in services['properties']['addressPrefixes']:
-                # Generate network (lib: ipaddress) based on ip and subnet mask
-                network = ipaddress.ip_network(ip_with_mask) 
-                
-                if ip_version == None:
+        # Considering the specific JSON structure of this provider,
+        # extract the ip addresses and subnet masks
+        for services in ips_with_mask["values"]:
+            for ip_with_mask in services["properties"]["addressPrefixes"]:
+                # Generate network based on ip and subnet mask
+                network = ipaddress.ip_network(ip_with_mask)
+
+                if ip_version is None:
                     # If no version is specified: include all
-                    list_of_networks.add(network) 
+                    list_of_networks.add(network)
                 elif type(network) == ip_version:
                     # Otherwise: include only the specified ip version (IPv4 or IPv6)
                     list_of_networks.add(network)
@@ -75,9 +71,11 @@ class MicrosoftCloudProvider:
 
     def update_ranges_in_db(self, hoster, ip_networks):
         """
-        Go over the list of ips in the network and request updating a record or creating a 
-        new one if it does not already exist.
-        Return: list of altered ip ranges, whereas each list item represents a record in the database.
+        Go over the list of ips in the network and request,
+        updating a record or creating a new one if it does
+        not already exist.
+        Return: list of altered ip ranges, whereas each list item represents a
+        record in the database.
         """
         altered_ranges = []
         logger.debug(hoster)
@@ -100,19 +98,16 @@ class MicrosoftCloudProvider:
         Update a single record representing a range associated with a provider/hoster
         Return: (if a new object was created) object (gcip) which is created or updated
         """
-        # TODO: decide if we need to optimise this: it might take a long time to update 
-        # the database with a big dataset. 
-        # Especially if we plan on including more providers 
-        
+        # TODO: decide if we need to optimise this: it might take a long time to update
+        # the database with a big dataset.
+        # Especially if we plan on including more providers
+
         # Update a specific range of a provider/hoster.
         # (by using first and last, we specify the range)
         gcip, created = GreencheckIp.objects.update_or_create(
-            active = True, 
-            ip_start = first, 
-            ip_end = last, 
-            hostingprovider = hoster
+            active=True, ip_start=first, ip_end=last, hostingprovider=hoster
         )
-        gcip.save() # Save the newly created or updated object
+        gcip.save()  # Save the newly created or updated object
 
         if created:
             # Only log and return when a new object was created
@@ -123,9 +118,9 @@ class MicrosoftCloudProvider:
 class Command(BaseCommand):
     help = "Update IP ranges for cloud providers that publish them"
 
-    def handle(self, *args, **options):        
+    def handle(self, *args, **options):
         azure = MicrosoftCloudProvider()
-        
+
         # Retrieve dataset and parse to networks
         dataset = azure.retrieve_dataset()
         ip_ranges = azure.extract_ip_ranges(dataset)
@@ -136,4 +131,3 @@ class Command(BaseCommand):
             f"Import Complete: Added {len(green_ipv4s)} new IPV4 networks, "
             f"and {len(green_ipv6s) } IPV6 networks"
         )
-
