@@ -213,6 +213,9 @@ OBJECT_STORAGE_SECRET_ACCESS_KEY = env("OBJECT_STORAGE_SECRET_ACCESS_KEY")
 AZURE_PROVIDER_ID = env("AZURE_PROVIDER_ID")
 AZURE_IP_RANGE_JSON_FILE = env("AZURE_IP_RANGE_JSON_FILE")
 
+# These are used for running our imports from Equinix
+EQUINIX_PROVIDER_ID = env("EQUINIX_PROVIDER_ID")
+EQUINIX_DATASET_ENDPOINT = env("EQUINIX_DATASET_ENDPOINT")
 
 RABBITMQ_URL = env("RABBITMQ_URL")
 
@@ -271,8 +274,6 @@ LOGGING = {
 
 SITE_URL = "https://admin.thegreenwebfoundation.org"
 
-EQUINIX_PROVIDER_ID = 1234
-EQUINIX_DATASET_ENDPOINT = "https://tgwf-web-app-live.s3.nl-ams.scw.cloud/data-imports/equinix.ips.and.asns.2022-02-25.txt"
 
 TAGGIT_CASE_INSENSITIVE = True
 
