@@ -1,10 +1,8 @@
 import requests
 import ipaddress
 import logging
-import json
 from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.accounts.models import Hostingprovider
-import pathlib
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -13,15 +11,23 @@ logger = logging.getLogger(__name__)
 
 
 class EquinixCloudProvider:
+    """
+    An importer for all of Equinix's IP ranges and AS numbers.
+    Because so many other providers rely on Equinix, and because their
+    ranges are so extensive we use an importer.
+    """
+
     def retrieve_dataset(self):
         try:
             response = requests.get(settings.EQUINIX_DATASET_ENDPOINT)
-
             list_of_ips = []
             for line in response.text.splitlines():
-                # Filter out the lines with network information (i.e. ip with subnet or AS numbers)
-                if (line.startswith("AS") or line[0].isdigit()):
-                    list_of_ips.append(line.split(' ', 1)[0]) # Format as follows: IP range/ASN, Naming
+                # Filter out the lines with network information
+                # (i.e. ip with subnet or AS numbers)
+                if line.startswith("AS") or line[0].isdigit():
+                    list_of_ips.append(
+                        line.split(" ", 1)[0]
+                    )  # Format as follows: IP range/ASN, Naming
 
             return list_of_ips
         except requests.RequestException:
@@ -58,31 +64,32 @@ class EquinixCloudProvider:
         Extract the ip ranges from the raw dataset.
         Return: list of altered IPv4 and IPv6 ranges
         """
-        ranges_IPv4, ranges_IPv6, asns = [], [], []
+        ranges_IPv4, ranges_IPv6 = [], []
         ranges_IPv4 = self.convert_to_networks(raw_dataset, ipaddress.IPv4Network)
         ranges_IPv6 = self.convert_to_networks(raw_dataset, ipaddress.IPv6Network)
 
         try:
-            logger.info(f"Looking IPs for Equinix")
+            logger.info("Looking IPs for Equinix")
 
             # Retrieve hosting provider by ID from the database
-            hoster = Hostingprovider.objects.get(pk = settings.EQUINIX_PROVIDER_ID) 
+            hoster = Hostingprovider.objects.get(pk=settings.EQUINIX_PROVIDER_ID)
         except Hostingprovider.DoesNotExist as e:
-            logger.warning(f"Hoster Equinix not found")
+            logger.warning("Hoster Equinix not found")
             raise e
-            
+
         # Check if lists are not empty
         assert len(ranges_IPv4) > 0
         assert len(ranges_IPv6) > 0
 
-        return { 
-            "ipv4": self.update_ranges_in_db(hoster, ranges_IPv4), 
-            "ipv6": self.update_ranges_in_db(hoster, ranges_IPv6)
-            }
+        return {
+            "ipv4": self.update_ranges_in_db(hoster, ranges_IPv4),
+            "ipv6": self.update_ranges_in_db(hoster, ranges_IPv6),
+        }
 
-    def convert_to_networks(self, ips_with_mask, ip_version = None):
+    def convert_to_networks(self, ips_with_mask, ip_version=None):
         """
-        Convert ip addresses and subnets of the providers into networks (lib: ipaddress).
+        Convert ip addresses and subnets of the providers into
+        network
         Return: List of networks extracted from the given dataset as parameter.
         """
         list_of_networks = set()
@@ -92,23 +99,24 @@ class EquinixCloudProvider:
             try:
                 # Generate network (lib: ipaddress) based on ip and subnet mask
                 network = ipaddress.ip_network(ip_with_mask)
-                
-                if ip_version == None:
+
+                if ip_version is None:
                     # If no version is specified: include all
-                    list_of_networks.add(network) 
+                    list_of_networks.add(network)
                 elif type(network) == ip_version:
                     # Otherwise: include only the specified ip version (IPv4 or IPv6)
                     list_of_networks.add(network)
             except ValueError:
-                pass # address/netmask is invalid for IPv4 or IPv6
-            
+                pass  # address/netmask is invalid for IPv4 or IPv6
+
         return list(list_of_networks)
 
     def update_ranges_in_db(self, hoster, ip_networks):
         """
-        Go over the list of ips in the network and request updating a record or creating a 
-        new one if it does not already exist.
-        Return: list of altered ip ranges, whereas each list item represents a record in the database.
+        Go over the list of ips in the network and request updating
+        a record or creating a new one if it does not already exist.
+        Return: list of altered ip ranges, whereas each list item
+        represents a record in the database.
         """
         altered_ranges = []
         logger.debug(hoster)
@@ -134,12 +142,9 @@ class EquinixCloudProvider:
         # Update a specific range of a provider/hoster.
         # (by using first and last, we specify the range)
         gcip, created = GreencheckIp.objects.update_or_create(
-            active = True, 
-            ip_start = first, 
-            ip_end = last, 
-            hostingprovider = hoster
+            active=True, ip_start=first, ip_end=last, hostingprovider=hoster
         )
-        gcip.save() # Save the newly created or updated object
+        gcip.save()  # Save the newly created or updated object
 
         if created:
             # Only log and return when a new object was created
