@@ -1,6 +1,5 @@
 import pytest
 import pathlib
-import ipaddress
 from io import StringIO
 
 from django.core.management import call_command
@@ -10,35 +9,39 @@ from apps.greencheck.models import GreencheckIp, GreencheckASN
 
 from django.conf import settings
 
+
 @pytest.fixture
 def hosting_provider():
     """
     Define necessary information of a hosting provider for testing.
-    Return: an initialization of a Hostingprovider object 
+    Return: an initialization of a Hostingprovider object
     """
     return Hostingprovider(
-        archived = False,
-        country = "US",
-        customer = False,
-        icon = "",
-        iconurl = "",
-        id = settings.EQUINIX_PROVIDER_ID, # host id
-        model = "groeneenergie",
-        name = "Equinix",
-        partner = "",
-        showonwebsite = True,
-        website = "https://www.equinix.nl",
+        archived=False,
+        country="US",
+        customer=False,
+        icon="",
+        iconurl="",
+        id=settings.EQUINIX_PROVIDER_ID,  # host id
+        model="groeneenergie",
+        name="Equinix",
+        partner="",
+        showonwebsite=True,
+        website="https://www.equinix.nl",
     )
-       
+
+
 @pytest.fixture
 def equinix_cloud_provider(hosting_provider):
     """
     Prepare the cloud provider.
-    Return: an initialization of a EquinixCloudProvider object from file update_equinix_ip_ranges.py
+    Return: EquinixCloudProvider
     """
-    # Propperly initialize the hosting provider so it retrieves necessary values such as an id
-    hosting_provider.save() 
+    # Properly initialize the hosting provider so
+    # it retrieves necessary values such as an id
+    hosting_provider.save()
     return update_equinix_ip_ranges.EquinixCloudProvider()
+
 
 @pytest.fixture
 def equinix_test_dataset():
@@ -48,14 +51,15 @@ def equinix_test_dataset():
     """
     this_file = pathlib.Path(__file__)
     path = this_file.parent.parent.joinpath("fixtures", "equinix_dataset.txt")
-    
+
     list_of_ips = []
     with open(path) as file:
         for line in file.readlines():
-            if (line.startswith("AS") or line[0].isdigit()):
-                list_of_ips.append(line.split(' ', 1)[0])
-                
+            if line.startswith("AS") or line[0].isdigit():
+                list_of_ips.append(line.split(" ", 1)[0])
+
     return list_of_ips
+
 
 @pytest.mark.django_db
 class TestEquinixCloudImporter:
@@ -65,14 +69,20 @@ class TestEquinixCloudImporter:
         """
         Test if the structure of the JSON is as expected
         """
-        hosting_provider.save() # Initialize hosting provider in database
+        hosting_provider.save()  # Initialize hosting provider in database
 
         # Test: file is in list format after retrieving it
-        assert type(equinix_test_dataset) == list and type(equinix_cloud_provider.retrieve_dataset()) == list
+        assert (
+            type(equinix_test_dataset) == list
+            and type(equinix_cloud_provider.retrieve_dataset()) == list
+        )
         print(len(equinix_test_dataset))
 
-        # Test: check for a list with a single dimension. If more dimensions exist (i.e. another list in the list), throw exception
-        assert not isinstance(equinix_test_dataset[0], list) and not isinstance(equinix_cloud_provider.retrieve_dataset()[0], list)
+        # Test: check for a list with a single dimension.
+        # If more dimensions exist (i.e. another list in the list), throw exception
+        assert not isinstance(equinix_test_dataset[0], list) and not isinstance(
+            equinix_cloud_provider.retrieve_dataset()[0], list
+        )
 
     def test_inserting_range(
         self, hosting_provider, equinix_cloud_provider, equinix_test_dataset
