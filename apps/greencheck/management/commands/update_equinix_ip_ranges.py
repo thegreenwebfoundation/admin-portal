@@ -34,19 +34,24 @@ class EquinixCloudProvider:
         """
         Extract the Autonomous System Number (ASN) from the dataset and save them.
         """
-        for address in raw_dataset:
-            if(address.startswith("AS")):
-                gcip, created = GreencheckASN.objects.update_or_create(
-                    active = True, 
-                    asn = int(address.replace('AS', '')),
-                    hostingprovider = Hostingprovider.objects.get(pk = settings.EQUINIX_PROVIDER_ID)
-                )
-        gcip.save() # Save the newly created or updated object
+        asns = []
 
-        if created:
-            # Only log and return when a new object was created
-            logger.debug(gcip)
-            return gcip
+        for address in raw_dataset:
+            if address.startswith("AS"):
+                gc_asn, created = GreencheckASN.objects.update_or_create(
+                    active=True,
+                    asn=int(address.replace("AS", "")),
+                    hostingprovider=Hostingprovider.objects.get(
+                        pk=settings.EQUINIX_PROVIDER_ID
+                    ),
+                )
+                gc_asn.save()  # Save the newly created or updated object
+
+                if created:
+                    # Only log and return when a new object was created
+                    logger.debug(gc_asn)
+                    asns.append(gc_asn)
+        return asns
 
     def extract_ip_ranges(self, raw_dataset):
         """
@@ -145,19 +150,21 @@ class EquinixCloudProvider:
 class Command(BaseCommand):
     help = "Update IP ranges for cloud providers that publish them"
 
-    def handle(self, *args, **options):        
+    def handle(self, *args, **options):
         equinix = EquinixCloudProvider()
-        
+
         # Retrieve dataset and parse to networks
         dataset = equinix.retrieve_dataset()
+
         ip_ranges = equinix.extract_ip_ranges(dataset)
         asns = equinix.update_asns_in_db(dataset)
 
-        green_ipv4s = [x for x in ip_ranges if isinstance(x, ipaddress.IPv4Network)]
-        green_ipv6s = [x for x in ip_ranges if isinstance(x, ipaddress.IPv6Network)]
+        green_ipv4s = [x for x in ip_ranges["ipv4"]]
+        green_ipv6s = [x for x in ip_ranges["ipv6"]]
 
-        # TODO: Add the number of ASN's added to the database. 
         self.stdout.write(
             f"Import Complete: Added {len(green_ipv4s)} new IPV4 networks, "
             f"{len(green_ipv6s) } IPV6 networks"
         )
+        if asns:
+            self.stdout.write(f"Added {len(asns)} AS Networks")
