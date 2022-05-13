@@ -280,6 +280,9 @@ LOGGING = {
 SITE_URL = "https://admin.thegreenwebfoundation.org"
 
 
+GOOGLE_PROVIDER_ID = 2345
+GOOGLE_DATASET_ENDPOINT = "https://www.gstatic.com/ipranges/cloud.json"
+
 TAGGIT_CASE_INSENSITIVE = True
 
 INTERNAL_IPS = [
