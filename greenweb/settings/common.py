@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 
 import os
 import environ
+import pathlib
 
 # Environ
 ROOT = environ.Path(__file__) - 3
@@ -151,8 +152,7 @@ DATABASES = {
 
 
 # Geo IP database
-
-GEOIP_PATH = "/data/GeoLite2-City.mmdb"
+GEOIP_PATH = pathlib.Path(ROOT) / "data" / "GeoLite2-City.mmdb"
 
 # Allow requests from any origin, but only make the API urls available
 # CORS_URLS_REGEX = r"^/api/.*$"
