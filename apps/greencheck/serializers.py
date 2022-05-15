@@ -191,3 +191,10 @@ class GreenDomainSerializer(serializers.ModelSerializer):
             "modified",
         ]
 
+
+class CO2ItensitySerializer(serializers.Serializer):
+
+    country_code = serializers.CharField()
+    city = serializers.CharField()
+    country_name = serializers.CharField()
+    annual_avg_co2_intensity = serializers.FloatField()

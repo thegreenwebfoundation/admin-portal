@@ -36,7 +36,6 @@ There will be cases where an organisation isn't running its own servers or other
 
 In this case a domain might be `my-cool-site.com`, which resolving to the IP address, which we then link to Provider A, the organisation.
 
------
 
 ### Domain, to IP to provider, by ASN
 
