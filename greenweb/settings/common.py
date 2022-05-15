@@ -149,6 +149,11 @@ DATABASES = {
     # 'extra': env.db('SQLITE_URL'),
 }
 
+
+# Geo IP database
+
+GEOIP_PATH = "/data/GeoLite2-City.mmdb"
+
 # Allow requests from any origin, but only make the API urls available
 # CORS_URLS_REGEX = r"^/api/.*$"
 CORS_ALLOW_ALL_ORIGINS = True

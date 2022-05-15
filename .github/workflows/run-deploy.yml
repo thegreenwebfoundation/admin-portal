@@ -54,4 +54,8 @@ jobs:
           AZURE_IP_RANGE_JSON_FILE: ${{ secrets.AZURE_IP_RANGE_JSON_FILE }}
           EQUINIX_PROVIDER_ID: ${{ secrets.EQUINIX_PROVIDER_ID }}
           EQUINIX_DATASET_ENDPOINT: ${{ secrets.EQUINIX_DATASET_ENDPOINT }}
+          MAXMIND_USER_ID: ${{ secrets.MAXMIND_USER_ID }}
+          MAXMIND_LICENCE_KEY: ${{ secrets.MAXMIND_LICENCE_KEY }}
+
+
 

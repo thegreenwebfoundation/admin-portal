@@ -75,6 +75,7 @@ markdown = "*"
 toml = "*"
 python-dateutil = "*"
 
+geoip2 = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
