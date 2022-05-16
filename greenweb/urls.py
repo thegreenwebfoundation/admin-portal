@@ -87,7 +87,12 @@ urlpatterns += [
         name="green-domain-batch",
     ),
     path(
-        "api/v3/ip-to-co2intensity",
+        "api/v3/ip-to-co2intensity/",
+        api_views.IPCO2Intensity.as_view(),
+        name="ip-to-co2intensity",
+    ),
+    path(
+        "api/v3/ip-to-co2intensity/<ip_to_check>",
         api_views.IPCO2Intensity.as_view(),
         name="ip-to-co2intensity",
     ),
