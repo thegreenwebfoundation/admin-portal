@@ -1,6 +1,8 @@
 import logging
 
 from django.contrib.gis.geoip2 import GeoIP2
+from django.contrib.gis.geoip2.base import GeoIP2Exception
+
 from apps.greencheck.models.checks import CO2Intensity
 from geoip2 import errors
 
@@ -13,7 +15,17 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-geolookup = GeoIP2(settings.GEOIP_PATH)
+
+geolookup = None
+
+try:
+    geolookup = GeoIP2(settings.GEOIP_PATH)
+except GeoIP2Exception as e:
+    logger.warning(
+        "No valid path found for the GeoIp binary database. "
+        "We will not be able to serve ip-to-co2-intensity lookups."
+    )
+
 
 
 class IPCO2Intensity(views.APIView):
