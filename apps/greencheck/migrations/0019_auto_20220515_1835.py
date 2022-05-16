@@ -24,13 +24,12 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                migrations.AddField(
-                    model_name="co2intensity",
-                    name="generation_from_fossil",
-                    field=models.FloatField(default=0),
-                ),
+                ("generation_from_fossil", models.FloatField(default=0)),
                 ("country_name", models.CharField(max_length=255)),
-                ("country_code_iso_2", models.CharField(max_length=255)),
+                (
+                    "country_code_iso_2",
+                    models.CharField(max_length=255, blank=True, null=True),
+                ),
                 ("country_code_iso_3", models.CharField(max_length=255)),
                 ("carbon_intensity", models.FloatField(default=0)),
                 ("carbon_intensity_type", models.CharField(max_length=255)),

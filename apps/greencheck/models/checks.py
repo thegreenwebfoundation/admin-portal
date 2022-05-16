@@ -505,3 +505,26 @@ class GreenDomain(models.Model):
 
     class Meta:
         db_table = "greendomain"
+
+
+class CO2Intensity(models.Model):
+    """
+    A lookup table for returning carbon intensity figures
+    for a given region, used when looking up IPs and/or domains.
+
+    Works at a country level of granularity at present, with the expectation
+    that grid or hosting provider data can offer greater detail as available.
+    """
+
+    country_name = models.CharField(max_length=255)
+    country_code_iso_2 = models.CharField(max_length=255, blank=True, null=True)
+    country_code_iso_3 = models.CharField(max_length=255)
+    carbon_intensity = models.FloatField()
+    # marginal, average or perhaps residual
+    carbon_intensity_type = models.CharField(max_length=255)
+    generation_from_fossil = models.FloatField(default=0)
+    year = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.country_name} - {self.year}"
+
