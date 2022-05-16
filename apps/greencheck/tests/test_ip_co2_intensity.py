@@ -14,14 +14,22 @@ pytestmark = pytest.mark.django_db
 logger = logging.getLogger(__name__)
 
 rf = APIRequestFactory()
+from ..models import CO2Intensity
 
 
 class TestIPCO2IntensityViewGet:
-    def test_get_ip_empty(self):
+    def test_get_ip_empty(self, mocker):
         """
         Exercise the simplest happy path - we return a payload listing the IP
         for the given IP address
         """
+
+        # we mock this call to avoid needing to download the GeoIP binary
+        # database in our tests
+        mocker.patch(
+            "apps.greencheck.api.views.IPCO2Intensity.lookup_ip",
+            return_value=CO2Intensity.global_value(),
+        )
 
         rf = APIRequestFactory()
         url_path = reverse("ip-to-co2intensity")
@@ -35,10 +43,18 @@ class TestIPCO2IntensityViewGet:
         # check contents
         assert response.status_code == 200
 
-    def test_get_specific_ip(self,):
+    def test_get_specific_ip(self, mocker):
         """
         Check with a specific IP to lookup.
         """
+
+        # we mock this call to avoid needing to download the GeoIP binary
+        # database in our tests
+        mocker.patch(
+            "apps.greencheck.api.views.IPCO2Intensity.lookup_ip",
+            return_value=CO2Intensity.global_value(),
+        )
+
         ip_to_check = "85.17.184.227"
 
         url_path = reverse("ip-to-co2intensity", kwargs={"ip_to_check": ip_to_check})
