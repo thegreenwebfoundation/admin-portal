@@ -27,6 +27,8 @@ except GeoIP2Exception as e:
     )
 
 
+from drf_yasg.utils import swagger_auto_schema
+
 
 class IPCO2Intensity(views.APIView):
     """
@@ -77,6 +79,7 @@ class IPCO2Intensity(views.APIView):
         # we couldn't trace this to a given country, fallback to default 'world' value
         return CO2Intensity.global_value()
 
+    @swagger_auto_schema(tags=["IP Carbon Intensity"])
     def get(self, request, ip_to_check=None, format=None):
         """
         Return the CO2 intensity for the IP address
