@@ -253,7 +253,7 @@ DRAMATIQ_EXTRA_QUEUES = {"stats": "stats"}
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "root": {"handlers": ["console"], "level": "DEBUG"},
+    "root": {"handlers": ["console"], "level": "INFO"},
     "handlers": {
         "console": {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
