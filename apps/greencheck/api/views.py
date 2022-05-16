@@ -1,12 +1,13 @@
 import logging
 
 from django.contrib.gis.geoip2 import GeoIP2
+from apps.greencheck.models.checks import CO2Intensity
 from geoip2 import errors
 
 from rest_framework import views
 from rest_framework import permissions
 from rest_framework.response import Response
-from ..serializers import CO2ItensitySerializer
+from ..serializers import CO2IntensitySerializer
 
 from django.conf import settings
 
@@ -24,7 +25,7 @@ class IPCO2Intensity(views.APIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    serializer_class = CO2ItensitySerializer
+    serializer_class = CO2IntensitySerializer
 
     def extract_ip(self, request):
         # TODO look a provided IP in data, to allow clients to
@@ -34,21 +35,10 @@ class IPCO2Intensity(views.APIView):
 
     def lookup_ip(self, ip_to_trace=None):
 
-        res = None
-
         try:
-            res = geolookup.city(ip_to_trace)
+            return geolookup.city(ip_to_trace)
         except errors.AddressNotFoundError:
-            # Give a fallback value to global defaults
-            # if no usable result is returned
-            res = {
-                "city": "Unknown",
-                "country_code": "XX",
-                "country_name": "World",
-                "annual_avg_co2_intensity": 442,
-            }
-
-        return res
+            return None
 
     def get(self, request, format=None):
         """
@@ -58,5 +48,12 @@ class IPCO2Intensity(views.APIView):
         ip_address = self.extract_ip(request)
         ip_lookup_res = self.lookup_ip(ip_address)
 
-        serialized = CO2ItensitySerializer(ip_lookup_res)
+        res = None
+        if ip_lookup_res is None:
+            res = CO2Intensity.global_value()
+        else:
+            country_code = ip_lookup_res.get("country_code")
+            res = CO2Intensity.check_for_country_code(country_code)
+
+        serialized = CO2IntensitySerializer(res, context={"checked_ip": ip_address})
         return Response(serialized.data)
