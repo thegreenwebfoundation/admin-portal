@@ -59,6 +59,11 @@ class IPCO2Intensity(views.APIView):
         geolocation info.
         """
 
+        # exit early if we do not have access to our `geolookup`
+        # GeoIP lookup service
+        if not geolookup:
+            return CO2Intensity.global_value()
+
         res = None
         try:
             res = geolookup.city(ip_to_trace)
