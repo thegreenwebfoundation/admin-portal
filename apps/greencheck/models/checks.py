@@ -507,6 +507,9 @@ class GreenDomain(models.Model):
         db_table = "greendomain"
 
 
+GLOBAL_AVG_FOSSIL_SHARE = 0.6
+
+
 class CO2Intensity(models.Model):
     """
     A lookup table for returning carbon intensity figures
@@ -527,4 +530,33 @@ class CO2Intensity(models.Model):
 
     def __str__(self):
         return f"{self.country_name} - {self.year}"
+
+    @classmethod
+    def check_for_country_code(cls, country_code):
+        """
+        Accept 2 letter country code, and return the CO2 Intensity
+        figures for the corresponding country if present
+        """
+
+        try:
+            return cls.objects.get(country_code_iso_2=country_code)
+        except cls.DoesNotExist:
+            return cls.global_value()
+
+    @classmethod
+    def global_value(cls):
+        """
+        Return a default lookup value for when we
+        do not have enough information to return information
+        based on a given country.
+        """
+        return CO2Intensity(
+            country_name="World",
+            country_code_iso_2="xx",
+            country_code_iso_3="xxx",
+            carbon_intensity_type="avg",
+            carbon_intensity=442,
+            generation_from_fossil=GLOBAL_AVG_FOSSIL_SHARE,
+            year=2021,
+        )
 
