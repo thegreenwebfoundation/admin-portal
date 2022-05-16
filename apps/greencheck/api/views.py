@@ -27,33 +27,47 @@ class IPCO2Intensity(views.APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = CO2IntensitySerializer
 
-    def extract_ip(self, request):
-        # TODO look a provided IP in data, to allow clients to
-        # specificy an IP to look up specfically
+    def extract_ip(self, request, ip_to_check):
+        """
+        Return either the IP used for the connection,
+        or the one explicitly provided in the API
+        """
 
+        if ip_to_check:
+            return ip_to_check
+
+        # otherwise fallback to the originating IP
         return request.META.get("REMOTE_ADDR")
 
     def lookup_ip(self, ip_to_trace=None):
+        """
+        Lookup a carbon intensity result for the given IP, based
+        on the country the IP is estimated to reside in.
+        Fall back to a global average if we can't find more specific
+        geolocation info.
+        """
 
+        res = None
         try:
-            return geolookup.city(ip_to_trace)
+            res = geolookup.city(ip_to_trace)
         except errors.AddressNotFoundError:
-            return None
+            logger.info("No matching result for the provided IP")
 
-    def get(self, request, format=None):
+        if res is not None:
+            country_code = res.get("country_code")
+            return CO2Intensity.check_for_country_code(country_code)
+
+        # we couldn't trace this to a given country, fallback to default 'world' value
+        return CO2Intensity.global_value()
+
+    def get(self, request, ip_to_check=None, format=None):
         """
         Return the CO2 intensity for the IP address
         """
-
-        ip_address = self.extract_ip(request)
+        ip_address = self.extract_ip(request, ip_to_check)
         ip_lookup_res = self.lookup_ip(ip_address)
 
-        res = None
-        if ip_lookup_res is None:
-            res = CO2Intensity.global_value()
-        else:
-            country_code = ip_lookup_res.get("country_code")
-            res = CO2Intensity.check_for_country_code(country_code)
-
-        serialized = CO2IntensitySerializer(res, context={"checked_ip": ip_address})
+        serialized = CO2IntensitySerializer(
+            ip_lookup_res, context={"checked_ip": ip_address}
+        )
         return Response(serialized.data)

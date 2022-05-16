@@ -20,6 +20,12 @@ from ...accounts import models as ac_models
 from .. import choices as gc_choices
 
 logger = logging.getLogger(__name__)
+
+# https://ember-data-api-scg3n.ondigitalocean.app/ember/generation_yearly?_sort=rowid&_facet=year&_facet=variable&country_or_region__exact=World&variable__exact=Fossil&year__exact=2021
+GLOBAL_AVG_FOSSIL_SHARE = 0.62
+
+# https://ember-data-api-scg3n.ondigitalocean.app/ember?sql=select+country_or_region%2C+country_code%2C+year%2C+emissions_intensity_gco2_per_kwh%0D%0Afrom+country_overview_yearly%0D%0Awhere+year+%3D+2021%0D%0Aand+country_or_region+%3D+%22World%22%0D%0Aorder+by+country_code+limit+300
+GLOBAL_AVG_CO2_INTENSITY = 442.23
 """
 - greencheck_linked - the purpose of the table is not very clear.
    Contains many entries though.
@@ -507,9 +513,6 @@ class GreenDomain(models.Model):
         db_table = "greendomain"
 
 
-GLOBAL_AVG_FOSSIL_SHARE = 0.6
-
-
 class CO2Intensity(models.Model):
     """
     A lookup table for returning carbon intensity figures
@@ -538,10 +541,21 @@ class CO2Intensity(models.Model):
         figures for the corresponding country if present
         """
 
-        try:
-            return cls.objects.get(country_code_iso_2=country_code)
-        except cls.DoesNotExist:
-            return cls.global_value()
+        # we try to return the latest value we have for a given country
+        # in some places data can be more than a year old, so we allow
+        # for this
+        res = (
+            cls.objects.filter(country_code_iso_2=country_code)
+            .order_by("-year")
+            .first()
+        )
+
+        # do we have a result? return it
+        if res:
+            return res
+
+        # otherwise fall back to global value
+        return cls.global_value()
 
     @classmethod
     def global_value(cls):
@@ -555,7 +569,7 @@ class CO2Intensity(models.Model):
             country_code_iso_2="xx",
             country_code_iso_3="xxx",
             carbon_intensity_type="avg",
-            carbon_intensity=442,
+            carbon_intensity=GLOBAL_AVG_CO2_INTENSITY,
             generation_from_fossil=GLOBAL_AVG_FOSSIL_SHARE,
             year=2021,
         )
