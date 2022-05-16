@@ -266,9 +266,9 @@ class HostingAdmin(admin.ModelAdmin):
         cancel_link = reverse(
             "admin:" + get_admin_name(self.model, "change"), args=[obj.pk]
         )
-        send_email_url = reverse(
-            "greenweb_admin:accounts_hostingprovider_send_email", args=[obj.id]
-        )
+
+        send_email_path = f"greenweb_admin:{get_admin_name(self.model, 'send_email')}"
+        send_email_url = reverse(send_email_path, args=[obj.id])
         logger.info(f"send_email_url - {send_email_url}")
 
         prepopulated_form = forms.PreviewEmailForm(
@@ -315,17 +315,21 @@ class HostingAdmin(admin.ModelAdmin):
 
         # add hosting provider note, so we have a record of
         # sending the request
+
         HostingProviderNote.objects.create(
             added_by=request.user, body_text=message, provider=obj
         )
 
         # TODO: is this needed any more?
+        # make note of the outbound message we sent
         HostingCommunication.objects.create(
             template=message_type, hostingprovider=obj, message_content=message
         )
         # add our internal label, so we know when they were last contacted
         # and we don't keep sending requests
         obj.staff_labels.add(f"{message_type} sent")
+
+        # add a tag to the hosting provider so we know they were messaged
 
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.pk)
