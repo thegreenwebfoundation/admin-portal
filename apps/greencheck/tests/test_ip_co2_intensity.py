@@ -4,10 +4,9 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
-from .. import models as gc_models
-from .. import viewsets as gc_viewsets
 from .. import api
 from .. import serializers
+from .. import models
 
 
 pytestmark = pytest.mark.django_db
@@ -68,19 +67,24 @@ class TestIPCO2IntensitySerializer:
     def test_serialize_ip_lookup(self):
 
         payload = {
-            "city": "Mountain View",
-            "country_code": "US",
-            "country_name": "United States",
-            "annual_avg_co2_intensity": 123.12,
+            "country_name": "World",
+            "country_code_iso_2": "xx",
+            "country_code_iso_3": "xxx",
+            "carbon_intensity_type": "avg",
+            "carbon_intensity": models.checks.GLOBAL_AVG_CO2_INTENSITY,
+            "generation_from_fossil": models.checks.GLOBAL_AVG_FOSSIL_SHARE,
+            "year": 2021,
         }
 
-        serialized = serializers.CO2ItensitySerializer(payload)
+        serialized = serializers.CO2IntensitySerializer(payload)
 
         fields = [
-            "country_code",
-            "country_name",
-            "city",
-            "annual_avg_co2_intensity",
+            "country_code_iso_2",
+            "country_code_iso_3",
+            "carbon_intensity_type",
+            "carbon_intensity",
+            "generation_from_fossil",
+            "year",
         ]
 
         for field in fields:
