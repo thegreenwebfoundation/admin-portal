@@ -3,8 +3,6 @@ import re
 import logging
 
 from typing import Protocol, runtime_checkable
-from abc import abstractmethod
-from dataclasses import dataclass
 
 from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.accounts.models import Hostingprovider
@@ -60,7 +58,7 @@ class BaseImporter():
         network = ipaddress.ip_network(address)
         hoster = Hostingprovider.objects.get(
             pk=cls.hosting_provider_id
-        )  # TODO: Need a way to fetch the ID from subclasses here
+        )
 
         gc_ip, created = GreencheckIp.objects.update_or_create(
             active=True, ip_start=network[1], ip_end=network[-1], hostingprovider=hoster
