@@ -18,19 +18,21 @@ class Importer(Protocol):
         raise NotImplementedError
 
 class BaseImporter():
+    hosting_provider_id:int
+
     def process_addresses(cls, list_of_addresses: list):
         # Determine the type of address (IPv4, IPv6 or ASN)for address in list_of_addresses:
         try:
             for address in list_of_addresses:
                 if re.search("(AS)[0-9]+$", address):
                     # Address is ASN
-                    cls.save_asn(address)
+                    cls.save_asn(cls, address)
                 elif isinstance(
                     ipaddress.ip_network(address),
                     (ipaddress.IPv4Network, ipaddress.IPv6Network),
                 ):
                     # Address is IPv4 or IPv6
-                    cls.save_ip(address)
+                    cls.save_ip(cls, address)
         except ValueError:
             logger.exception(
                 "Value has invalid structure. Must be IPv4 or IPv6 with subnetmask (101.102.103.104/27) or AS number (AS123456)."
