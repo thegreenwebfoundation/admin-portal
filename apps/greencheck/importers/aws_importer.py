@@ -13,7 +13,7 @@ class AwsImporter(BaseImporter):
 
     def fetch_data_from_source(cls) -> list:
         try:
-            response = requests.get(settings.EQUINIX_DATASET_ENDPOINT).json()
+            response = requests.get(settings.AWS_DATASET_ENDPOINT).json()
             return cls.parse_to_list(response)
         except requests.RequestException:
             logger.warning("Unable to fetch text file. Aborting early.")
