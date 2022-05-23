@@ -1,10 +1,8 @@
-import abc
 import requests
 import logging
 
-from apps.greencheck.management.commands.importer_interface import BaseImporter, Importer
+from apps.greencheck.importers.importer_interface import BaseImporter, Importer
 
-from django.core.management.base import BaseCommand
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -34,13 +32,3 @@ class EquinixImporter(BaseImporter):
             return list_of_ips
         except Exception as e:
             logger.exception("Something really unexpected happened. Aborting")
-
-class Command(BaseCommand):
-    help = "Update IP ranges for cloud providers that publish them"
-
-    def handle(self, *args, **options):
-        importer = EquinixImporter()
-        data = importer.fetch_data_from_source()
-        importer.process_addresses(data)
-
-        # TODO: Implement output

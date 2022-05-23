@@ -3,7 +3,7 @@ import pathlib
 from io import StringIO
 
 from django.core.management import call_command
-from apps.greencheck.management.commands.equinix_importer import EquinixImporter
+from apps.greencheck.importers.equinix_importer import EquinixImporter
 
 from django.conf import settings
 
@@ -44,26 +44,22 @@ class TestEquinixImportCommand:
     """
 
     def test_handle(self, mocker, sample_data):
+        # mock the call to retrieve from source, to a locally stored
+        # testing sample. By instead using the test sample,
+        # we avoid unnecessary network requests.
 
-        # mock the call to `retrieve_dataset`, and return
-        # our local text file instead of making a
-        # network request. This gives consistent
-        # input and output we can check for in our assertions
-
-        # identify the method we want to modify to return a new
-        # value for
+        # identify method we want to mock
         path_to_mock = (
-            "apps.greencheck.management.commands."
-            "equinix_importer.EquinixImporter."
-            "fetch_data_from_source"
+            "apps.greencheck.importers.equinix_importer."
+            "EquinixImporter.fetch_data_from_source"
         )
 
-        # define the mock return value to call when
-        # the `retrieve_dataset` method is called, instead
+        # define a different return when the targeted mock
+        # method is called
         mocker.patch(
             path_to_mock, return_value=sample_data,
         )
 
         out = StringIO()
-        call_command("equinix_importer", stdout=out)
+        call_command("update_equinix_network", stdout=out)
         # TODO: Report back on the output
