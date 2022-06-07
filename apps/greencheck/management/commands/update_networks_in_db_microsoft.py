@@ -5,5 +5,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         importer = MicrosoftImporter()
         data = importer.fetch_data_from_source()
-        importer.process_addresses(data)
+        update_message = importer.process_addresses(data)
+        
+        self.stdout.write(update_message)
         
