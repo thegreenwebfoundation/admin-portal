@@ -1,9 +1,10 @@
 import pytest
 import pathlib
+import json
 from io import StringIO
 
 from django.core.management import call_command
-from apps.greencheck.importers.equinix_importer import EquinixImporter
+from apps.greencheck.importers.importer_amazon import AmazonImporter
 
 from django.conf import settings
 
@@ -11,22 +12,23 @@ from django.conf import settings
 @pytest.fixture
 def sample_data():
     """
-    Retrieve a locally saved sample from the population as dataset to use for this test
-    Return: str (contents of the text file)
+    Retrieve a locally saved sample of the population to use for this test
+    Return: JSON
     """
     this_file = pathlib.Path(__file__)
-    path = this_file.parent.parent.joinpath("fixtures", "equinix_dataset.txt")
+    json_path = this_file.parent.parent.joinpath("fixtures", "test_dataset_amazon.json")
+    with open(json_path) as ipr:
+        return json.loads(ipr.read())
 
-    return open(path).read()
-    
+
 @pytest.mark.django_db
-class TestEquinixImporter:
-    def test_parse_to_list(self, hosting_provider, sample_data):
+class TestAmazonImporter:
+    def test_parse_to_list(self, sample_data):
         """
         Test the parsing function.
         """
-        # Initialize Equinix importer
-        importer = EquinixImporter()
+        # Initialize Amazon importer
+        importer = AmazonImporter()
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data)
@@ -34,10 +36,8 @@ class TestEquinixImporter:
         # Test: resulting list contains items
         assert len(list_of_addresses) > 0
 
-
-
 @pytest.mark.django_db
-class TestEquinixImportCommand:
+class TestAmazonImportCommand:
     """
     This just tests that we have a management command that can run.
     We _could_ mock the call to fetch ip ranges, if this turns out to be a slow test.
@@ -50,8 +50,8 @@ class TestEquinixImportCommand:
 
         # identify method we want to mock
         path_to_mock = (
-            "apps.greencheck.importers.equinix_importer."
-            "EquinixImporter.fetch_data_from_source"
+            "apps.greencheck.importers.importer_amazon."
+            "AmazonImporter.fetch_data_from_source"
         )
 
         # define a different return when the targeted mock
@@ -61,5 +61,4 @@ class TestEquinixImportCommand:
         )
 
         out = StringIO()
-        call_command("update_equinix_network", stdout=out)
-        # TODO: Report back on the output
+        call_command("update_networks_in_db_amazon", stdout=out)

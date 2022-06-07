@@ -13,7 +13,7 @@ class EquinixImporter(BaseImporter):
 
     def fetch_data_from_source(cls) -> list:
         try:
-            response = requests.get(settings.EQUINIX_DATASET_ENDPOINT)
+            response = requests.get(settings.EQUINIX_REMOTE_API_ENDPOINT)
             return cls.parse_to_list(response.text)
         except requests.RequestException:
             logger.warning("Unable to fetch text file. Aborting early.")

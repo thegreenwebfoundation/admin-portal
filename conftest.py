@@ -8,7 +8,7 @@ from django.contrib.auth import models as auth_models
 
 from apps.accounts.models import Hostingprovider, Datacenter
 from apps.greencheck.models import GreencheckIp, GreencheckASN
-from apps.greencheck.management.commands import update_aws_ip_ranges
+# from apps.greencheck.management.commands import update_aws_ip_ranges
 
 from apps.greencheck.factories import UserFactory, SiteCheckFactory
 
@@ -158,30 +158,6 @@ def hosting_provider():
 
 
 @pytest.fixture
-def hosting_provider_aws():
-
-    oregon, *rest = [
-        region
-        for region in update_aws_ip_ranges.GREEN_REGIONS
-        if region[1] == "us-west-2"
-    ]
-    name, region, host_id = oregon
-    return Hostingprovider(
-        archived=False,
-        country="US",
-        customer=False,
-        icon="",
-        iconurl="",
-        id=host_id,
-        model="groeneenergie",
-        name=name,
-        partner="",
-        showonwebsite=True,
-        website="http://aws.amazon.com",
-    )
-
-
-@pytest.fixture
 def hosting_provider_with_sample_user(hosting_provider, sample_hoster_user):
     """
     Return a hosting provider that's been persisted to the database,
@@ -231,18 +207,12 @@ def green_asn(hosting_provider):
     return GreencheckASN(active=True, asn=12345, hostingprovider=hosting_provider,)
 
 
-@pytest.fixture
-def aws_cloud_provider(hosting_provider):
-    return update_aws_ip_ranges.AmazonCloudProvider(
-        (("Amazon US West", "us-west-2", hosting_provider.id),)
-    )
-
 
 @pytest.fixture
 def csv_file():
     this_file = pathlib.Path(__file__)
     return this_file.parent.joinpath(
-        "apps", "greencheck", "fixtures", "import_data.csv"
+        "apps", "greencheck", "fixtures", "test_dataset_conftest.csv"
     )
 
 
