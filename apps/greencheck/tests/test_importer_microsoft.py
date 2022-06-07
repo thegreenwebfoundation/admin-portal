@@ -4,7 +4,7 @@ import json
 from io import StringIO
 
 from django.core.management import call_command
-from apps.greencheck.importers.azure_importer import AzureImporter
+from apps.greencheck.importers.importer_microsoft import MicrosoftImporter
 
 from django.conf import settings
 
@@ -16,19 +16,19 @@ def sample_data():
     Return: JSON
     """
     this_file = pathlib.Path(__file__)
-    json_path = this_file.parent.parent.joinpath("fixtures", "azure_test_sample.json")
+    json_path = this_file.parent.parent.joinpath("fixtures", "test_dataset_microsoft.json")
     with open(json_path) as ipr:
         return json.loads(ipr.read())
 
 
 @pytest.mark.django_db
-class TestAzureImporter:
+class TestMicrosoftImporter:
     def test_parse_to_list(self, sample_data):
         """
         Test the parsing function.
         """
-        # Initialize Azure importer
-        importer = AzureImporter()
+        # Initialize Microsoft importer
+        importer = MicrosoftImporter()
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data)
@@ -37,7 +37,7 @@ class TestAzureImporter:
         assert len(list_of_addresses) > 0
 
 @pytest.mark.django_db
-class TestAzureImportCommand:
+class TestMicrosoftImportCommand:
     """
     This just tests that we have a management command that can run.
     We _could_ mock the call to fetch ip ranges, if this turns out to be a slow test.
@@ -50,8 +50,8 @@ class TestAzureImportCommand:
 
         # identify method we want to mock
         path_to_mock = (
-            "apps.greencheck.importers.azure_importer."
-            "AzureImporter.fetch_data_from_source"
+            "apps.greencheck.importers.importer_microsoft."
+            "MicrosoftImporter.fetch_data_from_source"
         )
 
         # define a different return when the targeted mock
@@ -61,5 +61,4 @@ class TestAzureImportCommand:
         )
 
         out = StringIO()
-        call_command("update_azure_network", stdout=out)
-        # TODO: Report back on the output
+        call_command("update_networks_in_db_microsoft", stdout=out)

@@ -51,7 +51,7 @@ def sample_data():
     """
     this_file = pathlib.Path(__file__)
     json_path = this_file.parent.parent.joinpath(
-        "fixtures", "base_importer_dataset.json"
+        "fixtures", "test_dataset_base_importer.json"
     )
     with open(json_path) as ipr:
         return json.loads(ipr.read())

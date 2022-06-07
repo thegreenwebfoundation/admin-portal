@@ -7,13 +7,13 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-class AwsImporter(BaseImporter):
+class MicrosoftImporter(BaseImporter):
     def __init__(cls):
-        cls.hosting_provider_id = settings.AWS_PROVIDER_ID
+        cls.hosting_provider_id = settings.MICROSOFT_PROVIDER_ID
 
     def fetch_data_from_source(cls) -> list:
         try:
-            response = requests.get(settings.AWS_DATASET_ENDPOINT).json()
+            response = requests.get(settings.MICROSOFT_LOCAL_FILE_DIRECTORY).json()
             return cls.parse_to_list(response)
         except requests.RequestException:
             logger.warning("Unable to fetch text file. Aborting early.")
@@ -22,13 +22,10 @@ class AwsImporter(BaseImporter):
         try:
             list_of_ips = []
 
-            # Loop through IPv4 addresses
-            for address in raw_data['prefixes']:
-                list_of_ips.append(address['ip_prefix'])
-
-            # Loop through IPv6 addresses
-            for address in raw_data['ipv6_prefixes']:
-                list_of_ips.append(address['ipv6_prefix'])
+            # Extract IPv4 and IPv6
+            for services in raw_data["values"]:
+                for address in services["properties"]["addressPrefixes"]:
+                    list_of_ips.append(address)
 
             # This provider only has IPv4 and IPv6, so we
             # don't have to include ASN here
