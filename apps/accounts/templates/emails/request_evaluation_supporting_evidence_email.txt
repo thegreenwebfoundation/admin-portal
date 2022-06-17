@@ -1,0 +1,2 @@
+Supporting evidence has being updated for user {user_name} and is ready to be evaluated.
+Visit [this overview](overview_link) to see all hosts that are ready to be evaluated. 

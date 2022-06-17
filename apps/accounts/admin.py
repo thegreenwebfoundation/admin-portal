@@ -79,7 +79,10 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (
             None,
-            {"classes": ("wide",), "fields": ("username", "password1", "password2"),},
+            {
+                "classes": ("wide",),
+                "fields": ("username", "password1", "password2"),
+            },
         ),
     )
 
@@ -130,9 +133,7 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
 
 
 class HostingProviderNoteInline(admin.StackedInline):
-    """
-
-    """
+    """ """
 
     extra = 1
     model = HostingProviderNote
@@ -334,6 +335,34 @@ class HostingAdmin(admin.ModelAdmin):
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.pk)
 
+    def inform_updated_supporting_evidence(self, hosting_provider):
+        label_text = f"supporting-evidence-validation-pending"
+
+        # Return if action has already been taken to inform
+        if label_text in hosting_provider.staff_labels.names():
+            logger.info(f"label {label_text} already applied")
+            return
+
+        # Add label to the form to indicate that it is ready for evaluation
+        hosting_provider.staff_labels.add(label_text)
+
+        # Send mail to update staff about a pending evaluation
+        email_message = render_to_string(
+            "emails/request_evaluation_supporting_evidence_email.txt",
+            context={
+                "user_name": "PLACEHOLDER_NAME", # TODO: put name of the user in
+                "overview_link": "PLACEHOLDER_LINK", # TODO: needs to refer to the overiew with the applied filter of this tag (/admin/accounts/hostingprovider/?label=supporting-evidence-validation-pending)
+            },
+        )
+        # TODO: make sure the "to" and "from" addresses are correct
+        send_mail(
+            "Evaluation request regarding updated supporting evidence",
+            email_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.DEFAULT_FROM_EMAIL],
+            fail_silently=False,
+        )
+
     # Mutators
 
     def save_model(self, request, obj, form, change):
@@ -349,7 +378,7 @@ class HostingAdmin(admin.ModelAdmin):
         """
         Save the child objects in this form, and account for the special cases
         for each of the formset being iterated through.
-        
+
         Called multiple times - once for each formset on an model.
         """
 
@@ -362,7 +391,6 @@ class HostingAdmin(admin.ModelAdmin):
         # # has taken place.
         formset.form.changed = change
 
-        #
         if formset.form.__name__ == "HostingProviderNoteForm":
             # assign the current user to the
             # newly created comments
@@ -372,6 +400,11 @@ class HostingAdmin(admin.ModelAdmin):
                     if isinstance(new_obj, HostingProviderNote):
                         new_obj.added_by = request.user
                         new_obj.save()
+        elif formset.form.__name__ == "HostingProviderSupportingDocumentForm":
+            logger.info("found HostingProviderSupportingDocumentForm")
+            # TODO: by Chris: check if there is any update compared to the old version
+            # if yes, execute the following function:
+            # self.inform_updated_supporting_evidence(hosting_provider)
 
         formset.save()
 
@@ -450,7 +483,16 @@ class HostingAdmin(admin.ModelAdmin):
         fieldset = [
             (
                 "Hostingprovider info",
-                {"fields": (("name", "website",), "country", "services")},
+                {
+                    "fields": (
+                        (
+                            "name",
+                            "website",
+                        ),
+                        "country",
+                        "services",
+                    )
+                },
             )
         ]
 
@@ -458,7 +500,11 @@ class HostingAdmin(admin.ModelAdmin):
             "Admin only",
             {
                 "fields": (
-                    ("archived", "showonwebsite", "customer",),
+                    (
+                        "archived",
+                        "showonwebsite",
+                        "customer",
+                    ),
                     ("partner", "model"),
                     ("staff_labels",),
                     ("email_template", "preview_email_button"),
@@ -526,7 +572,9 @@ class HostingAdmin(admin.ModelAdmin):
     @mark_safe
     def send_button(self, obj):
         url = reverse_admin_name(
-            Hostingprovider, name="send_email", kwargs={"provider": obj.pk},
+            Hostingprovider,
+            name="send_email",
+            kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="sendEmail">Send email</a>'
         return link
@@ -536,7 +584,9 @@ class HostingAdmin(admin.ModelAdmin):
     @mark_safe
     def preview_email_button(self, obj):
         url = reverse_admin_name(
-            Hostingprovider, name="preview_email", kwargs={"provider": obj.pk},
+            Hostingprovider,
+            name="preview_email",
+            kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="sendEmail">Compose message</a>'
         return link
@@ -659,10 +709,16 @@ class DatacenterAdmin(admin.ModelAdmin):
                 "Datacenter info",
                 {
                     "fields": (
-                        ("name", "website",),
+                        (
+                            "name",
+                            "website",
+                        ),
                         ("country", "user"),
                         ("pue", "residualheat"),
-                        ("temperature", "temperature_type",),
+                        (
+                            "temperature",
+                            "temperature_type",
+                        ),
                         ("dc12v", "virtual", "greengrid", "showonwebsite"),
                         ("model",),
                     ),
