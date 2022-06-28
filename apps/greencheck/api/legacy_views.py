@@ -142,9 +142,9 @@ def directory_provider(self, id):
 
 def tiered_lookup(domain: str) -> GreenDomain:
     """
-    Try a lookup against the Greendomais cache table, then
+    Try a lookup against the Greendomains cache table, then
     fallback to doing a slower, full lookup, returning a
-    Greendomain lookup.
+    "Greendomain" lookup.
     """
     if res := GreenDomain.objects.filter(url__in=domain):
         return res.first()
@@ -170,11 +170,14 @@ def greencheck_multi(request, url_list: str):
     if urls is None:
         urls = []
 
-    # this is not returning results we need. We need to abstract out the checking logic so we try out different layers of caching like we do with the DRF based API.
     green_matches = []
 
     for domain in urls:
-        # fetch Greendomains entry
+        # fetch Greendomains entry for every domain, doing
+        # a full lookup if need be
+        # TODO this is likely a prime candidate for doing
+        # in parallel with newer async/await features in
+        # Django 4 onwards
         if res := tiered_lookup(domain):
             green_matches.append(res)
 
