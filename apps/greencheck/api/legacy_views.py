@@ -34,8 +34,7 @@ def augmented_greencheck(check):
             "green": True,
         }
     else:
-        return
-        {
+        return {
             "date": str(check.date),
             "url": check.url,
             "hostingProviderId": False,
@@ -141,6 +140,19 @@ def directory_provider(self, id):
     return response.Response([provider_dict])
 
 
+def tiered_lookup(domain: str) -> GreenDomain:
+    """
+    Try a lookup against the Greendomais cache table, then
+    fallback to doing a slower, full lookup, returning a
+    Greendomain lookup.
+    """
+    if res := GreenDomain.objects.filter(url__in=domain):
+        return res.first()
+
+    if res := checker.perform_full_lookup(domain):
+        return res
+
+
 @api_view()
 @permission_classes([AllowAny])
 def greencheck_multi(request, url_list: str):
@@ -158,8 +170,16 @@ def greencheck_multi(request, url_list: str):
     if urls is None:
         urls = []
 
-    green_matches = GreenDomain.objects.filter(url__in=urls)
+    # this is not returning results we need. We need to abstract out the checking logic so we try out different layers of caching like we do with the DRF based API.
+    green_matches = []
+
+    for domain in urls:
+        # fetch Greendomains entry
+        if res := tiered_lookup(domain):
+            green_matches.append(res)
+
     grey_urls = checker.grey_urls_only(urls, green_matches)
+
     checked_domains = checker.build_green_greylist(grey_urls, green_matches)
 
     serialised_domains = GreenDomainSerializer(checked_domains, many=True)

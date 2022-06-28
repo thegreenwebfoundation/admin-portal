@@ -58,7 +58,7 @@ class GreenDomainChecker:
                 parsed_url = urllib.parse.urlparse(f"//{url}")
             return parsed_url.netloc
 
-    def perform_full_lookup(self, domain) -> GreenDomain:
+    def perform_full_lookup(self, domain: str) -> GreenDomain:
         """
         Return a Green Domain object from doing a lookup.
         """
@@ -298,5 +298,3 @@ class GreenDomainChecker:
         # sort to return the smallest first
         return [obj["ip_range"] for obj in ascending_ip_ranges]
 
-
-    

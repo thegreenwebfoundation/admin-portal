@@ -435,6 +435,7 @@ class GreenDomain(models.Model):
         the time of the and the rest empty.
         """
         return GreenDomain(
+            green=False,
             url=domain,
             hosted_by=None,
             hosted_by_id=None,
