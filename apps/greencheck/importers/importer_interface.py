@@ -1,7 +1,6 @@
 import ipaddress
 import re
 import logging
-import pdb
 
 from typing import Protocol, runtime_checkable, List
 from django.db import transaction
@@ -30,16 +29,13 @@ class BaseImporter:
         count_asn = 0
 
         try:
-            # Extract ASN and IP values from the generic list
+            # Prepare and run ASN update
             regex = re.compile("(AS)[0-9]+$")
-            asn_list = list(filter(regex.match, list_of_addresses))
-            ip_list = list(set(list_of_addresses) - set(asn_list))
-
-            # ASN list preperation: formatting
-            asn_list = list(map(int, map(lambda x: x.replace("AS", ""), asn_list)))
+            asn_list = list(set(filter(regex.match, list_of_addresses)))
             count_asn = cls.update_asn(cls, asn_list)
 
-            # IP list preperation: type checking
+            # Prepare and run IP update
+            ip_list = list(set(list_of_addresses) - set(asn_list))
             ip_list = list(
                 filter(
                     lambda x: isinstance(
@@ -48,7 +44,7 @@ class BaseImporter:
                     ),
                     ip_list,
                 )
-            )
+            )  # Type checking
             count_ip = cls.update_ip(cls, ip_list)
 
             return f"Processing complete. Updated {count_asn} ASN's and {count_ip} IP's (IPv4 and/or IPv6)"
@@ -62,8 +58,11 @@ class BaseImporter:
             logger.exception(e)
             return f"An error occurred while adding new entries. Updated {count_asn} ASN's and {count_ip} IP's (IPv4 and/or IPv6)"
 
-    def update_asn(cls, active_networks: List[int]) -> int:
-        active_networks = list(set(active_networks))  # extract unique values
+    def update_asn(cls, active_networks: List[str]) -> int:
+        # Prepare list by extracting AS values
+        active_networks = list(
+            map(int, map(lambda x: x.replace("AS", ""), active_networks))
+        )
         updated_networks = 0
 
         logger.debug("Running atomic database transaction. Altered AS numbers:")
@@ -151,7 +150,7 @@ class BaseImporter:
                     )
                     entry.save()
 
-            if created:
-                logger.debug(entry)
+                    if created:
+                        logger.debug(entry)
 
         return updated_networks
