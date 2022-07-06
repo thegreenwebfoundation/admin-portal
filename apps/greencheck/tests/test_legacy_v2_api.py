@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from ..models import GreencheckIp
 from ...accounts import models as ac_models
+from ...greencheck.api import legacy_views
 from . import setup_domains
 
 
@@ -52,3 +53,58 @@ class TestGreencheckMultiView:
 
         response = client.get(reverse("legacy-greencheck-multi", args=[urls_string]))
         assert response.status_code == 200
+
+
+class TestDirectoryListingView:
+    """
+    Does our legacy directory endpoint list providers in the
+    correct order?
+    """
+
+    def test_list_directory_order_grouped(self, db, hosting_provider_factory):
+        for _ in range(3):
+            hosting_provider_factory.create(partner="Partner", showonwebsite=True)
+
+        for _ in range(3):
+            hosting_provider_factory.create(partner="", showonwebsite=True)
+
+        res = legacy_views.fetch_providers_for_country("US")
+
+        # Are the first three entries the partners and also the same order?
+        partners_in_response = res[:3]
+        reg_providers_in_response = res[3:]
+
+        partners_in_db = (
+            ac_models.Hostingprovider.objects.filter(partner="Partner")
+            .order_by("name")
+            .values("name", "partner")
+        )
+
+        reg_providers_in_db = (
+            ac_models.Hostingprovider.objects.filter(partner="")
+            .order_by("name")
+            .values("name", "partner")
+        )
+
+        # Are the first entries partners, and also in ascending order?
+        for index in range(3):
+            res_name = partners_in_response[index]["naam"]
+            res_partner = partners_in_response[index]["partner"]
+
+            db_name = partners_in_db[index]["name"]
+            db_partner = partners_in_db[index]["partner"]
+
+            assert res_name == db_name
+            assert res_partner == db_partner
+
+        # Are the second entries not partners, but also in ascending order?
+        for index in range(3):
+            res_name = reg_providers_in_response[index]["naam"]
+            res_partner = reg_providers_in_response[index]["partner"]
+
+            db_name = reg_providers_in_db[index]["name"]
+            db_partner = reg_providers_in_db[index]["partner"]
+
+            assert res_name == db_name
+            assert res_partner == db_partner
+

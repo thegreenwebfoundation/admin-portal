@@ -65,13 +65,27 @@ def fetch_providers_for_country(country_code):
     alphetical order.
     """
     # we need to order by partner, then alphabetical
-    # order
-    providers = Hostingprovider.objects.filter(
-        country=country_code, showonwebsite=True
-    ).order_by("-partner", "name")
-    
-    # Format companies as single entries for a country
-    countries_companies = [
+    # order. Because the django ORM doesn't natively support
+    # group by, and because we have hundreds of hosters for each
+    # country, at a maximum we can get away with doing it in memory
+
+    # because historically we have had a mix of empty strings and null
+    # values, we need to use multiple excludes
+    partner_providers = (
+        Hostingprovider.objects.filter(country=country_code, showonwebsite=True)
+        .exclude(partner__in=["", "None", None])
+        .order_by("name")
+    )
+    regular_providers = (
+        Hostingprovider.objects.filter(country=country_code, showonwebsite=True)
+        .filter(partner__in=["", "None", None])
+        .order_by("name")
+    )
+    # destructure the providers to build a new list,
+    # with partner providers first, then regular providers
+    providers = [*partner_providers, *regular_providers]
+
+    return [
         {
             "iso": str(provider.country),
             "id": str(provider.id),
@@ -81,13 +95,6 @@ def fetch_providers_for_country(country_code):
         }
         for provider in providers
     ]
-
-    # Sort company names connected to a country
-    for iso in countries_companies:
-        if 'providers' in countries_companies[iso].keys():
-            countries_companies[iso]['providers'] = sorted(countries_companies[iso]['providers'], key=itemgetter('naam'))
-
-    return countries_companies
 
 
 @api_view()
@@ -105,7 +112,6 @@ def directory(request):
 
         country_obj = {
             "iso": country.code,
-            # this is not correc
             "tld": f".{country.code.lower()}",
             "countryname": country.name.upper(),
         }
