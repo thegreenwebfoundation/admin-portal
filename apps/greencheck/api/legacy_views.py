@@ -69,8 +69,9 @@ def fetch_providers_for_country(country_code):
     providers = Hostingprovider.objects.filter(
         country=country_code, showonwebsite=True
     ).order_by("-partner", "name")
-
-    return [
+    
+    # Format companies as single entries for a country
+    countries_companies = [
         {
             "iso": str(provider.country),
             "id": str(provider.id),
@@ -80,6 +81,13 @@ def fetch_providers_for_country(country_code):
         }
         for provider in providers
     ]
+
+    # Sort company names connected to a country
+    for iso in countries_companies:
+        if 'providers' in countries_companies[iso].keys():
+            countries_companies[iso]['providers'] = sorted(countries_companies[iso]['providers'], key=itemgetter('naam'))
+
+    return countries_companies
 
 
 @api_view()
