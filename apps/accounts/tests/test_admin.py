@@ -379,3 +379,24 @@ class TestHostingProviderAdmin:
         assert len(resp.context["results"]) == archived[1]
         assert resp.status_code == 200
 
+
+class TestUserCreationAdmin:
+    """
+    Do the user creation forms work as expected,
+    and account for any legacy fields we have from earlier
+    versions of the platform?
+    """
+
+    def test_create_user_as_greenweb_staff(self):
+        """
+        Can a green web staff user sign in, and create a new user to
+        associate with an existing provider of services?
+        """
+
+        # create internal staff user
+
+        # sign them in
+
+        # use the add_form to add the new user
+
+        assert False
