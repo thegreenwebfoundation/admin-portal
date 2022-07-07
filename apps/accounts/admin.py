@@ -5,8 +5,10 @@ from django.contrib import messages
 from django.contrib import admin
 from django.urls import reverse
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
+from django.contrib.auth.forms import UserCreationForm
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
+from django.utils.translation import gettext, gettext_lazy as _
 from django.template.loader import render_to_string
 from django import template as dj_template
 from apps.greencheck.admin import (
@@ -37,7 +39,6 @@ from .admin_site import greenweb_admin
 from . import filters
 from . import forms
 from .forms import (
-    CustomUserChangeForm,
     CustomUserCreationForm,
     HostingProviderNoteForm,
     DatacenterNoteNoteForm,
@@ -70,31 +71,51 @@ class CustomGroupAdmin(GroupAdmin):
 
 @admin.register(User, site=greenweb_admin)
 class CustomUserAdmin(UserAdmin):
+
+    # we override the normal User Creation Form, because we want to support
+    # staff members creating users from inside the admin
     add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
+
     model = User
     search_fields = ("username", "email")
     list_display = ["username", "email", "last_login", "is_staff"]
 
-    add_fieldsets = (
-        (
-            None,
-            {"classes": ("wide",), "fields": ("username", "password1", "password2"),},
-        ),
-    )
-
     def get_queryset(self, request, *args, **kwargs):
+        """
+        This filter the view to only show the current user,
+        except if you are internal staff
+        """
         qs = super().get_queryset(request, *args, **kwargs)
-        if not request.user.is_staff:
+        if not request.user.groups.filter(name="admin").exists():
             qs = qs.filter(pk=request.user.pk)
         return qs
 
     def get_fieldsets(self, request, *args, **kwargs):
+        """Return """
+        # this is the normal username and password combo for
+        # creating a user.
+        top_row = (None, {"fields": ("username", "password")})
 
+        # followed by the stuff a user might change themselves
+        contact_deets = ("Personal info", {"fields": ("email",)})
+
+        # what we show for internal staff
+        staff_fieldsets = (
+            "Permissions",
+            {"fields": ("is_active", "is_staff", "groups",),},
+        )
+
+        # our usual set of forms to show for users
+        default_fieldset = [top_row, contact_deets]
+
+        # serve the extra staff fieldsets for creating users
+        if request.user.groups.filter(name="admin").exists():
+            return (*default_fieldset, staff_fieldsets)
+
+        # allow an override for super users
         if request.user.is_superuser:
             return (
-                (None, {"fields": ("username", "password")}),
-                ("Personal info", {"fields": ("email",)}),
+                *default_fieldset,
                 (
                     "Permissions",
                     {
@@ -107,15 +128,9 @@ class CustomUserAdmin(UserAdmin):
                         ),
                     },
                 ),
-                ("Important dates", {"fields": ("last_login", "date_joined")}),
             )
-        # TODO DRY this up, once the security hole is plugged
 
-        return (
-            (None, {"fields": ("username", "password")}),
-            ("Personal info", {"fields": ("email",)}),
-            ("Important dates", {"fields": ("last_login", "date_joined")}),
-        )
+        return default_fieldset
 
 
 class HostingCertificateInline(admin.StackedInline):
