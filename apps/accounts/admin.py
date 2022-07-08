@@ -80,6 +80,8 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ("username", "email")
     list_display = ["username", "email", "last_login", "is_staff"]
 
+    autocomplete_fields = ("hostingprovider",)
+
     def get_queryset(self, request, *args, **kwargs):
         """
         This filter the view to only show the current user,
@@ -99,10 +101,12 @@ class CustomUserAdmin(UserAdmin):
         # followed by the stuff a user might change themselves
         contact_deets = ("Personal info", {"fields": ("email",)})
 
+        hosting_provider = ("Linked Hosting Provider", {"fields": ("hostingprovider",)})
+
         # what we show for internal staff
         staff_fieldsets = (
             "Permissions",
-            {"fields": ("is_active", "is_staff", "groups",),},
+            {"fields": ("is_active", "is_staff", "groups"),},
         )
 
         # our usual set of forms to show for users
@@ -110,7 +114,7 @@ class CustomUserAdmin(UserAdmin):
 
         # serve the extra staff fieldsets for creating users
         if request.user.groups.filter(name="admin").exists():
-            return (*default_fieldset, staff_fieldsets)
+            return (*default_fieldset, hosting_provider, staff_fieldsets)
 
         # allow an override for super users
         if request.user.is_superuser:
