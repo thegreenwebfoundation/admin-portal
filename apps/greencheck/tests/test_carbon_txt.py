@@ -1,7 +1,7 @@
 import ipdb
 import pytest
 import pathlib
-import rich
+
 
 from .. import carbon_txt
 from ...accounts import models as ac_models
@@ -113,8 +113,6 @@ class TestCarbonTxtParser:
             check = gc_models.GreenDomain.check_for_domain(domain_alias)
             assert check.green == True
 
-
-
     @pytest.mark.skip(reason="pending")
     def test_creation_of_corporate_grouping(self):
         """
@@ -131,7 +129,3 @@ class TestCarbonTxtParser:
         """
         pass
 
-
-    
-        
-        

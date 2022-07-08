@@ -12,7 +12,6 @@ from dal_select2_taggit import widgets as dal_widgets
 
 
 from . import models as ac_models
-import rich
 
 User = get_user_model()
 

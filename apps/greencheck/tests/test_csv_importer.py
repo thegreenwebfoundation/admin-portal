@@ -1,6 +1,6 @@
 from io import StringIO
 import pathlib
-import rich
+
 
 import pytest
 from django.core.management import call_command

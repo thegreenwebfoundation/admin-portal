@@ -1,7 +1,6 @@
 from apps.accounts.models.hosting import Hostingprovider
 from typing import Dict, Set, List
 import toml
-import rich
 import logging
 import requests
 from urllib import parse

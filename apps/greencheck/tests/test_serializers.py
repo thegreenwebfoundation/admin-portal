@@ -2,7 +2,6 @@ import ipaddress
 import logging
 
 import pytest
-import rich
 
 
 from dateutil.relativedelta import relativedelta
