@@ -30,8 +30,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         Hostingprovider,
         on_delete=models.SET_NULL,
         db_column="id_hp",
-        unique=True,
         null=True,
+        blank=True,
     )
     last_login = models.DateTimeField(null=True)
     locked = models.BooleanField(default=False)
