@@ -80,6 +80,27 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ("username", "email")
     list_display = ["username", "email", "last_login", "is_staff"]
 
+    # these are not really fields, but buttons
+    # see the corresponding methods
+    readonly_fields = ["clear_provider_button"]
+
+    # provide a button to let us clear selections easily,
+    # as the default select2 widget does not offer this
+    @mark_safe
+    def clear_provider_button(self, obj):
+        return """
+            <button
+                class='button'
+                type='button'
+                id='clear-hosting-provider'
+                style='padding:0.5rem'
+            >
+                Clear hosting provider selection
+            </button>
+        """
+
+    clear_provider_button.short_description = ""
+
     autocomplete_fields = ("hostingprovider",)
 
     def get_queryset(self, request, *args, **kwargs):
@@ -93,7 +114,7 @@ class CustomUserAdmin(UserAdmin):
         return qs
 
     def get_fieldsets(self, request, *args, **kwargs):
-        """Return """
+        """Return different fieldsets depending on the user signed in"""
         # this is the normal username and password combo for
         # creating a user.
         top_row = (None, {"fields": ("username", "password")})
@@ -101,7 +122,10 @@ class CustomUserAdmin(UserAdmin):
         # followed by the stuff a user might change themselves
         contact_deets = ("Personal info", {"fields": ("email",)})
 
-        hosting_provider = ("Linked Hosting Provider", {"fields": ("hostingprovider",)})
+        hosting_provider = (
+            "Linked Hosting Provider",
+            {"fields": ("hostingprovider", "clear_provider_button")},
+        )
 
         # what we show for internal staff
         staff_fieldsets = (
@@ -135,6 +159,14 @@ class CustomUserAdmin(UserAdmin):
             )
 
         return default_fieldset
+
+    class Media:
+        """
+        An extended media class, to add an extra snippet
+        of js to allow us to clear the select2 dropdown
+        """
+
+        js = ("accounts/js/user-change.js",)
 
 
 class HostingCertificateInline(admin.StackedInline):
