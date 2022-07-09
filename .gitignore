@@ -132,7 +132,6 @@ notes.md
 sublime.sublime-workspace
 *.code-workspace
 static/*.*
-static
 
 # do not track ansible cruft
 deploy.retry
