@@ -308,6 +308,49 @@ class TestHostingProviderAdmin:
         assert len(resp.context["results"]) == archived[1]
         assert resp.status_code == 200
 
+    def test_staff_can_remove_provider_from_user(
+        self, db, client, hosting_provider_with_sample_user, greenweb_staff_user
+    ):
+        """
+        Can a staff member update a user to remove them
+        from a given hosting provider?
+        """
+
+        user = hosting_provider_with_sample_user.user_set.first()
+        provider = hosting_provider_with_sample_user
+        # log the staff member in
+        client.force_login(greenweb_staff_user)
+
+        user_admin_url = urls.reverse(
+            "greenweb_admin:accounts_user_change", args=[user.id],
+        )
+
+        user_payload_without_provider_allocated = {
+            "username": user.username,
+            "email": user.email,
+            "is_active": "on",
+            "is_staff": "on",
+            # simulate sending the empty result for a cleared
+            # hosting provider
+            "hostingprovider": "",
+            "groups": [group.id for group in user.groups.all()],
+        }
+
+        # make an update via a POST to clear the hosting provider
+        resp = client.post(
+            user_admin_url, user_payload_without_provider_allocated, follow=True
+        )
+
+        assert resp.status_code == 200
+
+        # is the user no longer allocated to the provider?
+        provider.refresh_from_db()
+        assert provider.user_set.count() == 0
+
+        # is the provider also no longer associated with the user?
+        user.refresh_from_db()
+        assert user.hostingprovider is None
+
 
 class TestUserCreationAdmin:
     """
