@@ -22,7 +22,7 @@ class TestHostingProviderAdminInlineRendering:
         """
         Sign in, and visit new hosting provider page.
 
-        Simulate the journey for a new user creating an hosting
+        Simulate the journey for a new user creating a hosting
         provider in the admin.
         """
 

@@ -1,3 +1,4 @@
+from ipaddress import ip_address
 import pathlib
 
 import pytest
@@ -36,15 +37,15 @@ def provider_groups():
 @pytest.fixture
 def sample_hoster_user(provider_groups):
     """A user created when they register"""
-    u = UserFactory.build(username="joebloggs", email="joe@example.com")
-    u.set_password("topSekrit")
-    u.save()
+    user = UserFactory.build(username="joebloggs", email="joe@example.com")
+    user.set_password("topSekrit")
+    user.save()
 
-    u.groups.add(*provider_groups)
+    user.groups.add(*provider_groups)
     [grp.save() for grp in provider_groups]
-    u.save()
+    user.save()
 
-    return u
+    return user
 
 
 @pytest.fixture
@@ -54,20 +55,20 @@ def greenweb_staff_user():
     of internal green web staff, who are paid to maintain
     the database
     """
-    u = UserFactory.build(username="greenweb_staff", email="staff@greenweb.org")
-    u.set_password("topSekrit")
+    user = UserFactory.build(username="greenweb_staff", email="staff@greenweb.org")
+    user.set_password("topSekrit")
 
     # give them an id so we can set up many to many relationships with groups
-    u.save()
+    user.save()
 
     groups = auth_models.Group.objects.filter(
         name__in=["admin", "datacenter", "hostingprovider"]
     )
 
-    u.groups.add(*groups)
+    user.groups.add(*groups)
     [grp.save() for grp in groups]
-    u.save()
-    return u
+    user.save()
+    return user
 
 
 @pytest.fixture
