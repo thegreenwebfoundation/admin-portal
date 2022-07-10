@@ -1,0 +1,7 @@
+Hello there.
+
+{{ provider }} has just updated their organisation profile. It is now awaiting review from staff.
+
+You can do so at the link below:
+
+{{ link_url }}
