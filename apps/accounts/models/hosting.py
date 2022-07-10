@@ -259,7 +259,7 @@ class Hostingprovider(models.Model):
         hosting_provider = approval_request.hostingprovider
         logger.debug(f"Approval request: {approval_request} for {hosting_provider}")
 
-        if not self.is_awaiting_review():
+        if not self.is_awaiting_review:
             self.label_as_awaiting_review()
             self.request_network_review_from_admins(approval_request)
             return True
