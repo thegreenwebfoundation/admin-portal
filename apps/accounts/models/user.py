@@ -77,8 +77,14 @@ class User(AbstractBaseUser, PermissionsMixin):
             models.Index(fields=["email_canonical"], name="email_canonical"),
         ]
 
+    # Properties
+
     def __str__(self):
         return self.username
+
+    @property
+    def is_admin(self):
+        return self.groups.filter(name="admin").exists()
 
     def get_absolute_url(self):
         return reverse("user_edit", args=[str(self.id)])
