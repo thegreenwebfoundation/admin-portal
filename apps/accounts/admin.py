@@ -436,7 +436,7 @@ class HostingAdmin(admin.ModelAdmin):
 
             # See more:
             # https://docs.djangoproject.com/en/dev/topics/forms/modelforms/#saving-objects-in-the-formset
-            instances = formset.save(commit=False)
+            formset.save(commit=False)
             if formset.new_objects:
                 for new_obj in formset.new_objects:
                     if isinstance(new_obj, HostingProviderNote):
@@ -445,12 +445,13 @@ class HostingAdmin(admin.ModelAdmin):
 
         formset.save()
 
+        # check for any changes in the other forms contained in the formset
         changes_in_related_objects = (
             formset.changed_objects or formset.changed_objects or formset.new_objects
         )
 
-        # we don't want flag the provider for review by internal staff when
-        # our internal staff area already the ones working on it
+        # we don't want to flag the provider for review by internal staff when
+        # our internal staff are the ones working on it
         should_flag_for_review = (
             not form.instance.is_awaiting_review and not request.user.is_admin
         )

@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 GREEN_VIA_CARBON_TXT = f"green:{GreenlistChoice.CARBONTXT.value}"
+AWAITING_REVIEW_STRING = "Awaiting Review"
+AWAITING_REVIEW_SLUG = "awaiting-review"
 
 
 class Datacenter(models.Model):
@@ -209,8 +211,9 @@ class Hostingprovider(models.Model):
     def is_awaiting_review(self):
         """
         Convenience check to see if this provider is labelled as
-        awaiting a review by staff."""
-        return "awaiting-review" in self.staff_labels.slugs()
+        awaiting a review by staff.
+        """
+        return AWAITING_REVIEW_SLUG in self.staff_labels.slugs()
 
     def label_as_awaiting_review(self, notify_admins=False):
         """
@@ -221,11 +224,12 @@ class Hostingprovider(models.Model):
         the added label
         """
 
+        # we already have the label, do nothing an return early
         if self.is_awaiting_review:
             return None
 
         # otherwise, we add the label
-        self.staff_labels.add("Awaiting Review")
+        self.staff_labels.add(AWAITING_REVIEW_STRING)
 
         if notify_admins:
             link_path = reverse(
@@ -247,7 +251,7 @@ class Hostingprovider(models.Model):
                 email_text,
                 email_html,
             )
-        return self.staff_labels.get(name="Awaiting Review")
+        return self.staff_labels.get(name=AWAITING_REVIEW_STRING)
 
     def mark_as_pending_review(self, approval_request):
         """
