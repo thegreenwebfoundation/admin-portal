@@ -404,10 +404,21 @@ class HostingAdmin(admin.ModelAdmin):
             if not obj.is_awaiting_review and not request.user.is_admin:
                 form.instance.label_as_awaiting_review(notify_admins=True)
 
+        # if there is not 'change' set, a user is creating a hosting
+        # provider for the first time.
+        # Allocate the new provider to them, so they can see their
+        # newly created provider on the next page load
         if not change:
-            user = request.user
-            # user.hostingprovider = obj
-            user.save()
+            # we don't allocate newly created providers to admin staff
+            # they might be creating a provider for someone else
+            if not request.user.is_admin:
+                user = request.user
+                user.hostingprovider = obj
+                user.save()
+
+            # and then notify the admins to review the new submission
+            if not obj.is_awaiting_review and not request.user.is_admin:
+                form.instance.label_as_awaiting_review(notify_admins=True)
 
     def save_formset(self, request, form, formset, change):
         """
