@@ -1,7 +1,9 @@
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Group, Permission
 
-# This file lists the expected permissions for each group, and is used in a
+# This file lists the expected permissions for each group.
+# We use it when setting up tests, and for keeping permissions
+# in source control to avoid drift
 
 
 def populate_group_permissions(apps, schema_editor):
@@ -107,6 +109,31 @@ def populate_group_permissions(apps, schema_editor):
         "change_greencheckipapprove",
         "delete_greencheckipapprove",
         "view_greencheckipapprove",
+        # need to be able to see support messages and create new ones
+        "add_supportmessage",
+        "change_supportmessage",
+        "delete_supportmessage",
+        "view_supportmessage",
+        # need to be able to add internal notes for hosting providers and datacentres
+        "add_datacenternote",
+        "change_datacenternote",
+        "delete_datacenternote",
+        "view_datacenternote",
+        "add_hostingprovidernote",
+        "change_hostingprovidernote",
+        "delete_hostingprovidernote",
+        "view_hostingprovidernote",
+        # need to be able to edit labels used by staff for annotating providers
+        "add_label",
+        "change_label",
+        "delete_label",
+        "view_label",
+        # need to be able to edit the tags used for listing the services that
+        # providers offer
+        "add_tag",
+        "change_tag",
+        "delete_tag",
+        "view_tag",
     ]
 
     for app_config in apps.get_app_configs():
