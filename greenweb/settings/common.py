@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     # 3rd party
+    "logentry_admin",
     "anymail",
     "django_extensions",
     "django_mysql",
