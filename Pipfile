@@ -75,6 +75,7 @@ toml = "*"
 python-dateutil = "*"
 geoip2 = "*"
 iso3166 = "*"
+django-logentry-admin = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
