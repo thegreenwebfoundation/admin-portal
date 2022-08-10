@@ -8,6 +8,7 @@ from apps.accounts.models.hosting import Hostingprovider
 from .. import carbon_txt
 from ...accounts import models as ac_models
 from .. import models as gc_models
+from .. import choices
 from .. import workers
 
 
@@ -144,6 +145,13 @@ class TestLogCarbonTxtCheck:
         psr = carbon_txt.CarbonTxtParser()
         psr.parse_and_import("www.hillbob.de", carbon_txt_string)
         hillbob_de = Hostingprovider.objects.get(name="www.hillbob.de")
+        dummy_check = site_check_factory.create(
+            url="www.hillbob.de",
+            ip=None,
+            hosting_provider_id=hillbob_de.id,
+            # we use WHOIS here, until we can use the correcrt ENUM for mariadb in a migration
+            match_type=choices.GreenlistChoice.WHOIS,
+        )
 
         check_logger = workers.SiteCheckLogger()
         # we need to mock the lookup here for domain checker
@@ -151,14 +159,14 @@ class TestLogCarbonTxtCheck:
         # mock our request to avoid the network call
         mocker.patch(
             "apps.greencheck.domain_check.GreenDomainChecker.check_domain",
-            return_value=site_check_factory.create(
-                url="www.hillbob.de", ip=None, hosting_provider_id=hillbob_de.id
-            ),
+            return_value=dummy_check,
         )
 
         res = check_logger.log_sitecheck_for_domain("www.hilbob.de")
 
-        # import ipdb
+        assert gc_models.Greencheck.objects.count() == 1
+        logged_check = gc_models.Greencheck.objects.first()
 
-        # ipdb.set_trace()
-        return True
+        assert logged_check.url == dummy_check.url
+        assert logged_check.type == dummy_check.match_type
+        assert logged_check.type == "whois"
