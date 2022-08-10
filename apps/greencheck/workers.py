@@ -113,9 +113,10 @@ class SiteCheckLogger:
         #
         # handle case of the domain IP not resolving to a useful IP
         # TODO find better way to handle these cases, before they to this point
-        if sitecheck.ip == "None":
+
+        if sitecheck.ip == "None" or sitecheck.ip is None:
             sitecheck.ip = 0
-            # sitecheck.match_ip_range = 0
+            sitecheck.match_ip_range = 0
 
         # finally write to the greencheck table
         if isinstance(sitecheck.checked_at, datetime.datetime):
