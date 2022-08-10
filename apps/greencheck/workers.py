@@ -115,6 +115,7 @@ class SiteCheckLogger:
         # TODO find better way to handle these cases, before they to this point
         if sitecheck.ip == "None":
             sitecheck.ip = 0
+            # sitecheck.match_ip_range = 0
 
         # finally write to the greencheck table
         if isinstance(sitecheck.checked_at, datetime.datetime):

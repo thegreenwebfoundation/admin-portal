@@ -2,10 +2,13 @@ import ipdb
 import pytest
 import pathlib
 
+from apps.accounts.models.hosting import Hostingprovider
+
 
 from .. import carbon_txt
 from ...accounts import models as ac_models
 from .. import models as gc_models
+from .. import workers
 
 
 @pytest.fixture
@@ -52,7 +55,6 @@ class TestCarbonTxtParser:
             # from the carbon txt file?
             assert prov.supporting_documents.all()
 
-    @pytest.mark.only
     def test_check_after_parsing_provider_txt_file(self, db, carbon_txt_string):
         """
         Does a check against the domain return a positive result?
@@ -129,3 +131,34 @@ class TestCarbonTxtParser:
         """
         pass
 
+
+class TestLogCarbonTxtCheck:
+    """Check that a sitecheck registered by Carbontxt will load"""
+
+    def test_log_sitecheck_to_database(
+        self, db, carbon_txt_string, mocker, site_check_factory
+    ):
+        """
+        Can we log a check that relies on a match with carbon.txt?
+        """
+        psr = carbon_txt.CarbonTxtParser()
+        psr.parse_and_import("www.hillbob.de", carbon_txt_string)
+        hillbob_de = Hostingprovider.objects.get(name="www.hillbob.de")
+
+        check_logger = workers.SiteCheckLogger()
+        # we need to mock the lookup here for domain checker
+
+        # mock our request to avoid the network call
+        mocker.patch(
+            "apps.greencheck.domain_check.GreenDomainChecker.check_domain",
+            return_value=site_check_factory.create(
+                url="www.hillbob.de", ip=None, hosting_provider_id=hillbob_de.id
+            ),
+        )
+
+        res = check_logger.log_sitecheck_for_domain("www.hilbob.de")
+
+        # import ipdb
+
+        # ipdb.set_trace()
+        return True
