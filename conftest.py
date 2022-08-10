@@ -27,6 +27,7 @@ register(gc_factories.HostingProviderFactory)
 register(gc_factories.GreenIpFactory)
 register(gc_factories.GreenDomainFactory)
 register(gc_factories.DailyStatFactory)
+register(gc_factories.SiteCheckFactory)
 
 
 @pytest.fixture
