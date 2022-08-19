@@ -34,8 +34,7 @@ def augmented_greencheck(check):
             "green": True,
         }
     else:
-        return
-        {
+        return {
             "date": str(check.date),
             "url": check.url,
             "hostingProviderId": False,
@@ -66,10 +65,25 @@ def fetch_providers_for_country(country_code):
     alphetical order.
     """
     # we need to order by partner, then alphabetical
-    # order
-    providers = Hostingprovider.objects.filter(
-        country=country_code, showonwebsite=True
-    ).order_by("-partner", "name")
+    # order. Because the django ORM doesn't natively support
+    # group by, and because we have hundreds of hosters for each
+    # country, at a maximum we can get away with doing it in memory
+
+    # because historically we have had a mix of empty strings and null
+    # values, we need to use multiple excludes
+    partner_providers = (
+        Hostingprovider.objects.filter(country=country_code, showonwebsite=True)
+        .exclude(partner__in=["", "None", None])
+        .order_by("name")
+    )
+    regular_providers = (
+        Hostingprovider.objects.filter(country=country_code, showonwebsite=True)
+        .filter(partner__in=["", "None", None])
+        .order_by("name")
+    )
+    # destructure the providers to build a new list,
+    # with partner providers first, then regular providers
+    providers = [*partner_providers, *regular_providers]
 
     return [
         {
@@ -98,7 +112,6 @@ def directory(request):
 
         country_obj = {
             "iso": country.code,
-            # this is not correc
             "tld": f".{country.code.lower()}",
             "countryname": country.name.upper(),
         }
@@ -141,6 +154,19 @@ def directory_provider(self, id):
     return response.Response([provider_dict])
 
 
+def tiered_lookup(domain: str) -> GreenDomain:
+    """
+    Try a lookup against the Greendomains cache table, then
+    fallback to doing a slower, full lookup, returning a
+    "Greendomain" lookup.
+    """
+    if res := GreenDomain.objects.filter(url__in=domain):
+        return res.first()
+
+    if res := checker.perform_full_lookup(domain):
+        return res
+
+
 @api_view()
 @permission_classes([AllowAny])
 def greencheck_multi(request, url_list: str):
@@ -158,16 +184,30 @@ def greencheck_multi(request, url_list: str):
     if urls is None:
         urls = []
 
-    green_matches = GreenDomain.objects.filter(url__in=urls)
+    green_matches = []
+
+    for domain in urls:
+        # fetch Greendomains entry for every domain, doing
+        # a full lookup if need be
+        # TODO this is likely a prime candidate for doing
+        # in parallel with newer async/await features in
+        # Django 4 onwards
+        if res := tiered_lookup(domain):
+            green_matches.append(res)
+
     grey_urls = checker.grey_urls_only(urls, green_matches)
+
     checked_domains = checker.build_green_greylist(grey_urls, green_matches)
 
     serialised_domains = GreenDomainSerializer(checked_domains, many=True)
 
     data = serialised_domains.data
+
     result_dict = {}
     for url in urls:
-        result_dict[url] = [datum for datum in data if datum["url"] == url]
+        result = [datum for datum in data if datum["url"] == url][0]
+        if result:
+            result_dict[url] = result
 
     return response.Response(result_dict)
 

@@ -1,0 +1,98 @@
+AS29154 	Equinix (Finland) Oy
+Finland
+AS27566 	Equinix, Inc.
+United States
+AS27466 	Equinix, Inc.
+United States
+AS27444 	Equinix, Inc.
+United States
+AS27438 	Equinix, Inc.
+United States
+AS27433 	Equinix, Inc.
+United States
+AS27407 	Equinix, Inc.
+United States
+AS27354 	Equinix, Inc.
+United States
+AS27330 	Equinix, Inc.
+United States
+AS27315 	Equinix, Inc.
+United States
+AS27272 	Equinix, Inc.
+United States
+AS27224 	Equinix, Inc.
+United States
+AS270475 	EQUINIX BRASIL
+Brazil
+AS270132 	Equinix MX Services S.A. de C.V
+Mexico
+AS270119 	Equinix MX Services S.A. de C.V
+Mexico
+64.191.203.0/24 	Equinix, Inc.
+United States
+64.191.202.0/24 	Equinix, Inc.
+United States
+64.191.201.0/24 	Equinix, Inc.
+United States
+64.191.195.0/24 	Equinix, Inc.
+United States
+64.191.194.0/24 	Equinix, Inc.
+United States
+64.191.192.0/24 	Equinix, Inc.
+United States
+62.96.70.0/24 	Equinix
+United Kingdom
+62.96.212.0/24 	EQUINIX GMBH
+United Kingdom
+51.163.8.0/21 	Equinix Sweden AB
+United Kingdom
+51.163.6.0/23 	EQUINIX (SERVICES) LIMITED
+United Kingdom
+51.163.4.0/23 	Equinix (Germany) GmbH
+United Kingdom
+51.163.24.0/22 	EQUINIX (SPAIN) ENTERPRISES SLU
+United Kingdom
+51.163.2.0/24 	Equinix (Bulgaria) Data Centers EOOD
+United Kingdom
+51.163.16.0/21 	EQUINIX (SPAIN) ENTERPRISES SLU
+United Kingdom
+51.162.188.0/22 	Equinix (Singapore) Enterprises PTE Ltd
+United Kingdom
+51.162.184.0/22 	Equinix (Singapore) Enterprises PTE Ltd
+United Kingdom
+51.162.160.0/21 	Equinix (Singapore) Enterprises PTE Ltd
+United Kingdom
+51.162.144.0/21 	Equinix (Singapore) Enterprises PTE Ltd
+United Kingdom
+51.162.128.0/21 	Equinix (Singapore) Enterprises PTE Ltd
+United Kingdom
+50.30.129.0/24 	Pavlov/Equinix (C05178680)
+United States
+50.100.5.0/24 	Equinix, Inc.
+United States
+2001:de8:4::/64 	Equinix Japan
+Japan
+2001:a68::/32 	Equinix (Finland) Oy
+Finland
+2001:920:19cc::/48 	Hella co Equinix FR6
+United Kingdom
+2001:920:19c3::/48 	MYLAN@EQUINIX
+United Kingdom
+2001:7f8:43::/64 	Equinix France SAS
+France
+2001:7f8:42::/64 	Equinix (Poland) Sp. z o.o.
+Poland
+2001:504::/48 	Equinix, Inc.
+United States
+2001:504:0:7::/64 	Equinix, Inc.
+United States
+2001:504:0:5::/64 	Equinix, Inc.
+United States
+2001:504:0:3::/64 	Equinix, Inc.
+United States
+2001:504:0:2::/64 	Equinix, Inc.
+United States
+2001:4818::/36 	Equinix, Inc.
+United States
+2001:4818:6000::/36 	Equinix, Inc.
+United States

@@ -26,14 +26,19 @@ from apps.greencheck.viewsets import (
     GreenDomainViewset,
     GreenDomainBatchView,
 )
+
 from apps.greencheck.swagger import TGWFSwaggerView
+
+from apps.greencheck.api import legacy_views
+from apps.greencheck.api import views as api_views
+
 
 from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts.admin import LabelAutocompleteView
 
 from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
-from apps.greencheck.api import legacy_views
+
 from apps.greencheck import urls as greencheck_urls
 
 
@@ -80,6 +85,16 @@ urlpatterns += [
         "api/v3/batch/greencheck",
         GreenDomainBatchView.as_view(),
         name="green-domain-batch",
+    ),
+    path(
+        "api/v3/ip-to-co2intensity/",
+        api_views.IPCO2Intensity.as_view(),
+        name="ip-to-co2intensity",
+    ),
+    path(
+        "api/v3/ip-to-co2intensity/<ip_to_check>",
+        api_views.IPCO2Intensity.as_view(),
+        name="ip-to-co2intensity",
     ),
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
     path(

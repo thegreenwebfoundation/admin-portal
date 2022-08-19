@@ -22,9 +22,14 @@ from .choices import (
     ClassificationChoice,
     PartnerChoice,
 )
-from apps.greencheck.choices import StatusApproval
+from apps.greencheck.choices import StatusApproval, GreenlistChoice
 
 logger = logging.getLogger(__name__)
+
+
+GREEN_VIA_CARBON_TXT = f"green:{GreenlistChoice.CARBONTXT.value}"
+AWAITING_REVIEW_STRING = "Awaiting Review"
+AWAITING_REVIEW_SLUG = "awaiting-review"
 
 
 class Datacenter(models.Model):
@@ -202,9 +207,55 @@ class Hostingprovider(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def is_awaiting_review(self):
+        """
+        Convenience check to see if this provider is labelled as
+        awaiting a review by staff.
+        """
+        return AWAITING_REVIEW_SLUG in self.staff_labels.slugs()
+
+    def label_as_awaiting_review(self, notify_admins=False):
+        """
+        Mark this hosting provider as in need of review by staff.
+        Sends an notification email if the provider previously
+        did not have this label.
+        Returns None if we have a label already, otherwise returns
+        the added label
+        """
+
+        # we already have the label, do nothing an return early
+        if self.is_awaiting_review:
+            return None
+
+        # otherwise, we add the label
+        self.staff_labels.add(AWAITING_REVIEW_STRING)
+
+        if notify_admins:
+            link_path = reverse(
+                "greenweb_admin:accounts_hostingprovider_change", args=[self.id]
+            )
+            link_url = f"{settings.SITE_URL}{link_path}"
+
+            email_text = render_to_string(
+                "emails/provider-awaiting-review.txt",
+                context={"provider": self.name, "link_url": link_url},
+            )
+            email_html = render_to_string(
+                "emails/provider-awaiting-review.html",
+                context={"provider": self.name, "link_url": link_url},
+            )
+
+            self.notify_admins(
+                f"TGWF: {self.name} has been updated and is awaiting review",
+                email_text,
+                email_html,
+            )
+        return self.staff_labels.get(name=AWAITING_REVIEW_STRING)
+
     def mark_as_pending_review(self, approval_request):
         """
-        Accept an approval request, and if the hosting provider
+        Accept an IP / ASN approval request, and if the hosting provider
         doesn't already have outstanding approvals, notify admins
         to review the IP Range or AS network. Returns true if
         marking it as pending trigger action, otherwise false.
@@ -212,13 +263,20 @@ class Hostingprovider(models.Model):
         hosting_provider = approval_request.hostingprovider
         logger.debug(f"Approval request: {approval_request} for {hosting_provider}")
 
-        approval_requests = self.outstanding_approval_requests()
-
-        if approval_request not in approval_requests:
-            self.flag_for_review(approval_request)
+        if not self.is_awaiting_review:
+            self.label_as_awaiting_review()
+            self.request_network_review_from_admins(approval_request)
             return True
 
         return False
+
+    def counts_as_green(self):
+        """
+        A convenience check, provide a simple to let us avoid
+        needing to implement the logic for determining
+        if a provider counts as green in multiple places
+        """
+        return GREEN_VIA_CARBON_TXT in self.staff_labels.names()
 
     def outstanding_approval_requests(self):
         """
@@ -239,39 +297,47 @@ class Hostingprovider(models.Model):
         )
         return approval_requests
 
-    def flag_for_review(self, approval_request):
+    def notify_admins(self, subject: str, email_txt: str, email_html: str = None):
         """
-        Mark this hosting provider as in need of review by admins.
+        Send an email to the admins with the provided subject, email content.
+        If an html version email_html is provided, the html variant is provided.
+        """
+
+        msg = AnymailMessage(
+            subject=subject, body=email_txt, to=["support@thegreenwebfoundation.org"],
+        )
+
+        if email_html:
+            msg.attach_alternative(email_html, "text/html")
+        msg.send()
+
+    def request_network_review_from_admins(self, approval_request):
+        """
+        Mark the approval request for this  hosting provider as
+        in need of review by admins.
         Sends an notification via email to admins.
         """
 
         #  notify_admin_via_email(approval_request)
-        provider = approval_request.hostingprovider
         link_path = reverse(
-            "greenweb_admin:accounts_hostingprovider_change", args=[provider.id]
+            "greenweb_admin:accounts_hostingprovider_change", args=[self.id]
         )
         link_url = f"{settings.SITE_URL}{link_path}"
         ctx = {
             "approval_request": approval_request,
-            "provider": provider,
+            "provider": self,
             "link_url": link_url,
         }
         notification_subject = (
-            f"TGWF: {approval_request.hostingprovider} - "
-            "has been updated and needs a review"
+            f"TGWF: {self.name} - " "has been updated and needs a review"
         )
 
         notification_email_copy = render_to_string("flag_for_review_text.txt", ctx)
         notification_email_html = render_to_string("flag_for_review_text.html", ctx)
 
-        msg = AnymailMessage(
-            subject=notification_subject,
-            body=notification_email_copy,
-            to=["support@thegreenwebfoundation.org"],
+        self.notify_admins(
+            notification_subject, notification_email_copy, notification_email_html
         )
-
-        msg.attach_alternative(notification_email_html, "text/html")
-        msg.send()
 
     class Meta:
         # managed = False

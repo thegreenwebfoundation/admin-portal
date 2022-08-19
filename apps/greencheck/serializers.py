@@ -3,6 +3,7 @@ import ipaddress
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from apps.accounts.models import Hostingprovider, HostingProviderSupportingDocument
+from apps.greencheck.models.checks import CO2Intensity
 
 from .models import GreencheckIp, GreenDomain, GreencheckASN
 
@@ -189,5 +190,31 @@ class GreenDomainSerializer(serializers.ModelSerializer):
             "green",
             "hosted_by_id",
             "modified",
+        ]
+
+
+class CO2IntensitySerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        """
+        Return the country info, with the data used to check it.
+        We include the IP
+        """
+
+        ret = super().to_representation(instance)
+        checked_ip = self.context.get("checked_ip")
+
+        ret["checked_ip"] = checked_ip
+        return ret
+
+    class Meta:
+        model = CO2Intensity
+        fields = [
+            "country_name",
+            "country_code_iso_2",
+            "country_code_iso_3",
+            "carbon_intensity_type",
+            "carbon_intensity",
+            "generation_from_fossil",
+            "year",
         ]
 

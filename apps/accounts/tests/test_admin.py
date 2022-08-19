@@ -1,11 +1,14 @@
-from apps.accounts.models.hosting import Hostingprovider
 from typing import List
 import io
 
 import pytest
 import markdown
+import pytest
+from apps.accounts.models.hosting import Hostingprovider
 from django import urls
 from django.contrib.auth import models as auth_models
+
+from ...greencheck.tests import view_in_browser
 from .. import admin as ac_admin
 from .. import admin_site
 from .. import models as ac_models
@@ -17,20 +20,14 @@ class TestHostingProviderAdminInlineRendering:
     any logic for deciding which inlines to show.
     """
 
-    def test_visit_new_provider(
-        self, db, client, sample_hoster_user, default_user_groups
-    ):
+    def test_visit_new_provider(self, db, client, sample_hoster_user):
         """
         Sign in, and visit new hosting provider page.
 
-        Simulate the journey for a new user creating an hosting
+        Simulate the journey for a new user creating a hosting
         provider in the admin.
         """
-        admin_grp, provider_grp = default_user_groups
-        sample_hoster_user.save()
-        sample_hoster_user.groups.add(provider_grp)
-        sample_hoster_user.save()
-        provider_grp.save()
+
         client.force_login(sample_hoster_user)
 
         new_provider_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
@@ -39,19 +36,13 @@ class TestHostingProviderAdminInlineRendering:
 
 
 class TestDatacenterAdmin:
-    def test_visit_admin_page(
-        self, db, client, sample_hoster_user, default_user_groups
-    ):
+    def test_visit_admin_page(self, db, client, sample_hoster_user):
         """
         Sign in, and visit new datacenter page.
 
         Simulate the journey for a new user creating a datacenter in the admin
         """
-        admin_grp, provider_grp = default_user_groups
-        sample_hoster_user.save()
-        sample_hoster_user.groups.add(provider_grp)
-        sample_hoster_user.save()
-        provider_grp.save()
+
         client.force_login(sample_hoster_user)
 
         new_datacenter_url = urls.reverse("greenweb_admin:accounts_datacenter_add")
@@ -59,23 +50,15 @@ class TestDatacenterAdmin:
         assert resp.status_code == 200
 
     def test_update_datacenter_admin_page(
-        self, db, client, sample_hoster_user, datacenter, default_user_groups
+        self, db, client, sample_hoster_user, datacenter
     ):
         """
         Sign in, and visit new datacenter page.
 
         Simulate the journey for a new user creating a datacenter in the admin
         """
-        admin_grp, provider_grp = default_user_groups
-
-        # check  we have everything persisted
-        sample_hoster_user.save()
-
-        # associated users, and objects with each other
-        sample_hoster_user.groups.add(provider_grp)
         datacenter.user = sample_hoster_user
         datacenter.save()
-        provider_grp.save()
 
         # now log in
         client.force_login(sample_hoster_user)
@@ -89,19 +72,17 @@ class TestDatacenterAdmin:
     def test_get_inlines_staff(
         self,
         db,
-        rf,
+        client,
         sample_hoster_user,
+        greenweb_staff_user,
         hosting_provider,
         datacenter,
-        default_user_groups,
     ):
-        admin_grp, provider_grp = default_user_groups
-
+        """Check that a staff member can see the notes section for a datacenter"""
         hosting_provider.save()
         sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.groups.add(admin_grp)
         sample_hoster_user.save()
-        admin_grp.save()
+        hosting_provider.save()
 
         gcip_admin = ac_admin.DatacenterAdmin(
             ac_models.Datacenter, admin_site.greenweb_admin
@@ -110,8 +91,9 @@ class TestDatacenterAdmin:
         ip_range_listing_path = urls.reverse(
             "greenweb_admin:accounts_datacenter_change", args=[datacenter.id]
         )
-        request = rf.get(ip_range_listing_path)
-        request.user = sample_hoster_user
+        client.force_login(sample_hoster_user)
+        request = client.get(ip_range_listing_path)
+        request.user = greenweb_staff_user
 
         inlines = gcip_admin.get_inlines(request, datacenter)
 
@@ -145,76 +127,38 @@ class TestHostingProviderAdmin:
     page use the custom features
     """
 
-    def _setup_hosting_provider(
-        self, provider: Hostingprovider, default_user_groups: List[auth_models.Group]
-    ) -> List:
-        """
-        Accept a  user linked to this provider with the correct groups
-        """
-        admin_grp, provider_grp = default_user_groups
-        provider_user = provider.user_set.first()
-        provider_user.save()
-        provider_user.groups.add(provider_grp)
-        provider_user.save()
-        provider_grp.save()
-        return [provider, provider_user]
-
-    def test_visit_admin_create_page_for_user(
-        self, db, client, sample_hoster_user, default_user_groups
-    ):
+    def test_visit_admin_create_page_for_user(self, db, client, sample_hoster_user):
         """
         Sign in, and visit new hosting page.
         Simulate the journey for a new user visiting the page to
         create a hosting provider
         """
-        admin_grp, provider_grp = default_user_groups
-        sample_hoster_user.save()
-        sample_hoster_user.groups.add(provider_grp)
-        sample_hoster_user.save()
-        provider_grp.save()
+
         client.force_login(sample_hoster_user)
 
         admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
         resp = client.get(admin_url)
         assert resp.status_code == 200
 
-    def test_visit_admin_create_for_user_with_one_provider(
-        self, db, client, hosting_provider_with_sample_user, default_user_groups
-    ):
-        """
-        Simulate the journey for a user visiting the page to create
-        a second hosting provider
-        """
-        provider, provider_user = self._setup_hosting_provider(
-            hosting_provider_with_sample_user, default_user_groups
-        )
-
-        client.force_login(provider_user)
-
-        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
-        resp = client.get(admin_url)
-        assert resp.status_code == 200
-
     def test_visit_admin_change_page_for_user_with_one_provider(
-        self, db, client, hosting_provider_with_sample_user, default_user_groups
+        self, db, client, hosting_provider_with_sample_user
     ):
         """
         Simulate the user visiting a page to update their own provider
         """
-        provider, provider_user = self._setup_hosting_provider(
-            hosting_provider_with_sample_user, default_user_groups
-        )
 
-        client.force_login(provider_user)
+        user = hosting_provider_with_sample_user.user_set.first()
+        client.force_login(user)
 
         admin_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_change", args=[provider.id],
+            "greenweb_admin:accounts_hostingprovider_change",
+            args=[hosting_provider_with_sample_user.id],
         )
         resp = client.get(admin_url)
         assert resp.status_code == 200
 
     def test_preview_email_page_for_user_with_provider(
-        self, db, client, hosting_provider_with_sample_user, default_user_groups
+        self, db, client, hosting_provider_with_sample_user
     ):
         """
         Test that we can visit an email preview page from the a provider admin page
@@ -229,13 +173,11 @@ class TestHostingProviderAdmin:
             """,
         )
 
-        provider, provider_user = self._setup_hosting_provider(
-            hosting_provider_with_sample_user, default_user_groups
-        )
-
-        client.force_login(provider_user)
+        user = hosting_provider_with_sample_user.user_set.first()
+        client.force_login(user)
         admin_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_preview_email", args=[provider.id],
+            "greenweb_admin:accounts_hostingprovider_preview_email",
+            args=[hosting_provider_with_sample_user.id],
         )
         resp = client.get(admin_url, {"email": msg.id})
         assert resp.status_code == 200
@@ -243,12 +185,7 @@ class TestHostingProviderAdmin:
         # TODO check that we have our host and user present in the form
 
     def test_send_created_email_for_user_with_provider(
-        self,
-        db,
-        client,
-        hosting_provider_with_sample_user,
-        default_user_groups,
-        mailoutbox,
+        self, db, client, hosting_provider_with_sample_user, mailoutbox,
     ):
         """Test that an email can be sent with the information we submit in the form"""
 
@@ -260,23 +197,21 @@ class TestHostingProviderAdmin:
                 Some content here, including the {{ user }}
             """,
         )
-        provider, provider_user = self._setup_hosting_provider(
-            hosting_provider_with_sample_user, default_user_groups
-        )
-
-        client.force_login(provider_user)
+        user = hosting_provider_with_sample_user.user_set.first()
+        client.force_login(user)
         admin_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_send_email", args=[provider.id],
+            "greenweb_admin:accounts_hostingprovider_send_email",
+            args=[hosting_provider_with_sample_user.id],
         )
 
         resp = client.post(
             admin_url,
             {
                 "title": "A sample email subject",
-                "recipient": [provider_user.email],
+                "recipient": [user.email],
                 "body": "Some content goes here",
                 "message_type": msg.category,
-                "provider": provider.id,
+                "provider": hosting_provider_with_sample_user.id,
             },
             follow=True,
         )
@@ -298,12 +233,7 @@ class TestHostingProviderAdmin:
         assert html_alternative[0] == markdown.markdown("Some content goes here")
 
     def test_log_created_email_for_user_with_provider_as_note(
-        self,
-        db,
-        client,
-        hosting_provider_with_sample_user,
-        default_user_groups,
-        mailoutbox,
+        self, db, client, hosting_provider_with_sample_user, mailoutbox,
     ):
         """Test that an email can be sent with the information we submit in the form"""
 
@@ -315,32 +245,160 @@ class TestHostingProviderAdmin:
                 Some content here, including the {{ user }}
             """,
         )
-        provider, provider_user = self._setup_hosting_provider(
-            hosting_provider_with_sample_user, default_user_groups
-        )
+        user = hosting_provider_with_sample_user.user_set.first()
 
-        client.force_login(provider_user)
+        client.force_login(user)
         admin_url = urls.reverse(
-            "greenweb_admin:accounts_hostingprovider_send_email", args=[provider.id],
+            "greenweb_admin:accounts_hostingprovider_send_email",
+            args=[hosting_provider_with_sample_user.id],
         )
 
         resp = client.post(
             admin_url,
             {
                 "title": "A sample email subject",
-                "recipient": [provider_user.email],
+                "recipient": [user.email],
                 "body": "Some content goes here",
                 "message_type": msg.category,
-                "provider": provider.id,
+                "provider": hosting_provider_with_sample_user.id,
             },
             follow=True,
         )
         assert resp.status_code == 200
 
         # check that we have our note for this provider
-        labels = provider.staff_labels.all()
+        labels = hosting_provider_with_sample_user.staff_labels.all()
         assert len(labels) == 1
         assert labels[0].name == "welcome-email sent"
+
+    @pytest.mark.parametrize(
+        "archived", ((True, 0), (False, 1),),
+    )
+    def test_archived_providers_are_hidden_by_default(
+        self, db, client, hosting_provider_with_sample_user, archived
+    ):
+        """Test that by default, archived users to not show up in our listings."""
+
+        hosting_provider_with_sample_user.archived = archived[0]
+        hosting_provider_with_sample_user.save()
+        client.force_login(hosting_provider_with_sample_user.user_set.first())
+
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
+        resp = client.get(admin_url, follow=True)
+
+        assert len(resp.context["results"]) == archived[1]
+        assert resp.status_code == 200
+
+    @pytest.mark.parametrize(
+        "archived", ((True, 1), (False, 0),),
+    )
+    def test_archived_providers_hidden_by_seen_with_override_params(
+        self, db, client, hosting_provider_with_sample_user, archived
+    ):
+        """
+        If we really need to see archived users, we can with a
+        special GET param, to override our view
+        """
+
+        hosting_provider_with_sample_user.archived = archived[0]
+        hosting_provider_with_sample_user.save()
+        client.force_login(hosting_provider_with_sample_user.user_set.first())
+
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
+        resp = client.get(admin_url, {"archived": True}, follow=True)
+
+        assert len(resp.context["results"]) == archived[1]
+        assert resp.status_code == 200
+
+    def test_staff_can_remove_provider_from_user(
+        self, db, client, hosting_provider_with_sample_user, greenweb_staff_user
+    ):
+        """
+        Can a staff member update a user to remove them
+        from a given hosting provider?
+        """
+
+        user = hosting_provider_with_sample_user.user_set.first()
+        provider = hosting_provider_with_sample_user
+        # log the staff member in
+        client.force_login(greenweb_staff_user)
+
+        user_admin_url = urls.reverse(
+            "greenweb_admin:accounts_user_change", args=[user.id],
+        )
+
+        user_payload_without_provider_allocated = {
+            "username": user.username,
+            "email": user.email,
+            "is_active": "on",
+            "is_staff": "on",
+            # simulate sending the empty result for a cleared
+            # hosting provider
+            "hostingprovider": "",
+            "groups": [group.id for group in user.groups.all()],
+        }
+
+        # make an update via a POST to clear the hosting provider
+        resp = client.post(
+            user_admin_url, user_payload_without_provider_allocated, follow=True
+        )
+
+        assert resp.status_code == 200
+
+        # is the user no longer allocated to the provider?
+        provider.refresh_from_db()
+        assert provider.user_set.count() == 0
+
+        # is the provider also no longer associated with the user?
+        user.refresh_from_db()
+        assert user.hostingprovider is None
+
+
+class TestUserCreationAdmin:
+    """
+    Do the user creation forms work as expected,
+    and account for any legacy fields we have from earlier
+    versions of the platform?
+    """
+
+    def test_create_user_as_greenweb_staff(self, db, client, greenweb_staff_user):
+        """
+        Can a green web staff user sign in, and create a new user to
+        associate with an existing provider of services?
+        """
+
+        provider_groups = auth_models.Group.objects.filter(
+            name__in=["hostingprovider", "datacenter"]
+        )
+
+        # sign them in
+        client.force_login(greenweb_staff_user)
+
+        add_user_url = urls.reverse("greenweb_admin:accounts_user_add")
+        resp = client.get(add_user_url)
+
+        # can they access the create user page?
+        assert resp.status_code == 200
+        # view_in_browser(resp.content)
+
+        # can they use the add_form to create a new user?
+        new_user_data = {
+            "username": "Made Up Name",
+            "password": "notARealPassword!12345",
+            "email": "foo@example.com",
+            "is_active": "on",
+            "is_staff": "on",
+            "groups": [group.id for group in provider_groups],
+        }
+
+        create_resp = client.post(add_user_url, new_user_data, follow=True)
+        # view_in_browser(create_resp.content)
+
+        assert create_resp.status_code == 200
+
+        created_user = ac_models.User.objects.get(email=new_user_data["email"])
+        for group in created_user.groups.all():
+            assert group in provider_groups
 
 
 SAMPLE_CSV_CONTENT = """Ip,Zone,Ipv6,

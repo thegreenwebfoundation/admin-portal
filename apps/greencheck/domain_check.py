@@ -25,6 +25,7 @@ import urllib
 import tld
 
 from .models import GreenDomain, SiteCheck
+from .choices import GreenlistChoice
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class GreenDomainChecker:
                 parsed_url = urllib.parse.urlparse(f"//{url}")
             return parsed_url.netloc
 
-    def perform_full_lookup(self, domain) -> GreenDomain:
+    def perform_full_lookup(self, domain: str) -> GreenDomain:
         """
         Return a Green Domain object from doing a lookup.
         """
@@ -87,13 +88,16 @@ class GreenDomainChecker:
 
     def convert_domain_to_ip(
         self, domain
-    ) -> ipaddress.IPv4Network or ipaddress.IPv6Network:
+    ) -> ipaddress.IPv4Network or ipaddress.IPv6Network or None:
         """
         Accepts a domain name or IP address, and returns an IPV4 or IPV6
         address
         """
-        ip_string = socket.gethostbyname(domain)
-        return ipaddress.ip_address(ip_string)
+        try:
+            ip_string = socket.gethostbyname(domain)
+            return ipaddress.ip_address(ip_string)
+        except socket.gaierror as err:
+            logger.warning(f"Unable to lookup domain: {domain} - error: {err}")
 
     def green_sitecheck_by_ip_range(self, domain, ip_address, ip_match):
         """
@@ -106,7 +110,7 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=ip_match.hostingprovider.id,
-            match_type="ip",
+            match_type=GreenlistChoice.IP.value,
             match_ip_range=ip_match.id,
             cached=False,
             checked_at=timezone.now(),
@@ -119,7 +123,7 @@ class GreenDomainChecker:
             data=True,
             green=True,
             hosting_provider_id=matching_asn.hostingprovider.id,
-            match_type="as",
+            match_type=GreenlistChoice.ASN.value,
             match_ip_range=matching_asn.id,
             cached=False,
             checked_at=timezone.now(),
@@ -134,7 +138,44 @@ class GreenDomainChecker:
             data=False,
             green=False,
             hosting_provider_id=None,
-            match_type=None,
+            match_type=GreenlistChoice.IP.value,
+            match_ip_range=None,
+            cached=False,
+            checked_at=timezone.now(),
+        )
+
+    def check_via_carbon_txt(self, domain):
+        """
+        Check against existing set of providers with info
+        provided via carbon.txt.
+        """
+        try:
+            green_domain = GreenDomain.objects.get(url=domain)
+            provider = green_domain.hosting_provider
+            if provider and provider.counts_as_green():
+                return green_domain
+        except GreenDomain.DoesNotExist:
+            return None
+
+    def green_sitecheck_by_carbontxt(
+        self, domain: str, matching_green_domain: GreenDomain
+    ):
+        """
+        Return a green site check, based the information we
+        are showing via a carbon.txt lookup
+        """
+        return SiteCheck(
+            url=domain,
+            ip=None,
+            data=True,
+            green=True,
+            hosting_provider_id=matching_green_domain.hosted_by_id,
+            # NOTE: we use WHOIS for now, as a way to decouple
+            # an expensive and risky migration from the rest of
+            # this carbon.txt work. See this issue for more:
+            # https://github.com/thegreenwebfoundation/admin-portal/issues/198
+            # match_type=GreenlistChoice.CARBONTXT.value,
+            match_type=GreenlistChoice.WHOIS.value,
             match_ip_range=None,
             cached=False,
             checked_at=timezone.now(),
@@ -146,7 +187,13 @@ class GreenDomainChecker:
         or the best matching IP range forip address it resolves to.
         """
 
+        if carbon_txt_match := self.check_via_carbon_txt(domain):
+            return self.green_sitecheck_by_carbontxt(domain, carbon_txt_match)
+
         ip_address = self.convert_domain_to_ip(domain)
+
+        if not ip_address:
+            return self.grey_sitecheck(domain, ip_address)
 
         if ip_match := self.check_for_matching_ip_ranges(ip_address):
             return self.green_sitecheck_by_ip_range(domain, ip_address, ip_match)

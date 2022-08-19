@@ -18,13 +18,17 @@ pytest-cov = "*"
 pytest-xdist = "*"
 hypothesis = "*"
 black = "*"
-iredis = "*"
 factory_boy = "*"
 rich = "*"
 pytest-mock = "*"
+pytest-factoryboy = "*"
+sphinx = "*"
+sphinx-autobuild = "*"
+furo = "*"
+myst-parser = "*"
 
 [packages]
-django = { extras = ["bcrypt"], version = "==3.2" }
+django = { extras = ["bcrypt"], version = "~=3.2" }
 django-anymail = { extras = ["mailgun"], version = "==7.0.0" }
 django-countries = "*"
 django-environ = "==0.4.5"
@@ -41,7 +45,7 @@ db-to-sqlite = "*"
 sqlite-utils = "*"
 sentry-sdk = "*"
 dramatiq = { extras = ["rabbitmq"], version = "*" }
-django-dramatiq = "*"
+django-dramatiq = "==v0.10.0"
 phpserialize = "*"
 tld = "*"
 djangorestframework = "*"
@@ -65,9 +69,13 @@ crispy-tailwind = "*"
 django-crispy-forms = "*"
 django-storages = "*"
 django-taggit-serializer = "*"
-# https://github.com/yourlabs/django-autocomplete-light/issues/1248
-django-autocomplete-light = "==3.8.2"
+django-autocomplete-light = "*"
 markdown = "*"
+toml = "*"
+python-dateutil = "*"
+geoip2 = "*"
+iso3166 = "*"
+django-logentry-admin = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.

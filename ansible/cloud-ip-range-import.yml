@@ -1,0 +1,12 @@
+---
+- name: Run the import tasks for the big cloud providers who expose IP-ranges over an API
+  hosts:
+    - all
+  remote_user: "deploy"
+  become: no
+
+  tasks:
+    - name: run management task import latest set of ip ranges from AWS
+      shell: "pipenv run ./manage.py update_aws_ip_ranges"
+      args:
+        chdir: "{{ project_root }}/current"

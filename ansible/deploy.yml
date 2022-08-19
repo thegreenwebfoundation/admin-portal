@@ -49,6 +49,11 @@
         dest: "{{ project_root }}/current/media"
         state: link
 
+    - name: Link ./data to shared ./data directory
+      file:
+        src: "{{ project_root }}/shared/data"
+        dest: "{{ project_root }}/current/data"
+        state: link
 
     - name: install pipenv and mariadb libraries for python
       apt:

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 
 import os
 import environ
+import pathlib
 
 # Environ
 ROOT = environ.Path(__file__) - 3
@@ -63,6 +64,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     # 3rd party
+    "logentry_admin",
     "anymail",
     "django_extensions",
     "django_mysql",
@@ -96,9 +98,13 @@ AUTH_USER_MODEL = "accounts.User"
 
 LOGIN_REDIRECT_URL = "/"
 
-# We need this to account for providers with massive numbers of IP ranges
-# to update. The default limit it too low for django admin!
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
+# We need this to account for some providers that have numbers of IP
+# ranges that are greater than the default limit in django.
+# By setting this to None, we no longer check for the size of the form.
+# This is not ideal, but it at least means some hosting providers can
+# update their info while we rethink how people update IP range info.
+# https://docs.djangoproject.com/en/4.0/ref/settings/#data-upload-max-number-fields
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -144,6 +150,10 @@ DATABASES = {
     "default": env.db(),
     # 'extra': env.db('SQLITE_URL'),
 }
+
+
+# Geo IP database
+GEOIP_PATH = pathlib.Path(ROOT) / "data" / "GeoLite2-City.mmdb"
 
 # Allow requests from any origin, but only make the API urls available
 # CORS_URLS_REGEX = r"^/api/.*$"
@@ -205,6 +215,19 @@ OBJECT_STORAGE_REGION = env("OBJECT_STORAGE_REGION")
 OBJECT_STORAGE_ACCESS_KEY_ID = env("OBJECT_STORAGE_ACCESS_KEY_ID")
 OBJECT_STORAGE_SECRET_ACCESS_KEY = env("OBJECT_STORAGE_SECRET_ACCESS_KEY")
 
+# Importer variables
+## Microsoft
+MICROSOFT_PROVIDER_ID = env("MICROSOFT_PROVIDER_ID")
+MICROSOFT_LOCAL_FILE_DIRECTORY = env("MICROSOFT_LOCAL_FILE_DIRECTORY")
+
+## Equinix
+EQUINIX_PROVIDER_ID = env("EQUINIX_PROVIDER_ID")
+EQUINIX_REMOTE_API_ENDPOINT = env("EQUINIX_REMOTE_API_ENDPOINT")
+
+## Amazon
+AMAZON_PROVIDER_ID = env("AMAZON_PROVIDER_ID")
+AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT")
+
 RABBITMQ_URL = env("RABBITMQ_URL")
 
 REST_FRAMEWORK = {
@@ -236,7 +259,7 @@ DRAMATIQ_EXTRA_QUEUES = {"stats": "stats"}
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "root": {"handlers": ["console"], "level": "DEBUG"},
+    "root": {"handlers": ["console"], "level": "INFO"},
     "handlers": {
         "console": {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
@@ -262,6 +285,9 @@ LOGGING = {
 
 SITE_URL = "https://admin.thegreenwebfoundation.org"
 
+
+GOOGLE_PROVIDER_ID = 2345
+GOOGLE_DATASET_ENDPOINT = "https://www.gstatic.com/ipranges/cloud.json"
 
 TAGGIT_CASE_INSENSITIVE = True
 

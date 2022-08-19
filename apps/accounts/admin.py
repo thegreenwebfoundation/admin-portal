@@ -7,8 +7,11 @@ from django.contrib import admin
 from django.urls import reverse
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 import django.forms as dj_forms
+from django.contrib.auth.forms import UserCreationForm
+
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
+from django.utils.translation import gettext, gettext_lazy as _
 from django.template.loader import render_to_string
 from django import template as dj_template
 from apps.greencheck.admin import (
@@ -18,6 +21,14 @@ from apps.greencheck.admin import (
     GreencheckAsnInline,
     GreencheckAsnApproveInline,
 )
+from logentry_admin.admin import (
+    LogEntry,
+    LogEntryAdmin,
+    ActionListFilter,
+    UserListFilter,
+)
+
+
 from taggit.models import Tag
 import logging
 import markdown
@@ -41,7 +52,6 @@ from .admin_site import greenweb_admin
 from . import filters
 from . import forms
 from .forms import (
-    CustomUserChangeForm,
     CustomUserCreationForm,
     HostingProviderNoteForm,
     DatacenterNoteNoteForm,
@@ -77,53 +87,112 @@ class CustomGroupAdmin(GroupAdmin):
 
 @admin.register(User, site=greenweb_admin)
 class CustomUserAdmin(UserAdmin):
+    """
+    Custom user admin form, with modifications for us by internal
+    green web staff members.
+    """
+
+    # we override the normal User Creation Form, because we want to support
+    # staff members creating users from inside the admin
     add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
+
     model = User
     search_fields = ("username", "email")
     list_display = ["username", "email", "last_login", "is_staff"]
 
-    add_fieldsets = (
-        (
-            None,
-            {"classes": ("wide",), "fields": ("username", "password1", "password2"),},
-        ),
-    )
+    # these are not really fields, but a hack to create buttons.
+    # see the corresponding methods with the same name
+    readonly_fields = ["clear_provider_button"]
+
+    # provide a button to let us clear provider selections easily,
+    # as the default select2 widget does not offer this
+    @mark_safe
+    def clear_provider_button(self, obj):
+        return """
+            <button
+                class='button'
+                type='button'
+                id='clear-hosting-provider'
+                style='padding:0.5rem'
+            >
+                Clear hosting provider selection
+            </button>
+        """
+
+    clear_provider_button.short_description = ""
+
+    # make the hosting provider dropdown an autocomplete
+    # select2 widget instead
+    autocomplete_fields = ("hostingprovider",)
 
     def get_queryset(self, request, *args, **kwargs):
+        """
+        This filter the view to only show the current user,
+        except if you are internal staff
+        """
         qs = super().get_queryset(request, *args, **kwargs)
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             qs = qs.filter(pk=request.user.pk)
         return qs
 
     def get_fieldsets(self, request, *args, **kwargs):
+        """Return different fieldsets depending on the user signed in"""
+        # this is the normal username and password combo for
+        # creating a user.
+        top_row = (None, {"fields": ("username", "password")})
 
-        regular_fieldsets = (
-            (None, {"fields": ("username", "password")}),
-            ("Personal info", {"fields": ("email",)}),
-        )
-        admin_editable = (
-            (
-                "Permissions",
-                {
-                    "fields": (
-                        "is_active",
-                        "is_staff",
-                        "is_superuser",
-                        "groups",
-                        "user_permissions",
-                    ),
-                },
-            ),
-            ("Important dates", {"fields": ("last_login", "date_joined")}),
+        # followed by the stuff a user might change themselves
+        contact_deets = ("Personal info", {"fields": ("email",)})
+
+        # options for setting and clearing the hostingprovider
+        # associated with this user
+        hosting_provider = (
+            "Linked Hosting Provider",
+            {"fields": ("hostingprovider", "clear_provider_button")},
         )
 
+        # what we show for internal staff
+        staff_fieldsets = (
+            "Permissions",
+            {"fields": ("is_active", "is_staff", "groups"),},
+        )
+
+        # our usual set of forms to show for users
+        default_fieldset = [top_row, contact_deets]
+
+        # serve the extra staff fieldsets for creating users
+        if request.user.is_admin:
+            return (*default_fieldset, hosting_provider, staff_fieldsets)
+
+        # allow an override for super users
         if request.user.is_superuser:
-            # destructure our default_fieldsets to make a new tuple
-            # with the extra fieldsets appended
-            return (*regular_fieldsets, *admin_editable)
+            return (
+                *default_fieldset,
+                hosting_provider,
+                staff_fieldsets,
+                (
+                    "Permissions",
+                    {
+                        "fields": (
+                            "is_active",
+                            "is_staff",
+                            "is_superuser",
+                            "groups",
+                            "user_permissions",
+                        ),
+                    },
+                ),
+            )
 
-        return regular_fieldsets
+        return default_fieldset
+
+    class Media:
+        """
+        An extended media class, to add an extra snippet
+        of js to allow us to clear the select2 dropdown
+        """
+
+        js = ("accounts/js/user-change.js",)
 
 
 class HostingCertificateInline(admin.StackedInline):
@@ -139,7 +208,6 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
 
 class HostingProviderNoteInline(admin.StackedInline):
     """
-
     """
 
     extra = 1
@@ -149,7 +217,7 @@ class HostingProviderNoteInline(admin.StackedInline):
 
 class DatacenterNoteInline(admin.StackedInline):
     """
-    A data
+    A inline for adding notes to Datacentres.
     """
 
     extra = 0
@@ -183,7 +251,7 @@ class LabelAutocompleteView(dal_select2_views.Select2QuerySetView):
         """
         Return our list of labels, only serving them to internal staff members"""
 
-        if not self.request.user.groups.filter(name="admin").exists():
+        if not self.request.user.is_admin:
             return Label.objects.none()
 
         qs = Label.objects.all()
@@ -350,9 +418,9 @@ class HostingAdmin(admin.ModelAdmin):
         cancel_link = reverse(
             "admin:" + get_admin_name(self.model, "change"), args=[obj.pk]
         )
-        send_email_url = reverse(
-            "greenweb_admin:accounts_hostingprovider_send_email", args=[obj.id]
-        )
+
+        send_email_path = f"greenweb_admin:{get_admin_name(self.model, 'send_email')}"
+        send_email_url = reverse(send_email_path, args=[obj.id])
         logger.info(f"send_email_url - {send_email_url}")
 
         prepopulated_form = forms.PreviewEmailForm(
@@ -399,17 +467,21 @@ class HostingAdmin(admin.ModelAdmin):
 
         # add hosting provider note, so we have a record of
         # sending the request
+
         HostingProviderNote.objects.create(
             added_by=request.user, body_text=message, provider=obj
         )
 
         # TODO: is this needed any more?
+        # make note of the outbound message we sent
         HostingCommunication.objects.create(
             template=message_type, hostingprovider=obj, message_content=message
         )
         # add our internal label, so we know when they were last contacted
         # and we don't keep sending requests
         obj.staff_labels.add(f"{message_type} sent")
+
+        # add a tag to the hosting provider so we know they were messaged
 
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.pk)
@@ -420,17 +492,32 @@ class HostingAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
+        if form.has_changed():
+            if not obj.is_awaiting_review and not request.user.is_admin:
+                form.instance.label_as_awaiting_review(notify_admins=True)
+
+        # if there is not 'change' set, a user is creating a hosting
+        # provider for the first time.
+        # Allocate the new provider to them, so they can see their
+        # newly created provider on the next page load
         if not change:
-            user = request.user
-            user.hostingprovider = obj
-            user.save()
+            # we don't allocate newly created providers to admin staff
+            # they might be creating a provider for someone else
+            if not request.user.is_admin:
+                user = request.user
+                user.hostingprovider = obj
+                user.save()
+
+            # and then notify the admins to review the new submission
+            if not obj.is_awaiting_review and not request.user.is_admin:
+                form.instance.label_as_awaiting_review(notify_admins=True)
 
     def save_formset(self, request, form, formset, change):
         """
         Save the child objects in this form, and account for the special cases
         for each of the formset being iterated through.
-        
-        Called multiple times - once for each formset on an model.
+
+        Called multiple times - once for each formset on a model.
         """
 
         # We need to let the form know if this an addition or a change
@@ -442,11 +529,17 @@ class HostingAdmin(admin.ModelAdmin):
         # # has taken place.
         formset.form.changed = change
 
-        #
         if formset.form.__name__ == "HostingProviderNoteForm":
             # assign the current user to the
             # newly created comments
-            instances = formset.save(commit=False)
+
+            # calling formset.save() lets us see if any of the forms
+            # contained in the formset have seen changes like new objects,
+            # deleted objects, or changed objects.
+
+            # See more:
+            # https://docs.djangoproject.com/en/dev/topics/forms/modelforms/#saving-objects-in-the-formset
+            formset.save(commit=False)
             if formset.new_objects:
                 for new_obj in formset.new_objects:
                     if isinstance(new_obj, HostingProviderNote):
@@ -454,6 +547,20 @@ class HostingAdmin(admin.ModelAdmin):
                         new_obj.save()
 
         formset.save()
+
+        # check for any changes in the other forms contained in the formset
+        changes_in_related_objects = (
+            formset.changed_objects or formset.changed_objects or formset.new_objects
+        )
+
+        # we don't want to flag the provider for review by internal staff when
+        # our internal staff are the ones working on it
+        should_flag_for_review = (
+            not form.instance.is_awaiting_review and not request.user.is_admin
+        )
+
+        if changes_in_related_objects and should_flag_for_review:
+            form.instance.label_as_awaiting_review(notify_admins=True)
 
     def approve_asn(self, request, *args, **kwargs):
 
@@ -477,6 +584,18 @@ class HostingAdmin(admin.ModelAdmin):
         return redirect(name, obj.hostingprovider_id)
 
     # Queries
+
+    def get_list_filter(self, request):
+        """
+        Return a list of filters for admins, otherwise an empty list.
+
+
+        """
+        if request.user.is_admin:
+            return super().get_list_filter(request)
+
+        # otherwise return nothing
+        return []
 
     def get_urls(self):
         """
@@ -523,6 +642,9 @@ class HostingAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
+        if "archived" not in request.GET:
+            qs = qs.filter(archived=False)
+
         qs = qs.prefetch_related(
             "hostingprovider_certificates",
             "datacenter",
@@ -555,7 +677,6 @@ class HostingAdmin(admin.ModelAdmin):
                 },
             ),
         )
-
         if request.user.is_staff:
             return (*default_fieldset, *admin_editable)
 
@@ -579,11 +700,10 @@ class HostingAdmin(admin.ModelAdmin):
         to groups with the correct permissions.
         """
         inlines = self.inlines
-        is_admin = request.user.groups.filter(name="admin").exists()
 
-        logger.info(f"{request.user}, is_admin: {is_admin}")
+        logger.info(f"{request.user}, is_admin: {request.user.is_admin}")
 
-        if not is_admin:
+        if not request.user.is_admin:
             # they're not an admin, return a
             # from the list filtered to remove the 'admin'
             # inlines.
@@ -785,11 +905,8 @@ class DatacenterAdmin(admin.ModelAdmin):
         to groups with the correct permissions.
         """
         inlines = self.inlines
-        is_admin = request.user.groups.filter(name="admin").exists()
 
-        logger.info(f"{request.user}, is_admin: {is_admin}")
-
-        if not is_admin:
+        if not request.user.is_admin:
             # they're not an admin, return a
             # from the list filtered to remove the 'admin'
             # inlines.
@@ -847,4 +964,43 @@ class SupportMessageAdmin(admin.ModelAdmin):
     pass
 
 
+class GroupListFilter(admin.SimpleListFilter):
+    """
+    Provide a filter to
+    """
+
+    title = _("Group")
+    parameter_name = "user_group"
+
+    def lookups(self, request, model_admin):
+        """
+        Allow filtering by the groups that have been assigned to
+        user. If a user has been assigned multiple groups they will
+        appear in both filter options.
+        """
+        groups = Group.objects.all()
+        return ((group.id, str(group)) for group in groups)
+
+    def queryset(self, request, queryset):
+        """
+        Filter the possible logentry results to ones
+        where they were created by a user in the group
+        provided by self.value()
+        """
+        if self.value():
+            queryset = queryset.filter(user__groups__in=[int(self.value())])
+        return queryset
+
+
+class GWLogEntryAdmin(LogEntryAdmin):
+    """
+    As subclass of the LogEntry admin provided by the
+    `django-logentry-admin`
+    """
+
+    # override our list of filters
+    list_filter = [GroupListFilter, "content_type", ActionListFilter]
+
+
 greenweb_admin.register(Flag, FlagAdmin)
+greenweb_admin.register(LogEntry, GWLogEntryAdmin)

@@ -515,6 +515,7 @@ class TestGreencheckStatsGeneration:
         assert [stat.count for stat in grey_stats] == [1, 1, 1, 1, 1, 1, 1]
         assert [stat.count for stat in grey_stats] == [1, 1, 1, 1, 1, 1, 1]
 
+    @pytest.mark.flaky
     def test_create_stat_async(
         self,
         transactional_db,
@@ -529,11 +530,16 @@ class TestGreencheckStatsGeneration:
         but have a worker create the stats asynchronously.
         """
 
+        # make sure we have our queues set up
         broker.declare_queue("default")
+        broker.declare_queue("stats")
+
         assert gc_models.DailyStat.objects.count() == 0
+
         # set up our date range
         generated_dates = self._set_up_dates_for_last_week()
 
+        # create our greenchecks to build an aggregate view of
         for date in generated_dates:
             gc_factories.GreencheckFactory.create(date=date + relativedelta(hours=2))
 
@@ -541,26 +547,18 @@ class TestGreencheckStatsGeneration:
 
         # we use the 'send' with the 'transactional_db' fixture here instead of db
         # because if we use the regular db fixture, the workers can not see what is
-        # happening 'inside' this test. TODO: check that this really is the
-        # explanation for this strange test behaviour
+        # happening 'inside' this test,
 
         gc_tasks.create_stat_async.send(
             date_string=chosen_date, query_name="total_count"
         )
 
-        # import ipdb
-
-        # ipdb.set_trace()
-
         # Wait for all the tasks to be processed
+
         broker.join(gc_tasks.create_stat_async.queue_name)
         worker.join()
 
-        # import ipdb
-
-        # ipdb.set_trace()
-
-        # hae we generate the daily stats?
+        # have we generated the daily stats?
         assert gc_models.DailyStat.objects.count() == 3
 
         # do that they have the right date?

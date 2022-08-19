@@ -20,6 +20,12 @@ from ...accounts import models as ac_models
 from .. import choices as gc_choices
 
 logger = logging.getLogger(__name__)
+
+# https://ember-data-api-scg3n.ondigitalocean.app/ember/generation_yearly?_sort=rowid&_facet=year&_facet=variable&country_or_region__exact=World&variable__exact=Fossil&year__exact=2021
+GLOBAL_AVG_FOSSIL_SHARE = 0.62
+
+# https://ember-data-api-scg3n.ondigitalocean.app/ember?sql=select+country_or_region%2C+country_code%2C+year%2C+emissions_intensity_gco2_per_kwh%0D%0Afrom+country_overview_yearly%0D%0Awhere+year+%3D+2021%0D%0Aand+country_or_region+%3D+%22World%22%0D%0Aorder+by+country_code+limit+300
+GLOBAL_AVG_CO2_INTENSITY = 442.23
 """
 - greencheck_linked - the purpose of the table is not very clear.
    Contains many entries though.
@@ -404,6 +410,10 @@ class TopUrl(models.Model):
 
 
 class GreenDomain(models.Model):
+    """
+    The model we use for quick lookups against a domain.
+
+    """
 
     url = models.CharField(max_length=255)
     hosted_by_id = models.IntegerField()
@@ -425,6 +435,7 @@ class GreenDomain(models.Model):
         the time of the and the rest empty.
         """
         return GreenDomain(
+            green=False,
             url=domain,
             hosted_by=None,
             hosted_by_id=None,
@@ -469,13 +480,15 @@ class GreenDomain(models.Model):
         """
         try:
             return ac_models.Hostingprovider.objects.get(pk=self.hosted_by_id)
+        except ac_models.Hostingprovider.DoesNotExist:
+            return None
         except ValueError:
             return None
         except Exception as err:
             logger.warn(
                 (
                     f"Couldn't find a hosting provider for url: {self.url}, "
-                    "and hosted_by_id: {hosted_by_id}."
+                    f"and hosted_by_id: {hosted_by_id}."
                 )
             )
             logger.warn(err)
@@ -499,3 +512,66 @@ class GreenDomain(models.Model):
 
     class Meta:
         db_table = "greendomain"
+
+
+class CO2Intensity(models.Model):
+    """
+    A lookup table for returning carbon intensity figures
+    for a given region, used when looking up IPs and/or domains.
+
+    Works at a country level of granularity at present, with the expectation
+    that grid or hosting provider data can offer greater detail as available.
+    """
+
+    country_name = models.CharField(max_length=255)
+    country_code_iso_2 = models.CharField(max_length=255, blank=True, null=True)
+    country_code_iso_3 = models.CharField(max_length=255)
+    carbon_intensity = models.FloatField()
+    # marginal, average or perhaps residual
+    carbon_intensity_type = models.CharField(max_length=255)
+    generation_from_fossil = models.FloatField(default=0)
+    year = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.country_name} - {self.year}"
+
+    @classmethod
+    def check_for_country_code(cls, country_code):
+        """
+        Accept 2 letter country code, and return the CO2 Intensity
+        figures for the corresponding country if present
+        """
+
+        # we try to return the latest value we have for a given country
+        # in some places data can be more than a year old, so we allow
+        # for this
+        res = (
+            cls.objects.filter(country_code_iso_2=country_code)
+            .order_by("-year")
+            .first()
+        )
+
+        # do we have a result? return it
+        if res:
+            return res
+
+        # otherwise fall back to global value
+        return cls.global_value()
+
+    @classmethod
+    def global_value(cls):
+        """
+        Return a default lookup value for when we
+        do not have enough information to return information
+        based on a given country.
+        """
+        return CO2Intensity(
+            country_name="World",
+            country_code_iso_2="xx",
+            country_code_iso_3="xxx",
+            carbon_intensity_type="avg",
+            carbon_intensity=GLOBAL_AVG_CO2_INTENSITY,
+            generation_from_fossil=GLOBAL_AVG_FOSSIL_SHARE,
+            year=2021,
+        )
+
