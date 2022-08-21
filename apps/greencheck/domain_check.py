@@ -12,20 +12,19 @@ This follows largely the same approach:
 5. check against registered ASNs
 6. if no matches left, report grey
 """
-import socket
-import logging
-
-
-from ipwhois.asn import IPASN
-from ipwhois.net import Net
-from ipwhois.exceptions import IPDefinedError
 import ipaddress
-from django.utils import timezone
+import logging
+import socket
 import urllib
-import tld
 
-from .models import GreenDomain, SiteCheck
+import tld
+from django.utils import timezone
+from ipwhois.asn import IPASN
+from ipwhois.exceptions import IPDefinedError
+from ipwhois.net import Net
+
 from .choices import GreenlistChoice
+from .models import GreenDomain, SiteCheck
 
 logger = logging.getLogger(__name__)
 
@@ -212,8 +211,9 @@ class GreenDomainChecker:
         from .models import GreencheckIp
 
         ip_matches = GreencheckIp.objects.filter(
-            ip_end__gte=ip_address, ip_start__lte=ip_address,
+            ip_end__gte=ip_address, ip_start__lte=ip_address, active=True
         )
+
         # order matches by ascending range size
         # we can't do this in the database because we need to work out the
         # size of the Ip ranges in order to order them properly
@@ -237,7 +237,7 @@ class GreenDomainChecker:
             return False
 
         if isinstance(asn_result, int):
-            return GreencheckASN.objects.filter(asn=asn_result).first()
+            return GreencheckASN.objects.filter(asn=asn_result, active=True).first()
 
         if asn_result == "NA" or asn_result is None:
             logger.info("Received a result we can't match to an ASN. Skipping")
@@ -248,7 +248,7 @@ class GreenDomainChecker:
         # look them up, and return the first green one
         asns = asn_result.split(" ")
         for asn in asns:
-            asn_match = GreencheckASN.objects.filter(asn=asn)
+            asn_match = GreencheckASN.objects.filter(asn=asn, active=True)
             if asn_match:
                 # we have a match, return the result
                 return asn_match.first()
