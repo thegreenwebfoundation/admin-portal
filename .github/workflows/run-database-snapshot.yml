@@ -3,7 +3,7 @@ name: Create database snapshot
 on:
   schedule:
     # at one thirty every morning run this job
-    - cron: "30 1 * * *"
+    # - cron: "30 1 * * *"
 
 defaults:
   run:

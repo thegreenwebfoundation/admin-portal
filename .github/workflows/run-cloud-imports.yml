@@ -2,8 +2,8 @@ name: Run cloud importer ansible job
 
 on:
   schedule:
-    # at one fourty five every morning run this job
-    - cron: "45 1 * * *"
+    # at one forty five every morning run this job
+    # - cron: "45 1 * * *"
 
 defaults:
   run:
