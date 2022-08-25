@@ -28,12 +28,14 @@ class CsvImporter(BaseImporter):
         try:
             list_of_ips = []
 
-            validate_csv_file(raw_data)
+            cls.validate_csv_file(raw_data)
 
-            # Assume this single column holds ASN or network (ip with subnet)
             if len(raw_data.columns) == 1:
+                # ASN or network (ip with subnet)
                 list_of_ips = list(raw_data.iloc[:, 0])
             # elif len(data.columns) == 2:
+            # TODO: Implement a way to convert two ip addresses to a network
+            # # Start and ending ip range
             # start_ip = data.iloc[:,0]
             # end_ip = data.iloc[:,1]
             # Create network from these
@@ -45,18 +47,15 @@ class CsvImporter(BaseImporter):
             logger.exception("Something really unexpected happened. Aborting")
 
     def validate_csv_file(cls, data):
-        # Loop through dataset to validate the data format
-        if len(data.columns) == 1:
-            validate_column_in_csv_file(data)
-        elif len(data.columns) == 2:
-            validate_column_in_csv_file(data.iloc[:, 0])
-            validate_column_in_csv_file(data.iloc[:, 1])
+        if len(data.columns) == 1 or len(data.columns) == 2:
+            cls.validate_column_in_csv_file(data.iloc[:, 0].values.tolist())
+
+            if len(data.columns) == 2:
+                cls.validate_column_in_csv_file(data.iloc[:, 1].values.tolist())
         else:
-            # exception: wrong format
             logger.exception("Number of columns in CSV are not as expected")
 
     def validate_column_in_csv_file(cls, column):
-        column = list(column)
         for address in column:
             if not re.search("(AS)[0-9]+$", address) or not isinstance(
                 ipaddress.ip_network(address),

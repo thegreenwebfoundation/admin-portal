@@ -17,10 +17,10 @@ def sample_data_raw():
     Retrieve a locally saved sample of the population to use for this test
     Return: CSV
     """
-    # this_file = pathlib.Path(__file__)
-    # csv_path = this_file.parent.parent.joinpath("fixtures", "test_dataset_csv.csv")
-    return pd.read_csv("apps/greencheck/fixtures/test_dataset_csv.csv", header=None)
-    # return pd.read_csv(csv_path, header=None)
+    this_file = pathlib.Path(__file__)
+    csv_path = this_file.parent.parent.joinpath("fixtures", "test_dataset_csv.csv")
+    return pd.read_csv(csv_path, header=None)
+
 
 @pytest.fixture
 def sample_data_as_list(sample_data_raw):
@@ -43,10 +43,16 @@ class TestCsvImporter:
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
-        # ipdb.set_trace()
 
         # Test: resulting list contains items
         assert len(list_of_addresses) > 0
+
+    # def test_validate_csv_file(self):
+    #     # TODO: Implement this test
+
+    # def test_validate_column_in_csv_file(self):
+    #     # TODO: Implement this test
+
 
 @pytest.mark.django_db
 class TestCsvImportCommand:
@@ -69,7 +75,9 @@ class TestCsvImportCommand:
         # define a different return when the targeted mock
         # method is called
         mocker.patch(
-            path_to_mock, return_value=sample_data_as_list,
+            path_to_mock,
+            return_value=sample_data_as_list,
         )
-        
+
+        # TODO: Do we need this call command?
         # call_command("update_networks_in_db_csv")
