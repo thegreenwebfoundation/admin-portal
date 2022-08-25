@@ -11,6 +11,8 @@ release:
 	PIPENV_DOTENV_LOCATION=.env.prod pipenv run ansible-playbook ansible/deploy.yml -i ansible/inventories/prod.yml
 	PIPENV_DOTENV_LOCATION=.env.prod pipenv run sentry-cli releases finalize $(shell sentry-cli releases propose-version)
 
+dev.runserver:
+	python manage.py runserver
 
 dev.test:
 	pytest -s --create-db --looponfail --ds=greenweb.settings.testing

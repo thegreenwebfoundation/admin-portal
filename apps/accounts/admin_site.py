@@ -139,6 +139,7 @@ class GreenWebAdmin(AdminSite):
         patterns = [
             path("try_out/", CheckUrlView.as_view(), name="check_url"),
             path("green-urls", GreenUrlsView.as_view(), name="green_urls"),
+            path("import-ip-ranges", GreenUrlsView.as_view(), name="import_ip_ranges"),
         ]
         return patterns + urls
 
@@ -167,6 +168,19 @@ class GreenWebAdmin(AdminSite):
                         "name": "Download data dump",
                         "object_name": "greencheck_url",
                         "admin_url": reverse("admin:green_urls"),
+                        "view_only": True,
+                    }
+                ],
+            },
+            {
+                "name": "Upload ip ranges",
+                "app_label": "greencheck",
+                "app_url": reverse("admin:import_ip_ranges"),
+                "models": [
+                    {
+                        "name": "As CSV",
+                        "object_name": "greencheck_url",
+                        "admin_url": reverse("admin:import_ip_ranges"),
                         "view_only": True,
                     }
                 ],

@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}
+    The Green Web Foundation Member portal: import ip ranges {{ domain }}
+{% endblock %}
+
+
+{% block pretitle %}
+<h1>Try out the greencheck with a URL of your choice</h1>
+{% endblock %}
+<!-- 
+
+{% block content %}
+{% if green_status %}
+<div>
+    <p>From the submitted url of <a href="{{ form.url.value }}">{{ form.url.value }}</a> we looked up the domain <code>{{ domain }}</code></p>
+
+    <p>This domain pointed to IP address <code>{{ ip_lookup }}</code>. This returned a <strong>{{ green_status}}</strong> result in our records.</p>
+</div>
+{% endif %}
+
+{% if matching_green_ip %}
+
+<p>This showed as green because we were able to link this IP address to to the IP range <em>{{ matching_green_ip.ip_start }} to {{ matching_green_ip.ip_start }}</em>, that we have for {{ matching_green_ip.hostingprovider }}.</p>
+
+{% endif %}
+
+{% if matching_green_as %}
+
+<p>This showed as green because we were able to link this IP address to autonomous network AS{{ matching_green_as.asn }} we have registered for {{ matching_green_as.hostingprovider }}.</p>
+
+{% endif %}
+
+{% if whois_info %}
+
+    <hr />
+
+    <h3>More info</h3>
+
+    {% if not matching_green_as and not matching_green_ip and green_status == "gray" %}
+
+    <p>We couldn't find a green match for the provided url: <a href="{{ form.url.value }}">{{ form.url.value }}</a>, but the info below shows the information we <em>can</em> find for it.</p>
+
+    {% endif %}
+
+    <p><a href="{{ form.url.value }}">{{ form.url.value }}</a> points to the IP address <code>{{ whois_info.query }}</code>.</p>
+    <p>This IP address appears to belong to the Autonomous Network {{ whois_info.asn }}, which is assigned to <code>{{ whois_info.network.name }}</code>.<p>
+
+
+    <p>You can look up <a href="https://stat.ripe.net/app/launchpad/AS{{ whois_info.asn }}">AS {{ whois_info.asn }}, on RIPE Stat, an free network anaylsis tool from RIPE<a/>, to learn who is repsonsible for the autonomous network, and where it is primaily located. <small><a href="https://stat.ripe.net/about/">What is RIPE Stat?</a></small></p>
+
+    <p>Look up the domain name <code>{{ domain }}</code> as well as the IP address <code>{{ whois_info.query }}</code> on the <a href="https://lookup.icann.org/">this registration data lookup tool</a> from ICANN. <small><a href="https://en.wikipedia.org/wiki/ICANN">Who is ICANN?</a></small>
+
+
+{% endif %}
+
+<h3>Making corrections</h3>
+
+<p>If you think this result should be showing green when it ought to be gray, or vice versa, please <a href="https://www.thegreenwebfoundation.org/faq/">check our FAQ for reasons why this might be, and to get help with making corrections.</a>.</p>
+
+
+{% if green_status %}
+
+<hr / >
+
+<h2>Try another lookup</h2>
+{% endif %}
+
+<style>
+    form.try_out input[type='url'] {
+        min-width:25rem;
+    }
+</style>
+
+<form action="{{ form_url }}" method="post" class="try_out">
+    {% csrf_token %}
+    {{ form.url.errors }}
+    <label for="{{ form.url.id_for_label }}">Url: </label>
+    {{ form.url }}
+
+    <input type="submit" value="Submit"
+        style="margin-top: 0px; padding: 6px 15px">
+</form>
+
+{% endblock content %} -->

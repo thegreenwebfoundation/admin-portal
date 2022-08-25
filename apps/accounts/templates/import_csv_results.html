@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block pretitle %}
+<h1>Import IP Ranges from a CSV file for {{ provider }}</h1>
+
+<p> If you have a large number of CSV files, you can import them in bulk.</p>
+{% endblock %}
+
+{% block content %}
+
+{% if ip_ranges %}
+
+<hr / style="margin-top:3rem; margin-bottom:3rem;">
+
+<h2>IP Range Import Preview</h2>
+
+<p>The following IP ranges have been created, and updated for <strong>{{ provider }}</strong>:</p>
+
+<table>
+<th>IP Range start</th><th>Ip Range End</th><th>Created / Updated</th>
+
+{% for ip in ip_ranges %}
+
+  <tr>
+    <td>{{ ip.ip_start }}</td>
+    <td>{{ ip.ip_end }}</td>
+    <td>
+      {% if ip.id  %}
+          Updated
+      {% else %}
+          Created
+      {% endif %}
+    </td>
+  </tr>
+
+{% endfor %}
+</table>
+
+{% endif %}
+
+{% endblock content %}
