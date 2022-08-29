@@ -33,15 +33,11 @@ class CsvImporter(BaseImporter):
             if len(raw_data.columns) == 1:
                 # ASN or network (ip with subnet)
                 list_of_ips = list(raw_data.iloc[:, 0])
-            # elif len(data.columns) == 2:
-            # TODO: Implement a way to convert two ip addresses to a network
-            # # Start and ending ip range
-            # start_ip = data.iloc[:,0]
-            # end_ip = data.iloc[:,1]
-            # Create network from these
-            # for index, row in data.iterrows():
-            #   list_of_ips.append(row[index,0])
-            #     print(row['c1'], row['c2'])
+            elif len(data.columns) == 2:
+                # IP range (start and ending IP)
+                
+                for index, row in data.iterrows():
+                    list_of_ips.append((row[0], row[1]))
             return list_of_ips
         except Exception as e:
             logger.exception("Something really unexpected happened. Aborting")
@@ -53,12 +49,19 @@ class CsvImporter(BaseImporter):
             if len(data.columns) == 2:
                 cls.validate_column_in_csv_file(data.iloc[:, 1].values.tolist())
         else:
-            logger.exception("Number of columns in CSV are not as expected")
+            logger.exception("Number of columns in CSV are not as expected.")
 
     def validate_column_in_csv_file(cls, column):
         for address in column:
-            if not re.search("(AS)[0-9]+$", address) or not isinstance(
-                ipaddress.ip_network(address),
-                (ipaddress.IPv4Network, ipaddress.IPv6Network),
+            if (
+                not re.search("(AS)[0-9]+$", address)
+                or not isinstance(
+                    ipaddress.ip_network(address),
+                    (ipaddress.IPv4Network, ipaddress.IPv6Network),
+                )
+                or not isinstance(
+                    ipaddress.ip_address(address),
+                    (ipaddress.IPv4Address, ipaddress.IPv6Address),
+                )
             ):
-                logger.exception("Value of %s is in an incorrect format", address)
+                logger.exception("Value of %s has an incorrect format.", address)
