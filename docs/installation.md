@@ -1,6 +1,7 @@
 # Installation
 
-This installation shows you how to setup the Admin Portal of The Green Web Foundation.<br>
+This installation shows you how to setup the Admin Portal of The Green Web Foundation.
+
 In order to setup this project, we recommend following the guides from top to bottom. Skipping some topics might result in missing crucial steps for the project to work.
 
 ---
@@ -24,7 +25,12 @@ Before following the following list, make sure you are in the root directory (wo
 3. Download a packages named *pipenv* with *pip*: `pip install pipenv`.
 4. Once download, use this tool to install all other packages: `pipenv install`.
 5. As a final step, make sure to copy the content of `.env.sample` to `.env` and add the necessary credentials.<br>
+
 __Note__ that this project relies on object storage. In production this is needed to store static files, but in development it is not required.
 
 By default `pipenv` loads the content of the `.env` file.<br>
 For starting the project the shell command can be used like this `pipenv shell`.
+
+## Working with email
+
+This project has features that send email notifications to users. To test email functionality, this project uses [Mailhog](https://github.com/mailhog/MailHog). It's enabled by default in gitpod environmenrts, and you can access it on port 8025.
