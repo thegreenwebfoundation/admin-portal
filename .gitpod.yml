@@ -26,6 +26,13 @@ tasks:
       mysqladmin create greencheck
       pipenv install --dev
       pipenv run ./manage.py migrate
+      pipenv run ./manage.py tailwind install
+      pipenv run ./manage.py tailwind build
+      cd ./apps/theme/static_src/
+      npx rollup --config
+      cd ../../../
+      pipenv run ./manage.py collectstatic --no-input
+      
     command: ls
 
   - name: rabbitmq
@@ -45,6 +52,15 @@ tasks:
       -p 6379:6379
       redis:6
 
+  - name: mailhog
+    command: >
+      docker run  
+      --rm
+      --name green-mailhog
+      -p 8025:8025
+      -p 1025:1025
+      mailhog/mailhog
+
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 8000
@@ -57,6 +73,9 @@ ports:
     onOpen: ignore
     # mysql
   - port: 3306
+    onOpen: ignore
+    # mailhog
+  - port: 8025
     onOpen: ignore
     # debugging ports in vscode
   - port: 30000-50000
