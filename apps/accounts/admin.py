@@ -25,7 +25,7 @@ from logentry_admin.admin import (
     ActionListFilter,
     UserListFilter,
 )
-
+import rich
 
 from taggit.models import Tag
 import logging
