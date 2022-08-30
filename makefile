@@ -11,6 +11,10 @@ release:
 	PIPENV_DOTENV_LOCATION=.env.prod pipenv run ansible-playbook ansible/deploy.yml -i ansible/inventories/prod.yml
 	PIPENV_DOTENV_LOCATION=.env.prod pipenv run sentry-cli releases finalize $(shell sentry-cli releases propose-version)
 
+dev.createsuperuser:
+	python ./manage.py createsuperuser --username admin --email admin@admin.commits --noinput
+	python ./manage.py set_fake_passwords
+
 dev.runserver:
 	python manage.py runserver
 
