@@ -16,7 +16,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
-class CsvImporter(BaseImporter):
+class CSVImporter(BaseImporter):
     def __init__(self, provider_id: int):
         self.hosting_provider_id = provider_id
 

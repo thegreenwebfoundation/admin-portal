@@ -15,7 +15,7 @@ from .choices import StatusApproval
 from .models import GreencheckIp
 from .models import GreencheckIpApprove
 from .models import GreencheckASN, GreencheckASNapprove
-from .importers import CsvImporter
+from .importers import CSVImporter
 from ..accounts import models as ac_models
 
 User = get_user_model()
@@ -136,7 +136,7 @@ class ImporterCSVForm(forms.Form):
 
         uploaded_csv_string = self.cleaned_data["csv_file"].read().decode("utf-8")
         csv_file = io.StringIO(uploaded_csv_string)
-        importer = CsvImporter(self.cleaned_data["provider"])
+        importer = CSVImporter(self.cleaned_data["provider"])
 
         importable_values = importer.fetch_data_from_source(csv_file)
 
