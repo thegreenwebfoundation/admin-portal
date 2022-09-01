@@ -134,7 +134,7 @@ class BaseImporter:
         hoster = Hostingprovider.objects.get(pk=self.hosting_provider_id)
 
         gc_asn, created = GreencheckASN.objects.update_or_create(
-            active=True, asn=int(address.replace("AS", "")), hostingprovider=hoster
+            active=True, asn=int(address.replace("AS", "")), hostingprovider=hoster.id
         )
         gc_asn.save()  # Save the newly created or updated object
 

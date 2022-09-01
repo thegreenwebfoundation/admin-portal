@@ -64,7 +64,10 @@ class TestImporterInterface:
         Test saving IPv4 and IPv6 networks to the database
         """
         testing_ipv4_range = ("191.233.8.25", "191.233.8.30")
-        testing_ipv6_range = ("2603:1010:0304:0000:0000:0000:0000:0140", "2603:1010:0304:0000:0000:0000:0000:015f")
+        testing_ipv6_range = (
+            "2603:1010:0304:0000:0000:0000:0000:0140",
+            "2603:1010:0304:0000:0000:0000:0000:015f",
+        )
         testing_ipv4_network = "191.233.8.24/29"
         testing_ipv6_network = "2603:1010:304::140/123"
 
@@ -135,7 +138,8 @@ class TestImporterInterface:
         hosting_provider.save()  # Initialize hosting provider in database
 
         # Process list of addresses in JSON file
-        BaseImporter.process_addresses(base_importer, sample_data)
+        importer = BaseImporter()
+        importer.process_addresses(sample_data)
 
         assert (
             GreencheckIp.objects.all().count() == 63
