@@ -399,15 +399,14 @@ class HostingAdmin(admin.ModelAdmin):
             valid = form.is_valid()
             skip_preview = form.cleaned_data["skip_preview"]
 
-            rich.inspect(request.POST)
-            rich.inspect(form.cleaned_data)
             if valid and skip_preview:
                 # not doing preview. Run the import
-                form.save()
+                completed_importer = form.save()
 
-                ip_ranges = form.get_ip_ranges()
+                # TODO show the updated files
+                
                 context = {
-                    "ip_ranges": ip_ranges,
+                    "ip_ranges": [],
                     "provider": provider,
                 }
                 return render(request, "import_csv_preview.html", context,)

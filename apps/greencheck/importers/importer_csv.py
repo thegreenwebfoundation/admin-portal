@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class CSVImporter(BaseImporter):
-    def __init__(self, provider_id: int):
-        self.hosting_provider_id = provider_id
+    def __init__(self, provider: Hostingprovider):
+        self.hosting_provider = provider
 
     def fetch_data_from_source(cls, filepath_or_buffer) -> List:
         """

@@ -29,7 +29,7 @@ class Importer(Protocol):
 
 
 class BaseImporter:
-    hosting_provider_id: int
+    hosting_provider: Hostingprovider
 
     def is_ip_range(self, address: Union[str, tuple]) -> Union[tuple, bool]:
         """
@@ -131,10 +131,12 @@ class BaseImporter:
             )
 
     def save_asn(self, address: str):
-        hoster = Hostingprovider.objects.get(pk=self.hosting_provider_id)
+        
 
         gc_asn, created = GreencheckASN.objects.update_or_create(
-            active=True, asn=int(address.replace("AS", "")), hostingprovider=hoster.id
+            active=True, 
+            asn=int(address.replace("AS", "")),
+            hostingprovider=self.hosting_provider
         )
         gc_asn.save()  # Save the newly created or updated object
 
@@ -153,13 +155,11 @@ class BaseImporter:
             start_address = network[1]
             ending_address = network[-1]
 
-        hoster = Hostingprovider.objects.get(pk=self.hosting_provider_id)
-
         gc_ip, created = GreencheckIp.objects.update_or_create(
             active=True,
             ip_start=start_address,
             ip_end=ending_address,
-            hostingprovider=hoster,
+            hostingprovider=self.hosting_provider,
         )
         gc_ip.save()  # Save the newly created or updated object
 

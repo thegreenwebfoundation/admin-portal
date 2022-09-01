@@ -154,7 +154,6 @@ class ImporterCSVForm(forms.Form):
         provider = self.cleaned_data["provider"]
         # make preview of generated ips
         ips = self.importer.preview(provider, self.ip_ranges)
-        rich.print(ips)
         return ips
 
     def save(self):
@@ -162,11 +161,12 @@ class ImporterCSVForm(forms.Form):
         if self.importer is None:
             self.initialize_importer()
         logger.info("Skipping preview, running import")
-        import ipdb
-
-        ipdb.set_trace()
+        
+        provider = self.cleaned_data["provider"]
+        
         self.importer.process_addresses(self.ip_ranges)
-        return self.importer
+        
+        return self.importer.preview(provider, self.ip_ranges)
 
 
 class GreencheckAsnForm(ModelForm, ApprovalMixin):

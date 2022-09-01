@@ -18,8 +18,7 @@ def sample_data_raw():
     Retrieve a locally saved sample of the population to use for this test
     Return: CSV
     """
-    this_file = pathlib.Path(__file__)
-    csv_path = this_file.parent.parent.joinpath("fixtures", "test_dataset_csv.csv")
+    csv_path = pathlib.Path(settings.ROOT) / "apps" / "greencheck" / "fixtures" / "test_dataset_csv.csv"
     return pd.read_csv(csv_path, header=None)
 
 
@@ -41,7 +40,7 @@ class TestCSVImporter:
         """
         # Initialize Csv importer
         hosting_provider.save()
-        importer = CSVImporter(hosting_provider.id)
+        importer = CSVImporter(hosting_provider)
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
@@ -69,12 +68,13 @@ class TestCSVImporter:
 
         # Initialize Csv importer
         hosting_provider.save()
-        importer = CSVImporter(hosting_provider.id)
+        importer = CSVImporter(hosting_provider)
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
         created_networks = importer.process_addresses(list_of_addresses)
-
+        import rich
+        rich.print(created_networks)
         # we should have seen one AS network added
         assert "1 ASN" in created_networks
         # have we created two new IP ranges?
