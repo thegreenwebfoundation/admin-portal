@@ -30,16 +30,15 @@ __Note__ Currently Python version 3.8.5 is used on production.
 
 ### Setup
 Before following the following list, make sure you are in the root directory (workspace/admin-portal).
-1. Start by creating a virtual environment named *venv* by executing the following command in a terminal window: `make venv`.
-2. Now that the environment has been created, we can access it with the following command `. venv/bin/activate`.
-3. Download a package named *pipenv* with *pip*: `pip install pipenv`.
-4. Once downloaded, use this command to install all other packages: `pipenv install`.
+1. Make sure you have the right Python version installed: `python --version`
+2. Install a package named `pipenv` with `pip`: `python -m pip install pipenv`.
+3. Once installed, use this command to install all project packages: `pipenv install --dev`. The project packages are defined in `Pipfile`, and the `--dev` option installs both: develop and default packages.
+4. You can activate the virtual environment created for you by `pipenv` by running the command: `pipenv shell`.
 5. As a final step, make sure to copy the content of `.env.test` to `.env` and add the necessary credentials.<br>
 
 __Note__ that this project relies on object storage. In production this is needed to store static files, but in development it is not required.
 
 By default `pipenv` loads the content of the `.env` file.<br>
-For starting the project the shell command can be used like this `pipenv shell`.
 
 ## Working with email
 
