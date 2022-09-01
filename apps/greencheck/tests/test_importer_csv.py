@@ -24,7 +24,7 @@ def sample_data_raw():
 
 
 @pytest.fixture
-def sample_data_as_list(sample_data_raw):
+def sample_data_as_list(sample_data_raw, hosting_provider: Hostingprovider):
     """
     Retrieve a locally saved sample of the population to use for this test and parse it to a list
     Return: List
@@ -80,31 +80,46 @@ class TestCsvImporter:
         # have we created two new IP ranges?
         assert "2 IP" in created_networks
 
+    def test_preview_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
+        """
+        Can we see a representation of the data we would import before
+        we run the import it?
+        """
+        # Initialize Csv importer
+        hosting_provider.save()
+        importer = CsvImporter(hosting_provider.id)
 
-@pytest.mark.django_db
-class TestCsvImportCommand:
-    """
-    This just tests that we have a management command that can run.
-    We _could_ mock the call to fetch ip ranges, if this turns out to be a slow test.
-    """
+        # Run parse list with sample data
+        list_of_addresses = importer.parse_to_list(sample_data_raw)
+        preview = importer.preview(hosting_provider, list_of_addresses)
 
-    def test_handle(self, mocker, sample_data_as_list):
-        # mock the call to retrieve from source, to a locally stored
-        # testing sample. By instead using the test sample,
-        # we avoid unnecessary network requests.
+        assert len(preview["green_ips"]) == 2
+        assert len(preview["green_asns"]) == 1
 
-        # identify method we want to mock
-        path_to_mock = (
-            "apps.greencheck.importers.importer_csv."
-            "CsvImporter.fetch_data_from_source"
-        )
 
-        # define a different return when the targeted mock
-        # method is called
-        mocker.patch(
-            path_to_mock,
-            return_value=sample_data_as_list,
-        )
+# @pytest.mark.django_db
+# class TestCsvImportCommand:
+#     """
+#     This just tests that we have a management command that can run.
+#     """
 
-        # TODO: Do we need this call command?
-        # call_command("update_networks_in_db_csv")
+#     def test_handle(self, mocker, sample_data_as_list):
+#         # mock the call to retrieve from source, to a locally stored
+#         # testing sample. By instead using the test sample,
+#         # we avoid unnecessary network requests.
+
+#         # identify method we want to mock
+#         path_to_mock = (
+#             "apps.greencheck.importers.importer_csv."
+#             "CsvImporter.fetch_data_from_source"
+#         )
+
+#         # define a different return when the targeted mock
+#         # method is called
+#         mocker.patch(
+#             path_to_mock,
+#             return_value=sample_data_as_list,
+#         )
+
+#         # TODO: Do we need this call command?
+#         # call_command("update_networks_in_db_csv")

@@ -6,8 +6,10 @@ import re
 import ipaddress
 import rich
 from typing import List
+from apps.accounts.models.hosting import Hostingprovider
 
 from apps.greencheck.importers.importer_interface import BaseImporter, Importer
+from apps.greencheck.models import GreencheckIp, GreencheckASN
 
 from django.conf import settings
 
@@ -74,3 +76,71 @@ class CsvImporter(BaseImporter):
         ]
 
         return flattened_network_list
+
+    def preview(self, provider: Hostingprovider, list_of_networks: List) -> List:
+        """
+        Return a list of the GreencheckIPs that would be updated
+        or created based on the current provided file.
+
+        Return a preview of the networks to import, suitable for displaying
+        in a webpage.
+        """
+
+        green_ips = []
+        green_asns = []
+        # try to find a GreenIP
+        for network in list_of_networks:
+
+            if self.is_as_number(network):
+                # this looks like an AS number
+                try:
+                    as_number = network.split("AS")[1]
+                    green_asn = GreencheckASN.objects.get(
+                        asn=as_number, active=True, hostingprovider=provider
+                    )
+                    green_asns.append(green_asn)
+                except GreencheckASN.DoesNotExist:
+                    green_asn = GreencheckASN(
+                        active=True, asn=as_number, hostingprovider=provider
+                    )
+                    green_asns.append(green_asn)
+
+            if ip_network := self.is_ip_network(network):
+                try:
+                    green_ip = GreencheckIp.objects.get(
+                        active=True,
+                        ip_start=ip_network[1],
+                        ip_end=ip_network[-1],
+                        hostingprovider=provider,
+                    )
+                    green_ips.append(green_ip)
+
+                except GreencheckIp.DoesNotExist:
+                    green_ip = GreencheckIp(
+                        active=True,
+                        ip_start=ip_network[1],
+                        ip_end=ip_network[-1],
+                        hostingprovider=provider,
+                    )
+                    green_ips.append(green_ip)
+
+            if ip_range := self.is_ip_range(network):
+                try:
+                    green_ip = GreencheckIp.objects.get(
+                        active=True,
+                        hostingprovider=provider,
+                        ip_start=ip_range[0],
+                        ip_end=ip_range[1],
+                    )
+                    green_ips.append(green_ip)
+                except GreencheckIp.DoesNotExist:
+                    green_ip = GreencheckIp(
+                        active=True,
+                        hostingprovider=provider,
+                        ip_start=ip_range[0],
+                        ip_end=ip_range[1],
+                    )
+                    green_ips.append(green_ip)
+
+        # or make a new one, in memory
+        return {"green_ips": green_ips, "green_asns": green_asns}
