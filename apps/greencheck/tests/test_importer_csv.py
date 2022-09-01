@@ -6,6 +6,7 @@ import ipdb
 from io import StringIO
 
 from django.core.management import call_command
+from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.importers.importer_csv import CsvImporter
 
 from django.conf import settings
@@ -34,42 +35,42 @@ def sample_data_as_list(sample_data_raw):
 
 @pytest.mark.django_db
 class TestCsvImporter:
-    def test_parse_to_list(self, sample_data_raw):
+    def test_parse_to_list(self, sample_data_raw, hosting_provider: Hostingprovider):
         """
         Test the parsing function.
         """
         # Initialize Csv importer
-        importer = CsvImporter()
-        
+        hosting_provider.save()
+        importer = CsvImporter(hosting_provider.id)
+
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
 
         # Test: resulting list contains some items
         assert len(list_of_addresses) > 0
-        
+
         # do we have an ip network?
         assert "104.21.2.0/24" in list_of_addresses
-                
-        # have we filtered out our incorrect IP network?
+
+        # have we filtered out our incorrect IP network?
         assert "104.21.2.192/24" not in list_of_addresses
-        
-                
+
         # do we have our expected AS number?
         assert "AS234" in list_of_addresses
-        
+
         # have we filtered out our bad AS line?
         assert "AS" not in list_of_addresses
-        
+
         # do we have an IP range in our list
-        expected_ip_range = ('104.21.2.197', '104.21.2.199')
+        expected_ip_range = ("104.21.2.197", "104.21.2.199")
         assert expected_ip_range in list_of_addresses
-        
 
+    def test_process_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
 
-    def test_process_imports(self, sample_data_raw):
         # Initialize Csv importer
-        importer = CsvImporter()
-        
+        hosting_provider.save()
+        importer = CsvImporter(hosting_provider.id)
+
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
         created_networks = importer.process_addresses(list_of_addresses)
@@ -78,7 +79,6 @@ class TestCsvImporter:
         assert "1 ASN" in created_networks
         # have we created two new IP ranges?
         assert "2 IP" in created_networks
-        
 
 
 @pytest.mark.django_db
