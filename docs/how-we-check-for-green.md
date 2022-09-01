@@ -10,7 +10,7 @@ The two main ways we track this being done are either running a service powered 
 
 ## Making this more specific
 
-More concretely, when we do a check for a site, we are usually looking up a domain like mycoolsite.com, then resolving that to an IP address. Once we have the IP address, we check it against a set of IP ranges or Autonomous System networks (ASN) that are associated with a given provider that we have supporting evidence for. We outline each approach below.
+More concretely, when we do a check for a site, we are usually looking up a domain like `mycoolsite.com`, then resolving that to an IP address. Once we have the IP address, we check it against a set of IP ranges or Autonomous System networks (ASN) that are associated with a given provider that we have supporting evidence for. We outline each approach below.
 
 Once we the IP address, we take one of three paths to arrive at an organisation that we have information for.
 
@@ -22,11 +22,11 @@ We'll cover each one in turn.
 
 ### Domain, to IP to provider, by IP range
 
-Once we have an IP address, we establish the link a provider by checking if this IP falls insite a one of the IP ranges already shared with us by a given service provider.
+Once we have an IP address, we establish the link a provider by checking if this IP falls inside one of the IP ranges already shared with us by a given service provider.
 
 #### Linking directly to a provider by IP range
 
-So, if an IP address is 123.123.123.100, and we have an IP range for Provider A, who has registered the IP range 123.123.123.1 to 123.123.123.255, we associate the lookup with that provider, and refer to the supporting evidence shared with us by Provider A.
+So, if an IP address is `123.123.123.100`, and we have an IP range for Provider A, who has registered the IP range `123.123.123.1` to `123.123.123.255`, we associate the lookup with that provider, and refer to the supporting evidence shared with us by Provider A.
 
 This is the simplest case - where a domain might be `provider-a.com`, resolving to the IP address, which we then link to Provider A, the organisation.
 
@@ -47,7 +47,7 @@ Maintaining which individual IP address points to which is something that is oft
 
 If we don't have a matching range for an IP address, we can perform a lookup to see which AS Network the IP address belongs to - if an entire AS network belongs to one organisation, and we have supporting evidence for the organisation using enough green energy, this saves duplicating the records that the AS network is managing themselves.
 
-As before, we support two cases - an organisation providing a digital service themselves, or an organistion using a green provider to provide a service.
+As before, we support two cases - an organisation providing a digital service themselves, or an organisation using a green provider to provide a service.
 
 #### Linking directly to a provider by ASN
 
@@ -57,7 +57,7 @@ By following the link to supporting evidence shared by `Provider B`, we can esta
 
 #### Linking a site to a provider in the site's supply chain
 
-Similarly, a domain `my-green-site.com`, which resolves to the IP address `213.213.212.213`. From there, we perform a lookup to the same Autonomous Network 12345 (`AS 12345`). We folow the link from `AS 12345 to link to Provider B, and refer to their evidence to establish the link to green energy.
+Similarly, a domain `my-green-site.com`, which resolves to the IP address `213.213.212.213`. From there, we perform a lookup to the same Autonomous Network 12345 (`AS 12345`). We follow the link from `AS 12345` to link to Provider B, and refer to their evidence to establish the link to green energy.
 
 ------
 
