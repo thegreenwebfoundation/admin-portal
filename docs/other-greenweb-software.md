@@ -1,4 +1,4 @@
-# Other greenweb software
+# Other Green Web software
 
 While the main admin-portal repository holds the code for serving the main API and administration platform, The Green Web Foundation actively maintains a some other open source software.
 

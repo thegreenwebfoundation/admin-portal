@@ -6,7 +6,7 @@ This data closely follows the data available over the Green Web API, and general
 
 ## Understanding the url2green dataset
 
-Every check of a website is recorded in a table called greenchecks. As of January 2020, this table is nearly 1.6 billion rows, so is rather unwieldy to work with.
+Every check of a website is recorded in a table called `greenchecks`. As of January 2020, this table is nearly 1.6 billion rows, so is rather unwieldy to work with.
 
 For this reason, the dataset we publish contains a smaller table, `green_domains`, listing the urls, and their status, with the columns below.
 
@@ -23,7 +23,7 @@ For this reason, the dataset we publish contains a smaller table, `green_domains
 
 ## Example uses of this dataset
 
-Because this data provides similar data to the greencheck API, this dataset can work like an offline cache, where making API calls for each check either would either be too slow, or leak data about your users that you would not want to share.
+Because this data provides similar data to the Greencheck API, this dataset can work like an offline cache, where making API calls for each check either would either be too slow, or leak data about your users that you would not want to share.
 
 - _running local checks for privacy_ - a build of the [privacy protecting search engine searx](https://github.com/thegreenwebfoundation/searx/), uses this, to avoid needing to leak information
 - _checking domains as part of development workflow_ - tools which consume the green web foundation's green check API, like [Greenhouse](https://github.com/thegreenwebfoundation/lighthouse-plugin-greenhouse), or [Website Carbon](https://websitecarbon.com/), can use this to avoid being reliant on the Green Web API for running checks
