@@ -31,7 +31,7 @@ class Importer(Protocol):
 class BaseImporter:
     hosting_provider_id: int
 
-    def is_ip_range(self, address: Union[str, tuple]) -> Union[tuple, False]:
+    def is_ip_range(self, address: Union[str, tuple]) -> Union[tuple, bool]:
         """
         Check if "address" is a usable ip range, and return the tuple containing
         the required ip addresses, ready for importing as an ip range
@@ -54,6 +54,10 @@ class BaseImporter:
         if not isinstance(address, str):
             return
 
+        # this looks an AS number return early
+        if address.startswith("AS"):
+            return
+
         try:
             network = ipaddress.ip_network(address)
         except ValueError:
@@ -69,7 +73,7 @@ class BaseImporter:
         if network:
             return network
 
-    def is_as_number(self, address: Union[str, tuple]) -> Union[str, False]:
+    def is_as_number(self, address: Union[str, tuple]) -> Union[str, bool]:
         """
         Check that "address" is a string suitable for saving as a AS number
         """
