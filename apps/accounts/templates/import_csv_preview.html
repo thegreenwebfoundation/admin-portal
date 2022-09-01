@@ -6,7 +6,7 @@
 
 <p> If you have a large number of CSV files, you can import them in bulk.</p>
 
-<p>Make sure the form follows the sample format</p>
+<p>Make sure the form follows the sample format, without the header row</p>
 
 <table>
 <th>IP Range start</th><th>Ip Range End</th>
@@ -15,10 +15,20 @@
   <td>104.21.2.199</td>
 
 </tr>
+<tr>
+  <td>104.21.2.0/24</td>
+  <td></td>
+</tr>
+<tr>
+  <td>AS12345</td>
+  <td></td>
+</tr>
+
 </table>
 
 <p>If no end range is provided in the second column, the first IP is used to represent an IP Range of a single IP address.</p>
 <p>So, uploading a CSV file with a single column IP addresses would be the equivalent to:</p>
+
 
 <table>
 <th>IP Range start</th><th>Ip Range End</th>
@@ -29,8 +39,26 @@
 </tr>
 </table>
 
-{% endblock %}
+<p> If you have an an IP range to import, add it all in the first column. It will be expanded into a full IP range</p>
 
+<table>
+<th>IP Range start</th><th>Ip Range End</th>
+<tr>
+  <td>104.21.2.0/24</td>
+  <td></td>
+</tr>
+</table>
+
+<p>Likewise with AS numbers. Do not as a space between 'AS' and the number itself.</p>
+
+<table>
+<th>IP Range start</th><th>Ip Range End</th>
+<tr>
+  <td>AS12345</td>
+  <td></td>
+</tr>
+</table>
+{% endblock %}
 
 {% block content %}
 
@@ -43,15 +71,41 @@
 <p>The following IP ranges would be imported for <strong>{{ provider }}</strong>:</p>
 
 <table>
-<th>IP Range start</th><th>Ip Range End</th><th>Created / Updated</th>
+<th>IP Range start</th><th>Ip Range End</th><th>Created / Updated</th><th>Length</th>
 
-{% for ip in ip_ranges %}
+{% for ip in ip_ranges.green_ips %}
 
   <tr>
     <td>{{ ip.ip_start }}</td>
     <td>{{ ip.ip_end }}</td>
     <td>
       {% if ip.id  %}
+          Updated
+      {% else %}
+          Created
+      {% endif %}
+    </td>
+    <td>
+      {{  ip.ip_range_length }}
+    </td>
+  </tr>
+
+{% endfor %}
+</table>
+
+<h2>AS Import Preview</h2>
+
+<p>The following AS Numbers ranges would be imported for <strong>{{ provider }}</strong>:</p>
+
+<table>
+<th>AS number</th><th>Created / Updated</th>
+
+{% for as in ip_ranges.green_asns %}
+
+  <tr>
+    <td>{{ as.asn }}</td>
+    <td>
+      {% if as.id  %}
           Updated
       {% else %}
           Created
