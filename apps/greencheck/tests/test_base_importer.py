@@ -33,13 +33,12 @@ def hosting_provider():
 
 
 @pytest.fixture
-def base_importer():
+def base_importer(hosting_provider: Hostingprovider):
     """
     Initialize a BaseImporter object
     Return: BaseImporter
     """
-    importer = BaseImporter
-    importer.hosting_provider_id = 1234
+    importer = BaseImporter(hosting_provider)
     return importer
 
 
@@ -77,7 +76,7 @@ class TestImporterInterface:
         hosting_provider.save()  # Initialize hosting provider in database
 
         # Import a single IPv4 network
-        BaseImporter.save_ip(base_importer, testing_ipv4_range)
+        base_importer.save_ip(testing_ipv4_range)
 
         assert (
             GreencheckIp.objects.all().count() == 1
@@ -85,7 +84,7 @@ class TestImporterInterface:
         hosting_provider.save()  # Initialize hosting provider in database
 
         # Import a single IPv4 network
-        BaseImporter.save_ip(base_importer, testing_ipv6_range)
+        base_importer.save_ip(testing_ipv6_range)
 
         assert (
             GreencheckIp.objects.all().count() == 2
@@ -93,14 +92,14 @@ class TestImporterInterface:
         hosting_provider.save()  # Initialize hosting provider in database
 
         # Import a single IPv4 network
-        BaseImporter.save_ip(base_importer, testing_ipv4_network)
+        base_importer.save_ip(testing_ipv4_network)
 
         assert (
             GreencheckIp.objects.all().count() == 3
         )  # Test: IPv4 is saved after insertion
 
         # Import a single IPv6 network
-        BaseImporter.save_ip(base_importer, testing_ipv6_network)
+        base_importer.save_ip(testing_ipv6_network)
 
         assert (
             GreencheckIp.objects.all().count() == 4
@@ -138,8 +137,8 @@ class TestImporterInterface:
         hosting_provider.save()  # Initialize hosting provider in database
 
         # Process list of addresses in JSON file
-        importer = BaseImporter()
-        importer.process_addresses(sample_data)
+        
+        base_importer.process_addresses(sample_data)
 
         assert (
             GreencheckIp.objects.all().count() == 63

@@ -30,6 +30,9 @@ class Importer(Protocol):
 
 class BaseImporter:
     hosting_provider: Hostingprovider
+    def __init__(self, provider):
+        self.hosting_provider = provider
+    
 
     def is_ip_range(self, address: Union[str, tuple]) -> Union[tuple, bool]:
         """
