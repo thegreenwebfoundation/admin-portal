@@ -62,49 +62,32 @@ class TestDirectoryListingView:
     """
 
     def test_list_directory_order_grouped(self, db, hosting_provider_factory):
-        for _ in range(3):
-            hosting_provider_factory.create(partner="Partner", showonwebsite=True)
 
+        # given: 9 providers, out of which 3 are partners
+        created_providers = []
         for _ in range(3):
-            hosting_provider_factory.create(partner="", showonwebsite=True)
+            p1 = hosting_provider_factory.create(partner="", showonwebsite=True)
+            p2 = hosting_provider_factory.create(partner="Partner", showonwebsite=True)
+            p3 = hosting_provider_factory.create(partner=None, showonwebsite=True)
+            created_providers.extend([p1, p2, p3])
 
+        sorted_partners = sorted(
+            [p for p in created_providers if p.partner], key=lambda x: x.name
+        )
+        sorted_nonpartners = sorted(
+            [p for p in created_providers if p not in sorted_partners],
+            key=lambda x: x.name,
+        )
+
+        # when: requesting all providers
         res = legacy_views.fetch_providers_for_country("US")
 
-        # Are the first three entries the partners and also the same order?
-        partners_in_response = res[:3]
-        reg_providers_in_response = res[3:]
-
-        partners_in_db = (
-            ac_models.Hostingprovider.objects.filter(partner="Partner")
-            .order_by("name")
-            .values("name", "partner")
-        )
-
-        reg_providers_in_db = (
-            ac_models.Hostingprovider.objects.filter(partner="")
-            .order_by("name")
-            .values("name", "partner")
-        )
-
-        # Are the first entries partners, and also in ascending order?
+        # then: first 3 items in the response are partners, sorted alphabetically by name
         for index in range(3):
-            res_name = partners_in_response[index]["naam"]
-            res_partner = partners_in_response[index]["partner"]
+            assert res[index]["naam"] == sorted_partners[index].name
+            assert res[index]["partner"] == sorted_partners[index].partner
 
-            db_name = partners_in_db[index]["name"]
-            db_partner = partners_in_db[index]["partner"]
-
-            assert res_name == db_name
-            assert res_partner == db_partner
-
-        # Are the second entries not partners, but also in ascending order?
-        for index in range(3):
-            res_name = reg_providers_in_response[index]["naam"]
-            res_partner = reg_providers_in_response[index]["partner"]
-
-            db_name = reg_providers_in_db[index]["name"]
-            db_partner = reg_providers_in_db[index]["partner"]
-
-            assert res_name == db_name
-            assert res_partner == db_partner
-
+        # then: remaining items are sorted alphabetically by name
+        for index in range(6):
+            assert res[index + 3]["naam"] == sorted_nonpartners[index].name
+            assert res[index + 3]["partner"] == sorted_nonpartners[index].partner
