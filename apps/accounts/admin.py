@@ -402,8 +402,6 @@ class HostingAdmin(admin.ModelAdmin):
             if valid and skip_preview:
                 # not doing preview. Run the import
                 completed_importer = form.save()
-
-                # TODO show the updated files
         
                 context = {
                     "ip_ranges": completed_importer,
@@ -656,7 +654,6 @@ class HostingAdmin(admin.ModelAdmin):
                 {
                     "fields": (
                         ("name", "website",), "country", "services",
-                        ("start_csv_import_button"),
                     )
                 },
             )
@@ -670,6 +667,7 @@ class HostingAdmin(admin.ModelAdmin):
                     ("partner", "model"),
                     ("staff_labels",),
                     ("email_template", "preview_email_button"),
+                    ("start_csv_import_button"),
                 )
             },
         )

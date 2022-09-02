@@ -172,19 +172,6 @@ class GreenWebAdmin(AdminSite):
                     }
                 ],
             },
-            {
-                "name": "Upload ip ranges",
-                "app_label": "greencheck",
-                "app_url": reverse("admin:import_ip_ranges"),
-                "models": [
-                    {
-                        "name": "As CSV",
-                        "object_name": "greencheck_url",
-                        "admin_url": reverse("admin:import_ip_ranges"),
-                        "view_only": True,
-                    }
-                ],
-            },
         ]
         return app_list
 
