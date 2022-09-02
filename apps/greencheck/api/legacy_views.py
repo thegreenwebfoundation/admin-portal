@@ -62,7 +62,7 @@ def fetch_providers_for_country(country_code):
     """
     Return all the country providers that should be visible
     as a list, with partners listed first, then in
-    alphetical order.
+    alphabetical order.
     """
     # we need to order by partner, then alphabetical
     # order. Because the django ORM doesn't natively support
@@ -73,14 +73,16 @@ def fetch_providers_for_country(country_code):
     # values, we need to use multiple excludes
     partner_providers = (
         Hostingprovider.objects.filter(country=country_code, showonwebsite=True)
-        .exclude(partner__in=["", "None", None])
+        .filter(partner__isnull=False)
+        .exclude(partner__in=["", "None"])
         .order_by("name")
     )
-    regular_providers = (
-        Hostingprovider.objects.filter(country=country_code, showonwebsite=True)
-        .filter(partner__in=["", "None", None])
-        .order_by("name")
+    all_providers = Hostingprovider.objects.filter(
+        country=country_code, showonwebsite=True
     )
+
+    regular_providers = all_providers.exclude(id__in=partner_providers).order_by("name")
+
     # destructure the providers to build a new list,
     # with partner providers first, then regular providers
     providers = [*partner_providers, *regular_providers]
@@ -210,4 +212,3 @@ def greencheck_multi(request, url_list: str):
             result_dict[url] = result
 
     return response.Response(result_dict)
-
