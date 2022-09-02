@@ -33,13 +33,12 @@ def hosting_provider():
 
 
 @pytest.fixture
-def base_importer():
+def base_importer(hosting_provider: Hostingprovider):
     """
     Initialize a BaseImporter object
     Return: BaseImporter
     """
-    importer = BaseImporter
-    importer.hosting_provider_id = 1234
+    importer = BaseImporter(hosting_provider)
     return importer
 
 
@@ -63,8 +62,13 @@ class TestImporterInterface:
         """
         Test saving IPv4 and IPv6 networks to the database
         """
-        testing_ipv4 = "191.233.8.24/29"
-        testing_ipv6 = "2603:1010:304::140/123"
+        testing_ipv4_range = ("191.233.8.25", "191.233.8.30")
+        testing_ipv6_range = (
+            "2603:1010:0304:0000:0000:0000:0000:0140",
+            "2603:1010:0304:0000:0000:0000:0000:015f",
+        )
+        testing_ipv4_network = "191.233.8.24/29"
+        testing_ipv6_network = "2603:1010:304::140/123"
 
         assert (
             GreencheckIp.objects.all().count() == 0
@@ -72,17 +76,33 @@ class TestImporterInterface:
         hosting_provider.save()  # Initialize hosting provider in database
 
         # Import a single IPv4 network
-        BaseImporter.save_ip(base_importer, testing_ipv4)
+        base_importer.save_ip(testing_ipv4_range)
 
         assert (
             GreencheckIp.objects.all().count() == 1
-        )  # Test: IPv4 is saved after insertion
+        )  # Test: database is empty (for IP)
+        hosting_provider.save()  # Initialize hosting provider in database
 
-        # Import a single IPv6 network
-        BaseImporter.save_ip(base_importer, testing_ipv6)
+        # Import a single IPv4 network
+        base_importer.save_ip(testing_ipv6_range)
 
         assert (
             GreencheckIp.objects.all().count() == 2
+        )  # Test: database is empty (for IP)
+        hosting_provider.save()  # Initialize hosting provider in database
+
+        # Import a single IPv4 network
+        base_importer.save_ip(testing_ipv4_network)
+
+        assert (
+            GreencheckIp.objects.all().count() == 3
+        )  # Test: IPv4 is saved after insertion
+
+        # Import a single IPv6 network
+        base_importer.save_ip(testing_ipv6_network)
+
+        assert (
+            GreencheckIp.objects.all().count() == 4
         )  # Test: IPv6 is saved after insertion
 
     def test_save_asn(self, hosting_provider, base_importer):
@@ -117,7 +137,8 @@ class TestImporterInterface:
         hosting_provider.save()  # Initialize hosting provider in database
 
         # Process list of addresses in JSON file
-        BaseImporter.process_addresses(base_importer, sample_data)
+        
+        base_importer.process_addresses(sample_data)
 
         assert (
             GreencheckIp.objects.all().count() == 63

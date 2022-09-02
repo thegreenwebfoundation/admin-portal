@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block pretitle %}
+<h1>CSV Import Results for {{ provider }}</h1>
+{% endblock %}
+
+{% block content %}
+
+
+{% if ip_ranges %}
+
+<hr / style="margin-top:3rem; margin-bottom:3rem;">
+
+<h2>IP Range Import </h2>
+
+<p>The following IP ranges were imported for <strong>{{ provider }}</strong>:</p>
+
+<table>
+<th>IP Range start</th><th>Ip Range End</th><th>Created / Updated</th><th>Length</th>
+
+{% for ip in ip_ranges.green_ips %}
+
+  <tr>
+    <td>{{ ip.ip_start }}</td>
+    <td>{{ ip.ip_end }}</td>
+    <td>
+      {% if ip.id  %}
+          Updated
+      {% else %}
+          Created
+      {% endif %}
+    </td>
+    <td>
+      {{  ip.ip_range_length }}
+    </td>
+  </tr>
+
+{% endfor %}
+</table>
+
+<h2>AS Import</h2>
+
+<p>The following AS Numbers ranges were imported for <strong>{{ provider }}</strong>:</p>
+
+<table>
+<th>AS number</th><th>Created / Updated</th>
+
+{% for as in ip_ranges.green_asns %}
+
+  <tr>
+    <td>{{ as.asn }}</td>
+    <td>
+      {% if as.id  %}
+          Updated
+      {% else %}
+          Created
+      {% endif %}
+    </td>
+  </tr>
+
+{% endfor %}
+</table>
+
+{% endif %}
+
+<hr / style="margin-top:3rem; margin-bottom:3rem;">
+
+<style>
+.submit-row a.button{ 
+  margin-right: 1rem;
+}
+.submit-row a.button:visited{
+  color: #fff;
+}
+</style>
+
+<div class="submit-row">
+      <a class="button" href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">Back to hosting provider</a>
+
+      |
+
+      <a style="margin-left:1rem;" class="button" href="{% url 'greenweb_admin:accounts_hostingprovider_start_import_from_csv' provider.id %}">Make another CSV Import</a>
+</form>
+
+{% endblock content %}

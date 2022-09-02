@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib import admin
 from django.urls import reverse
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
+import django.forms as dj_forms
 from django.contrib.auth.forms import UserCreationForm
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
@@ -24,7 +25,7 @@ from logentry_admin.admin import (
     ActionListFilter,
     UserListFilter,
 )
-
+import rich
 
 from taggit.models import Tag
 import logging
@@ -40,6 +41,8 @@ from apps.greencheck.models import GreencheckIp
 from apps.greencheck.models import GreencheckIpApprove
 from apps.greencheck.models import GreencheckASNapprove
 from apps.greencheck.choices import StatusApproval
+
+from apps.greencheck.forms import ImporterCSVForm
 
 
 from .utils import get_admin_name, reverse_admin_name
@@ -290,7 +293,7 @@ class HostingAdmin(admin.ModelAdmin):
     ]
     # these are not really fields, but buttons
     # see the corresponding methods
-    readonly_fields = ["preview_email_button"]
+    readonly_fields = ["preview_email_button", "start_csv_import_button"]
     ordering = ("name",)
 
     # Factories
@@ -356,6 +359,79 @@ class HostingAdmin(admin.ModelAdmin):
         }
 
         return render(request, "preview_email.html", context)
+
+    def start_import_from_csv(self, request, *args, **kwargs):
+        """
+        Show the form, and preview required formate for the importer
+        for the given hosting provider.
+        """
+
+        # get our provider
+        provider = Hostingprovider.objects.get(pk=kwargs["provider"])
+
+        # get our document
+        data = {"provider": provider.id}
+        form = ImporterCSVForm(data)
+        form.fields["provider"].widget = dj_forms.widgets.HiddenInput()
+
+        return render(
+            request,
+            "import_csv_start.html",
+            {"form": form, "ip_ranges": [], "provider": provider},
+        )
+
+    def save_import_from_csv(self, request, *args, **kwargs):
+        """
+        Process the contents of the uploaded file, and either
+        show a preview of the IP ranges that would be created, or
+        create them, based on submitted form value
+        """
+        provider = Hostingprovider.objects.get(pk=kwargs["provider"])
+
+        if request.method == "POST":
+            # get our provider
+            data = {"provider": provider.id}
+
+            # try to get our document
+            form = ImporterCSVForm(request.POST, request.FILES)
+            form.fields["provider"].widget = dj_forms.widgets.HiddenInput()
+
+            valid = form.is_valid()
+            skip_preview = form.cleaned_data["skip_preview"]
+
+            if valid and skip_preview:
+                # not doing preview. Run the import
+                completed_importer = form.save()
+        
+                context = {
+                    "ip_ranges": completed_importer,
+                    "provider": provider,
+                }
+                return render(request, "import_csv_results.html", context,)
+
+            if valid:
+                # the save default we don't save the contents
+                # just showing what would happen
+                ip_ranges = form.get_ip_ranges()
+                context = {
+                    "form": form,
+                    "ip_ranges": ip_ranges,
+                    "provider": provider,
+                }
+                return render(request, "import_csv_preview.html", context,)
+
+            # otherwise fallback to showing the form with errors,
+            # ready for another attempted submission
+
+            context = {
+                "form": form,
+                "ip_ranges": None,
+                "provider": provider,
+            }
+
+            return render(request, "import_csv_preview.html", context,)
+
+        return redirect("greenweb_admin:accounts_hostingprovider_change", provider.id)
 
     def send_email(self, request, *args, **kwargs):
         """
@@ -538,6 +614,16 @@ class HostingAdmin(admin.ModelAdmin):
                 name=get_admin_name(self.model, "send_email"),
             ),
             path(
+                "<provider>/start_import_from_csv",
+                self.start_import_from_csv,
+                name=get_admin_name(self.model, "start_import_from_csv"),
+            ),
+            path(
+                "<provider>/save_import_from_csv",
+                self.save_import_from_csv,
+                name=get_admin_name(self.model, "save_import_from_csv"),
+            ),
+            path(
                 "<provider>/preview_email",
                 self.preview_email,
                 name=get_admin_name(self.model, "preview_email"),
@@ -565,7 +651,11 @@ class HostingAdmin(admin.ModelAdmin):
         fieldset = [
             (
                 "Hostingprovider info",
-                {"fields": (("name", "website",), "country", "services")},
+                {
+                    "fields": (
+                        ("name", "website",), "country", "services",
+                    )
+                },
             )
         ]
 
@@ -577,6 +667,7 @@ class HostingAdmin(admin.ModelAdmin):
                     ("partner", "model"),
                     ("staff_labels",),
                     ("email_template", "preview_email_button"),
+                    ("start_csv_import_button"),
                 )
             },
         )
@@ -658,6 +749,20 @@ class HostingAdmin(admin.ModelAdmin):
 
     preview_email_button.short_description = "Support Messages"
 
+    @mark_safe
+    def start_csv_import_button(self, obj):
+        """
+        Create clickable link to begin process of bulk import
+        of IP ranges.
+        """
+        url = reverse_admin_name(
+            Hostingprovider, name="start_import_from_csv", kwargs={"provider": obj.pk},
+        )
+        link = f'<a href="{url}" class="start_csv_import">Import IP Ranges from CSV</a>'
+        return link
+
+    send_button.short_description = "Import IP Ranges from a CSV file"
+    
     @mark_safe
     def html_website(self, obj):
         html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'

@@ -1,4 +1,9 @@
+from django.db.models.fields import CharField
+from django.forms.fields import BooleanField, FileField, IntegerField
+from apps.accounts.models.hosting import ProviderLabel
 import logging
+import rich
+import io
 
 from django import forms
 from django.forms import ModelForm
@@ -10,6 +15,8 @@ from .choices import StatusApproval
 from .models import GreencheckIp
 from .models import GreencheckIpApprove
 from .models import GreencheckASN, GreencheckASNapprove
+from .importers import CSVImporter
+from ..accounts import models as ac_models
 
 User = get_user_model()
 
@@ -101,6 +108,73 @@ class ApprovalMixin:
             raise ValidationError("Alert staff: a bug has occurred.")
 
 
+class ImporterCSVForm(forms.Form):
+    """
+    A form for handling bulk IP range submissions in the django admin.
+    Uses the ImporterCSV class to handle imports
+    """
+
+    provider = forms.ModelChoiceField(
+        empty_label="Choose a Provider",
+        queryset=ac_models.Hostingprovider.objects.all(),
+    )
+    csv_file = FileField(required=False)
+    skip_preview = BooleanField(
+        required=False,
+        help_text=("Do not show the preview of what would happen. Save to the import to the database"),
+    )
+    # replace_with_import = BooleanField(
+    #     required=False,
+    #     label=("Replace networks with this import"),
+    #     help_text=("Replace all the networks assigned to this hoster with the networks in this import"),
+    # )
+
+    ip_ranges = []
+    processed_ips = []
+    importer = None
+
+    def initialize_importer(self):
+        """
+        Clean our form, and return our importer with the
+        """
+
+        self.is_valid()
+
+        uploaded_csv_string = self.cleaned_data["csv_file"].read().decode("utf-8")
+        csv_file = io.StringIO(uploaded_csv_string)
+        importer = CSVImporter(self.cleaned_data["provider"])
+
+        importable_values = importer.fetch_data_from_source(csv_file)
+
+        self.ip_ranges = importable_values
+
+        self.importer = importer
+        return importer
+
+    def get_ip_ranges(self):
+        """
+        Return a list of the IP Ranges, showing which ones would be updated, and
+        which ones would be created with this submission.
+        """
+        self.initialize_importer()
+        provider = self.cleaned_data["provider"]
+        # make preview of generated ips
+        ips = self.importer.preview(provider, self.ip_ranges)
+        return ips
+
+    def save(self):
+        """Save our list of IP ranges to the database"""
+        if self.importer is None:
+            self.initialize_importer()
+        logger.info("Skipping preview, running import")
+        
+        provider = self.cleaned_data["provider"]
+        
+        self.importer.process_addresses(self.ip_ranges)
+        self.processed_ips = self.importer.preview(provider, self.ip_ranges)
+        return self.processed_ips
+
+
 class GreencheckAsnForm(ModelForm, ApprovalMixin):
     ApprovalModel = GreencheckASNapprove
 
@@ -116,8 +190,7 @@ class GreencheckAsnForm(ModelForm, ApprovalMixin):
         )
 
     def save(self, commit=True):
-        """
-        """
+        """ """
         # Like the GreencheckIpForm, we non-staff user creates an ip, instead of saving
         self._save_approval()
         return super().save(commit=True)
@@ -186,8 +259,7 @@ class GreecheckIpApprovalForm(ModelForm):
         fields = "__all__"
 
     def save(self, commit=True):
-        """
-        """
+        """ """
         ip_instance = self.instance.greencheck_ip
         if commit is True:
             if ip_instance:

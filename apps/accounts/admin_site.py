@@ -139,6 +139,7 @@ class GreenWebAdmin(AdminSite):
         patterns = [
             path("try_out/", CheckUrlView.as_view(), name="check_url"),
             path("green-urls", GreenUrlsView.as_view(), name="green_urls"),
+            path("import-ip-ranges", GreenUrlsView.as_view(), name="import_ip_ranges"),
         ]
         return patterns + urls
 
