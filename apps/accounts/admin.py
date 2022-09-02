@@ -404,12 +404,12 @@ class HostingAdmin(admin.ModelAdmin):
                 completed_importer = form.save()
 
                 # TODO show the updated files
-                
+        
                 context = {
-                    "ip_ranges": [],
+                    "ip_ranges": completed_importer,
                     "provider": provider,
                 }
-                return render(request, "import_csv_preview.html", context,)
+                return render(request, "import_csv_results.html", context,)
 
             if valid:
                 # the save default we don't save the contents

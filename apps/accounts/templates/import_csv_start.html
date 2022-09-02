@@ -4,9 +4,13 @@
 {% block pretitle %}
 <h1>Import IP Ranges from a CSV file for {{ provider }}</h1>
 
-<p> If you have a large number of Ip addresses or IP ranges, you can import them in bulk.</p>
+<details>
+<summary>Formatting notes for uploading CSVs</summary>
 
-<p>Make sure the uploaded file follows the sample format</p>
+<div style="padding:1rem; background-color:#eee; border-radius: 5px; margin-top: 1rem;">
+  <p> If you have a large number of CSV files, you can import them in bulk.</p>
+
+<p>Make sure the form follows the sample format, without the header row</p>
 
 <table>
 <th>IP Range start</th><th>Ip Range End</th>
@@ -15,10 +19,20 @@
   <td>104.21.2.199</td>
 
 </tr>
+<tr>
+  <td>104.21.2.0/24</td>
+  <td></td>
+</tr>
+<tr>
+  <td>AS12345</td>
+  <td></td>
+</tr>
+
 </table>
 
 <p>If no end range is provided in the second column, the first IP is used to represent an IP Range of a single IP address.</p>
 <p>So, uploading a CSV file with a single column IP addresses would be the equivalent to:</p>
+
 
 <table>
 <th>IP Range start</th><th>Ip Range End</th>
@@ -29,19 +43,47 @@
 </tr>
 </table>
 
+<p> If you have an an IP range to import, add it all in the first column. It will be expanded into a full IP range</p>
+
+<table>
+<th>IP Range start</th><th>Ip Range End</th>
+<tr>
+  <td>104.21.2.0/24</td>
+  <td></td>
+</tr>
+</table>
+
+<p>Likewise with AS numbers. Do not as a space between 'AS' and the number itself.</p>
+
+<table>
+<th>IP Range start</th><th>Ip Range End</th>
+<tr>
+  <td>AS12345</td>
+  <td></td>
+</tr>
+</table>
+</div>
+
+</details>
+
+
 {% endblock %}
 
 
 {% block content %}
 
-<hr / style="margin-top:3rem; margin-bottom:3rem;">
+<hr / style="margin-top:1rem; margin-bottom:1rem;">
 
 <form enctype="multipart/form-data" action="{% url 'greenweb_admin:accounts_hostingprovider_save_import_from_csv' provider.id %}" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Submit"
         style="margin-top: 0px; padding: 6px 15px">
+    <a class="" href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">Back to hosting provider</a>
+
 </form>
+
+
 
 {% if ip_ranges %}
 

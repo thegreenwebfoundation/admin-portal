@@ -121,10 +121,16 @@ class ImporterCSVForm(forms.Form):
     csv_file = FileField(required=False)
     skip_preview = BooleanField(
         required=False,
-        help_text=("Do not show the preview of what would happen. "),
+        help_text=("Do not show the preview of what would happen. Save to the import to the database"),
+    )
+    replace_with_import = BooleanField(
+        required=False,
+        label=("Replace networks with this import"),
+        help_text=("Replace all the networks assigned to this hoster with the networks in this import"),
     )
 
     ip_ranges = []
+    processed_ips = []
     importer = None
 
     def initialize_importer(self):
@@ -165,8 +171,8 @@ class ImporterCSVForm(forms.Form):
         provider = self.cleaned_data["provider"]
         
         self.importer.process_addresses(self.ip_ranges)
-        
-        return self.importer.preview(provider, self.ip_ranges)
+        self.processed_ips = self.importer.preview(provider, self.ip_ranges)
+        return self.processed_ips
 
 
 class GreencheckAsnForm(ModelForm, ApprovalMixin):

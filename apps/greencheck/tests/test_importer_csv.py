@@ -73,8 +73,7 @@ class TestCSVImporter:
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
         created_networks = importer.process_addresses(list_of_addresses)
-        import rich
-        rich.print(created_networks)
+        
         # we should have seen one AS network added
         assert "1 ASN" in created_networks
         # have we created two new IP ranges?
@@ -95,8 +94,6 @@ class TestCSVImporter:
         assert green_ips[1].ip_start == "104.21.2.197"
         assert green_ips[1].ip_end == "104.21.2.199"
         
-        
-
     def test_preview_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
         """
         Can we see a representation of the data we would import before
@@ -104,7 +101,7 @@ class TestCSVImporter:
         """
         # Initialize Csv importer
         hosting_provider.save()
-        importer = CSVImporter(hosting_provider.id)
+        importer = CSVImporter(hosting_provider)
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
@@ -112,6 +109,35 @@ class TestCSVImporter:
 
         assert len(preview["green_ips"]) == 2
         assert len(preview["green_asns"]) == 1
+
+    def test_view_processed_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
+        """
+        Can we compare the state of an import to the networks already in the database
+        for this provider?
+        """
+        # Initialize Csv importer
+        hosting_provider.save()
+        importer = CSVImporter(hosting_provider)
+
+        # Run parse list with sample data
+        list_of_addresses = importer.parse_to_list(sample_data_raw)
+        # Run our import to save them to the database, simulating saving 
+        # via our the form
+        created_networks = importer.process_addresses(list_of_addresses)
+        # Generate a view of the data, to check if we are fetching from 
+        # the database now
+        preview = importer.preview(hosting_provider, list_of_addresses)
+        
+        green_ips = [gip for gip in preview['green_ips']]
+        green_asns = [gip for gip in preview['green_asns']]
+        
+        # are these the IPs checked against the database?
+        for green_ip in green_ips:
+            assert green_ip.id is not None
+            
+        # are these the ASNs checked against the database?
+        for green_asn in green_asns:
+            assert green_asn.id is not None
 
 
 # @pytest.mark.django_db
