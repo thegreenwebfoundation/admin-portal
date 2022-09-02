@@ -123,11 +123,11 @@ class ImporterCSVForm(forms.Form):
         required=False,
         help_text=("Do not show the preview of what would happen. Save to the import to the database"),
     )
-    replace_with_import = BooleanField(
-        required=False,
-        label=("Replace networks with this import"),
-        help_text=("Replace all the networks assigned to this hoster with the networks in this import"),
-    )
+    # replace_with_import = BooleanField(
+    #     required=False,
+    #     label=("Replace networks with this import"),
+    #     help_text=("Replace all the networks assigned to this hoster with the networks in this import"),
+    # )
 
     ip_ranges = []
     processed_ips = []
