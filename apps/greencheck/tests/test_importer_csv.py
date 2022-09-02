@@ -2,7 +2,6 @@ import pytest
 import pathlib
 import re
 import pandas as pd
-import ipdb
 from io import StringIO
 
 from django.core.management import call_command

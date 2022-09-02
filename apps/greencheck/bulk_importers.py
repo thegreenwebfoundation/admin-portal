@@ -46,9 +46,6 @@ class ImporterCSV:
                 logger.exception(f"Couldn't load ipaddress for row: {row}")
             except Exception:
                 logger.exception("New error, dropping to debug")
-                import ipdb
-
-                ipdb.set_trace()
 
     def run(self):
 
