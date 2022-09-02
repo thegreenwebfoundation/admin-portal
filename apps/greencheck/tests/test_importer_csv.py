@@ -79,6 +79,23 @@ class TestCSVImporter:
         assert "1 ASN" in created_networks
         # have we created two new IP ranges?
         assert "2 IP" in created_networks
+        
+        # have we created the new Green ASN in the db?
+        green_asns = hosting_provider.greencheckasn_set.all()
+        assert green_asns .first().asn == 234
+
+        # have we created the green ip ranges in the db?
+        green_ips = hosting_provider.greencheckip_set.all().order_by('ip_start')
+        
+        # have we converted a network to a range?
+        assert green_ips[0].ip_start == "104.21.2.1"
+        assert green_ips[0].ip_end == "104.21.2.255"
+        
+        # have do we have the range added as well?
+        assert green_ips[1].ip_start == "104.21.2.197"
+        assert green_ips[1].ip_end == "104.21.2.199"
+        
+        
 
     def test_preview_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
         """
