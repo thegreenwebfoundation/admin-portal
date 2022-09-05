@@ -116,7 +116,7 @@ class CSVImporter(BaseImporter):
                 try:
                     green_ip = GreencheckIp.objects.get(
                         active=True,
-                        ip_start=ip_network[1],
+                        ip_start=ip_network[0],
                         ip_end=ip_network[-1],
                         hostingprovider=provider,
                     )
@@ -125,7 +125,7 @@ class CSVImporter(BaseImporter):
                 except GreencheckIp.DoesNotExist:
                     green_ip = GreencheckIp(
                         active=True,
-                        ip_start=ip_network[1],
+                        ip_start=ip_network[0],
                         ip_end=ip_network[-1],
                         hostingprovider=provider,
                     )
