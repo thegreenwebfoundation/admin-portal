@@ -1,5 +1,6 @@
 {% extends "admin/base_site.html" %}
-{% load i18n static %}
+
+{% load i18n static humanize %}
 
 {% block pretitle %}
 <h1>Import IP Ranges from a CSV file for {{ provider }}</h1>
@@ -33,7 +34,7 @@
       {% endif %}
     </td>
     <td>
-      {{  ip.ip_range_length }}
+      {{  ip.ip_range_length|intcomma }}
     </td>
   </tr>
 

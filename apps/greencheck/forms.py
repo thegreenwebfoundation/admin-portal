@@ -118,7 +118,7 @@ class ImporterCSVForm(forms.Form):
         empty_label="Choose a Provider",
         queryset=ac_models.Hostingprovider.objects.all(),
     )
-    csv_file = FileField(required=False)
+    csv_file = FileField(required=True)
     skip_preview = BooleanField(
         required=False,
         help_text=("Do not show the preview of what would happen. Save to the import to the database"),
