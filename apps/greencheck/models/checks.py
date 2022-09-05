@@ -168,12 +168,18 @@ class GreencheckIp(mu_models.TimeStampedModel):
         Return the length of the ip range beginning at
         ip_start, and ending at ip_end
         """
+        end_number = int(ipaddress.ip_address(self.ip_end))
+        start_number = int(ipaddress.ip_address(self.ip_start))
+        
+        # we add the extra ip to the range length for the 
+        # case of the start and end ip addresses being the same ip, 
+        # and to account for the calc undercounting the number 
+        # of addresses in a network normally returned by `num_addresses`
+        extra_one_ip = 1
+        
         return (
-            int(ipaddress.IPv4Address(self.ip_end))
-            - int(ipaddress.IPv4Address(self.ip_start))
-            + 1
+            end_number - start_number + extra_one_ip
         )
-        # return len(ip_range)
 
     def __str__(self):
         return f"{self.ip_start} - {self.ip_end}"

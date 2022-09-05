@@ -38,7 +38,14 @@ class CSVImporter(BaseImporter):
         for row in rows:
 
             # just one column? it's probably an AS or a IP network
-            if pd.isnull(row[1]):
+            just_one_column = len(row) == 1
+            
+            if not just_one_column:
+                # is there a second column, but it is empty?
+                # we might have a mix of IP ranges and IP networks
+                null_second_column = pd.isnull(row[1])
+            
+            if just_one_column or null_second_column:
 
                 # is it an AS number?
                 if row[0].startswith("AS"):

@@ -50,7 +50,7 @@ class BaseImporter:
 
     def is_ip_network(self, address: Union[str, tuple]):
         """
-        Chck that "address" is a string we can parse to an ip network,
+        Check that "address" is a string we can parse to an ip network,
         ready for saving as an ip range.
         """
         # return early if not a string we can parse
