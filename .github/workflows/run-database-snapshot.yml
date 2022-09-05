@@ -1,34 +1,34 @@
-name: Create database snapshot
+# name: Create database snapshot
 
-on:
-  schedule:
-    # at one thirty every morning run this job
-    # - cron: "30 1 * * *"
+# on:
+#   schedule:
+#     # at one thirty every morning run this job
+#     # - cron: "30 1 * * *"
 
-defaults:
-  run:
-    shell: bash
-    working-directory: ./
+# defaults:
+#   run:
+#     shell: bash
+#     working-directory: ./
 
-jobs:
-  create_snapshot:
-    environment: prod
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
+# jobs:
+#   create_snapshot:
+#     environment: prod
+#     timeout-minutes: 10
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
 
-      - name: Run playbook
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: ./ansible/domain-dataset-snapshot.yml
-          directory: ./
-          key: ${{secrets.SSH_PRIVATE_KEY}}
-          inventory: |
-          options: |
-            --inventory ./ansible/inventories/prod.yml
-        env:
-          ANSIBLE_STDOUT_CALLBACK: yaml
-          PYTHONDONTWRITEBYTECODE: 1
+#       - name: Run playbook
+#         uses: dawidd6/action-ansible-playbook@v2
+#         with:
+#           playbook: ./ansible/domain-dataset-snapshot.yml
+#           directory: ./
+#           key: ${{secrets.SSH_PRIVATE_KEY}}
+#           inventory: |
+#           options: |
+#             --inventory ./ansible/inventories/prod.yml
+#         env:
+#           ANSIBLE_STDOUT_CALLBACK: yaml
+#           PYTHONDONTWRITEBYTECODE: 1
