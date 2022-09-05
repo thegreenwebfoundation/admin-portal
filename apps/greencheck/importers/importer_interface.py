@@ -105,7 +105,7 @@ class BaseImporter:
                 if self.is_ip_network(address):
                     # address looks like IPv4 or IPv6 network
                     network = ipaddress.ip_network(address)
-                    self.save_ip((network[1], network[-1]))
+                    self.save_ip((network[0], network[-1]))
                     count_ip += 1
                     continue
 
@@ -155,7 +155,7 @@ class BaseImporter:
         elif isinstance(address, str):
             network = ipaddress.ip_network(address)
 
-            start_address = network[1]
+            start_address = network[0]
             ending_address = network[-1]
 
         gc_ip, created = GreencheckIp.objects.update_or_create(

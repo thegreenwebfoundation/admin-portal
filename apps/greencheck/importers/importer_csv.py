@@ -61,9 +61,13 @@ class CSVImporter(BaseImporter):
                     try:
                         ip_network = ipaddress.ip_network(row[0])
                         imported_networks["ip_networks"].append(row[0])
-                    except Exception:
+                    except ValueError:
                         logger.warn(
-                            f"Item {row[0]} was not an ip network. Not importing."
+                            f"Item {row[0]} has host bits set. Probably not a network."
+                        )
+                    except Exception as e:
+                        logger.exception(
+                            f"Item {row[0]} was not an ip network. Not importing. Full error: {e}" 
                         )
             else:
                 try:
