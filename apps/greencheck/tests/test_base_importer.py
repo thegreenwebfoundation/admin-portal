@@ -102,7 +102,7 @@ class TestImporterInterface:
         base_importer.save_ip(testing_ipv6_network)
 
         assert (
-            GreencheckIp.objects.all().count() == 4
+            GreencheckIp.objects.all().count() == 3
         )  # Test: IPv6 is saved after insertion
 
     def test_save_asn(self, hosting_provider, base_importer):

@@ -86,7 +86,7 @@ class TestCSVImporter:
         green_ips = hosting_provider.greencheckip_set.all().order_by('ip_start')
         
         # have we converted a network to a range?
-        assert green_ips[0].ip_start == "104.21.2.1"
+        assert green_ips[0].ip_start == "104.21.2.0"
         assert green_ips[0].ip_end == "104.21.2.255"
         
         # have do we have the range added as well?
