@@ -106,7 +106,9 @@ class IpAddressField(Field):
             return ipaddress.ip_address(value)
         except (TypeError, ValueError):
             raise exceptions.ValidationError(
-                self.error_messages["invalid"], code="invalid", params={"value": value},
+                self.error_messages["invalid"],
+                code="invalid",
+                params={"value": value},
             )
 
     def get_db_prep_save(self, value, connection):
@@ -157,11 +159,40 @@ class GreencheckIp(mu_models.TimeStampedModel):
     """
 
     active = models.BooleanField(null=True)
-    ip_end = IpAddressField(db_column="ip_eind")
     ip_start = IpAddressField()
+    ip_end = IpAddressField(db_column="ip_eind")
     hostingprovider = models.ForeignKey(
         ac_models.Hostingprovider, db_column="id_hp", on_delete=models.CASCADE
     )
+
+    @staticmethod
+    def validate_ip_range(ip_start, ip_end):
+        """
+        Validation logic for IP range:
+        do not allow ip_start to be after ip_end.
+
+        This method is defined here as a convenience to allow re-using
+        between GreencheckIp and GreencheckIpApprove models.
+        """
+        start_ip = ipaddress.ip_address(ip_start)
+        end_ip = ipaddress.ip_address(ip_end)
+        if start_ip > end_ip:
+            raise exceptions.ValidationError(
+                "IP range invalid! IP start must be before IP end", code="invalid"
+            )
+
+    def clean(self):
+        """
+        Model-level validation: check if IP range is valid.
+
+        This will not be called automatically on Model.save()!
+        It needs an explicit call, either:
+        - Model.clean()
+        - Model.full_clean()
+        - ModelForm.is_valid()
+        - ModelForm.save()
+        """
+        GreencheckIp.validate_ip_range(self.ip_start, self.ip_end)
 
     def ip_range_length(self) -> int:
         """
@@ -170,16 +201,14 @@ class GreencheckIp(mu_models.TimeStampedModel):
         """
         end_number = int(ipaddress.ip_address(self.ip_end))
         start_number = int(ipaddress.ip_address(self.ip_start))
-        
-        # we add the extra ip to the range length for the 
-        # case of the start and end ip addresses being the same ip, 
-        # and to account for the calc undercounting the number 
+
+        # we add the extra ip to the range length for the
+        # case of the start and end ip addresses being the same ip,
+        # and to account for the calc undercounting the number
         # of addresses in a network normally returned by `num_addresses`
         extra_one_ip = 1
-        
-        return (
-            end_number - start_number + extra_one_ip
-        )
+
+        return end_number - start_number + extra_one_ip
 
     def __str__(self):
         return f"{self.ip_start} - {self.ip_end}"
@@ -252,9 +281,21 @@ class GreencheckIpApprove(mu_models.TimeStampedModel):
     greencheck_ip = models.ForeignKey(
         GreencheckIp, on_delete=models.CASCADE, db_column="idorig", null=True
     )
-    ip_end = IpAddressField(db_column="ip_eind")
     ip_start = IpAddressField()
+    ip_end = IpAddressField(db_column="ip_eind")
     status = models.TextField(choices=gc_choices.StatusApproval.choices)
+
+    def clean(self):
+        """
+        Model-level validation: check if IP range is valid.
+
+        This will not be called automatically on Model.save()!
+        It needs an explicit call, either:
+        - Model.clean()
+        - Model.full_clean()
+        - ModelForm.is_valid()
+        """
+        GreencheckIp.validate_ip_range(self.ip_start, self.ip_end)
 
     # Factories
     def process_approval(self, action):
@@ -393,7 +434,9 @@ class GreencheckASNapprove(mu_models.TimeStampedModel):
 
         if action == gc_choices.StatusApproval.APPROVED:
             created_asn = GreencheckASN.objects.create(
-                active=True, hostingprovider=self.hostingprovider, asn=self.asn,
+                active=True,
+                hostingprovider=self.hostingprovider,
+                asn=self.asn,
             )
             self.greencheck_asn = created_asn
         self.save()
@@ -580,4 +623,3 @@ class CO2Intensity(models.Model):
             generation_from_fossil=GLOBAL_AVG_FOSSIL_SHARE,
             year=2021,
         )
-

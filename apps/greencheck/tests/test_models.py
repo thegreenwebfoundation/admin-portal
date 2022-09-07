@@ -1,5 +1,6 @@
 import pytest
 from apps.greencheck import choices, models
+from django.core import exceptions
 
 
 @pytest.fixture
@@ -66,6 +67,19 @@ class TestGreenCheckIP:
             hostingprovider=hosting_provider,
         )
         assert gcip.ip_range_length() == range_length
+
+    def test_greencheck_ip_range_validation(self, hosting_provider, db):
+        hosting_provider.save()
+        # given: invalid IP range (ip_start after ip_end)
+        greencheck_ip = models.GreencheckIp.objects.create(
+            active=True,
+            ip_start="127.0.0.2",
+            ip_end="127.0.0.1",
+            hostingprovider=hosting_provider,
+        )
+        # when validating the object, ValidationError is raised
+        with pytest.raises(exceptions.ValidationError):
+            greencheck_ip.full_clean()
 
 
 class TestGreencheckIPApproval:

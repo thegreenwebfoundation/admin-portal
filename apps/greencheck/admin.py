@@ -8,7 +8,7 @@ from apps.accounts.utils import reverse_admin_name
 
 from . import forms, models
 from .choices import StatusApproval
-from .forms import GreecheckIpApprovalForm, GreencheckIpForm
+from .forms import GreencheckIpApprovalForm, GreencheckIpForm
 from .models import GreencheckIp, GreencheckIpApprove
 
 
@@ -103,7 +103,7 @@ class GreencheckIpInline(admin.TabularInline):
 
 class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
     extra = 0
-    form = GreecheckIpApprovalForm
+    form = GreencheckIpApprovalForm
     model = GreencheckIpApprove
     ordering = (
         "ip_start",
@@ -195,7 +195,6 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
     list_display_links = None
     list_filter = [StatusIpFilter]
     readonly_fields = ["link"]
-
     actions = ["approve_selected"]
 
     def get_actions(self, request):

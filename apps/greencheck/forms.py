@@ -121,7 +121,9 @@ class ImporterCSVForm(forms.Form):
     csv_file = FileField(required=True)
     skip_preview = BooleanField(
         required=False,
-        help_text=("Do not show the preview of what would happen. Save to the import to the database"),
+        help_text=(
+            "Do not show the preview of what would happen. Save to the import to the database"
+        ),
     )
     # replace_with_import = BooleanField(
     #     required=False,
@@ -167,9 +169,9 @@ class ImporterCSVForm(forms.Form):
         if self.importer is None:
             self.initialize_importer()
         logger.info("Skipping preview, running import")
-        
+
         provider = self.cleaned_data["provider"]
-        
+
         self.importer.process_addresses(self.ip_ranges)
         self.processed_ips = self.importer.preview(provider, self.ip_ranges)
         return self.processed_ips
@@ -250,7 +252,7 @@ class GreencheckAsnApprovalForm(ModelForm):
         return super().save(commit=commit)
 
 
-class GreecheckIpApprovalForm(ModelForm):
+class GreencheckIpApprovalForm(ModelForm):
 
     field_order = ("ip_start", "ip_end")
 
