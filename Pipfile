@@ -26,6 +26,7 @@ sphinx = "*"
 sphinx-autobuild = "*"
 furo = "*"
 myst-parser = "*"
+jupyterlab = "*"
 
 [packages]
 django = { extras = ["bcrypt"], version = "~=3.2" }
