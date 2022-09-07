@@ -32,7 +32,7 @@ tasks:
       npx rollup --config
       cd ../../../
       pipenv run ./manage.py collectstatic --no-input
-      
+
     command: ls
 
   - name: rabbitmq
@@ -80,3 +80,8 @@ ports:
     # debugging ports in vscode
   - port: 30000-50000
     onOpen: ignore
+
+vscode:
+  extensions:
+    - ms-python.python
+    - eamodio.gitlens
