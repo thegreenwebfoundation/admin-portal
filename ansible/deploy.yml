@@ -168,7 +168,6 @@
         # this way when we clear up old releases we also
         # remove the deps
         PIPENV_VENV_IN_PROJECT: 1
-      tags: [wip]
 
     - name: update node deps for building tailwind
       shell: "python -m pipenv run ./manage.py tailwind update"
@@ -190,13 +189,11 @@
       shell: "npx rollup --config"
       args:
         chdir: "{{ project_root }}/current/apps/theme/static_src"
-      tags: [wip]
 
     - name: collect static files for django
       shell: "python -m pipenv run ./manage.py collectstatic --no-input"
       args:
         chdir: "{{ project_root }}/current"
-      tags: [wip]
 
     - name: set up nginx server entry
       template:
@@ -217,12 +214,18 @@
       template:
         src: "run_gunicorn.sh.j2"
         dest: "{{ project_root }}/current/run_gunicorn.sh"
+        owner: deploy
+        group: deploy
+        mode: "0755"
       become: yes
 
     - name: set up script for running workers, via supervisor
       template:
         src: "run_worker.sh.j2"
         dest: "{{ project_root }}/current/run_worker.sh"
+        owner: deploy
+        group: deploy
+        mode: "0755"
       become: yes
 
     - name: set up supervisor entry for web
