@@ -1,24 +1,28 @@
 ---
 app_servers:
-    hosts:
-      app2.thegreenwebfoundation.org:
-        project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        tgwf_stage: "prod"
-        tgwf_domain_name: admin
-
-
-all:
   hosts:
-    # TODO find out if we need to duplicate all the settings from above in this yaml
-    app2.thegreenwebfoundation.org:
-        project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        tgwf_stage: "prod"
-        tgwf_domain_name: admin
-
-
-    hel1.thegreenwebfoundation.org:
+    app1.thegreenwebfoundation.org:
       project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
       tgwf_stage: "prod"
       tgwf_domain_name: admin
+    app2.thegreenwebfoundation.org:
+      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+      tgwf_stage: "prod"
+      tgwf_domain_name: admin
+
+all:
+  hosts:
+    app1.thegreenwebfoundation.org:
+      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+      tgwf_stage: "prod"
+      tgwf_domain_name: admin
+    app2.thegreenwebfoundation.org:
+      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+      tgwf_stage: "prod"
+      tgwf_domain_name: admin
+    hel1.thegreenwebfoundation.org:
+        project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+        tgwf_stage: "prod"
+        tgwf_domain_name: admin
 
 

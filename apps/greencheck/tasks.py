@@ -1,8 +1,11 @@
 import logging
 
 import dateutil.parser as date_parser
+import datetime
 import dramatiq
 import MySQLdb
+
+from one_day_to_parquet import backup_day_to_parquet
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -58,3 +61,26 @@ def create_stat_async(date_string: str = None, query_name: str = "total_count", 
     query_function = getattr(DailyStat, query_name)
     query_function(date_to_check=parsed_date)
 
+
+@dramatiq.actor(queue_name="stats")
+def backup_day_to_parquet_queue_actor(date_string: str):
+    """
+    Intended for use dramatiq:
+    Accept a isoformat date string, convert it to a date
+    and call back the day of checks to object storage as a parquert
+    file.
+
+    date_string (str): the isoformat YYYY-MM-DD string for the chosen date
+    """
+
+    try:
+        target_date = datetime.date.fromisoformat(date_string)
+        backup_day_to_parquet(target_date)
+    except ValueError as e:
+        logger.warning(
+            (
+                f"Could not parse a date out of the given string {date_string}. "
+                "Please check that the format is YYYY-MM-DD"
+            )
+        )
+        logger.warning(e)

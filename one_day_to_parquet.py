@@ -1,20 +1,19 @@
 import csv
 import datetime
+import logging
 import pathlib
 import tempfile
 
-import django
 import duckdb
-import rich
 from dateutils import timedelta
 
-django.setup()
 
 from django.utils import timezone  # noqa
 
 from apps.greencheck.models import checks  # noqa
 from apps.greencheck.object_storage import object_storage_bucket  # noqa
 
+logger = logging.getLogger(__name__)
 infra_bucket = object_storage_bucket("internal-infra")
 
 
@@ -25,7 +24,7 @@ def csv_of_checks_for_day(day=datetime.date, directory: str = None) -> bool:
     If a directory is given, output the file into the given directory.
     """
 
-    rich.print(f"Starting export for {day}")
+    logger.info(f"Starting export for {day}")
     start_time = timezone.now()
 
     date_string = day.strftime("%Y-%m_%d")
@@ -44,20 +43,20 @@ def csv_of_checks_for_day(day=datetime.date, directory: str = None) -> bool:
     if directory is not None:
         csv_path = pathlib.Path(directory).joinpath(csv_path)
 
-    rich.print(f"Writing query results to {csv_path}")
+    logger.info(f"Writing query results to {csv_path}")
 
     with open(csv_path, "w") as f:
         list_writer = csv.writer(f)
         for check in res:
             list_writer.writerow(check)
 
-    rich.print(f"Finished export for {day}")
+    logger.info(f"Finished export for {day}")
 
     end_time = timezone.now()
-    rich.print(end_time)
+    logger.info(end_time)
 
     time_span = end_time - start_time
-    rich.print(f"Took {time_span.seconds} seconds")
+    logger.info(f"Took {time_span.seconds} seconds")
 
     return True
 
@@ -72,8 +71,8 @@ def convert_csv_to_parquet(day=datetime.date, directory: str = None) -> bool:
     """
 
     start_time = timezone.now()
-    rich.print(f"Starting conversion to parquet for {day}")
-    rich.print(start_time)
+    logger.info(f"Starting conversion to parquet for {day}")
+    logger.info(start_time)
 
     date_string = day.strftime("%Y-%m_%d")
     # set up our in-memory database with duckdb
@@ -93,12 +92,12 @@ def convert_csv_to_parquet(day=datetime.date, directory: str = None) -> bool:
             f"TO '{local_parquet_path}' (FORMAT 'PARQUET', CODEC 'ZSTD')"
         )
     )
-    rich.print(f"Finished conversion to parquet {day}")
+    logger.info(f"Finished conversion to parquet {day}")
     end_time = timezone.now()
-    rich.print(end_time)
+    logger.info(end_time)
 
     time_span = end_time - start_time
-    rich.print(f"Took {time_span.seconds} seconds")
+    logger.info(f"Took {time_span.seconds} seconds")
 
 
 def upload_to_object_storage(day=datetime.date, directory: str = None) -> bool:
@@ -119,16 +118,15 @@ def upload_to_object_storage(day=datetime.date, directory: str = None) -> bool:
         parquet_file_path = str(pathlib.Path(directory).joinpath(parquet_file_path))
 
     start_time = timezone.now()
-    rich.print(f"Start uploading at {start_time}")
+    logger.info(f"Start uploading at {start_time}")
 
-    upload_res = infra_bucket.upload_file(parquet_file_path, upload_path)
+    infra_bucket.upload_file(parquet_file_path, upload_path)
 
     end_time = timezone.now()
     time_span = end_time - start_time
 
-    rich.print(f"Finished uploading at {end_time}")
-    rich.print(f"Took {time_span.seconds} seconds")
-    rich.inspect(upload_res)
+    logger.info(f"Finished uploading at {end_time}")
+    logger.info(f"Took {time_span.seconds} seconds")
 
 
 def backup_day_to_parquet(target_date: datetime.date):
