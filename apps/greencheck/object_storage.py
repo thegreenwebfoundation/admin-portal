@@ -6,10 +6,10 @@ import boto3
 from django.conf import settings
 
 
-def green_domains_bucket():
+def object_storage_bucket(bucket_name: str):
     """
-    Return an object storage bucket containing snapshots
-    of the green domain table
+    Return the bucket identified by `bucket_name` for uploading
+    and downloading files.
     """
     session = boto3.Session(region_name=settings.OBJECT_STORAGE_REGION)
     object_storage = session.resource(
@@ -18,7 +18,15 @@ def green_domains_bucket():
         aws_access_key_id=settings.OBJECT_STORAGE_ACCESS_KEY_ID,
         aws_secret_access_key=settings.OBJECT_STORAGE_SECRET_ACCESS_KEY,
     )
-    return object_storage.Bucket(settings.DOMAIN_SNAPSHOT_BUCKET)
+    return object_storage.Bucket(bucket_name)
+
+
+def green_domains_bucket():
+    """
+    Return an object storage bucket containing snapshots
+    of the green domain table
+    """
+    return object_storage_bucket(settings.DOMAIN_SNAPSHOT_BUCKET)
 
 
 def public_url(bucket: str, key: str) -> str:

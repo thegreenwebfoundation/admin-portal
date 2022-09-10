@@ -26,6 +26,9 @@ sphinx = "*"
 sphinx-autobuild = "*"
 furo = "*"
 myst-parser = "*"
+ansible-lint = "*"
+awscli = "*"
+awscli-plugin-endpoint = "*"
 
 [packages]
 django = { extras = ["bcrypt"], version = "~=3.2" }
@@ -78,6 +81,8 @@ iso3166 = "*"
 django-logentry-admin = "*"
 pandas = "*"
 rich = "*"
+duckdb = "*"
+dateutils = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
