@@ -124,5 +124,5 @@ def backup_day_to_parquet(target_date: datetime.date):
         upload_path = f"parquet/days/{date_string}.{greencheck_table}.zstd.parquet"
 
         csv_of_checks_for_day(target_date, csv_path)
-        convert_csv_to_parquet(target_date, csv_path, parquet_path)
+        convert_csv_to_parquet(csv_path, parquet_path)
         upload_to_object_storage(parquet_path, upload_path)
