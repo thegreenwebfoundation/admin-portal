@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import os
 import environ
 import pathlib
+from dramatiq import middleware as dramatiq_middleware
 
 # Environ
 ROOT = environ.Path(__file__) - 3
@@ -216,15 +217,15 @@ OBJECT_STORAGE_ACCESS_KEY_ID = env("OBJECT_STORAGE_ACCESS_KEY_ID")
 OBJECT_STORAGE_SECRET_ACCESS_KEY = env("OBJECT_STORAGE_SECRET_ACCESS_KEY")
 
 # Importer variables
-## Microsoft
+# Microsoft
 MICROSOFT_PROVIDER_ID = env("MICROSOFT_PROVIDER_ID")
 MICROSOFT_LOCAL_FILE_DIRECTORY = env("MICROSOFT_LOCAL_FILE_DIRECTORY")
 
-## Equinix
+# Equinix
 EQUINIX_PROVIDER_ID = env("EQUINIX_PROVIDER_ID")
 EQUINIX_REMOTE_API_ENDPOINT = env("EQUINIX_REMOTE_API_ENDPOINT")
 
-## Amazon
+# Amazon
 AMAZON_PROVIDER_ID = env("AMAZON_PROVIDER_ID")
 AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT")
 
@@ -239,6 +240,7 @@ REST_FRAMEWORK = {
     ],
 }
 
+
 DRAMATIQ_BROKER = {
     "BROKER": "dramatiq.brokers.rabbitmq.RabbitmqBroker",
     "OPTIONS": {"url": RABBITMQ_URL,},  # noqa
@@ -246,7 +248,9 @@ DRAMATIQ_BROKER = {
         # remove until we are actually using it
         # "dramatiq.middleware.Prometheus"
         "dramatiq.middleware.AgeLimit",
-        "dramatiq.middleware.TimeLimit",
+        # use a longer timeout, as the default of 10 minutes means
+        # that long running queries are aborted too early
+        dramatiq_middleware.TimeLimit(time_limit=60 * 60 * 1000),
         "dramatiq.middleware.Callbacks",
         "dramatiq.middleware.Retries",
     ],
