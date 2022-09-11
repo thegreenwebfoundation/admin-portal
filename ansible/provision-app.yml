@@ -1,0 +1,196 @@
+---
+- name: Deploy the TGWF django admin
+  hosts:
+    # - app_servers
+    - app2.thegreenwebfoundation.org
+  remote_user: "deploy"
+  become: false
+
+  vars:
+    project_git_repo: "git@github.com:thegreenwebfoundation/admin-portal.git"
+    project_deploy_strategy: git
+    project_version: "master"
+    project_local_path: "../"
+    restart_supervisor: false
+    supervisor_user: "deploy"
+    gunicorn_app: "admin_web"
+    project_unwanted_items:
+      - .git
+    project_finalize: true
+    # if an app servers are behind nginx working as reverse proxy, it is not necessary to
+    # run nginx on the machine
+    use_nginx: false
+    # setting this to true will fetch the latest version of nodejs
+    install_node: false
+    # set this to true will fetch the system requirements like python, mariadb, redis,
+    # and so on
+    install_system_reqs: false
+    # run an update of our front dependencies as part of the deploy. This is better
+    # handled in source control, but if the front end will not build in deployment, this
+    # is a workaround
+    update_front_end_deps: true
+
+  roles:
+    - f500.project_deploy
+
+  tasks:
+    - name: Set up directories for deploying django app
+      ansible.builtin.file:
+        path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+        state: directory
+        mode: "0755"
+        owner: deploy
+        group: deploy
+      become: true
+
+    - name: Set up media, data directory
+      ansible.builtin.file:
+        path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/shared/{{ item }}"
+        state: directory
+        mode: "0755"
+        owner: deploy
+        group: deploy
+      loop:
+        - media
+        - data
+      become: true
+
+    - name: Move .env file to shared directory
+      ansible.builtin.template:
+        src: "templates/dotenv.j2"
+        dest: "{{ project_root }}/shared/.env"
+        mode: "0755"
+        owner: deploy
+        group: deploy
+      become: true
+
+    - name: Install mariadb libraries for python
+      ansible.builtin.apt:
+        pkg:
+          - build-essential
+          - libmariadb-dev
+          - libmariadbclient-dev
+          - libmariadb3
+          - mariadb-client-10.3
+          - mariadb-client-core-10.3
+          - mariadb-common
+          - mariadb-server-10.3
+          - mariadb-server-core-10.3
+          # - redis-server
+          # - redis-tools
+        state: present
+        update_cache: true
+      become: true
+      when: install_system_reqs is true
+
+    - name: Install nginx for reverse proxying and serving static files
+      ansible.builtin.apt:
+        pkg:
+          - build-essential
+          - nginx
+        state: present
+        update_cache: true
+      become: true
+      when: use_nginx is true
+
+    - name: Download node source script
+      ansible.builtin.get_url:
+        url: "https://deb.nodesource.com/setup_18.x"
+        dest: "/tmp/setup_18.x.sh"
+        mode: "0755"
+      when: install_node is true
+
+    - name: Run node installer as root
+      ansible.builtin.command: "bash /tmp/setup_18.x.sh"
+      when: install_node is true
+      become: true
+
+    - name: Install node and npm
+      ansible.builtin.apt:
+        pkg:
+          - nodejs
+        state: present
+        update_cache: true
+      become: true
+      when: install_node is true
+
+    - name: Install python libraries
+      ansible.builtin.apt:
+        pkg:
+          - python3-venv
+          - python3-dev
+          - python3-pip
+          - python-is-python3
+          - supervisor
+        state: present
+        update_cache: true
+      become: true
+      when: install_system_reqs is true
+
+    - name: Set up venv for pipenv to use. this is needed for the step below to work
+      # without creating the venv in .env, pipenv can't find the version
+      # of python or pip to use, and errors out
+      ansible.builtin.command: "python -m venv .venv"
+      args:
+        chdir: "{{ project_root }}/current"
+      changed_when: false
+
+    - name: Install latest version of pipenv
+      ansible.builtin.pip:
+        name: pipenv
+        virtualenv: "{{ project_root }}/current/.venv"
+
+    - name: Install python dependencies with pipenv
+      ansible.builtin.command: "python -m pipenv sync" # noqa no-changed-when
+      args:
+        chdir: "{{ project_root }}/current"
+      environment:
+        # make sure we install in the project root.
+        # this way when we clear up old releases we also
+        # remove the deps.
+        # using env vars triggers the 'schema[playbook]', hence the noqa
+        PIPENV_VENV_IN_PROJECT: "1" # noqa schema[playbook]
+
+    - name: Set up nginx server entry
+      ansible.builtin.template:
+        src: "nginx.conf.j2"
+        dest: "/etc/nginx/sites-available/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+        owner: deploy
+        group: deploy
+        mode: "0755"
+      become: true
+      when: use_nginx is true
+
+    - name: Create a symbolic to make nginx file appear in sites-enabled
+      ansible.builtin.file:
+        src: "/etc/nginx/sites-available/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+        dest: "/etc/nginx/sites-enabled/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+        state: link
+      become: true
+      when: use_nginx is true
+
+    - name: Set up supervisor entry for web
+      ansible.builtin.template:
+        src: "supervisor.gunicorn.conf.j2"
+        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf"
+        owner: deploy
+        group: deploy
+        mode: "0755"
+      become: true
+
+    - name: Set up supervisor entry for worker
+      ansible.builtin.template:
+        src: "supervisor.worker.conf.j2"
+        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf"
+        owner: deploy
+        group: deploy
+        mode: "0755"
+      become: true
+      when: worker_node is true
+
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+      become: true
+      when: use_nginx is true

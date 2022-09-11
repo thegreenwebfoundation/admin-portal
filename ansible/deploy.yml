@@ -1,9 +1,9 @@
 ---
 - name: Deploy the TGWF django admin
   hosts:
-    - all
+    - app_servers
   remote_user: "deploy"
-  become: no
+  become: false
 
   vars:
     project_git_repo: "git@github.com:thegreenwebfoundation/admin-portal.git"
@@ -20,10 +20,10 @@
     # run nginx on the machine
     use_nginx: false
     # setting this to true will fetch the latest version of nodejs
-    install_node: true
+    install_node: false
     # set this to true will fetch the system requirements like python, mariadb, redis,
     # and so on
-    install_system_reqs: true
+    install_system_reqs: false
     # run an update of our front dependencies as part of the deploy. This is better
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
@@ -33,222 +33,115 @@
     - f500.project_deploy
 
   tasks:
-    - name: set up directory for deploying django app
-      file:
+    - name: Set up directory for deploying django app
+      ansible.builtin.file:
         path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
         state: directory
         mode: "0755"
         owner: deploy
         group: deploy
-      become: yes
-
-    - name: set up media directory
-      file:
-        path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/shared/media/"
-        state: directory
-        mode: "0755"
-        owner: deploy
-        group: deploy
-      become: yes
-
-    - name: set up data directory
-      file:
-        path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/shared/data/"
-        state: directory
-        mode: "0755"
-        owner: deploy
-        group: deploy
-      become: yes
-
-    - name: move .env file to shared directory
-      template:
-        src: "templates/dotenv.j2"
-        dest: "{{ project_root }}/shared/.env"
-      become: yes
+      become: true
 
     - name: Link .env to shared directory
-      file:
+      ansible.builtin.file:
         src: "{{ project_root }}/shared/.env"
         dest: "{{ project_root }}/current/.env"
         state: link
 
     - name: Link ./media to shared ./media directory
-      file:
+      ansible.builtin.file:
         src: "{{ project_root }}/shared/media"
         dest: "{{ project_root }}/current/media"
         state: link
 
     - name: Link ./data to shared ./data directory
-      file:
+      ansible.builtin.file:
         src: "{{ project_root }}/shared/data"
         dest: "{{ project_root }}/current/data"
         state: link
 
-    - name: install mariadb libraries for python
-      apt:
-        pkg:
-          - build-essential
-          - libmariadb-dev
-          - libmariadbclient-dev
-          - libmariadb3
-          - mariadb-client-10.3
-          - mariadb-client-core-10.3
-          - mariadb-common
-          - mariadb-server-10.3
-          - mariadb-server-core-10.3
-          # - redis-server
-          # - redis-tools
-        state: present
-        update_cache: true
-      become: yes
-      when: install_system_reqs == true
-
-    - name: install nginx for reverse proxying and serving static files
-      apt:
-        pkg:
-          - build-essential
-          - nginx
-        state: present
-        update_cache: true
-      become: yes
-      when: use_nginx == true
-
-    - name: Download node source script
-      ansible.builtin.get_url:
-        url: https://deb.nodesource.com/setup_18.x
-        dest: /tmp/setup_18.x.sh
-        mode: "0755"
-      when: install_node == true
-
-    - name: Run node installer as root
-      ansible.builtin.command: "bash /tmp/setup_18.x.sh"
-      when: install_node == true
-      become: true
-
-    - name: install node and npm
-      apt:
-        pkg:
-          - nodejs
-        state: present
-        update_cache: true
-      become: yes
-      when: install_node == true
-
-    - name: install python libraries
-      apt:
-        pkg:
-          - python3-venv
-          - python3-dev
-          - python3-pip
-          - python-is-python3
-          - supervisor
-        state: present
-        update_cache: true
-      become: yes
-      when: install_system_reqs == true
-
-    - name: set up venv for pipenv to use. this is needed for the step below to work
+    - name: Set up venv for pipenv to use. this is needed for the step below to work
       # without creating the venv in .env, pipenv can't find the version
       # of python or pip to use, and errors out
-      shell: "python -m venv .venv"
+      ansible.builtin.command: "python -m venv .venv"
       args:
         chdir: "{{ project_root }}/current"
+      changed_when: false
 
-    - name: install latest version of pipenv
+    - name: Install latest version of pipenv
       ansible.builtin.pip:
         name: pipenv
         virtualenv: "{{ project_root }}/current/.venv"
 
-    - name: install python dependencies with pipenv
-      shell: "python -m pipenv sync"
+    - name: Install python dependencies with pipenv
+      ansible.builtin.command: "python -m pipenv sync" # noqa no-changed-when
       args:
         chdir: "{{ project_root }}/current"
       environment:
         # make sure we install in the project root.
         # this way when we clear up old releases we also
-        # remove the deps
-        PIPENV_VENV_IN_PROJECT: 1
+        # remove the deps.
+        # using env vars triggers the 'schema[playbook]', hence the noqa
+        PIPENV_VENV_IN_PROJECT: "1" # noqa schema[playbook]
 
-    - name: update node deps for building tailwind
-      shell: "python -m pipenv run ./manage.py tailwind update"
+    - name: Update node deps for building tailwind
+      ansible.builtin.command: "python -m pipenv run ./manage.py tailwind update"
       args:
         chdir: "{{ project_root }}/current"
-      when: update_front_end_deps == true
+      when: update_front_end_deps is true
 
-    - name: install node deps for building tailwind
-      shell: "python -m pipenv run ./manage.py tailwind install"
+    - name: Install node deps for building tailwind
+      ansible.builtin.command: "python -m pipenv run ./manage.py tailwind install"
       args:
         chdir: "{{ project_root }}/current"
+      changed_when: false
 
-    - name: build minified tailwind css file
-      shell: "python -m pipenv run ./manage.py tailwind build"
+    - name: Build minified tailwind css file
+      ansible.builtin.command: "python -m pipenv run ./manage.py tailwind build"
       args:
         chdir: "{{ project_root }}/current"
+      changed_when: false
 
-    - name: build javascript bundle with rollup, using the local config file
-      shell: "npx rollup --config"
+    - name: Build javascript bundle with rollup, using the local config file
+      ansible.builtin.command: "npx rollup --config"
       args:
         chdir: "{{ project_root }}/current/apps/theme/static_src"
+      changed_when: false
 
-    - name: collect static files for django
-      shell: "python -m pipenv run ./manage.py collectstatic --no-input"
+    - name: Collect static files for django
+      ansible.builtin.command: "python -m pipenv run ./manage.py collectstatic --no-input"
       args:
         chdir: "{{ project_root }}/current"
+      changed_when: false
 
-    - name: set up nginx server entry
-      template:
-        src: "nginx.conf.j2"
-        dest: "/etc/nginx/sites-available/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-      become: yes
-      when: use_nginx == true
-
-    - name: Create a symbolic to make nginx file appear in sites-enabled
-      file:
-        src: "/etc/nginx/sites-available/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        dest: "/etc/nginx/sites-enabled/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        state: link
-      become: yes
-      when: use_nginx == true
-
-    - name: set up script for running gunicorn, via supervisor
-      template:
+    - name: Set up script for running gunicorn, via supervisor
+      ansible.builtin.template:
         src: "run_gunicorn.sh.j2"
         dest: "{{ project_root }}/current/run_gunicorn.sh"
         owner: deploy
         group: deploy
         mode: "0755"
-      become: yes
+      become: true
 
-    - name: set up script for running workers, via supervisor
-      template:
-        src: "run_worker.sh.j2"
-        dest: "{{ project_root }}/current/run_worker.sh"
+    - name: Set up supervisor entry for web
+      ansible.builtin.template:
+        src: "supervisor.gunicorn.conf.j2"
+        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf"
         owner: deploy
         group: deploy
         mode: "0755"
-      become: yes
+      become: true
 
-    - name: set up supervisor entry for web
-      template:
-        src: "supervisor.gunicorn.conf.j2"
-        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf"
-      become: yes
-
-    - name: set up supervisor entry for worker
-      template:
-        src: "supervisor.worker.conf.j2"
-        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf"
-      become: yes
-
-    - name: trigger restart for app with supervisor
+    - name: Trigger restart for app with supervisor
       supervisorctl:
         name: "{{ gunicorn_app }}:"
         state: restarted
-      become: yes
+      become: true
+      when: restart_supervisor is true
 
     - name: Reload nginx
-      service:
+      ansible.builtin.service:
         name: nginx
         state: reloaded
-      become: yes
-      when: use_nginx == true
+      become: true
+      when: use_nginx is true
