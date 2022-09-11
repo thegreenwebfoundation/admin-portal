@@ -1,7 +1,6 @@
 import csv
 import datetime
 import logging
-import pathlib
 import tempfile
 
 import duckdb
@@ -37,6 +36,10 @@ def csv_of_checks_for_day(day: datetime.date, csv_path: str) -> bool:
         .values_list()
         .iterator()
     )
+
+    # return early if we have no results from our greencheck query.
+    if not res:
+        return False
 
     logger.info(f"Writing query results to {csv_path}")
 
@@ -86,6 +89,8 @@ def convert_csv_to_parquet(csv_path: str, parquet_path: str) -> bool:
     time_span = end_time - start_time
     logger.info(f"Took {time_span.seconds} seconds")
 
+    return True
+
 
 def upload_to_object_storage(parquet_path: str, upload_path: str) -> bool:
     """
@@ -123,6 +128,12 @@ def backup_day_to_parquet(target_date: datetime.date):
         parquet_path = f"{tmpdir}/{date_string}.zstd.parquet"
         upload_path = f"parquet/days/{date_string}.{greencheck_table}.zstd.parquet"
 
-        csv_of_checks_for_day(target_date, csv_path)
-        convert_csv_to_parquet(csv_path, parquet_path)
-        upload_to_object_storage(parquet_path, upload_path)
+        csv_generated, parquet_created = None, None
+
+        # only proceed with following steps we get a truthy result from earlier steps
+        csv_generated = csv_of_checks_for_day(target_date, csv_path)
+
+        if csv_generated:
+            parquet_created = convert_csv_to_parquet(csv_path, parquet_path)
+        if parquet_created:
+            upload_to_object_storage(parquet_path, upload_path)
