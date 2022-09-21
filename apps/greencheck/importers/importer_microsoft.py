@@ -1,11 +1,12 @@
 import requests
 import logging
 
-from apps.greencheck.importers.importer_interface import BaseImporter, Importer
+from apps.greencheck.importers.importer_interface import BaseImporter
 
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
 
 class MicrosoftImporter(BaseImporter):
     def __init__(cls):
@@ -31,5 +32,5 @@ class MicrosoftImporter(BaseImporter):
             # This provider only has IPv4 and IPv6, so we
             # don't have to include ASN here
             return list_of_ips
-        except Exception as e:
+        except Exception:
             logger.exception("Something really unexpected happened. Aborting")

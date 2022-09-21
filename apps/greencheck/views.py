@@ -22,7 +22,7 @@ from . import models as gc_models
 from . import object_storage
 from .tests import dummy_greencheck_stat_data as dummy_data
 
-bucket = object_storage.green_domains_bucket()
+bucket = object_storage.bucket_green_domains()
 
 
 class GreenUrlsView(TemplateView):
