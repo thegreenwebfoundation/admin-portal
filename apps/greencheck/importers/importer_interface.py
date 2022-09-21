@@ -25,6 +25,17 @@ class BaseImporter:
 
     # @transaction.atomic
     def process_addresses(cls, list_of_addresses: list):
+        """
+        General function that processes all types of addresses (IPv4, IPv6 and ASN).
+
+        The list that is given to this function is considered a list of active networks
+        and the process that is taking place is changing the state of these addresses
+        in the database in terms of their state.
+
+        Addresses in the list will be set as active, and other addresses in the database
+        will be set to inactive.
+        """
+        # TODO: Add docstring
         count_ip = 0
         count_asn = 0
 
@@ -59,50 +70,69 @@ class BaseImporter:
             return f"An error occurred while adding new entries. Updated {count_asn} ASN's and {count_ip} IP's (IPv4 and/or IPv6)"
 
     def update_asn(cls, active_networks: List[str]) -> int:
+        """
+        General function that updates a hostingprovider's ASN networks.
+        Under "networks" in this case, it is understood that it needs to have a format 
+        similar to for example: AS12345.
+        Return: int, number of ASN networks updated in the database
+        """
+
         # Prepare list by extracting AS values
         active_networks = list(
             map(int, map(lambda x: x.replace("AS", ""), active_networks))
         )
         updated_networks = 0
-
+        
+        # Running an atomic transaction.
+        # Meaning that if something goes wrong in the process, all changes to the
+        # database will be reverted to when the transaction started.
+        #
+        # This is to avoid having updated half of the networks in the databse and
+        # thereafter crashing and being left with a half updated set of networks
+        # connected to a hostingprovider. 
         logger.debug("Running atomic database transaction. Altered AS numbers:")
         with transaction.atomic():
             # Retrieve all ASN entries assosiated with this hosting provider
             hosting_provider = Hostingprovider.objects.get(pk=cls.hosting_provider_id)
-            entries = GreencheckASN.objects.select_for_update().filter(
+            db_entries = GreencheckASN.objects.select_for_update().filter(
                 hostingprovider=hosting_provider
             )
 
             # Iterate database entries
-            for entry in entries:
-                if entry.asn in active_networks:
-                    active_networks.pop(active_networks.index(entry.asn))
-                    entry.active = True
-                    entry.save()
+            for db_entry in db_entries:
+                if db_entry.asn in active_networks:
+                    active_networks.pop(active_networks.index(db_entry.asn))
+                    db_entry.active = True
+                    db_entry.save()
 
                     updated_networks += 1
-                    logger.debug(entry)
-                elif entry.active == True:
-                    entry.active = False
-                    entry.save()
+                    logger.debug(db_entry)
+                elif db_entry.active:
+                    db_entry.active = False
+                    db_entry.save()
 
                     updated_networks += 1
-                    logger.debug(entry)
+                    logger.debug(db_entry)
 
             # Iterate remaining list items (that are not in the database)
             if active_networks:
                 for asn_network in active_networks:
-                    entry, created = GreencheckASN.objects.update_or_create(
+                    db_entry, created = GreencheckASN.objects.update_or_create(
                         active=True, asn=asn_network, hostingprovider=hosting_provider
                     )
-                    entry.save()
+                    db_entry.save()
 
                     if created:
-                        logger.debug(entry)
+                        logger.debug(db_entry)
 
         return updated_networks
 
     def update_ip(cls, active_networks: List[str]) -> int:
+        """
+        General function that updates a hostingprovider's IPv4 and IPv6 networks.
+        Under "networks" in this case, it is understood that it exists a IP and it's given subnet.
+        Return: int, number of IP networks updated in the database
+        """
         updated_networks = 0
 
         # Convert networks (xxx.xxx.xxx.xxx/yy) to a
@@ -113,44 +143,51 @@ class BaseImporter:
             tmp_list.append((str(network[1]), str(network[-1])))
         active_networks = list(set(tmp_list))
 
+        # Running an atomic transaction.
+        # Meaning that if something goes wrong in the process, all changes to the
+        # database will be reverted to when the transaction started.
+        #
+        # This is to avoid having updated half of the networks in the databse and
+        # thereafter crashing and being left with a half updated set of networks
+        # connected to a hostingprovider. 
         logger.debug("Running atomic database transaction. Altered IP ranges:")
         with transaction.atomic():
             # Retrieve all IP(v4 and v6) entries assosiated to this hosting provider
             hosting_provider = Hostingprovider.objects.get(pk=cls.hosting_provider_id)
-            entries = GreencheckIp.objects.select_for_update().filter(
+            db_entries = GreencheckIp.objects.select_for_update().filter(
                 hostingprovider=hosting_provider
             )
 
             # Iterate database entries
-            for entry in entries:
-                if (entry.ip_start, entry.ip_end) in active_networks:
+            for db_entry in db_entries:
+                if (db_entry.ip_start, db_entry.ip_end) in active_networks:
                     active_networks.pop(
-                        active_networks.index((entry.ip_start, entry.ip_end))
+                        active_networks.index((db_entry.ip_start, db_entry.ip_end))
                     )
-                    entry.active = True
-                    entry.save()
+                    db_entry.active = True
+                    db_entry.save()
 
                     updated_networks += 1
-                    logger.debug(entry)
-                elif entry.active == True:
-                    entry.active = False
-                    entry.save()
+                    logger.debug(db_entry)
+                elif db_entry.active == True:
+                    db_entry.active = False
+                    db_entry.save()
 
                     updated_networks += 1
-                    logger.debug(entry)
+                    logger.debug(db_entry)
 
             # Iterate remaining list items (that are not in the database)
             if active_networks:
                 for ip_network in active_networks:
-                    entry, created = GreencheckIp.objects.update_or_create(
+                    db_entry, created = GreencheckIp.objects.update_or_create(
                         active=True,
                         ip_start=ip_network[0],
                         ip_end=ip_network[1],
                         hostingprovider=hosting_provider,
                     )
-                    entry.save()
+                    db_entry.save()
 
                     if created:
-                        logger.debug(entry)
+                        logger.debug(db_entry)
 
         return updated_networks
