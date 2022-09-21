@@ -6,7 +6,7 @@ from requests import request, HTTPError
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
-from ...object_storage import public_url, green_domains_bucket
+from ...object_storage import public_url, bucket_green_domains
 
 
 _COMPRESSION_TYPES = {
@@ -102,7 +102,7 @@ class GreenDomainExporter:
          uploaded file cannot be accessed publicly.
         """
         with open(file_path, "rb") as file_to_upload:
-            bucket = green_domains_bucket()
+            bucket = bucket_green_domains()
             bucket.put_object(ACL="public-read", Key=file_path, Body=file_to_upload)
 
         try:
