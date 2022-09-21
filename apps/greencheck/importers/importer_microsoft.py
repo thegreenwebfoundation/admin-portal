@@ -13,7 +13,8 @@ class MicrosoftImporter(BaseImporter):
 
     def fetch_data_from_source(cls) -> list:
         try:
-            response = requests.get(settings.MICROSOFT_LOCAL_FILE_DIRECTORY).json()
+            # TODO: refer to bucket instead of local storage
+            response = requests.get(settings.MICROSOFT_REMOTE_FILE_DIRECTORY).json()
             return cls.parse_to_list(response)
         except requests.RequestException:
             logger.warning("Unable to fetch text file. Aborting early.")
