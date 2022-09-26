@@ -81,7 +81,7 @@ iso3166 = "*"
 django-logentry-admin = "*"
 pandas = "*"
 rich = "*"
-duckdb = "*"
+duckdb = "==0.5.0"
 dateutils = "*"
 
 [pipenv]
