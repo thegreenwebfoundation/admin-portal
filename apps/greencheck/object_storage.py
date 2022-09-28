@@ -7,10 +7,14 @@ import json
 from django.conf import settings
 
 
+# TODO: how to specify this return time. The following example throws an error as
+# this structure does not exist
+# def retrieve_object_storage() -> boto3.resources.factory.s3.ServiceResource:
 def retrieve_object_storage():
     """
-    Return an object storage session
+    Create a resource service client by name using the default session.
     """
+    # Create a session and return a resource client for the caller to use
     session = boto3.Session(region_name=settings.OBJECT_STORAGE_REGION)
     return session.resource(
         "s3",
@@ -20,9 +24,12 @@ def retrieve_object_storage():
     )
 
 
+# TODO: how to specify this return time. The following example throws an error as
+# this structure does not exist
+# def retrieve_bucket(bucket_name: str) -> boto3.resources.factory.s3.Bucket:
 def retrieve_bucket(bucket_name: str):
     """
-    Return a specific S3 object storage bucket
+    Retrieve specified bucket from our object storage resource.
     """
     return retrieve_object_storage().Bucket(bucket_name)
 
@@ -30,28 +37,16 @@ def retrieve_bucket(bucket_name: str):
 # TODO: set return type
 def bucket_green_domains():
     """
-    Return an object storage bucket containing snapshots
-    of the green domain table
+    Retrieve the green domains bucket.
+    This bucket contains snapshots of green domain tables
     """
     return retrieve_bucket(settings.DOMAIN_SNAPSHOT_BUCKET)
 
 
-# TODO: Maybe get a bucket specifically for Microsoft's dataset?
-# def microsoft_network_ranges_bucket():
-# def bucket_microsoft_import_data():
-def bucket_file_get_json(bucket_name: str, json_data: dict, file_name: str) -> dict:
+def upload_json_file_to_bucket(bucket_name: str, json_data: dict, file_name: str):
     """
-    Retrieve specific file from a bucket
-    """
-    # s3_object = retrieve_object_storage().Object(bucket_name, file_name)
-    # TODO: Implement a get functionality here
-    # return s3_object.get....
-    return {}
-
-
-def bucket_file_put_json(bucket_name: str, json_data: dict, file_name: str):
-    """
-    Put/overwrite data in a specified file and bucket
+    Upload a JSON file to the object storage.
+    The file will be overwritten if the file already exists
     """
     s3_object = retrieve_object_storage().Object(bucket_name, file_name)
     s3_object.put(Body=(bytes(json.dumps(json_data).encode("UTF-8"))))

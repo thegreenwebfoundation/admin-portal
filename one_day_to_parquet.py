@@ -10,10 +10,11 @@ from dateutils import timedelta
 from django.utils import timezone  # noqa
 
 from apps.greencheck.models import checks  # noqa
-from apps.greencheck.object_storage import object_storage_bucket  # noqa
+from apps.greencheck.object_storage import bucket_green_domains  # noqa
 
 logger = logging.getLogger(__name__)
-infra_bucket = object_storage_bucket("internal-infra")
+# infra_bucket = object_storage_bucket("internal-infra")
+infra_bucket = bucket_green_domains()
 
 
 def csv_of_checks_for_day(day: datetime.date, csv_path: str) -> bool:
