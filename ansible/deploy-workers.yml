@@ -1,0 +1,115 @@
+---
+- name: Deploy updates for the worker nodes
+  hosts:
+    - worker_servers
+  remote_user: "deploy"
+  become: false
+
+  vars:
+    project_git_repo: "git@github.com:thegreenwebfoundation/admin-portal.git"
+    project_deploy_strategy: git
+    project_version: "master"
+    project_local_path: "../"
+    restart_supervisor: false
+    supervisor_user: "deploy"
+    gunicorn_app: "admin_web"
+    project_unwanted_items:
+      - .git
+    project_finalize: true
+    # if an app servers are behind nginx working as reverse proxy, it is not necessary to
+    # run nginx on the machine
+    use_nginx: false
+    # setting this to true will fetch the latest version of nodejs
+    install_node: false
+    # set this to true will fetch the system requirements like python, mariadb, redis,
+    # and so on
+    install_system_reqs: false
+    # run an update of our front dependencies as part of the deploy. This is better
+    # handled in source control, but if the front end will not build in deployment, this
+    # is a workaround
+    update_front_end_deps: true
+
+  roles:
+    - f500.project_deploy
+
+  tasks:
+    - name: Set up directory for deploying django app
+      ansible.builtin.file:
+        path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+        state: directory
+        mode: "0755"
+        owner: deploy
+        group: deploy
+      become: true
+
+    - name: Link .env to shared directory
+      ansible.builtin.file:
+        src: "{{ project_root }}/shared/.env"
+        dest: "{{ project_root }}/current/.env"
+        state: link
+
+    - name: Link ./media to shared ./media directory
+      ansible.builtin.file:
+        src: "{{ project_root }}/shared/media"
+        dest: "{{ project_root }}/current/media"
+        state: link
+
+    - name: Link ./data to shared ./data directory
+      ansible.builtin.file:
+        src: "{{ project_root }}/shared/data"
+        dest: "{{ project_root }}/current/data"
+        state: link
+
+    - name: Set up venv for pipenv to use. this is needed for the step below to work
+      # without creating the venv in .env, pipenv can't find the version
+      # of python or pip to use, and errors out
+      ansible.builtin.command: "python -m venv .venv"
+      args:
+        chdir: "{{ project_root }}/current"
+      changed_when: false
+
+    - name: Install latest version of pipenv
+      ansible.builtin.pip:
+        name: pipenv
+        virtualenv: "{{ project_root }}/current/.venv"
+
+    - name: Install python dependencies with pipenv
+      ansible.builtin.command: "python -m pipenv sync" # noqa no-changed-when
+      args:
+        chdir: "{{ project_root }}/current"
+      environment:
+        # make sure we install in the project root.
+        # this way when we clear up old releases we also
+        # remove the deps.
+        # using env vars triggers the 'schema[playbook]', hence the noqa
+        PIPENV_VENV_IN_PROJECT: "1" # noqa schema[playbook]
+
+    - name: Update node deps for building tailwind
+      ansible.builtin.command: "python -m pipenv run ./manage.py tailwind update"
+      args:
+        chdir: "{{ project_root }}/current"
+      when: update_front_end_deps is true
+
+    - name: Install node deps for building tailwind
+      ansible.builtin.command: "python -m pipenv run ./manage.py tailwind install"
+      args:
+        chdir: "{{ project_root }}/current"
+      changed_when: false
+
+    - name: Build minified tailwind css file
+      ansible.builtin.command: "python -m pipenv run ./manage.py tailwind build"
+      args:
+        chdir: "{{ project_root }}/current"
+      changed_when: false
+
+    - name: Build javascript bundle with rollup, using the local config file
+      ansible.builtin.command: "npx rollup --config"
+      args:
+        chdir: "{{ project_root }}/current/apps/theme/static_src"
+      changed_when: false
+
+    - name: Collect static files for django
+      ansible.builtin.command: "python -m pipenv run ./manage.py collectstatic --no-input"
+      args:
+        chdir: "{{ project_root }}/current"
+      changed_when: false

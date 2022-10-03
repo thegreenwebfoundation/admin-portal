@@ -1,8 +1,8 @@
 ---
-- name: Deploy the TGWF django admin
+- name: Deploy the TGWF django web-app servers
   hosts:
-    # - app_servers
-    - app2.thegreenwebfoundation.org
+    - app_servers
+    # - app2.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
 
