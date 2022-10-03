@@ -30,6 +30,7 @@ console = logging.StreamHandler()
 fake = faker.Faker()
 
 
+@pytest.mark.skip(reason="Not in use - will be refactored")
 class TestGreencheckStatsDaily:
     @pytest.mark.parametrize(
         "date_to_check, expected_count",
