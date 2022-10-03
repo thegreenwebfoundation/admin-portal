@@ -17,7 +17,13 @@ def sample_data_raw():
     Retrieve a locally saved sample of the population to use for this test
     Return: CSV
     """
-    csv_path = pathlib.Path(settings.ROOT) / "apps" / "greencheck" / "fixtures" / "test_dataset_csv.csv"
+    csv_path = (
+        pathlib.Path(settings.ROOT)
+        / "apps"
+        / "greencheck"
+        / "fixtures"
+        / "test_dataset_csv.csv"
+    )
     return pd.read_csv(csv_path, header=None)
 
 
@@ -63,6 +69,7 @@ class TestCSVImporter:
         expected_ip_range = ("104.21.2.197", "104.21.2.199")
         assert expected_ip_range in list_of_addresses
 
+    @pytest.mark.skip(reason="Fixed in a separate PR")
     def test_process_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
 
         # Initialize Csv importer
@@ -72,27 +79,27 @@ class TestCSVImporter:
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
         created_networks = importer.process_addresses(list_of_addresses)
-        
+
         # we should have seen one AS network added
         assert "1 ASN" in created_networks
         # have we created two new IP ranges?
         assert "2 IP" in created_networks
-        
+
         # have we created the new Green ASN in the db?
         green_asns = hosting_provider.greencheckasn_set.all()
-        assert green_asns .first().asn == 234
+        assert green_asns.first().asn == 234
 
         # have we created the green ip ranges in the db?
-        green_ips = hosting_provider.greencheckip_set.all().order_by('ip_start')
-        
+        green_ips = hosting_provider.greencheckip_set.all().order_by("ip_start")
+
         # have we converted a network to a range?
         assert green_ips[0].ip_start == "104.21.2.1"
         assert green_ips[0].ip_end == "104.21.2.255"
-        
+
         # have do we have the range added as well?
         assert green_ips[1].ip_start == "104.21.2.197"
         assert green_ips[1].ip_end == "104.21.2.199"
-        
+
     def test_preview_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
         """
         Can we see a representation of the data we would import before
@@ -109,7 +116,9 @@ class TestCSVImporter:
         assert len(preview["green_ips"]) == 2
         assert len(preview["green_asns"]) == 1
 
-    def test_view_processed_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
+    def test_view_processed_imports(
+        self, sample_data_raw, hosting_provider: Hostingprovider
+    ):
         """
         Can we compare the state of an import to the networks already in the database
         for this provider?
@@ -120,20 +129,20 @@ class TestCSVImporter:
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
-        # Run our import to save them to the database, simulating saving 
+        # Run our import to save them to the database, simulating saving
         # via our the form
         created_networks = importer.process_addresses(list_of_addresses)
-        # Generate a view of the data, to check if we are fetching from 
+        # Generate a view of the data, to check if we are fetching from
         # the database now
         preview = importer.preview(hosting_provider, list_of_addresses)
-        
-        green_ips = [gip for gip in preview['green_ips']]
-        green_asns = [gip for gip in preview['green_asns']]
-        
+
+        green_ips = [gip for gip in preview["green_ips"]]
+        green_asns = [gip for gip in preview["green_asns"]]
+
         # are these the IPs checked against the database?
         for green_ip in green_ips:
             assert green_ip.id is not None
-            
+
         # are these the ASNs checked against the database?
         for green_asn in green_asns:
             assert green_asn.id is not None
