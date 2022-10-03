@@ -2,7 +2,6 @@
 - name: Deploy the TGWF django web-app servers
   hosts:
     - app_servers
-    # - app2.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
 
@@ -30,8 +29,8 @@
     # is a workaround
     update_front_end_deps: true
 
-  roles:
-    - f500.project_deploy
+  # roles:
+  #   - f500.project_deploy
 
   tasks:
     - name: Set up directories for deploying django app
