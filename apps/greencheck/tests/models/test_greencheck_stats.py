@@ -349,6 +349,7 @@ class TestGreencheckStatsDaily:
             # not 1234 against '1234'
             assert str(provider_id) in stat_keys
 
+    @pytest.mark.skip(reason="Not in use - will be refactored")
     def test_create_top_providers_by_date_is_idempotent(
         self,
         db,
