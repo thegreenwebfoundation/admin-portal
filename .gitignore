@@ -152,3 +152,5 @@ staticfiles
 
 # only used for notifying sentry of releases
 RELEASE
+
+.*venv

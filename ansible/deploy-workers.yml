@@ -1,7 +1,7 @@
 ---
-- name: Deploy the TGWF django admin
+- name: Deploy updates for the worker nodes
   hosts:
-    - app_servers
+    - worker_servers
   remote_user: "deploy"
   become: false
 
@@ -113,35 +113,3 @@
       args:
         chdir: "{{ project_root }}/current"
       changed_when: false
-
-    - name: Set up script for running gunicorn, via supervisor
-      ansible.builtin.template:
-        src: "run_gunicorn.sh.j2"
-        dest: "{{ project_root }}/current/run_gunicorn.sh"
-        owner: deploy
-        group: deploy
-        mode: "0755"
-      become: true
-
-    - name: Set up supervisor entry for web
-      ansible.builtin.template:
-        src: "supervisor.gunicorn.conf.j2"
-        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf"
-        owner: deploy
-        group: deploy
-        mode: "0755"
-      become: true
-
-    - name: Trigger restart for app with supervisor
-      supervisorctl:
-        name: "{{ gunicorn_app }}:"
-        state: restarted
-      become: true
-      when: restart_supervisor is true
-
-    - name: Reload nginx
-      ansible.builtin.service:
-        name: nginx
-        state: reloaded
-      become: true
-      when: use_nginx is true
