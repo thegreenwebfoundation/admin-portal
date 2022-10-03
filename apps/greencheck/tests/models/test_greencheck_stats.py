@@ -30,8 +30,8 @@ console = logging.StreamHandler()
 fake = faker.Faker()
 
 
-@pytest.mark.skip(reason="Not in use - will be refactored")
 class TestGreencheckStatsDaily:
+    @pytest.mark.skip(reason="Not in use - will be refactored")
     @pytest.mark.parametrize(
         "date_to_check, expected_count",
         [
@@ -63,6 +63,7 @@ class TestGreencheckStatsDaily:
 
         assert stat.count == expected_count
 
+    @pytest.mark.skip(reason="Not in use - will be refactored")
     @pytest.mark.parametrize(
         "date_to_check, expected_count",
         [
@@ -97,6 +98,7 @@ class TestGreencheckStatsDaily:
 
         assert stat.count == expected_count
 
+    @pytest.mark.skip(reason="Not in use - will be refactored")
     @pytest.mark.parametrize(
         "date_to_check, expected_count",
         [
@@ -133,6 +135,7 @@ class TestGreencheckStatsDaily:
         assert grey_stat.count == expected_count
         assert green_stat.count == 0
 
+    @pytest.mark.skip(reason="Not in use - will be refactored")
     @pytest.mark.parametrize(
         "date_to_check, expected_count",
         [
@@ -173,6 +176,7 @@ class TestGreencheckStatsDaily:
         assert grey_stat.count == expected_count
         assert green_stat.count == 0
 
+    @pytest.mark.skip(reason="Not in use - will be refactored")
     def test_count_daily_by_provider_green(
         self,
         db,
@@ -206,6 +210,7 @@ class TestGreencheckStatsDaily:
     # and fixes
     # https://github.com/thegreenwebfoundation/admin-portal/issues/163
     @pytest.mark.flaky
+    @pytest.mark.skip(reason="Not in use - will be refactored")
     @pytest.mark.skip(reason="an intermittent flaky test")
     def test_create_top_domains_by_date(
         self,
@@ -249,6 +254,7 @@ class TestGreencheckStatsDaily:
         for dom in domains_to_check:
             assert dom in stat_keys
 
+    @pytest.mark.skip(reason="Not in use - will be refactored")
     def test_create_top_domains_by_date_is_idempotent(
         self,
         db,
