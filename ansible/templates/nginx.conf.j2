@@ -5,14 +5,7 @@
 upstream {{ tgwf_domain_name }} {
     # replace with loop, once we have a nice way to keep supervisor and
     # nginx in sync, so we only forward to healthy app servers
-    server localhost:9002;
-    server localhost:9003;
-    server localhost:9004;
-    server localhost:9005;
-    server localhost:9006;
-    server localhost:9007;
-    server localhost:9008;
-    server localhost:9009;
+    server localhost:9000;
 }
 
 server {

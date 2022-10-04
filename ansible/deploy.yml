@@ -1,7 +1,7 @@
 ---
 - name: Deploy the TGWF django admin
   hosts:
-    - app_servers
+    - hel1.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
 
@@ -10,20 +10,19 @@
     project_deploy_strategy: git
     project_version: "master"
     project_local_path: "../"
-    restart_supervisor: false
-    supervisor_user: "deploy"
-    gunicorn_app: "admin_web"
     project_unwanted_items:
       - .git
     project_finalize: true
+
+    restart_supervisor: true
+    supervisor_user: "deploy"
+    gunicorn_app: "admin_web"
+
     # if an app servers are behind nginx working as reverse proxy, it is not necessary to
     # run nginx on the machine
-    use_nginx: false
+    use_nginx: true
     # setting this to true will fetch the latest version of nodejs
     install_node: false
-    # set this to true will fetch the system requirements like python, mariadb, redis,
-    # and so on
-    install_system_reqs: false
     # run an update of our front dependencies as part of the deploy. This is better
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
@@ -133,7 +132,7 @@
       become: true
 
     - name: Trigger restart for app with supervisor
-      supervisorctl:
+      ansible.builtin.supervisorctl:
         name: "{{ gunicorn_app }}:"
         state: restarted
       become: true

@@ -1,28 +1,24 @@
 ---
-app_servers:
-  hosts:
-    app1.thegreenwebfoundation.org:
-      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-      tgwf_stage: "prod"
-      tgwf_domain_name: admin
-    app2.thegreenwebfoundation.org:
-      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-      tgwf_stage: "prod"
-      tgwf_domain_name: admin
-
 all:
   hosts:
     app1.thegreenwebfoundation.org:
-      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-      tgwf_stage: "prod"
-      tgwf_domain_name: admin
     app2.thegreenwebfoundation.org:
-      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-      tgwf_stage: "prod"
-      tgwf_domain_name: admin
     hel1.thegreenwebfoundation.org:
-        project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        tgwf_stage: "prod"
-        tgwf_domain_name: admin
+  vars:
+    project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+    tgwf_stage: "prod"
+    tgwf_domain_name: admin
+    ansible_user: deploy
 
-
+  # you can set child groups too
+  children:
+    app_servers:
+      # within a child group, you need to define your hosts again
+      # so it's clear which hosts you want to refer to
+      hosts:
+        app1.thegreenwebfoundation.org:
+        app2.thegreenwebfoundation.org:
+      # within the child group can define new vars which take
+      # precedence over the ones further 'upstream'
+      # vars:
+      #   some_var: value_here
