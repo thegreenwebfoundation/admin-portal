@@ -16,7 +16,17 @@ from ..serializers import GreenDomainSerializer
 
 logger = logging.getLogger(__name__)
 
+from ..viewsets import AbstractGreenDomainViewset
+
 checker = GreenDomainChecker()
+
+
+class GreenDomainViewset(AbstractGreenDomainViewset):
+    """
+    The legacy version of our API, served at the older `greencheck` routes, with
+    """
+
+    pass
 
 
 def augmented_greencheck(check):

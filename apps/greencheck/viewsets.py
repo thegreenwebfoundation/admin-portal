@@ -60,7 +60,7 @@ def log_domain_safely(domain):
         logger.exception(f"Unexpected error of type {err}")
 
 
-class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
+class AbstractGreenDomainViewset(viewsets.ReadOnlyModelViewSet):
     """
     The greencheck service to replicate the older PHP API for checking domains.
 
@@ -181,48 +181,24 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
             fetched_domain.delete()
 
-    def retrieve(self, request, *args, **kwargs):
+
+class GreenDomainViewset(AbstractGreenDomainViewset):
+    """
+    The concrete class, to support us making out changes to the currently
+    developed API, without affecting behaviour clients of the old
+    API are expecting.
+    """
+
+    def build_response_from_database_lookup(self, domain):
         """
-        Fetch entry matching the provided URL, like a 'detail' view
+        Return an API reponse listing all the matching providers for an IP.
         """
-        url = self.kwargs.get("url")
-        domain = None
+        instance = gc_models.GreenDomain.objects.filter(url=domain).first()
+        import ipdb
 
-        # `nocache=true` is the same string used by nginx. Using the same params
-        # means we won't have to worry about nginx caching our request before it
-        # hits an app server
-        skip_cache = request.GET.get("nocache") == "true"
-
-        try:
-            domain = self.checker.validate_domain(url)
-        except Exception:
-            # not a valid domain, OR a valid IP. Get rid of it.
-            logger.warning(f"unable to extract domain from {url}")
-            return self.legacy_grey_response(url, log_check=False)
-
-        if skip_cache:
-            # try to fetch domain the long way, clearing it from the
-            # any caches if already present
-            self.clear_from_caches(domain)
-            if http_response := self.build_response_from_full_network_lookup(domain):
-                return http_response
-
-        # try from redis cache first:
-        if http_response := self.build_response_from_redis(domain):
-            return http_response
-
-        # not in the cache. Try the database instead:
-        if http_response := self.build_response_from_database_lookup(domain):
-            return http_response
-
-        # not in database or the cache, try full lookup using network
-        if http_response := self.build_response_from_full_network_lookup(domain):
-            return http_response
-
-        # not in database or the cache, nor can we see find it with
-        # any third party lookups. Fall back to saying we couldn't find anything,
-        # the way the API used to work.
-        return self.legacy_grey_response(url)
+        ipdb.set_trace()
+        if instance:
+            return self.return_green_response(instance)
 
 
 class GreenDomainBatchView(CreateAPIView):

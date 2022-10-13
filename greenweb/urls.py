@@ -106,7 +106,7 @@ urlpatterns += [
     # it behind the reverse proxy
     path(
         "greencheck/<url>",
-        GreenDomainViewset.as_view({"get": "retrieve"}),
+        legacy_views.GreenDomainViewset.as_view({"get": "retrieve"}),
         name="green-domain-detail",
     ),
     path(
@@ -114,7 +114,11 @@ urlpatterns += [
         legacy_views.latest_greenchecks,
         name="legacy-latest-greenchecks",
     ),
-    path("data/directory/", legacy_views.directory, name="legacy-directory-listing",),
+    path(
+        "data/directory/",
+        legacy_views.directory,
+        name="legacy-directory-listing",
+    ),
     path(
         "data/hostingprovider/<id>",
         legacy_views.directory_provider,
