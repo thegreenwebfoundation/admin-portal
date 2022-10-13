@@ -34,6 +34,7 @@ register(gc_factories.GreenIpFactory)
 register(gc_factories.GreenDomainFactory)
 register(gc_factories.DailyStatFactory)
 register(gc_factories.SiteCheckFactory)
+register(gc_factories.GreenIpFactory)
 
 
 @pytest.fixture

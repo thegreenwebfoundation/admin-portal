@@ -109,7 +109,10 @@ class TestGreenDomainViewset:
             hostingprovider=hosting_provider,
             title="Carbon free energy for Google Cloud regions",
             url="https://cloud.google.com/sustainability/region-carbon",
-            description="Google's guidance on understanding how they power each region, how they acheive carbon free energy, and how to report it",
+            description=(
+                "Google's guidance on understanding how they power each region, how"
+                " they acheive carbon free energy, and how to report it"
+            ),
             valid_from=now,
             valid_to=a_year_from_now,
             public=True,
@@ -164,7 +167,10 @@ class TestGreenDomainViewset:
             hostingprovider=hosting_provider,
             title="Carbon free energy for Google Cloud regions",
             url="https://cloud.google.com/sustainability/region-carbon",
-            description="Google's guidance on understanding how they power each region, how they acheive carbon free energy, and how to report it",
+            description=(
+                "Google's guidance on understanding how they power each region, how"
+                " they acheive carbon free energy, and how to report it"
+            ),
             valid_from=now,
             valid_to=a_year_from_now,
             public=False,
@@ -312,6 +318,74 @@ class TestGreenDomainViewset:
         # do we still have the same number of green domains listed? We defer
         # persistence til later, typically outside the request/response lifecycle
         assert GreenDomain.objects.all().count() == 1
+
+    @pytest.mark.only
+    def test_check_single_url_matching_two_providers(
+        self,
+        hosting_provider_factory,
+        green_ip_factory,
+    ):
+        """
+        Check that a lookup that matches multiple IP ranges
+        returns all the matching providers, not just the first one.
+        """
+
+        # make a hosting provider with one IP range
+
+        hp1 = hosting_provider_factory.create()
+        gip1 = green_ip_factory.create()
+        hp1.greencheckip_set.add(gip1)
+        hp1.save()
+
+        hp2 = hosting_provider_factory.create()
+        gip2 = green_ip_factory.create(ip_start=gip1.ip_start, ip_end=gip1.ip_end)
+        hp2.greencheckip_set.add(gip2)
+        hp2.save()
+
+        sitecheck_logger = LegacySiteCheckLogger()
+
+        domain = hp1.website
+        now = timezone.now()
+
+        a_year_from_now = now + relativedelta(years=1)
+
+        # create a sample piece of evidence
+        ac_models.HostingProviderSupportingDocument.objects.create(
+            hostingprovider=hp1,
+            title="Carbon free energy for Google Cloud regions",
+            url="https://cloud.google.com/sustainability/region-carbon",
+            description=(
+                "Google's guidance on understanding how they power each region, how"
+                " they acheive carbon free energy, and how to report it"
+            ),
+            valid_from=now,
+            valid_to=a_year_from_now,
+            public=False,
+        )
+
+        sitecheck = greencheck_sitecheck(domain, hp1, gip1)
+
+        # when we perform a lookup for the IP, we should see two matching responses
+
+        import ipdb
+
+        ipdb.set_trace()
+
+        sitecheck_logger.update_green_domain_caches(sitecheck, hp1)
+
+        # assume we just have a link to a url, no uploading of files
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-detail", kwargs={"url": domain})
+        logger.info(f"url_path: {url_path}")
+
+        request = rf.get(url_path)
+
+        view = GreenDomainViewset.as_view({"get": "retrieve"})
+
+        response = view(request, url=domain)
+
+        assert response.status_code == 200
+        assert response.data["green"] is True
 
 
 class TestGreenDomainBatchView:

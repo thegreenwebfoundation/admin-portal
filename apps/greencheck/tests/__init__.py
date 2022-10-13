@@ -5,6 +5,8 @@ import webbrowser
 
 from django.utils import timezone
 
+from apps.greencheck.models.checks import SiteCheck
+
 from ...accounts import models as ac_models
 from .. import legacy_workers
 from .. import models as gc_models
@@ -24,14 +26,18 @@ def create_greendomain(hosting_provider, sitecheck):
 
 
 def greencheck_sitecheck(
-    domain,
+    domain: str,
     hosting_provider: ac_models.Hostingprovider,
     green_ip: gc_models.GreencheckIp,
-):
+) -> SiteCheck:
+    """
+    Return a sitecheck object for the provided domain,
+    hosting provider and green ip range.
+    """
 
     return gc_models.SiteCheck(
         url=domain,
-        ip="192.30.252.153",
+        ip=green_ip.ip_start,
         data=True,
         green=True,
         hosting_provider_id=hosting_provider.id,
