@@ -81,6 +81,8 @@ class TestDatacenterAdmin:
         sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.save()
         hosting_provider.save()
+        datacenter.user = sample_hoster_user
+        datacenter.save()
 
         gcip_admin = ac_admin.DatacenterAdmin(
             ac_models.Datacenter, admin_site.greenweb_admin

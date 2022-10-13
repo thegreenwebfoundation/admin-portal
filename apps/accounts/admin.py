@@ -955,18 +955,19 @@ class DatacenterAdmin(admin.ModelAdmin):
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
 
-        # import ipdb
+        if object_id is not None:
 
-        # ipdb.set_trace()
-        datacentre = self.model.objects.get(id=object_id)
-        associated_providers_count = datacentre.hostingproviders.all().count()
+            datacentre = self.model.objects.get(id=object_id)
+            associated_providers_count = datacentre.hostingproviders.all().count()
 
-        if associated_providers_count > 1000:
-            extra_context["associated_providers_count"] = associated_providers_count
-            extra_context["associated_providers"] = []
-        else:
-            extra_context["associated_providers_count"] = associated_providers_count
-            extra_context["associated_providers"] = datacentre.hostingproviders.all()
+            if associated_providers_count > 1000:
+                extra_context["associated_providers_count"] = associated_providers_count
+                extra_context["associated_providers"] = []
+            else:
+                extra_context["associated_providers_count"] = associated_providers_count
+                extra_context[
+                    "associated_providers"
+                ] = datacentre.hostingproviders.all()
 
         return super().change_view(
             request,
