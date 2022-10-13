@@ -1,5 +1,6 @@
 {% load admin_helpers %}
 
+
 <fieldset class="module aligned {{ fieldset.classes }}">
     {% if fieldset.name %}<h2>{{ fieldset.name }}</h2>{% endif %}
     {% if fieldset.description %}
@@ -54,3 +55,39 @@
     {% endfor %}
 
 </fieldset>
+{% if fieldset.name == "Datacenter info" %}
+    
+    {% comment %} 
+        We have too many providers to list. Do not try to list them all. 
+    {% endcomment %}
+    {% if associated_providers_count > 1000 %}
+        <h2>Associated Hosting Providers</h2>    
+        <p>There are too many hosting providers using this datacentre to display.</p>
+        <p>If you need to see this please contact support</p>
+    {% endif %}
+
+    {% comment %} 
+        We have some providers listed in this DC, show them.
+    {% endcomment %}
+    {% if associated_providers_count < 1000 and associated_providers %}
+    <h2>Hosting Providers using this datacenter</h2>
+    
+    <ul>
+    {% for provider in associated_providers %}
+        <li>
+            {{ provider.name }}
+        </li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+    
+    {% comment %}
+        We have no datacentres listed at all, say so.
+    {% endcomment %}
+    {% if associated_providers_count == 0 %}
+        <h2>Hosting Providers using this datacenter</h2>
+        <p>No hosting providers registered in our system appear to be using this datacenter
+        </p>
+    {% endif %}
+    
+{% endif %}
