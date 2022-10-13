@@ -63,7 +63,11 @@
     {% if associated_providers_count > 1000 %}
         <h2>Associated Hosting Providers</h2>    
         <p>There are too many hosting providers using this datacentre to display.</p>
-        <p>If you need to see this please contact support</p>
+        <p>If you need to see the full list, please 
+            <a href="https://www.thegreenwebfoundation.org/support-form/">
+            contact support.
+            </a>
+        </p>
     {% endif %}
 
     {% comment %} 
@@ -80,6 +84,11 @@
     {% endfor %}
     </ul>
     {% endif %}
+    <p>If you need to change this, this please 
+        <a href="https://www.thegreenwebfoundation.org/support-form/">
+        contact support.
+        </a>
+    </p>
     
     {% comment %}
         We have no datacentres listed at all, say so.
@@ -88,6 +97,11 @@
         <h2>Hosting Providers using this datacenter</h2>
         <p>No hosting providers registered in our system appear to be using this datacenter
         </p>
+        <p>If you need to change this, this please 
+            <a href="https://www.thegreenwebfoundation.org/support-form/">
+            contact support.
+        </a>
+    </p>
     {% endif %}
     
     <hr / style="margin-bottom:1rem;">
