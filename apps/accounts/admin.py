@@ -149,7 +149,9 @@ class CustomUserAdmin(UserAdmin):
         # what we show for internal staff
         staff_fieldsets = (
             "Permissions",
-            {"fields": ("is_active", "is_staff", "groups"),},
+            {
+                "fields": ("is_active", "is_staff", "groups"),
+            },
         )
 
         # our usual set of forms to show for users
@@ -202,8 +204,7 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
 
 
 class HostingProviderNoteInline(admin.StackedInline):
-    """
-    """
+    """ """
 
     extra = 1
     model = HostingProviderNote
@@ -323,10 +324,8 @@ class HostingAdmin(admin.ModelAdmin):
             messages.add_message(
                 request,
                 messages.WARNING,
-                (
-                    "No user exists for this host, so you will need to "
-                    "add an email manually"
-                ),
+                "No user exists for this host, so you will need to "
+                "add an email manually",
             )
 
         context = dj_template.Context({"host": obj, "recipient": user})
@@ -402,12 +401,16 @@ class HostingAdmin(admin.ModelAdmin):
             if valid and skip_preview:
                 # not doing preview. Run the import
                 completed_importer = form.save()
-        
+
                 context = {
                     "ip_ranges": completed_importer,
                     "provider": provider,
                 }
-                return render(request, "import_csv_results.html", context,)
+                return render(
+                    request,
+                    "import_csv_results.html",
+                    context,
+                )
 
             if valid:
                 # the save default we don't save the contents
@@ -418,7 +421,11 @@ class HostingAdmin(admin.ModelAdmin):
                     "ip_ranges": ip_ranges,
                     "provider": provider,
                 }
-                return render(request, "import_csv_preview.html", context,)
+                return render(
+                    request,
+                    "import_csv_preview.html",
+                    context,
+                )
 
             # otherwise fallback to showing the form with errors,
             # ready for another attempted submission
@@ -429,7 +436,11 @@ class HostingAdmin(admin.ModelAdmin):
                 "provider": provider,
             }
 
-            return render(request, "import_csv_preview.html", context,)
+            return render(
+                request,
+                "import_csv_preview.html",
+                context,
+            )
 
         return redirect("greenweb_admin:accounts_hostingprovider_change", provider.id)
 
@@ -653,7 +664,12 @@ class HostingAdmin(admin.ModelAdmin):
                 "Hostingprovider info",
                 {
                     "fields": (
-                        ("name", "website",), "country", "services",
+                        (
+                            "name",
+                            "website",
+                        ),
+                        "country",
+                        "services",
                     )
                 },
             )
@@ -663,11 +679,15 @@ class HostingAdmin(admin.ModelAdmin):
             "Admin only",
             {
                 "fields": (
-                    ("archived", "showonwebsite", "customer",),
+                    (
+                        "archived",
+                        "showonwebsite",
+                        "customer",
+                    ),
                     ("partner", "model"),
                     ("staff_labels",),
                     ("email_template", "preview_email_button"),
-                    ("start_csv_import_button"),
+                    "start_csv_import_button",
                 )
             },
         )
@@ -732,7 +752,9 @@ class HostingAdmin(admin.ModelAdmin):
     @mark_safe
     def send_button(self, obj):
         url = reverse_admin_name(
-            Hostingprovider, name="send_email", kwargs={"provider": obj.pk},
+            Hostingprovider,
+            name="send_email",
+            kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="sendEmail">Send email</a>'
         return link
@@ -742,7 +764,9 @@ class HostingAdmin(admin.ModelAdmin):
     @mark_safe
     def preview_email_button(self, obj):
         url = reverse_admin_name(
-            Hostingprovider, name="preview_email", kwargs={"provider": obj.pk},
+            Hostingprovider,
+            name="preview_email",
+            kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="sendEmail">Compose message</a>'
         return link
@@ -756,13 +780,15 @@ class HostingAdmin(admin.ModelAdmin):
         of IP ranges.
         """
         url = reverse_admin_name(
-            Hostingprovider, name="start_import_from_csv", kwargs={"provider": obj.pk},
+            Hostingprovider,
+            name="start_import_from_csv",
+            kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="start_csv_import">Import IP Ranges from CSV</a>'
         return link
 
     send_button.short_description = "Import IP Ranges from a CSV file"
-    
+
     @mark_safe
     def html_website(self, obj):
         html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
@@ -874,23 +900,34 @@ class DatacenterAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
     def get_fieldsets(self, request, obj=None):
-        fieldset = [
+        fieldsets = [
             (
                 "Datacenter info",
                 {
                     "fields": (
-                        ("name", "website",),
+                        (
+                            "name",
+                            "website",
+                        ),
                         ("country", "user"),
                         ("pue", "residualheat"),
-                        ("temperature", "temperature_type",),
+                        (
+                            "temperature",
+                            "temperature_type",
+                        ),
                         ("dc12v", "virtual", "greengrid", "showonwebsite"),
                         ("model",),
                     ),
                 },
             ),
-            (None, {"fields": ("hostingproviders",)}),
         ]
-        return fieldset
+        # we only allow green web staff to add hosting providers in the admin
+        # to make these changes
+        if request.user.is_admin:
+            fieldsets.append(
+                ("Associated hosting providers", {"fields": ("hostingproviders",)}),
+            )
+        return fieldsets
 
     def get_inlines(self, request, obj):
         """
