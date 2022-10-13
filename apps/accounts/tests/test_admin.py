@@ -94,12 +94,23 @@ class TestDatacenterAdmin:
         request.user = greenweb_staff_user
 
         inlines = gcip_admin.get_inlines(request, datacenter)
+        fieldsets = gcip_admin.get_fieldsets(request, datacenter)
 
+        fieldset_names = []
+        for fieldset in fieldsets:
+            name, fields = fieldset
+            fieldset_names.append(name)
+
+        # Then they should be able to edit which hosting providers
+        # are associated with the datacentre, and leave notes for other
+        # admin staff
+        assert "Associated hosting providers" in fieldset_names
         assert ac_admin.DatacenterNoteInline in inlines
 
     def test_get_inlines_non_staff(
         self, db, rf, sample_hoster_user, hosting_provider, datacenter
     ):
+        # Given: a end user running a datacentre or hosting provider
         hosting_provider.save()
         sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.save()
@@ -111,12 +122,23 @@ class TestDatacenterAdmin:
         dc_update_path = urls.reverse(
             "greenweb_admin:accounts_datacenter_change", args=[datacenter.id]
         )
+        # When: they visit a datacentre page
         request = rf.get(dc_update_path)
         request.user = sample_hoster_user
 
+        # what fields and fieldets do we have on our change form?
         inlines = gcip_admin.get_inlines(request, datacenter)
+        fieldsets = gcip_admin.get_fieldsets(request, datacenter)
 
+        fieldset_names = []
+        for fieldset in fieldsets:
+            name, fields = fieldset
+            fieldset_names.append(name)
+
+        # Then: they should not be able to add other hosting providers
+        # to the datacentre, or view internal administration notes
         assert ac_admin.DatacenterNoteInline not in inlines
+        assert "Associated hosting providers" not in fieldset_names
 
 
 class TestHostingProviderAdmin:
@@ -183,7 +205,11 @@ class TestHostingProviderAdmin:
         # TODO check that we have our host and user present in the form
 
     def test_send_created_email_for_user_with_provider(
-        self, db, client, hosting_provider_with_sample_user, mailoutbox,
+        self,
+        db,
+        client,
+        hosting_provider_with_sample_user,
+        mailoutbox,
     ):
         """Test that an email can be sent with the information we submit in the form"""
 
@@ -231,7 +257,11 @@ class TestHostingProviderAdmin:
         assert html_alternative[0] == markdown.markdown("Some content goes here")
 
     def test_log_created_email_for_user_with_provider_as_note(
-        self, db, client, hosting_provider_with_sample_user, mailoutbox,
+        self,
+        db,
+        client,
+        hosting_provider_with_sample_user,
+        mailoutbox,
     ):
         """Test that an email can be sent with the information we submit in the form"""
 
@@ -270,7 +300,11 @@ class TestHostingProviderAdmin:
         assert labels[0].name == "welcome-email sent"
 
     @pytest.mark.parametrize(
-        "archived", ((True, 0), (False, 1),),
+        "archived",
+        (
+            (True, 0),
+            (False, 1),
+        ),
     )
     def test_archived_providers_are_hidden_by_default(
         self, db, client, hosting_provider_with_sample_user, archived
@@ -288,7 +322,11 @@ class TestHostingProviderAdmin:
         assert resp.status_code == 200
 
     @pytest.mark.parametrize(
-        "archived", ((True, 1), (False, 0),),
+        "archived",
+        (
+            (True, 1),
+            (False, 0),
+        ),
     )
     def test_archived_providers_hidden_by_seen_with_override_params(
         self, db, client, hosting_provider_with_sample_user, archived
@@ -322,7 +360,8 @@ class TestHostingProviderAdmin:
         client.force_login(greenweb_staff_user)
 
         user_admin_url = urls.reverse(
-            "greenweb_admin:accounts_user_change", args=[user.id],
+            "greenweb_admin:accounts_user_change",
+            args=[user.id],
         )
 
         user_payload_without_provider_allocated = {
@@ -397,4 +436,3 @@ class TestUserCreationAdmin:
         created_user = ac_models.User.objects.get(email=new_user_data["email"])
         for group in created_user.groups.all():
             assert group in provider_groups
-
