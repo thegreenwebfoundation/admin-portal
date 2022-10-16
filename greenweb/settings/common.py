@@ -30,6 +30,7 @@ env = environ.Env(
         str,
         os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
     ),
+    REDIS_HOST=(str, "localhost"),
 )
 
 environ.Env.read_env(".env")  # Read .env
@@ -232,7 +233,7 @@ AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT")
 RABBITMQ_URL = env("RABBITMQ_URL")
 
 # Redis
-REDIS_HOST = env("REDIS_HOST", "localhost")
+REDIS_HOST = env("REDIS_HOST")
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
