@@ -1,7 +1,7 @@
 ---
 - name: Deploy updates for the worker nodes
   hosts:
-    # - app1.thegreenwebfoundation.org
+    - app1.thegreenwebfoundation.org
     - app2.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
@@ -53,23 +53,35 @@
       when:
         compile_assets is true
 
-    - name: Set up script for running workers, via supervisor
+    - name: Set up script for running workers and gunicorn, via supervisor
       ansible.builtin.template:
-        src: "run_worker.sh.j2"
-        dest: "{{ project_root }}/current/run_worker.sh"
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         owner: deploy
         group: deploy
         mode: "0755"
+      loop:
+        - { src: "run_worker.sh.j2", dest: "{{ project_root }}/current/run_worker.sh" }
+        - { src: "run_gunicorn.sh.j2", dest: "{{ project_root }}/current/run_gunicorn.sh" }
       become: true
+      tags:
+        - fixnow
 
-    - name: Set up supervisor entry for workers
+
+    - name: Set up supervisor entries for workers and web
       ansible.builtin.template:
-        src: "supervisor.worker.conf.j2"
-        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf"
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         owner: deploy
         group: deploy
         mode: "0755"
+      loop:
+        - { src: "supervisor.gunicorn.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf" }
+        - { src: "supervisor.worker.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf" }
       become: true
+      tags:
+        - fixnow
+
 
     - name: Trigger restart for worker with supervisor
       ansible.builtin.supervisorctl:

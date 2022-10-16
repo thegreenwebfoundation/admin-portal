@@ -2,7 +2,7 @@
 - name: Deploy the TGWF django admin
   hosts:
     # - app_servers
-    # - app1.thegreenwebfoundation.org
+    - app1.thegreenwebfoundation.org
     - app2.thegreenwebfoundation.org
     # - hel1.thegreenwebfoundation.org
   remote_user: "deploy"
@@ -33,7 +33,7 @@
     supervisor_worker_job: "admin_worker"
     # flag for deciding to compile assets or not
     # this is the slowest deploy step
-    compile_assets: false
+    compile_assets: true
 
   roles:
     - f500.project_deploy
@@ -47,24 +47,37 @@
 
     - name: Assemble assets and related files
       ansible.builtin.include_tasks: "_assemble_deploy_assets.yml"
+      when:
+        compile_assets is true
 
-    - name: Set up script for running gunicorn, via supervisor
+    - name: Set up script for running workers and gunicorn, via supervisor
       ansible.builtin.template:
-        src: "run_gunicorn.sh.j2"
-        dest: "{{ project_root }}/current/run_gunicorn.sh"
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         owner: deploy
         group: deploy
         mode: "0755"
+      loop:
+        - { src: "run_worker.sh.j2", dest: "{{ project_root }}/current/run_worker.sh" }
+        - { src: "run_gunicorn.sh.j2", dest: "{{ project_root }}/current/run_gunicorn.sh" }
       become: true
+      tags:
+        - fixnow
 
-    - name: Set up supervisor entry for web
+    - name: Set up supervisor entries for workers and web
       ansible.builtin.template:
-        src: "supervisor.gunicorn.conf.j2"
-        dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf"
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         owner: deploy
         group: deploy
         mode: "0755"
+      loop:
+        - { src: "supervisor.gunicorn.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf" }
+        - { src: "supervisor.worker.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf" }
       become: true
+      tags:
+        - fixnow
+
 
     - name: Trigger restart for app with supervisor
       ansible.builtin.supervisorctl:

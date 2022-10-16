@@ -5,7 +5,13 @@
 upstream {{ tgwf_domain_name }} {
     # replace with loop, once we have a nice way to keep supervisor and
     # nginx in sync, so we only forward to healthy app servers
-    server localhost:9000;
+
+    # hel1
+    # server localhost:9000;
+    # app1
+    server 10.0.0.4:9000;
+    # app2
+    server 10.0.0.5:9000;
 }
 
 server {
@@ -37,9 +43,10 @@ server {
         proxy_set_header           X-Forwarded-For $proxy_add_x_forwarded_for;
 		proxy_set_header           X-Forwarded-Proto $scheme;
 		proxy_set_header           Host $host;
-		#                          we don't want nginx trying to do something clever with
-		#                          redirects, we set the Host: header above already.
-		proxy_redirect             off;
+
+		# we need this for when we served requests to app servers on different
+        # machines to the server acting as the reverse proxy
+        proxy_redirect redirect replacement;
         proxy_pass http://{{ tgwf_domain_name }};
     }
 
