@@ -9,6 +9,7 @@ from io import TextIOWrapper
 import tld
 import urllib
 from django.utils import timezone
+from django.conf import settings
 from rest_framework import pagination, parsers, request, response, viewsets
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.generics import CreateAPIView
@@ -37,7 +38,9 @@ import redis
 
 logger = logging.getLogger(__name__)
 
-redis_cache = redis.Redis(host="localhost", port=6379, db=0)
+# TODO: switch to using django's native redis library
+# so we do not initialise connectionn in strange place
+redis_cache = redis.Redis(host=settings.REDIS_HOST, port=6379, db=0)
 
 
 checker = GreenDomainChecker()
