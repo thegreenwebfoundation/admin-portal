@@ -10,5 +10,5 @@ command=bash ./run_worker.sh
 process_name=%(process_num)02d
 autostart=true
 autorestart=true
-stopsignal=QUIT
+stopsignal=TERM
 user={{ supervisor_user }}

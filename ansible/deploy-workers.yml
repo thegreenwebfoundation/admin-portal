@@ -2,7 +2,7 @@
 - name: Deploy updates for the worker nodes
   hosts:
     # - app1.thegreenwebfoundation.org
-    # - app2.thegreenwebfoundation.org
+    - app2.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
 
@@ -27,12 +27,15 @@
     # is a workaround
     update_front_end_deps: true
     # For triggering restarts with supervisor
-    supervisor_restart: false
+    supervisor_restart: true
     supervisor_user: "deploy"
     supervisor_gunicorn_app: "admin_web"
     supervisor_worker_job: "admin_worker"
     dramatiq_threads: 3
     dramatiq_processes: 2
+    # flag for deciding to compile assets or not
+    # this is the slowest deploy step
+    compile_assets: false
 
 
   roles:
@@ -47,6 +50,8 @@
 
     - name: Assemble assets and related files
       ansible.builtin.include_tasks: "_assemble_deploy_assets.yml"
+      when:
+        compile_assets is true
 
     - name: Set up script for running workers, via supervisor
       ansible.builtin.template:
