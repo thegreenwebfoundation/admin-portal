@@ -14,3 +14,6 @@ autostart=true
 autorestart=true
 stopsignal=QUIT
 user={{ supervisor_user }}
+
+stdout_logfile=%(program_name)s_%(process_num)02d_.log
+stderr_logfile=%(program_name)s_%(process_num)02d_.error.log

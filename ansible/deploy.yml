@@ -17,10 +17,6 @@
       - .git
     project_finalize: true
 
-    restart_supervisor: true
-    supervisor_user: "deploy"
-    gunicorn_app: "admin_web"
-
     # if an app servers are behind nginx working as reverse proxy, it is not necessary to
     # run nginx on the machine
     use_nginx: false
@@ -30,6 +26,14 @@
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
     update_front_end_deps: true
+
+    supervisor_restart: true
+    supervisor_user: "deploy"
+    supervisor_gunicorn_app: "admin_web"
+    supervisor_worker_job: "admin_worker"
+    # flag for deciding to compile assets or not
+    # this is the slowest deploy step
+    compile_assets: false
 
   roles:
     - f500.project_deploy
@@ -64,7 +68,7 @@
 
     - name: Trigger restart for app with supervisor
       ansible.builtin.supervisorctl:
-        name: "{{ gunicorn_app }}:"
+        name: "{{ supervisor_gunicorn_app }}:"
         state: restarted
       become: true
       when: restart_supervisor is true
