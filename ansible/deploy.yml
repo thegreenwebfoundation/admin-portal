@@ -3,7 +3,7 @@
   hosts:
     # - app_servers
     # - app1.thegreenwebfoundation.org
-    # - app2.thegreenwebfoundation.org
+    - app2.thegreenwebfoundation.org
     # - hel1.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
