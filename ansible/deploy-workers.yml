@@ -65,7 +65,7 @@
         - { src: "run_gunicorn.sh.j2", dest: "{{ project_root }}/current/run_gunicorn.sh" }
       become: true
       tags:
-        - fixnow
+        - supervisor
 
 
     - name: Set up supervisor entries for workers and web
@@ -80,7 +80,7 @@
         - { src: "supervisor.worker.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf" }
       become: true
       tags:
-        - fixnow
+        - supervisor
 
 
     - name: Trigger restart for worker with supervisor
