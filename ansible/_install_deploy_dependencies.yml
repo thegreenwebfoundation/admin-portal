@@ -1,0 +1,36 @@
+---
+- name: Set up venv for pipenv to use. this is needed for the step below to work
+  # without creating the venv in .env, pipenv can't find the version
+  # of python or pip to use, and errors out
+  ansible.builtin.command: "python -m venv .venv"
+  args:
+    chdir: "{{ project_root }}/current"
+  changed_when: false
+
+- name: Install latest version of pipenv
+  ansible.builtin.pip:
+    name: pipenv
+    virtualenv: "{{ project_root }}/current/.venv"
+
+- name: Install python dependencies with pipenv
+  ansible.builtin.command: "python -m pipenv sync" # noqa no-changed-when
+  args:
+    chdir: "{{ project_root }}/current"
+  environment:
+    # make sure we install in the project root.
+    # this way when we clear up old releases we also
+    # remove the deps.
+    # using env vars triggers the 'schema[playbook]', hence the noqa
+    PIPENV_VENV_IN_PROJECT: "1" # noqa schema[playbook]
+
+- name: Update node deps for building tailwind
+  ansible.builtin.command: "python -m pipenv run ./manage.py tailwind update"
+  args:
+    chdir: "{{ project_root }}/current"
+  when: update_front_end_deps is true
+
+- name: Install node deps for building tailwind
+  ansible.builtin.command: "python -m pipenv run ./manage.py tailwind install"
+  args:
+    chdir: "{{ project_root }}/current"
+  changed_when: false

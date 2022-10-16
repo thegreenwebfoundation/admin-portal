@@ -2,8 +2,12 @@
 all:
   hosts:
     app1.thegreenwebfoundation.org:
+      internal_ip: "10.0.0.4"
     app2.thegreenwebfoundation.org:
+      internal_ip: "10.0.0.5"
     hel1.thegreenwebfoundation.org:
+      internal_ip: "10.0.0.3"
+
   vars:
     project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
     tgwf_stage: "prod"
