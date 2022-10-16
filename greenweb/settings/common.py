@@ -231,6 +231,9 @@ AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT")
 
 RABBITMQ_URL = env("RABBITMQ_URL")
 
+# Redis
+REDIS_HOST = env("REDIS_HOST", "localhost")
+
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
