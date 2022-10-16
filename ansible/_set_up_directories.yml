@@ -1,0 +1,27 @@
+---
+- name: Set up directory for deploying django app
+  ansible.builtin.file:
+    path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+    state: directory
+    mode: "0755"
+    owner: deploy
+    group: deploy
+  become: true
+
+- name: Link .env to shared directory
+  ansible.builtin.file:
+    src: "{{ project_root }}/shared/.env"
+    dest: "{{ project_root }}/current/.env"
+    state: link
+
+- name: Link ./media to shared ./media directory
+  ansible.builtin.file:
+    src: "{{ project_root }}/shared/media"
+    dest: "{{ project_root }}/current/media"
+    state: link
+
+- name: Link ./data to shared ./data directory
+  ansible.builtin.file:
+    src: "{{ project_root }}/shared/data"
+    dest: "{{ project_root }}/current/data"
+    state: link

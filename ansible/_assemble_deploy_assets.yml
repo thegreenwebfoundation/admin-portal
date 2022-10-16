@@ -1,0 +1,18 @@
+---
+- name: Build minified tailwind css file
+  ansible.builtin.command: "python -m pipenv run ./manage.py tailwind build"
+  args:
+    chdir: "{{ project_root }}/current"
+  changed_when: false
+
+- name: Build javascript bundle with rollup, using the local config file
+  ansible.builtin.command: "npx rollup --config"
+  args:
+    chdir: "{{ project_root }}/current/apps/theme/static_src"
+  changed_when: false
+
+- name: Collect static files for django
+  ansible.builtin.command: "python -m pipenv run ./manage.py collectstatic --no-input"
+  args:
+    chdir: "{{ project_root }}/current"
+  changed_when: false
