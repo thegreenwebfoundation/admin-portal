@@ -35,6 +35,9 @@
     # this is the slowest deploy step
     compile_assets: true
 
+    # See "dramatiq_threads" and "dramatiq_processes"
+    # in the inventory
+
   roles:
     - f500.project_deploy
 

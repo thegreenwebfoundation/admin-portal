@@ -31,8 +31,11 @@
     supervisor_user: "deploy"
     supervisor_gunicorn_app: "admin_web"
     supervisor_worker_job: "admin_worker"
-    dramatiq_threads: 3
-    dramatiq_processes: 2
+
+
+    # See "dramatiq_threads" and "dramatiq_processes"
+    # in the inventory
+
     # flag for deciding to compile assets or not
     # this is the slowest deploy step
     compile_assets: false
