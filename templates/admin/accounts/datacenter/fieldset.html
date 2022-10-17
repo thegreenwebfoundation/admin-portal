@@ -58,50 +58,35 @@
 {% if fieldset.name == "Datacenter info" %}
     
     {% comment %} 
-        We have too many providers to list. Do not try to list them all. 
+        We have some providers listed in this DC, show them.
     {% endcomment %}
-    {% if associated_providers_count > 1000 %}
-        <h2>Associated Hosting Providers</h2>    
-        <p>There are too many hosting providers using this datacentre to display.</p>
-        <p>If you need to see the full list, please 
+    {% if dc_has_providers %}
+        <h2>Hosting Providers using this datacenter</h2>
+        
+        <ul>
+        {% for provider in associated_providers %}
+            <li>
+                {{ provider.name }}
+            </li>
+        {% endfor %}
+        </ul>
+        <p>If you need to change this, this please 
             <a href="https://www.thegreenwebfoundation.org/support-form/">
             contact support.
             </a>
         </p>
-    {% endif %}
-
-    {% comment %} 
-        We have some providers listed in this DC, show them.
-    {% endcomment %}
-    {% if associated_providers_count < 1000 and associated_providers %}
-    <h2>Hosting Providers using this datacenter</h2>
-    
-    <ul>
-    {% for provider in associated_providers %}
-        <li>
-            {{ provider.name }}
-        </li>
-    {% endfor %}
-    </ul>
-    {% endif %}
-    <p>If you need to change this, this please 
-        <a href="https://www.thegreenwebfoundation.org/support-form/">
-        contact support.
-        </a>
-    </p>
-    
     {% comment %}
         We have no datacentres listed at all, say so.
     {% endcomment %}
-    {% if associated_providers_count == 0 %}
+    {% else  %}
         <h2>Hosting Providers using this datacenter</h2>
         <p>No hosting providers registered in our system appear to be using this datacenter
         </p>
         <p>If you need to change this, this please 
             <a href="https://www.thegreenwebfoundation.org/support-form/">
             contact support.
-        </a>
-    </p>
+            </a>
+        </p>
     {% endif %}
     
     <hr / style="margin-bottom:1rem;">

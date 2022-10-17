@@ -960,14 +960,12 @@ class DatacenterAdmin(admin.ModelAdmin):
             datacentre = self.model.objects.get(id=object_id)
             associated_providers_count = datacentre.hostingproviders.all().count()
 
-            if associated_providers_count > 1000:
-                extra_context["associated_providers_count"] = associated_providers_count
-                extra_context["associated_providers"] = []
-            else:
+            if associated_providers_count:
                 extra_context["associated_providers_count"] = associated_providers_count
                 extra_context[
                     "associated_providers"
                 ] = datacentre.hostingproviders.all()
+                extra_context["dc_has_providers"] = True
 
         return super().change_view(
             request,
