@@ -1,0 +1,63 @@
+---
+- name: Install mariadb libraries for python
+  ansible.builtin.apt:
+    pkg:
+      - build-essential
+      - libmariadb-dev
+      - libmariadbclient-dev
+      - libmariadb3
+      - mariadb-client-10.3
+      - mariadb-client-core-10.3
+      - mariadb-common
+      - mariadb-server-10.3
+      - mariadb-server-core-10.3
+      # - redis-server
+      # - redis-tools
+    state: present
+    update_cache: true
+  become: true
+  when: install_system_reqs is true
+
+- name: Install nginx for reverse proxying and serving static files
+  ansible.builtin.apt:
+    pkg:
+      - build-essential
+      - nginx
+    state: present
+    update_cache: true
+  become: true
+  when: use_nginx is true
+
+- name: Download node source script
+  ansible.builtin.get_url:
+    url: "https://deb.nodesource.com/setup_18.x"
+    dest: "/tmp/setup_18.x.sh"
+    mode: "0755"
+  when: install_node is true
+
+- name: Run node installer as root
+  ansible.builtin.command: "bash /tmp/setup_18.x.sh"
+  when: install_node is true
+  become: true
+
+- name: Install node and npm
+  ansible.builtin.apt:
+    pkg:
+      - nodejs
+    state: present
+    update_cache: true
+  become: true
+  when: install_node is true
+
+- name: Install python libraries
+  ansible.builtin.apt:
+    pkg:
+      - python3-venv
+      - python3-dev
+      - python3-pip
+      - python-is-python3
+      - supervisor
+    state: present
+    update_cache: true
+  become: true
+  when: install_system_reqs is true

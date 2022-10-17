@@ -1,0 +1,30 @@
+---
+- name: Set up directories for deploying django app
+  ansible.builtin.file:
+    path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+    state: directory
+    mode: "0755"
+    owner: deploy
+    group: deploy
+  become: true
+
+- name: Set up media, data directory
+  ansible.builtin.file:
+    path: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/shared/{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: deploy
+    group: deploy
+  loop:
+    - media
+    - data
+  become: true
+
+- name: Move .env file to shared directory
+  ansible.builtin.template:
+    src: "templates/dotenv.j2"
+    dest: "{{ project_root }}/shared/.env"
+    mode: "0755"
+    owner: deploy
+    group: deploy
+  become: true
