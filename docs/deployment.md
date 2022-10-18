@@ -1,13 +1,14 @@
 ## Deployment
+
 ```{admonition} Draft
 As a ... you probably want to deploy your work at some point. The following steps will guide you through the process of deploying your work.
 ```
 
 ### Github conventions
+
 ....
 
 ### Using Ansible
-....
 
 We use Ansible to deploy versions of the site to our servers.
 
@@ -21,8 +22,34 @@ This runs through the following steps:
 - reload the servers
 - if necessary, update nginx
 
+```{mermaid}
+flowchart LR
+
+    request
+    request-->master
+    
+    subgraph gunicorn
+        
+        master-->worker1
+        master-->worker2
+
+        subgraph worker1[worker 1]
+            %% render left to right
+            %% to make them stack
+            direction LR
+            thread1
+            thread2
+        end
+        
+        subgraph worker2[worker 2]
+            %% render left to right
+            %% to make them stack
+            direction LR
+            thread3
+            thread4
+        end
+        
+    end
 
 
-
-
-
+```
