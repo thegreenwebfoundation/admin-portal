@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from taggit.managers import TaggableManager
 from apps.greencheck.models import IpAddressField
+from apps.greencheck.validators import validate_ip_range
 from model_utils.models import TimeStampedModel
 
 
@@ -56,6 +57,9 @@ class ProviderRequestIPRange(models.Model):
 
     def __str__(self):
         return f"{self.location} | {self.start} - {self.end}"
+
+    def clean(self):
+        validate_ip_range(self.start, self.end)
 
 
 class EvidenceType(models.TextChoices):
