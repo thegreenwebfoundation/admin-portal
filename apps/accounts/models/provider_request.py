@@ -6,6 +6,7 @@ from taggit.managers import TaggableManager
 from apps.greencheck.models import IpAddressField
 from apps.greencheck.validators import validate_ip_range
 from model_utils.models import TimeStampedModel
+from . import Hostingprovider
 
 
 class ProviderRequestStatus(models.TextChoices):
@@ -25,8 +26,17 @@ class ProviderRequest(TimeStampedModel):
     )
 
     def __str__(self):
-        return f"ProviderRequest: {self.name}"
+        return f"{self.name}"
 
+
+class ProviderRequestSupplier(models.Model):
+    supplier = models.ForeignKey(Hostingprovider, on_delete=models.CASCADE)
+    # TODO: only allow services defined in the selected supplier
+    services = TaggableManager()
+    request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE, related_name="suppliers")
+
+    def __str__(self):
+        return f"{self.supplier}"
 
 class ProviderRequestLocation(models.Model):
     city = models.CharField(max_length=255)

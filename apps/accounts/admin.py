@@ -12,7 +12,6 @@ from django.shortcuts import redirect, render
 from django.utils.translation import gettext, gettext_lazy as _
 from django.template.loader import render_to_string
 from django import template as dj_template
-from apps.accounts.models.provider_request import ProviderRequestEvidence
 from apps.greencheck.admin import (
     GreencheckASNApprove,
     GreencheckIpApproveInline,
@@ -55,6 +54,7 @@ from .forms import (
     CustomUserCreationForm,
     HostingProviderNoteForm,
     DatacenterNoteNoteForm,
+    ProviderRequestSupplierForm
 )
 from .models import (
     Datacenter,
@@ -75,7 +75,9 @@ from .models import (
     ProviderRequest,
     ProviderRequestASN,
     ProviderRequestIPRange,
-    ProviderRequestLocation
+    ProviderRequestLocation,
+    ProviderRequestEvidence,
+    ProviderRequestSupplier,
 )
 
 logger = logging.getLogger(__name__)
@@ -1063,9 +1065,11 @@ class GWLogEntryAdmin(LogEntryAdmin):
 greenweb_admin.register(Flag, FlagAdmin)
 greenweb_admin.register(LogEntry, GWLogEntryAdmin)
 
+
 class ProviderRequestASNInline(NestedTabularInline):
     model = ProviderRequestASN
     extra = 0
+
 
 class ProviderRequestIPRangeInline(NestedTabularInline):
     model = ProviderRequestIPRange
@@ -1080,15 +1084,31 @@ class ProviderRequestEvidenceInline(NestedTabularInline):
 class ProviderRequestLocationInline(NestedStackedInline):
     model = ProviderRequestLocation
     extra = 0
-    inlines = [ProviderRequestEvidenceInline, ProviderRequestIPRangeInline, ProviderRequestASNInline]
+    inlines = [
+        ProviderRequestEvidenceInline,
+        ProviderRequestIPRangeInline,
+        ProviderRequestASNInline,
+    ]
+
+
+class ProviderRequestSupplierInline(NestedStackedInline):
+    form = ProviderRequestSupplierForm
+    model = ProviderRequestSupplier
+    extra = 0
+    verbose_name = "supplier"
+
+    # TODO: this does not work as expected?
+    def services(self, obj):
+        supplier_services = obj.supplier.services.objects.all().values("id")
+        return ", ".join(o.name for o in obj.services.filter(id__in=supplier_services))
+
 
 
 @admin.register(ProviderRequest, site=greenweb_admin)
 class ProviderRequest(NestedModelAdmin):
-    @admin.display(description='Status')
+    @admin.display(description="Status")
     def status(self, obj):
         return obj.status.value()
 
-    list_display = ('name', 'website', 'status', 'created')
-    inlines = [ProviderRequestLocationInline]
-
+    list_display = ("name", "website", "status", "created")
+    inlines = [ProviderRequestLocationInline, ProviderRequestSupplierInline]

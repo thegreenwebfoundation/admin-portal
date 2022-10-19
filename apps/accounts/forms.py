@@ -159,3 +159,12 @@ class PreviewEmailForm(forms.Form):
 
     # TODO
     # check that we have an email before trying to forwarding to an email service
+
+class ProviderRequestSupplierForm(forms.ModelForm):
+
+    class Meta:
+        model = ac_models.ProviderRequestSupplier
+        fields = "__all__"
+        widgets = {
+            "services": LabelWidget(model=Tag),
+        }
