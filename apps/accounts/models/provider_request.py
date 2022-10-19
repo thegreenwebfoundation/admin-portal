@@ -1,44 +1,48 @@
 from django.db import models
 from django_countries.fields import CountryField
+from django.conf import settings
 from taggit.managers import TaggableManager
-from greencheck.models import IpAddressField
+from apps.greencheck.models import IpAddressField
+from model_utils.models import TimeStampedModel
 
 
 class ProviderRequestStatus(models.TextChoices):
-    # TODO: naming is hard
-    PENDING_REVIEW = "Pending review"
-    ACCEPTED = "Accepted"
-    REJECTED = "Rejected"
-    CHANGES_REQUESTED = "Changes requested"
+    PENDING_REVIEW = "Pending review"  # GWF staff needs to verify the request
+    ACCEPTED = "Accepted"  # GWF staff accepted the request
+    REJECTED = "Rejected"  # GWF staff rejected the request (completely)
+    OPEN = (
+        "Open"  # GWF staff requested some changes from the provider
+    )
 
 
-class ProviderRequest(models.Model):
+class ProviderRequest(TimeStampedModel):
     name = models.CharField(max_length=255)
     website = models.CharField(max_length=255)
     description = models.TextField()
-    status = models.CharField(choices=ProviderRequestStatus.choices)
-
-
-class ProviderRequestASN(models.Model):
-    asn = models.IntegerField()
-    request = models.ForeignKey(ProviderRequest)
-
-
-class ProviderRequestIPRange(models.Model):
-    start = IpAddressField()
-    end = IpAddressField()
-    request = models.ForeignKey(ProviderRequest)
+    status = models.CharField(choices=ProviderRequestStatus.choices, max_length=255)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
 
 
 class ProviderRequestLocation(models.Model):
-    city = models.CharField()
+    city = models.CharField(max_length=255)
     country = CountryField()
     services = TaggableManager(
         verbose_name="Services Offered",
         help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
         blank=True,
     )
-    request = models.ForeignKey(ProviderRequest)
+    request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
+
+
+class ProviderRequestASN(models.Model):
+    asn = models.IntegerField()
+    location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
+
+
+class ProviderRequestIPRange(models.Model):
+    start = IpAddressField()
+    end = IpAddressField()
+    location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
 
 
 class EvidenceType(models.TextChoices):
@@ -48,9 +52,9 @@ class EvidenceType(models.TextChoices):
 
 
 class ProviderRequestEvidence(models.Model):
-    title = models.CharField()
-    # TODO: can link and file be modelled as one, preferably existing abstraction?
-    link = models.URLField()
+    title = models.CharField(max_length=255)
+    # TODO: add validation: link XOR file
+    link = models.URLField(null=True)
     file = models.FileField()
-    location = models.ForeignKey(ProviderRequestLocation)
-    type = models.CharField(choices=EvidenceType.choices)
+    location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
+    type = models.CharField(choices=EvidenceType.choices, max_length=255)
