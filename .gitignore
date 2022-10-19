@@ -154,3 +154,6 @@ staticfiles
 RELEASE
 
 .*venv
+
+# do not track generated docs
+.build
