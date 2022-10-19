@@ -15,6 +15,7 @@ from django.utils.text import capfirst
 from django_mysql import models as dj_mysql_models
 from django_mysql import models as mysql_models
 from model_utils import models as mu_models
+from apps.greencheck.validators import validate_ip_range
 
 from ...accounts import models as ac_models
 from .. import choices as gc_choices
@@ -165,22 +166,6 @@ class GreencheckIp(mu_models.TimeStampedModel):
         ac_models.Hostingprovider, db_column="id_hp", on_delete=models.CASCADE
     )
 
-    @staticmethod
-    def validate_ip_range(ip_start, ip_end):
-        """
-        Validation logic for IP range:
-        do not allow ip_start to be after ip_end.
-
-        This method is defined here as a convenience to allow re-using
-        between GreencheckIp and GreencheckIpApprove models.
-        """
-        start_ip = ipaddress.ip_address(ip_start)
-        end_ip = ipaddress.ip_address(ip_end)
-        if start_ip > end_ip:
-            raise exceptions.ValidationError(
-                "IP range invalid! IP start must be before IP end", code="invalid"
-            )
-
     def clean(self):
         """
         Model-level validation: check if IP range is valid.
@@ -192,7 +177,7 @@ class GreencheckIp(mu_models.TimeStampedModel):
         - ModelForm.is_valid()
         - ModelForm.save()
         """
-        GreencheckIp.validate_ip_range(self.ip_start, self.ip_end)
+        validate_ip_range(self.ip_start, self.ip_end)
 
     def ip_range_length(self) -> int:
         """
@@ -295,7 +280,7 @@ class GreencheckIpApprove(mu_models.TimeStampedModel):
         - Model.full_clean()
         - ModelForm.is_valid()
         """
-        GreencheckIp.validate_ip_range(self.ip_start, self.ip_end)
+        validate_ip_range(self.ip_start, self.ip_end)
 
     # Factories
     def process_approval(self, action):
