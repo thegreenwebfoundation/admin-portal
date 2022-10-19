@@ -12,6 +12,7 @@ from django.shortcuts import redirect, render
 from django.utils.translation import gettext, gettext_lazy as _
 from django.template.loader import render_to_string
 from django import template as dj_template
+from apps.accounts.models.provider_request import ProviderRequestEvidence
 from apps.greencheck.admin import (
     GreencheckASNApprove,
     GreencheckIpApproveInline,
@@ -35,6 +36,7 @@ from dal_select2 import views as dal_select2_views
 
 from waffle.models import Flag
 from waffle.admin import FlagAdmin
+from nested_admin import NestedStackedInline, NestedModelAdmin, NestedTabularInline
 
 from apps.greencheck.models import GreencheckASN
 from apps.greencheck.models import GreencheckIp
@@ -70,6 +72,10 @@ from .models import (
     DatacenterSupportingDocument,
     HostingProviderSupportingDocument,
     SupportMessage,
+    ProviderRequest,
+    ProviderRequestASN,
+    ProviderRequestIPRange,
+    ProviderRequestLocation
 )
 
 logger = logging.getLogger(__name__)
@@ -1056,3 +1062,33 @@ class GWLogEntryAdmin(LogEntryAdmin):
 
 greenweb_admin.register(Flag, FlagAdmin)
 greenweb_admin.register(LogEntry, GWLogEntryAdmin)
+
+class ProviderRequestASNInline(NestedTabularInline):
+    model = ProviderRequestASN
+    extra = 0
+
+class ProviderRequestIPRangeInline(NestedTabularInline):
+    model = ProviderRequestIPRange
+    extra = 0
+
+
+class ProviderRequestEvidenceInline(NestedTabularInline):
+    model = ProviderRequestEvidence
+    extra = 0
+
+
+class ProviderRequestLocationInline(NestedStackedInline):
+    model = ProviderRequestLocation
+    extra = 0
+    inlines = [ProviderRequestEvidenceInline, ProviderRequestIPRangeInline, ProviderRequestASNInline]
+
+
+@admin.register(ProviderRequest, site=greenweb_admin)
+class ProviderRequest(NestedModelAdmin):
+    @admin.display(description='Status')
+    def status(self, obj):
+        return obj.status.value()
+
+    list_display = ('name', 'website', 'status', 'created')
+    inlines = [ProviderRequestLocationInline]
+
