@@ -33,7 +33,6 @@ test.only:
 
 flake:
 	flake8 ./greenweb ./apps ./*.py --count --statistics
-
 black:
 	black ./greenweb ./apps ./*.py $(ARGS)
 
