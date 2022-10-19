@@ -1,6 +1,7 @@
 from django.db import models
 from django_countries.fields import CountryField
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from taggit.managers import TaggableManager
 from apps.greencheck.models import IpAddressField
 from model_utils.models import TimeStampedModel
@@ -10,9 +11,7 @@ class ProviderRequestStatus(models.TextChoices):
     PENDING_REVIEW = "Pending review"  # GWF staff needs to verify the request
     ACCEPTED = "Accepted"  # GWF staff accepted the request
     REJECTED = "Rejected"  # GWF staff rejected the request (completely)
-    OPEN = (
-        "Open"  # GWF staff requested some changes from the provider
-    )
+    OPEN = "Open"  # GWF staff requested some changes from the provider
 
 
 class ProviderRequest(TimeStampedModel):
@@ -20,7 +19,12 @@ class ProviderRequest(TimeStampedModel):
     website = models.CharField(max_length=255)
     description = models.TextField()
     status = models.CharField(choices=ProviderRequestStatus.choices, max_length=255)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
+    )
+
+    def __str__(self):
+        return f"ProviderRequest: {self.name}"
 
 
 class ProviderRequestLocation(models.Model):
@@ -33,16 +37,25 @@ class ProviderRequestLocation(models.Model):
     )
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.request.name} | {self.country}/{self.city}"
+
 
 class ProviderRequestASN(models.Model):
     asn = models.IntegerField()
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.location} | {self.asn}"
 
 
 class ProviderRequestIPRange(models.Model):
     start = IpAddressField()
     end = IpAddressField()
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.location} | {self.start} - {self.end}"
 
 
 class EvidenceType(models.TextChoices):
@@ -53,8 +66,19 @@ class EvidenceType(models.TextChoices):
 
 class ProviderRequestEvidence(models.Model):
     title = models.CharField(max_length=255)
-    # TODO: add validation: link XOR file
-    link = models.URLField(null=True)
-    file = models.FileField()
+    link = models.URLField(null=True, blank=True)
+    file = models.FileField(null=True, blank=True)
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
     type = models.CharField(choices=EvidenceType.choices, max_length=255)
+
+    def __str__(self):
+        return f"{self.location} | {self.title}"
+
+    def clean(self):
+        reason = (
+            "Exactly one of the value for the evidence, link or file, must be provided"
+        )
+        if self.link is None and self.file is None:
+            raise ValidationError(f"{reason}. Neither of them were provided")
+        if self.link and self.file:
+            raise ValidationError(f"{reason}. Both of them were provided")
