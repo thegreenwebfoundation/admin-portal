@@ -47,6 +47,7 @@ requests = ">=2"
 whitenoise = { extras = ["brotli"], version = "==4.1.4" }
 db-to-sqlite = "*"
 sqlite-utils = "*"
+sqlalchemy = "~=1.4"
 sentry-sdk = "*"
 dramatiq = { extras = ["rabbitmq"], version = "*" }
 django-dramatiq = "==v0.10.0"
