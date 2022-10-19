@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "taggit_labels",
     "taggit_serializer",
     "waffle",
+    "nested_admin",
     # UI
     "tailwind",
     "crispy_forms",
