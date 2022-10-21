@@ -66,8 +66,7 @@ class UserUpdateForm(UserChangeForm):
     """
 
     def __init__(self, *args, **kwargs):
-        """
-        """
+        """ """
         super().__init__(*args, **kwargs)
         del self.fields["password"]
 
@@ -79,7 +78,9 @@ class UserUpdateForm(UserChangeForm):
 class HostingAdminForm(forms.ModelForm):
 
     email_template = forms.ModelChoiceField(
-        queryset=ac_models.SupportMessage.objects.all(), required=False, label="email",
+        queryset=ac_models.SupportMessage.objects.all(),
+        required=False,
+        label="email",
     )
 
     class Meta:
@@ -160,11 +161,10 @@ class PreviewEmailForm(forms.Form):
     # TODO
     # check that we have an email before trying to forwarding to an email service
 
+
 class ProviderRequestSupplierForm(forms.ModelForm):
+    services = TagField(required=False, widget=LabelWidget)
 
     class Meta:
         model = ac_models.ProviderRequestSupplier
         fields = "__all__"
-        widgets = {
-            "services": LabelWidget(model=Tag),
-        }

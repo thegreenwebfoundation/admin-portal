@@ -30,19 +30,28 @@ class ProviderRequest(TimeStampedModel):
 
 
 class ProviderRequestSupplier(models.Model):
+    # TODO: add filtering and/or validation to check
+    # that the selected services are offered by the selected supplier.
+
     supplier = models.ForeignKey(Hostingprovider, on_delete=models.CASCADE)
-    # TODO: only allow services defined in the selected supplier
-    services = TaggableManager()
-    request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE, related_name="suppliers")
+    services = TaggableManager(
+        verbose_name="Services used",
+        help_text="Click the services that your organisation uses from the selected supplier. These will be listed in the green web directory.",
+        blank=True,
+    )
+    request = models.ForeignKey(
+        ProviderRequest, on_delete=models.CASCADE, related_name="suppliers"
+    )
 
     def __str__(self):
         return f"{self.supplier}"
+
 
 class ProviderRequestLocation(models.Model):
     city = models.CharField(max_length=255)
     country = CountryField()
     services = TaggableManager(
-        verbose_name="Services Offered",
+        verbose_name="Services offered",
         help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
         blank=True,
     )
