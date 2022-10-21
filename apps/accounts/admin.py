@@ -54,7 +54,7 @@ from .forms import (
     CustomUserCreationForm,
     HostingProviderNoteForm,
     DatacenterNoteNoteForm,
-    ProviderRequestSupplierForm
+    ProviderRequestSupplierForm,
 )
 from .models import (
     Datacenter,
@@ -1096,19 +1096,13 @@ class ProviderRequestSupplierInline(NestedStackedInline):
     model = ProviderRequestSupplier
     extra = 0
     verbose_name = "supplier"
-
-    # TODO: this does not work as expected?
-    def services(self, obj):
-        supplier_services = obj.supplier.services.objects.all().values("id")
-        return ", ".join(o.name for o in obj.services.filter(id__in=supplier_services))
-
+    autocomplete_fields = ("supplier",)
 
 
 @admin.register(ProviderRequest, site=greenweb_admin)
 class ProviderRequest(NestedModelAdmin):
-    @admin.display(description="Status")
-    def status(self, obj):
-        return obj.status.value()
-
     list_display = ("name", "website", "status", "created")
     inlines = [ProviderRequestLocationInline, ProviderRequestSupplierInline]
+    empty_value_display = "(empty)"
+    list_filter = ("status",)
+    readonly_fields = ("created_by",)
