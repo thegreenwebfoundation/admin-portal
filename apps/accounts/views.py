@@ -1,7 +1,9 @@
 import waffle
+from waffle.mixins import WaffleFlagMixin
 from django.contrib import messages
 from django.contrib.auth.models import Group
-from django.http import HttpResponseRedirect
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.utils.encoding import force_text
 from django.views.generic import UpdateView
@@ -15,7 +17,7 @@ from django_registration.exceptions import ActivationError
 from django_registration.forms import RegistrationFormCaseInsensitive
 
 from .forms import UserUpdateForm
-from .models import User
+from .models import User, ProviderRequest
 
 
 class RegistrationForm(RegistrationFormCaseInsensitive):
@@ -109,3 +111,15 @@ class UserUpdateView(UpdateView):
     def get(self, request, *args, **kwargs):
         """Handle GET requests: instantiate a blank version of the form."""
         return super().get(request, args, kwargs)
+
+
+class ProviderRequestView(LoginRequiredMixin, WaffleFlagMixin, TemplateView):
+
+    template_name = "provider_request.html"
+    waffle_flag = "provider_request"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context["provider_requests"] = ProviderRequest.objects.filter(created_by=user)
+        return context
