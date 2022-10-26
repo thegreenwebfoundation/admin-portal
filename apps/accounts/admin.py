@@ -28,6 +28,9 @@ from logentry_admin.admin import (
 import rich
 
 from taggit.models import Tag
+from taggit.managers import TaggableManager
+from taggit_labels.widgets import LabelWidget
+
 import logging
 import markdown
 
@@ -54,7 +57,6 @@ from .forms import (
     CustomUserCreationForm,
     HostingProviderNoteForm,
     DatacenterNoteNoteForm,
-    ProviderRequestSupplierForm,
 )
 from .models import (
     Datacenter,
@@ -1089,14 +1091,15 @@ class ProviderRequestLocationInline(NestedStackedInline):
         ProviderRequestIPRangeInline,
         ProviderRequestASNInline,
     ]
+    formfield_overrides = {TaggableManager: {"widget": LabelWidget}}
 
 
 class ProviderRequestSupplierInline(NestedStackedInline):
-    form = ProviderRequestSupplierForm
     model = ProviderRequestSupplier
     extra = 0
     verbose_name = "supplier"
     autocomplete_fields = ("supplier",)
+    formfield_overrides = {TaggableManager: {"widget": LabelWidget}}
 
 
 @admin.register(ProviderRequest, site=greenweb_admin)
