@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django_countries.fields import CountryField
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -27,6 +28,9 @@ class ProviderRequest(TimeStampedModel):
 
     def __str__(self):
         return f"{self.name}"
+
+    def get_absolute_url(self):
+        return reverse("provider_request_detail", args=[str(self.id)])
 
 
 class ProviderRequestSupplier(models.Model):
@@ -66,7 +70,7 @@ class ProviderRequestASN(models.Model):
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.location} | {self.asn}"
+        return f"{self.asn}"
 
 
 class ProviderRequestIPRange(models.Model):
@@ -75,7 +79,7 @@ class ProviderRequestIPRange(models.Model):
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.location} | {self.start} - {self.end}"
+        return f"{self.start} - {self.end}"
 
     def clean(self):
         validate_ip_range(self.start, self.end)
@@ -95,7 +99,7 @@ class ProviderRequestEvidence(models.Model):
     type = models.CharField(choices=EvidenceType.choices, max_length=255)
 
     def __str__(self):
-        return f"{self.location} | {self.title}"
+        return f"{self.title} ({self.type})"
 
     def clean(self):
         reason = (

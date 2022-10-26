@@ -1105,4 +1105,3 @@ class ProviderRequest(NestedModelAdmin):
     inlines = [ProviderRequestLocationInline, ProviderRequestSupplierInline]
     empty_value_display = "(empty)"
     list_filter = ("status",)
-    readonly_fields = ("created_by",)
