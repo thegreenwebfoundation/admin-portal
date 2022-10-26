@@ -7,7 +7,8 @@ from apps.accounts.views import (
     AdminRegistrationView,
     DashboardView,
     UserUpdateView,
-    ProviderRequestView,
+    ProviderRequestListView,
+    ProviderRequestDetailView,
 )
 
 urlpatterns = [
@@ -53,5 +54,10 @@ urlpatterns = [
         name="password_reset_complete",
     ),
     path("user/<pk>/", UserUpdateView.as_view(), name="user_edit"),
-    path("requests/", ProviderRequestView.as_view(), name="provider_request"),
+    path("requests/", ProviderRequestListView.as_view(), name="provider_request_list"),
+    path(
+        "requests/<pk>/",
+        ProviderRequestDetailView.as_view(),
+        name="provider_request_detail",
+    ),
 ]

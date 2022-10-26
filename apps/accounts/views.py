@@ -3,10 +3,10 @@ from waffle.mixins import WaffleFlagMixin
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.encoding import force_text
-from django.views.generic import UpdateView
+from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
 from django_registration import signals
 from django_registration.backends.activation.views import (
@@ -113,13 +113,14 @@ class UserUpdateView(UpdateView):
         return super().get(request, args, kwargs)
 
 
-class ProviderRequestView(LoginRequiredMixin, WaffleFlagMixin, TemplateView):
+class ProviderRequestListView(LoginRequiredMixin, WaffleFlagMixin, ListView):
 
-    template_name = "provider_request.html"
+    template_name = "provider_request/list.html"
     waffle_flag = "provider_request"
+    model = ProviderRequest
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        context["provider_requests"] = ProviderRequest.objects.filter(created_by=user)
-        return context
+
+class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView):
+    template_name = "provider_request/detail.html"
+    waffle_flag = "provider_request"
+    model = ProviderRequest
