@@ -1,5 +1,7 @@
 import requests
 
+import logging
+import json
 from datetime import datetime, timedelta
 from . import object_storage
 
@@ -11,9 +13,31 @@ class MicrosoftBucketUpdater:
         self.bucket_url_prefix = "data-imports/microsoft-network-ranges-"
         self.file_extension = ".json"
 
-    def search_for_dataset(self) -> dict:
+    def initiate_update_bucket(self) -> bool:
         """
-        Searching for an endpoint from Microsoft that returns a dataset containing
+        Initiate the process of searching, retrieving and uploading the latest version
+        of Microsof's dataset containing all active network ranges.
+
+        Return bool: True when the full process was successful, False otherwise
+        """
+        # Search
+        url = self.search_for_dataset()
+
+        if url:
+            # Retrieve
+            dataset = self.retrieve_dataset(url)
+
+            # Upload
+            return self.upload_dataset_to_bucket(dataset)
+        else:
+            logging.error(
+                "Microsoft bucket updater: No newer dataset found on the server."
+            )
+            return False
+
+    def search_for_dataset(self) -> str:
+        """
+        Searching Microsoft's server for an endpoint that returns a dataset containing
         active network (IP/ASN) ranges.
 
         Searching is being done by doing a HTTP request to a specific address and
@@ -23,7 +47,8 @@ class MicrosoftBucketUpdater:
         latest version of the dataset first, in the case of having multiple endpoints
         active at once.
 
-        Return: dict (representing a dataset from Microsoft containing active IP ranges)
+        Return str: Representing a url from Microsoft that returns a dataset
+        containing active IP ranges
         """
         # Set a range to start searching from:
         # - pivot : iterable date, starting with today
@@ -40,8 +65,7 @@ class MicrosoftBucketUpdater:
 
         # Search backwards in time by trying out addresses with a specific ending date
         # postfixed
-        # The search is succesful when a working endpoint is found and a dataset is
-        # being returned.
+        # The search is succesful when a working endpoint is found and returned.
         while (date_pivot >= date_until) and duration_between_last_updated > timedelta(
             days=1
         ):
@@ -50,7 +74,7 @@ class MicrosoftBucketUpdater:
 
             if response.status_code == 200:
                 # Dataset found
-                return {"url": tmp_url, "date": date_pivot, "data": response.json()}
+                return tmp_url
             else:
                 # No dataset found:
                 # move the pivot and try the day before that
@@ -58,19 +82,29 @@ class MicrosoftBucketUpdater:
 
         return None
 
-    def update_bucket(self):
+    def retrieve_dataset(self, url) -> json:
         """
-        A updater that overwrites the dataset file in object storage.
-        This file represents the network (IP/ASN) ranges from this hosting provider.
+        Retrieve the dataset from a given url.
+
+        Return json: Containing the data
         """
-        dataset = self.search_for_dataset()
+        response = requests.get(url)
+        return response.json()
 
-        if dataset:
-            bucket_name = "roald-testing-bucket"
-            data = dataset["data"]
-            file_name = self.format_date_to_url(datetime.now(), self.bucket_url_prefix)
+    def upload_dataset_to_bucket(self, dataset) -> bool:
+        """
+        Uploads a given dataset to the bucket.
+        This dataset represents the network (IP/ASN) ranges from the hosting provider.
 
-            object_storage.upload_json_file_to_bucket(bucket_name, data, file_name)
+        Return bool: True if successfully uploaded, False otherwise
+        """
+        # TODO: remove personal creds
+        bucket_name = "roald-testing-bucket"
+        data = dataset["data"]
+        file_name = self.format_date_to_url(datetime.now(), self.bucket_url_prefix)
+
+        # TODO: Test if this function works
+        return object_storage.upload_file_to_bucket(data, file_name, bucket_name)
 
     def retrieve_delta_last_updated(self) -> timedelta:
         """
@@ -84,6 +118,9 @@ class MicrosoftBucketUpdater:
         Knowing the difference between these dates is particularly useful for knowing
         how far we can search back and get a updated version. Searching further than
         that (today - delta) only retrieves an outdated version of the dataset.
+
+        Return timedelta: The time between today and the last updated object in
+        object storage
         """
         # Get bucket and retrieve items that match the prefix of the file
         bucket = object_storage.bucket_green_domains()
@@ -104,13 +141,17 @@ class MicrosoftBucketUpdater:
     def format_url_to_date(self, url: str, url_prefix: str) -> datetime:
         """
         Format an url str to datetime format given a prefix
+
+        Return datetime: Representing the extracted date
         """
         return datetime.strptime(
-            url[len(url_prefix) : len(url) - len(self.file_extension)], "%Y%m%d"
+            url[len(url_prefix): len(url) - len(self.file_extension)], "%Y%m%d"
         )
 
     def format_date_to_url(self, date: datetime, url_prefix: str) -> str:
         """
-        Format a datetime to url string format
+        Format a datetime to a string format that follows the servers pattern
+
+        Return str: Representing an url to execute a HTTP request on
         """
         return url_prefix + date.strftime("%Y%m%d") + self.file_extension
