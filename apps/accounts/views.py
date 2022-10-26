@@ -119,8 +119,14 @@ class ProviderRequestListView(LoginRequiredMixin, WaffleFlagMixin, ListView):
     waffle_flag = "provider_request"
     model = ProviderRequest
 
+    def get_queryset(self):
+        return ProviderRequest.objects.filter(created_by=self.request.user)
+
 
 class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView):
     template_name = "provider_request/detail.html"
     waffle_flag = "provider_request"
     model = ProviderRequest
+
+    def get_queryset(self):
+        return ProviderRequest.objects.filter(created_by=self.request.user)
