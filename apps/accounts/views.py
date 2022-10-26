@@ -3,6 +3,7 @@ from waffle.mixins import WaffleFlagMixin
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.encoding import force_text
@@ -114,19 +115,32 @@ class UserUpdateView(UpdateView):
 
 
 class ProviderRequestListView(LoginRequiredMixin, WaffleFlagMixin, ListView):
+    """
+    List view for ProviderRequests:
+    - used by external (non-staff) users to access a list of requests they submitted,
+    - renders the list of requests on a HTML template,
+    - requires the flag `provider_request` enabled for the user (otherwise returns 404).
+    """
 
     template_name = "provider_request/list.html"
     waffle_flag = "provider_request"
     model = ProviderRequest
 
-    def get_queryset(self):
+    def get_queryset(self) -> "QuerySet[ProviderRequest]":
         return ProviderRequest.objects.filter(created_by=self.request.user)
 
 
 class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView):
+    """
+    Detail view for ProviderRequests:
+    - used by external (non-staff) users to view a summary of a single request they submitted,
+    - renders a single provider request on a HTML template,
+    - requires the flag `provider_request` enabled for the user (otherwise returns 404).
+    """
+
     template_name = "provider_request/detail.html"
     waffle_flag = "provider_request"
     model = ProviderRequest
 
-    def get_queryset(self):
+    def get_queryset(self) -> "QuerySet[ProviderRequest]":
         return ProviderRequest.objects.filter(created_by=self.request.user)

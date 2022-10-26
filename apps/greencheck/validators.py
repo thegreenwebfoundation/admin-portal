@@ -1,8 +1,11 @@
 import ipaddress
+from typing import Union
 from django.core import exceptions
 
+IpAddress = Union[str, int]
 
-def validate_ip_range(ip_start, ip_end):
+
+def validate_ip_range(ip_start: IpAddress, ip_end: IpAddress) -> None:
     """
     Validation logic for IP range:
     do not allow ip_start to be after ip_end.

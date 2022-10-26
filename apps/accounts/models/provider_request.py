@@ -26,10 +26,10 @@ class ProviderRequest(TimeStampedModel):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}"
 
-    def get_absolute_url(self):
+    def get_absolute_url(self) -> str:
         return reverse("provider_request_detail", args=[str(self.id)])
 
 
@@ -47,7 +47,7 @@ class ProviderRequestSupplier(models.Model):
         ProviderRequest, on_delete=models.CASCADE, related_name="suppliers"
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.supplier}"
 
 
@@ -61,7 +61,7 @@ class ProviderRequestLocation(models.Model):
     )
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.request.name} | {self.country}/{self.city}"
 
 
@@ -69,7 +69,7 @@ class ProviderRequestASN(models.Model):
     asn = models.IntegerField()
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.asn}"
 
 
@@ -78,10 +78,10 @@ class ProviderRequestIPRange(models.Model):
     end = IpAddressField()
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.start} - {self.end}"
 
-    def clean(self):
+    def clean(self) -> None:
         validate_ip_range(self.start, self.end)
 
 
@@ -98,10 +98,10 @@ class ProviderRequestEvidence(models.Model):
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
     type = models.CharField(choices=EvidenceType.choices, max_length=255)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.title} ({self.type})"
 
-    def clean(self):
+    def clean(self) -> None:
         reason = (
             "Exactly one of the value for the evidence, link or file, must be provided"
         )
