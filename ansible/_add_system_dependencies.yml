@@ -61,3 +61,7 @@
     update_cache: true
   become: true
   when: install_system_reqs is true
+
+- name: Install pipenv libraries
+  ansible.builtin.command: "python -m pip install pipenv wheel"
+  when: install_system_reqs is true

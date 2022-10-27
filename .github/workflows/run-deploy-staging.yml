@@ -1,9 +1,12 @@
-name: Deploy
+name: Deploy to staging environment
 
 on:
   push:
+    # TODO: decide whether we should to
+    # parameterize our deploy script instead of
+    # duplicating the action
     branches:
-      - master
+      - staging
 
 defaults:
   run:
@@ -12,7 +15,7 @@ defaults:
 
 jobs:
   deploy:
-    environment: prod
+    environment: staging
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
@@ -28,12 +31,12 @@ jobs:
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: ./ansible/deploy.yml
+          playbook: ./ansible/deploy-staging.yml
           directory: ./
           key: ${{secrets.SSH_PRIVATE_KEY}}
           inventory: |
           options: |
-            --inventory ./ansible/inventories/prod.yml
+            --inventory ./ansible/inventories/staging.yml
         env:
           ANSIBLE_STDOUT_CALLBACK: yaml
           PYTHONDONTWRITEBYTECODE: 1
@@ -45,7 +48,7 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ENVIRONMENT: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ENVIRONMENT: ${{ secrets.SENTRY_ENVIRONMENT }}
           OBJECT_STORAGE_ENDPOINT: ${{ secrets.OBJECT_STORAGE_ENDPOINT }}
           OBJECT_STORAGE_REGION: ${{ secrets.OBJECT_STORAGE_REGION }}
           OBJECT_STORAGE_ACCESS_KEY_ID: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY_ID }}
