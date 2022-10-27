@@ -1,9 +1,10 @@
 ---
 - name: Deploy the TGWF django admin
   hosts:
-    # - app_servers
-    - app1.thegreenwebfoundation.org
-    - app2.thegreenwebfoundation.org
+    - app_servers
+    # - app1.thegreenwebfoundation.org
+    # - app2.thegreenwebfoundation.org
+    # - app3.thegreenwebfoundation.org
     # - hel1.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
@@ -29,8 +30,7 @@
 
     supervisor_restart: true
     supervisor_user: "deploy"
-    supervisor_gunicorn_app: "admin_web"
-    supervisor_worker_job: "admin_worker"
+
     # flag for deciding to compile assets or not
     # this is the slowest deploy step
     compile_assets: true
