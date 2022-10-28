@@ -21,3 +21,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "localhost"
 EMAIL_PORT = 1025
 SITE_URL = "http://localhost:9000"
+
+DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-test"
+
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
