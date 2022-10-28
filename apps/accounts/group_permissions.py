@@ -201,3 +201,34 @@ def populate_group_permissions_2022_08_05(apps, schema_editor):
     admin.permissions.add(*datacenter_perms)
     admin.permissions.add(*hoster_perms)
 
+
+def group_permissions_2022_10_28_provider_request_add(apps, schema_editor):
+    """
+    Explicitly grant all permissions for provider_request to the admin group
+    """
+
+    admin, _ = Group.objects.get_or_create(name="admin")
+    pr_perms_codenames = [
+        "add_providerrequest",
+        "change_providerrequest",
+        "view_providerrequest",
+    ]
+    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
+
+    admin.permissions.add(*pr_perms)
+
+
+def group_permissions_2022_10_28_provider_request_revert(apps, schema_editor):
+    """
+    Explicitly revert all permissions for provider_request to the admin group
+    """
+
+    admin, _ = Group.objects.get_or_create(name="admin")
+    pr_perms_codenames = [
+        "add_providerrequest",
+        "change_providerrequest",
+        "view_providerrequest",
+    ]
+    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
+
+    admin.permissions.remove(*pr_perms)
