@@ -9,7 +9,9 @@ from apps.accounts.views import (
     UserUpdateView,
     ProviderRequestListView,
     ProviderRequestDetailView,
+    ProviderRegistrationView,
 )
+from apps.accounts.forms import RegistrationForm1, RegistrationForm2
 
 urlpatterns = [
     path(
@@ -56,8 +58,13 @@ urlpatterns = [
     path("user/<pk>/", UserUpdateView.as_view(), name="user_edit"),
     path("requests/", ProviderRequestListView.as_view(), name="provider_request_list"),
     path(
-        "requests/<pk>/",
+        "requests/<int:pk>/",
         ProviderRequestDetailView.as_view(),
         name="provider_request_detail",
+    ),
+    path(
+        "requests/new/",
+        ProviderRegistrationView.as_view([RegistrationForm1, RegistrationForm2]),
+        name="provider_registration",
     ),
 ]

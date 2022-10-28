@@ -2,16 +2,14 @@ import datetime
 
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
-
 from django.contrib.auth import get_user_model
-
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, UsernameField
 
+from django_countries.fields import CountryField
 from taggit.forms import TagField
 from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
-
 
 from . import models as ac_models
 
@@ -164,6 +162,7 @@ class PreviewEmailForm(forms.Form):
     # check that we have an email before trying to forwarding to an email service
 
 
+<<<<<<< HEAD
 class InlineSupportingDocumentForm(forms.ModelForm):
     """
     A custom form for listing and uploading supporting documents
@@ -188,3 +187,36 @@ class InlineSupportingDocumentForm(forms.ModelForm):
     class Meta:
         model = ac_models.HostingProviderSupportingDocument
         fields = "__all__"
+=======
+class RegistrationForm1(forms.Form):
+    name = forms.CharField(
+        max_length=255,
+        label="Name",
+        help_text="What is the brand or commonly used name for this provider? This will be the name listed in the directory",
+    )
+    website = forms.URLField(
+        max_length=255,
+        label="Web address",
+        help_text="Add the full URL - don't forget the https:// part",
+    )
+    description = forms.CharField(
+        label="Description",
+        help_text="Add the description for this organisation, as you would expect to see it in the search results",
+        widget=forms.Textarea,
+    )
+    country = CountryField().formfield(
+        label="Country",
+        blank_label="Select country",
+        help_text="Which country is this provider based in?",
+    )
+    city = forms.CharField(max_length=255, label="City", help_text="Add the city")
+    services = TagField(widget=LabelWidget)
+
+
+class RegistrationForm2(forms.Form):
+    location = forms.CharField(
+        max_length=255,
+        label="Location",
+        help_text="TODO",
+    )
+>>>>>>> 687fc36 (Install and enable django-formtools, add first basic form)

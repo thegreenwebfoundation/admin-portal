@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     "nested_admin",
     "django_filters",
     "django_admin_multiple_choice_list_filter",
+    "formtools",
     # UI
     "tailwind",
     "crispy_forms",
