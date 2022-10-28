@@ -88,6 +88,7 @@ dateutils = "*"
 django-filter = "*"
 django-sql-explorer = "*"
 django-admin-multiple-choice-list-filter = "*"
+django-formtools = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.

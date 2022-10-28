@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.encoding import force_text
 from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
+from django.shortcuts import render
 from django_registration import signals
 from django_registration.backends.activation.views import (
     ActivationView,
@@ -16,6 +17,7 @@ from django_registration.backends.activation.views import (
 )
 from django_registration.exceptions import ActivationError
 from django_registration.forms import RegistrationFormCaseInsensitive
+from formtools.wizard.views import SessionWizardView
 
 from .forms import UserUpdateForm
 from .models import User, ProviderRequest
@@ -144,3 +146,14 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
 
     def get_queryset(self) -> "QuerySet[ProviderRequest]":
         return ProviderRequest.objects.filter(created_by=self.request.user)
+
+
+class ProviderRegistrationView(SessionWizardView):
+    def done(self, form_list, **kwargs):
+        return render(
+            self.request,
+            "done.html",
+            {
+                "form_data": [form.cleaned_data for form in form_list],
+            },
+        )
