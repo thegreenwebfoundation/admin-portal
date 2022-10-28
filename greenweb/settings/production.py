@@ -35,9 +35,26 @@ AWS_S3_ENDPOINT_URL = env("OBJECT_STORAGE_ENDPOINT")  # noqa
 
 # report when things asplode
 sentry_dsn = os.environ.get("SENTRY_DSN", False)  # noqa
+
+# Set to a value between 0 for 0% of request and
+# 1.0 to capture 100% of requests and annotate
+# them with traces for performance monitoring.
+# This generates *a lot* of data, so its better to
+# sample at a lower value, or only activate this
+# on specific environments
+
+# For more:
+# https://docs.sentry.io/platforms/python/guides/django/
+# https://docs.sentry.io/platforms/python/guides/django/performance/
+sentry_sample_rate = os.environ.get("SENTRY_SAMPLE_RATE", 0)  # noqa
+
 if sentry_dsn:
     sentry_sdk.init(
+        # set our identifying credentials
         dsn=sentry_dsn,
+        # Set traces_sample_rate.
+        traces_sample_rate=sentry_sample_rate,
+        # activate the django specific integrations for sentry
         integrations=[DjangoIntegration()],
         # We assume that is a user is logged in, we want to be able
         # to see who is having a bad day, so we can contact them and
