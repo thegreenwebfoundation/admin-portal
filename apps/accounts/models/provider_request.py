@@ -11,13 +11,32 @@ from . import Hostingprovider
 
 
 class ProviderRequestStatus(models.TextChoices):
-    PENDING_REVIEW = "Pending review"  # GWF staff needs to verify the request
-    ACCEPTED = "Accepted"  # GWF staff accepted the request
-    REJECTED = "Rejected"  # GWF staff rejected the request (completely)
-    OPEN = "Open"  # GWF staff requested some changes from the provider
+    """
+    Status of the ProviderRequest, exposed to both: end users and staff.
+    Some status change (PENDING_REVIEW -> ACCEPTED) will be later used to trigger
+    automatic creation of the different resources in the system.
+
+    Meaning of each value:
+    - PENDING_REVIEW: GWF staff needs to verify the request
+    - ACCEPTED: GWF staff accepted the request
+    - REJECTED: GWF staff rejected the request (completely)
+    - OPEN: GWF staff requested some changes from the provider
+    """
+
+    PENDING_REVIEW = "Pending review"
+    ACCEPTED = "Accepted"
+    REJECTED = "Rejected"
+    OPEN = "Open"
 
 
 class ProviderRequest(TimeStampedModel):
+    """
+    Model representing the input data
+    as submitted by the provider to our system,
+    when they want to include their information into our dataset.
+
+    """
+
     name = models.CharField(max_length=255)
     website = models.CharField(max_length=255)
     description = models.TextField()
@@ -34,6 +53,12 @@ class ProviderRequest(TimeStampedModel):
 
 
 class ProviderRequestSupplier(models.Model):
+    """
+    Intermediate abstraction to model a relationship between:
+    - a new ProviderRequest, and
+    - existing Hostingprovider that supplies some services to them.
+    """
+
     # TODO: add filtering and/or validation to check
     # that the selected services are offered by the selected supplier.
 
@@ -52,6 +77,11 @@ class ProviderRequestSupplier(models.Model):
 
 
 class ProviderRequestLocation(models.Model):
+    """
+    Each ProviderRequest may be connected to many ProviderRequestLocations,
+    in which the new provider offers services.
+    """
+
     city = models.CharField(max_length=255)
     country = CountryField()
     services = TaggableManager(
@@ -66,6 +96,10 @@ class ProviderRequestLocation(models.Model):
 
 
 class ProviderRequestASN(models.Model):
+    """
+    ASN number that is available to the provider in a specific location.
+    """
+
     asn = models.IntegerField()
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
 
@@ -74,6 +108,10 @@ class ProviderRequestASN(models.Model):
 
 
 class ProviderRequestIPRange(models.Model):
+    """
+    IP range that is available to the provider in a specific location.
+    """
+
     start = IpAddressField()
     end = IpAddressField()
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
@@ -86,12 +124,21 @@ class ProviderRequestIPRange(models.Model):
 
 
 class EvidenceType(models.TextChoices):
+    """
+    Type of the supporting evidence, that certifies that green energy is used
+    """
+
     ANNUAL_REPORT = "Annual report"
     WEB_PAGE = "Web page"
     CERTIFICATE = "Certificate"
 
 
 class ProviderRequestEvidence(models.Model):
+    """
+    Document that certifies that green energy is used in a specific location
+    operated by the provider.
+    """
+
     title = models.CharField(max_length=255)
     link = models.URLField(null=True, blank=True)
     file = models.FileField(null=True, blank=True)
@@ -105,7 +152,7 @@ class ProviderRequestEvidence(models.Model):
         reason = (
             "Exactly one of the value for the evidence, link or file, must be provided"
         )
-        if self.link is None and self.file is None:
+        if self.link is None and not bool(self.file):
             raise ValidationError(f"{reason}. Neither of them were provided")
-        if self.link and self.file:
+        if self.link and bool(self.file):
             raise ValidationError(f"{reason}. Both of them were provided")

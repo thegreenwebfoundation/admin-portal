@@ -7,7 +7,13 @@ from django.contrib.auth import get_user_model
 
 from django.contrib.auth import models as auth_models
 
-from apps.accounts.models import Hostingprovider, Datacenter
+from apps.accounts.models import (
+    Hostingprovider,
+    Datacenter,
+    ProviderRequest,
+    ProviderRequestStatus,
+    ProviderRequestLocation,
+)
 from apps.greencheck.models import GreencheckIp, GreencheckASN
 
 # from apps.greencheck.management.commands import update_aws_ip_ranges
@@ -141,7 +147,11 @@ def green_ip(hosting_provider):
 @pytest.fixture
 def green_asn(hosting_provider):
     hosting_provider.save()
-    return GreencheckASN(active=True, asn=12345, hostingprovider=hosting_provider,)
+    return GreencheckASN(
+        active=True,
+        asn=12345,
+        hostingprovider=hosting_provider,
+    )
 
 
 @pytest.fixture
@@ -166,3 +176,22 @@ def worker(broker):
     worker.start()
     yield worker
     worker.stop()
+
+
+@pytest.fixture()
+def provider_request(sample_hoster_user):
+    return ProviderRequest(
+        name="test provider request",
+        website="www.example.com",
+        description="I want to join GWF dataset",
+        status=ProviderRequestStatus.PENDING_REVIEW,
+        created_by=sample_hoster_user,
+    )
+
+
+@pytest.fixture()
+def provider_request_location(provider_request):
+    provider_request.save()
+    return ProviderRequestLocation(
+        city="Berlin", country="DE", services=None, request=provider_request
+    )
