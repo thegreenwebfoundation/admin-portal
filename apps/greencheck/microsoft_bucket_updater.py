@@ -1,5 +1,4 @@
 import requests
-
 import logging
 import json
 from datetime import datetime, timedelta
@@ -28,7 +27,9 @@ class MicrosoftBucketUpdater:
             dataset = self.retrieve_dataset(url)
 
             # Upload
-            return self.upload_dataset_to_bucket(dataset)
+            return self.upload_dataset_to_bucket(
+                dataset, self.format_url_to_date(url, self.bucket_url_prefix)
+            )
         else:
             logging.error(
                 "Microsoft bucket updater: No newer dataset found on the server."
@@ -56,6 +57,12 @@ class MicrosoftBucketUpdater:
         date_pivot = datetime.now()
         duration_between_last_updated = self.retrieve_delta_last_updated()
         date_until = date_pivot - duration_between_last_updated
+
+        if date_until > 30:
+            raise RuntimeWarning(
+                """Searching window is abnormally big. Endpoint is 
+            either not showing support or something else might be wrong."""
+            )
 
         # Return the value of delta given that it is greater or equal than one day
         # If an update already occurred within the 24hours of now, then return one day
@@ -91,7 +98,7 @@ class MicrosoftBucketUpdater:
         response = requests.get(url)
         return response.json()
 
-    def upload_dataset_to_bucket(self, dataset) -> bool:
+    def upload_dataset_to_bucket(self, dataset, date: datetime()) -> bool:
         """
         Uploads a given dataset to the bucket.
         This dataset represents the network (IP/ASN) ranges from the hosting provider.
@@ -101,7 +108,7 @@ class MicrosoftBucketUpdater:
         # TODO: remove personal creds
         bucket_name = "roald-testing-bucket"
         data = dataset["data"]
-        file_name = self.format_date_to_url(datetime.now(), self.bucket_url_prefix)
+        file_name = self.format_date_to_url(date, self.bucket_url_prefix)
 
         # TODO: Test if this function works
         return object_storage.upload_file_to_bucket(data, file_name, bucket_name)
@@ -145,7 +152,7 @@ class MicrosoftBucketUpdater:
         Return datetime: Representing the extracted date
         """
         return datetime.strptime(
-            url[len(url_prefix): len(url) - len(self.file_extension)], "%Y%m%d"
+            url[len(url_prefix) : len(url) - len(self.file_extension)], "%Y%m%d"
         )
 
     def format_date_to_url(self, date: datetime, url_prefix: str) -> str:
