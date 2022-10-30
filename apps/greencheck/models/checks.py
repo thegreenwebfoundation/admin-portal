@@ -22,7 +22,7 @@ from .. import choices as gc_choices
 logger = logging.getLogger(__name__)
 
 # https://ember-data-api-scg3n.ondigitalocean.app/ember/generation_yearly?_sort=rowid&_facet=year&_facet=variable&country_or_region__exact=World&variable__exact=Fossil&year__exact=2021
-GLOBAL_AVG_FOSSIL_SHARE = 0.62
+GLOBAL_AVG_FOSSIL_SHARE = 61.56
 
 # https://ember-data-api-scg3n.ondigitalocean.app/ember?sql=select+country_or_region%2C+country_code%2C+year%2C+emissions_intensity_gco2_per_kwh%0D%0Afrom+country_overview_yearly%0D%0Awhere+year+%3D+2021%0D%0Aand+country_or_region+%3D+%22World%22%0D%0Aorder+by+country_code+limit+300
 GLOBAL_AVG_CO2_INTENSITY = 442.23
