@@ -87,7 +87,7 @@
         name: "{{ supervisor_gunicorn_app }}:"
         state: restarted
       become: true
-      when: restart_supervisor is true
+      when: supervisor_restart is true
 
     - name: Reload nginx
       ansible.builtin.service:
