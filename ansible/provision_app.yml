@@ -1,28 +1,25 @@
 ---
-- name: Deploy the TGWF django web-app servers
+- name: Provision the TGWF django web-app server
   hosts:
-    # - app_servers
-    # - app1.thegreenwebfoundation.org
-    # - app2.thegreenwebfoundation.org
-    - hel1.thegreenwebfoundation.org
+    - app_servers
   remote_user: "deploy"
   become: false
 
   vars:
-    # set up our deployment directories to be compatible with the projecr f500
+    # set up our deployment directories to be compatible with the project f500
     # deployment role
-    create_deployment_dirs: false
+    create_deployment_dirs: true
     # set this to true will fetch the system requirements like python, mariadb, redis,
     # and so on
-    install_system_reqs: false
+    install_system_reqs: true
     # decide about installing a recent version of node
-    install_node: false
+    install_node: true
     # run an update of our front dependencies as part of the deploy. This is better
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
     update_front_end_deps: true
     # set to true to update the nginx conf file for this app
-    setup_nginx: true
+    setup_nginx: false
 
   tasks:
 

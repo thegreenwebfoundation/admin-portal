@@ -1,0 +1,7 @@
+---
+all:
+  hosts:
+    server.thegreenwebfoundation.dev:
+      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+      tgwf_stage: "dev"
+      tgwf_domain_name: "{{ tgwf_stage }}-admin"
