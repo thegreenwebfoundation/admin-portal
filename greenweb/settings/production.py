@@ -17,7 +17,12 @@ ALLOWED_HOSTS = [
     "newadmin.thegreenwebfoundation.org",
     "staging-admin.thegreenwebfoundation.org",
     "api.thegreenwebfoundation.org",
+    # temporary to workaround the acme rate limit issue
     "app.greenweb.org",
+    "app3.greenweb.org",
+    "app3-staging.greenweb.org",
+    # for staging
+    "admin-staging.greenweb.org",
 ]
 
 
