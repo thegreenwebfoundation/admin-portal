@@ -1,7 +1,27 @@
 ---
 all:
   hosts:
-    server.thegreenwebfoundation.org:
-      project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-      tgwf_stage: "staging"
-      tgwf_domain_name: staging-admin
+    app3.thegreenwebfoundation.org:
+      internal_ip: "10.0.0.6"
+      dramatiq_threads: 1
+      dramatiq_processes: 1
+
+  vars:
+    project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+    tgwf_stage: "staging"
+    tgwf_domain_name: "admin-staging"
+    ansible_user: "deploy"
+    supervisor_gunicorn_app: "admin_staging_web"
+    supervisor_worker_job: "admin_staging_worker"
+
+  # you can set child groups too
+  children:
+    app_servers:
+      # within a child group, you need to define your hosts again
+      # so it's clear which hosts you want to refer to
+      hosts:
+        app3.thegreenwebfoundation.org:
+      # within the child group can define new vars which take
+      # precedence over the ones further 'upstream'
+      # vars:
+      #   some_var: value_here

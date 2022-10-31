@@ -6,6 +6,7 @@ DATABASE_URL="{{ lookup('env','DATABASE_URL') }}"
 SECRET_KEY="{{ lookup('env','SECRET_KEY') }}"
 DJANGO_SETTINGS_MODULE="{{ lookup('env','DJANGO_SETTINGS_MODULE') }}"
 SENTRY_DSN="{{ lookup('env', "SENTRY_DSN")}}"
+SENTRY_ENVIRONMENT="{{ lookup('env', "SENTRY_ENVIRONMENT")}}"
 RABBITMQ_URL="{{ lookup('env', "RABBITMQ_URL")}}"
 PYTHONDONTWRITEBYTECODE=1
 HONEYCOMBIO_WRITE_KEY="{{ lookup('env', "HONEYCOMBIO_WRITE_KEY")}}"

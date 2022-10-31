@@ -1,0 +1,6 @@
+DROP DATABASE {{ staging_database_name }};
+CREATE DATABASE {{ staging_database_name }};
+-- set up our user with their password, so they can connect from any IP
+CREATE USER IF NOT EXISTS deploy @'%' IDENTIFIED BY '{{ staging_password}}';
+-- grant permissions to the same user
+GRANT ALL ON {{ staging_database_name }}.* TO deploy @'%';

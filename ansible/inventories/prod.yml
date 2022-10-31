@@ -17,6 +17,8 @@ all:
     tgwf_stage: "prod"
     tgwf_domain_name: admin
     ansible_user: deploy
+    supervisor_gunicorn_app: "admin_web"
+    supervisor_worker_job: "admin_worker"
 
   # you can set child groups too
   children:

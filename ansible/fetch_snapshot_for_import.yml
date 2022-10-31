@@ -1,0 +1,78 @@
+---
+
+- name: Fetch database snapshot from object storage and upload script ready to import it.
+  hosts:
+    # - app_servers
+    # - app1.thegreenwebfoundation.org
+    # - app2.thegreenwebfoundation.org
+    - app3.thegreenwebfoundation.org
+    # - hel1.thegreenwebfoundation.org
+  remote_user: "deploy"
+  become: false
+
+  vars:
+    fetch_db_snapshot: true
+    clear_and_import_data: false
+    list_keys: false
+    add_object_storage_deps: false
+    # needed to identify the bucket and project_local_path
+    backup_bucket: "{{ lookup('env', 'OBJECT_STORAGE_BACKUP_BUCKET') }}"
+    backup_key_path: "{{ lookup('env', 'OBJECT_STORAGE_BACKUP_KEY_PATH') }}"
+    # needed to use a different provider than AWS
+    endpoint_url: "{{ lookup('env', 'OBJECT_STORAGE_ENDPOINT') }}"
+    region: "{{ lookup('env', 'OBJECT_STORAGE_REGION') }}"
+    # needed to identify us when making requests
+    aws_access_key: "{{ lookup('env', 'OBJECT_STORAGE_ACCESS_KEY_ID') }}"
+    aws_secret_key: "{{ lookup('env', 'OBJECT_STORAGE_SECRET_ACCESS_KEY') }}"
+
+
+  tasks:
+
+    - name: Install our deps work working with object storage
+      ansible.builtin.pip:
+        name:
+          - botocore
+          - boto3
+      when: add_object_storage_deps is true
+
+    - name: List keys simple
+      amazon.aws.aws_s3:
+        mode: list
+        bucket: "{{ backup_bucket }}"
+        prefix: "{{ backup_key_path }}"
+        endpoint_url: "{{ endpoint_url }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      register: list_of_keys
+
+    - name: Show the list of keys
+      ansible.builtin.debug:
+        var: list_of_keys
+
+    - name: Download database snapshot from object storage
+      amazon.aws.aws_s3:
+        mode: get
+        bucket: "{{ backup_bucket }}"
+        object: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        endpoint_url: "{{ endpoint_url }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      loop:
+        - {src: "{{ backup_key_path }}/small_tables.data.sql.gz", dest: "/tmp/small_tables.data.sql.gz"}
+        - {src: "{{ backup_key_path }}/small_tables.schema.sql.gz", dest: "/tmp/small_tables.schema.sql.gz"}
+      when: fetch_db_snapshot is true
+
+    - name: Upload import script to run import, but do not run import
+      ansible.builtin.template:
+        src: "clear_and_import.sql.j2"
+        dest: "tmp/clear_and_import_greencheck.sql"
+        owner: deploy
+        group: deploy
+        mode: "0755"
+
+      when: clear_and_import_data is true
+
+
