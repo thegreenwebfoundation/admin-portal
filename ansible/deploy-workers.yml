@@ -9,7 +9,7 @@
   vars:
     project_git_repo: "git@github.com:thegreenwebfoundation/admin-portal.git"
     project_deploy_strategy: git
-    project_version: "master"
+    project_version: "{{ project_deploy_branch }}"
     project_local_path: "../"
     project_unwanted_items:
       - .git

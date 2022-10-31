@@ -12,7 +12,7 @@
   vars:
     project_git_repo: "git@github.com:thegreenwebfoundation/admin-portal.git"
     project_deploy_strategy: git
-    project_version: "master"
+    project_version: "{{ project_deploy_branch }}"
     project_local_path: "../"
     project_unwanted_items:
       - .git
@@ -50,8 +50,7 @@
 
     - name: Assemble assets and related files
       ansible.builtin.include_tasks: "_assemble_deploy_assets.yml"
-      when:
-        compile_assets is true
+      when: compile_assets is true
 
     - name: Set up script for running workers and gunicorn, via supervisor
       ansible.builtin.template:
@@ -61,8 +60,14 @@
         group: deploy
         mode: "0755"
       loop:
-        - { src: "run_worker.sh.j2", dest: "{{ project_root }}/current/run_worker.sh" }
-        - { src: "run_gunicorn.sh.j2", dest: "{{ project_root }}/current/run_gunicorn.sh" }
+        - {
+            src: "run_worker.sh.j2",
+            dest: "{{ project_root }}/current/run_worker.sh",
+          }
+        - {
+            src: "run_gunicorn.sh.j2",
+            dest: "{{ project_root }}/current/run_gunicorn.sh",
+          }
       become: true
       tags:
         - supervisor
@@ -75,12 +80,17 @@
         group: deploy
         mode: "0755"
       loop:
-        - { src: "supervisor.gunicorn.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf" }
-        - { src: "supervisor.worker.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf" }
+        - {
+            src: "supervisor.gunicorn.conf.j2",
+            dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf",
+          }
+        - {
+            src: "supervisor.worker.conf.j2",
+            dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf",
+          }
       become: true
       tags:
         - supervisor
-
 
     - name: Trigger restart for app with supervisor
       ansible.builtin.supervisorctl:

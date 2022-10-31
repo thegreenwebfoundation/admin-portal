@@ -8,6 +8,7 @@ all:
 
   vars:
     project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+    project_deploy_branch: "staging"
     tgwf_stage: "staging"
     tgwf_domain_name: "admin-staging"
     ansible_user: "deploy"
