@@ -2,56 +2,55 @@
 {% load static %}
 
 {% block favicon %}
-        {# -- Maybe replace the favicon -- #}
-        <link rel="icon" type="image/png" href="{% static 'drf-yasg/swagger-ui-dist/favicon-32x32.png' %}"/>
-    {% endblock %}
+{# -- Maybe replace the favicon -- #}
+<link rel="icon" type="image/png" href="{% static 'drf-yasg/swagger-ui-dist/favicon-32x32.png' %}" />
+{% endblock %}
 
 {% block extra_body %}
-    {# -- Add any header/body markup here (rendered BEFORE the swagger-ui/redoc element) -- #}
-    {% include "partials/nav_menu.html" %}
+{# -- Add any header/body markup here (rendered BEFORE the swagger-ui/redoc element) -- #}
+{% include "partials/nav_menu.html" %}
+{% include "partials/docs_banner.html" %}
 {% endblock %}
 
 
 {% block extra_scripts %}
 
-  <script src="{% static 'drf-yasg/swagger-ui-dist/swagger-ui-bundle.js' %}"></script>
-    <script src="{% static 'drf-yasg/swagger-ui-dist/swagger-ui-standalone-preset.js' %}"></script>
-    <script src="{% static 'drf-yasg/insQ.min.js' %}"></script>
-    <script src="{% static 'drf-yasg/immutable.min.js' %}"></script>
-    <script src="{% static 'greencheck/js/swagger-custom-init.js' %}"></script>
+<script src="{% static 'drf-yasg/swagger-ui-dist/swagger-ui-bundle.js' %}"></script>
+<script src="{% static 'drf-yasg/swagger-ui-dist/swagger-ui-standalone-preset.js' %}"></script>
+<script src="{% static 'drf-yasg/insQ.min.js' %}"></script>
+<script src="{% static 'drf-yasg/immutable.min.js' %}"></script>
+<script src="{% static 'greencheck/js/swagger-custom-init.js' %}"></script>
 
 {% endblock %}
 
 
- {% block session_auth_button %}
-            {% csrf_token %}
+{% block session_auth_button %}
+{% csrf_token %}
 
-            {% block user_context_message %}
-                {% if request.user.is_authenticated %}
-                    <div class="hello">
-                        <span class="django-session">Django</span> <span
-                            class="label label-primary">{{ request.user }}</span>
-                    </div>
-                {% endif %}
-            {% endblock %}
-
-            {% if request.user.is_authenticated %}
-                <div class='btn authorize'>
-                    <a id="auth" class="header__btn" href="{% url  'greenweb_admin:logout' %}?next={{ request.path }}" data-sw-translate>
-                        {% block django_logout_message %}
-                            Logout
-                        {% endblock %}
-                    </a>
-                </div>
-            {% else %}
-                <div class='btn authorize'>
-                    <a id="auth" class="header__btn" href="{% url  'greenweb_admin:login' %}?next={{ request.path }}" data-sw-translate>
-                        {% block django_login_message %}
-                            Login
-                        {% endblock %}
-                    </a>
-                </div>
-            {% endif %}
+{% block user_context_message %}
+{% if request.user.is_authenticated %}
+<div class="hello">
+    <span class="django-session">Django</span> <span class="label label-primary">{{ request.user }}</span>
+</div>
+{% endif %}
 {% endblock %}
 
-
+{% if request.user.is_authenticated %}
+<div class='btn authorize'>
+    <a id="auth" class="header__btn" href="{% url  'greenweb_admin:logout' %}?next={{ request.path }}"
+        data-sw-translate>
+        {% block django_logout_message %}
+        Logout
+        {% endblock %}
+    </a>
+</div>
+{% else %}
+<div class='btn authorize'>
+    <a id="auth" class="header__btn" href="{% url  'greenweb_admin:login' %}?next={{ request.path }}" data-sw-translate>
+        {% block django_login_message %}
+        Login
+        {% endblock %}
+    </a>
+</div>
+{% endif %}
+{% endblock %}
