@@ -148,10 +148,24 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
         return ProviderRequest.objects.filter(created_by=self.request.user)
 
 
-class ProviderRegistrationView(SessionWizardView, WaffleFlagMixin, LoginRequiredMixin):
+class ProviderRegistrationView(SessionWizardView):
     template_name = "provider_request/registration.html"
     waffle_flag = "provider_request"
     form_list = [RegistrationForm1, RegistrationForm2]
 
     def done(self, form_list, **kwargs):
         return HttpResponseRedirect("/done/")
+
+    def get_form_initial(self, step):
+        initial = self.initial_dict.get(step, {})
+        # populate the location on step1 using data from step0
+        if step == "1":
+            prev_step_data = self.get_cleaned_data_for_step("0")
+            location_keys = ["country", "city", "services"]
+            location_data = dict(
+                [(k, v) for k, v in prev_step_data.items() if k in location_keys]
+            )
+            # step1 is a formset, so initial data needs to be a sequence
+            return [location_data]
+
+        return initial

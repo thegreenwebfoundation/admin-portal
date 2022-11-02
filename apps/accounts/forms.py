@@ -162,7 +162,6 @@ class PreviewEmailForm(forms.Form):
     # check that we have an email before trying to forwarding to an email service
 
 
-<<<<<<< HEAD
 class InlineSupportingDocumentForm(forms.ModelForm):
     """
     A custom form for listing and uploading supporting documents
@@ -187,7 +186,8 @@ class InlineSupportingDocumentForm(forms.ModelForm):
     class Meta:
         model = ac_models.HostingProviderSupportingDocument
         fields = "__all__"
-=======
+
+
 class RegistrationForm1(forms.Form):
     name = forms.CharField(
         max_length=255,
@@ -211,14 +211,28 @@ class RegistrationForm1(forms.Form):
     )
     city = forms.CharField(max_length=255, label="City", help_text="Add the city")
     services = forms.MultipleChoiceField(
-        widget=forms.SelectMultiple, required=False, choices=tags_choices
+        widget=forms.SelectMultiple,
+        required=False,
+        choices=tags_choices,
+        help_text="Services offered",
     )
 
 
-class RegistrationForm2(forms.Form):
-    location = forms.CharField(
-        max_length=255,
-        label="Location",
-        help_text="TODO",
+class LocationForm(forms.Form):
+    country = CountryField().formfield(
+        label="Country",
+        blank_label="Select country",
+        help_text="Which country is this provider based in?",
     )
->>>>>>> 687fc36 (Install and enable django-formtools, add first basic form)
+    city = forms.CharField(
+        max_length=255, label="City", help_text="List the closest city to this location"
+    )
+    services = forms.MultipleChoiceField(
+        widget=forms.SelectMultiple,
+        required=False,
+        choices=tags_choices,
+        help_text="Services offered",
+    )
+
+
+RegistrationForm2 = forms.formset_factory(LocationForm, extra=0)
