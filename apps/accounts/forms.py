@@ -10,6 +10,8 @@ from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
 
+from apps.accounts.models.hosting import Hostingprovider
+
 from . import models as ac_models
 from .utils import tags_choices
 
@@ -235,4 +237,19 @@ class LocationForm(forms.Form):
     )
 
 
-RegistrationForm2 = forms.formset_factory(LocationForm, extra=0)
+RegistrationForm2 = forms.formset_factory(LocationForm, extra=1)
+
+
+class SupplierForm(forms.Form):
+    supplier = forms.ModelChoiceField(
+        queryset=Hostingprovider.objects.all(), label="Supplier"
+    )
+    services = forms.MultipleChoiceField(
+        widget=forms.SelectMultiple,
+        required=False,
+        choices=tags_choices,
+        label="Services used",
+    )
+
+
+RegistrationForm3 = forms.formset_factory(SupplierForm, extra=1)

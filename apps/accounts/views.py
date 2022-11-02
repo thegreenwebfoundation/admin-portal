@@ -19,7 +19,12 @@ from django_registration.exceptions import ActivationError
 from django_registration.forms import RegistrationFormCaseInsensitive
 from formtools.wizard.views import SessionWizardView
 
-from .forms import UserUpdateForm, RegistrationForm1, RegistrationForm2
+from .forms import (
+    UserUpdateForm,
+    RegistrationForm1,
+    RegistrationForm2,
+    RegistrationForm3,
+)
 from .models import User, ProviderRequest
 
 
@@ -151,7 +156,7 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
 class ProviderRegistrationView(SessionWizardView):
     template_name = "provider_request/registration.html"
     waffle_flag = "provider_request"
-    form_list = [RegistrationForm1, RegistrationForm2]
+    form_list = [RegistrationForm1, RegistrationForm2, RegistrationForm3]
 
     def done(self, form_list, **kwargs):
         return HttpResponseRedirect("/done/")
