@@ -1,39 +1,80 @@
 {% load static %}
 
 <div class="announce-banner">
-    <p>We're working on a new home for our API docs! Check it out at <a
-            href="https://developers.thegreenwebfoundation.org/#apis"
-            target="_blank">developers.thegreenwebfoundation.org</a>.</p>
+    <p>We're working on a new home for our API docs and other code libraries! </p>
+    <a href="https://developers.thegreenwebfoundation.org/#apis" class="btn" target="_blank">Read the docs</a>
 </div>
 
 <style>
     div.announce-banner {
         background-color: #466D22;
-        color: #CECCCA;
-        width: 100%;
-        padding: 0.5rem 1rem;
-        text-align: center;
+        color: #FFF;
+        width: max-content;
+        margin: 1.5rem auto;
+        padding: 1rem 1.5rem 1.5rem;
+        /* text-align: center; */
         font-family: 'Lato', sans-serif;
         font-size: 1.15rem;
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (min-width: 1024px) {
+        div.announce-banner {
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 1.5rem;
+            text-align: center;
+        }
     }
 
     div.announce-banner>p {
         max-width: 60ch;
-        margin-inline: auto;
-        line-height: 1.525;
-    }
-
-    div.announce-banner a,
-    div.announce-banner a:visited {
-        color: inherit;
-        text-decoration: underline;
+        /* line-height: 1.525; */
         font-weight: 600;
-        letter-spacing: 0.1rem;
     }
 
-    div.announce-banner a:hover,
-    div.announce-banner a:focus {
-        color: inherit;
+    div.announce-banner>a.btn {
+        display: block;
+        background-color: #F48C25;
+        color: #333333;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 1.125rem;
+        animation: button-pop var(--animation-btn, .25s) ease-out;
+        border-color: transparent;
+        border-color: hsl(var(--n)/var(--tw-border-opacity));
+        border-radius: var(--rounded-btn, .5rem);
+        border-width: var(--border-btn, 1px);
+        cursor: pointer;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        font-weight: 600;
+        height: 3rem;
+        line-height: 1em;
+        min-height: 3rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        text-align: center;
+        text-decoration-line: none;
+        text-transform: uppercase;
+        text-transform: var(--btn-text-case, uppercase);
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    div.announce-banner>a.btn:hover,
+    div.announce-banner>a.btn:focus {
+        background-color: #D5700B;
+        color: #fff;
         text-decoration: none;
     }
 </style>
