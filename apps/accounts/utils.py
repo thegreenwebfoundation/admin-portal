@@ -1,6 +1,7 @@
 from urllib.parse import urlencode
 from django.urls import reverse
 from django.apps import apps
+from taggit.models import Tag
 
 
 def get_admin_name(model, name):
@@ -22,3 +23,7 @@ def reverse_admin_name(model, name, args=None, kwargs=None, params=None):
     if params:
         url = f"{url}?{urlencode(params)}"
     return url
+
+
+def tags_choices():
+    return [(tag.id, tag.name) for tag in Tag.objects.all()]
