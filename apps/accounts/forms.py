@@ -6,12 +6,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, UsernameField
 
 from django_countries.fields import CountryField
-from taggit.forms import TagField
 from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
 
 from . import models as ac_models
+from .utils import tags_choices
 
 User = get_user_model()
 
@@ -210,7 +210,9 @@ class RegistrationForm1(forms.Form):
         help_text="Which country is this provider based in?",
     )
     city = forms.CharField(max_length=255, label="City", help_text="Add the city")
-    services = TagField(widget=LabelWidget)
+    services = forms.MultipleChoiceField(
+        widget=forms.SelectMultiple, required=False, choices=tags_choices
+    )
 
 
 class RegistrationForm2(forms.Form):

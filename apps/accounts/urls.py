@@ -11,7 +11,6 @@ from apps.accounts.views import (
     ProviderRequestDetailView,
     ProviderRegistrationView,
 )
-from apps.accounts.forms import RegistrationForm1, RegistrationForm2
 
 urlpatterns = [
     path(
@@ -64,7 +63,7 @@ urlpatterns = [
     ),
     path(
         "requests/new/",
-        ProviderRegistrationView.as_view([RegistrationForm1, RegistrationForm2]),
+        ProviderRegistrationView.as_view(),
         name="provider_registration",
     ),
 ]
