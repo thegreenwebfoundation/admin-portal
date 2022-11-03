@@ -184,21 +184,69 @@ class AbstractGreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
 class GreenDomainViewset(AbstractGreenDomainViewset):
     """
-    The concrete class, to support us making out changes to the currently
+    The concrete class, to support us making our changes to the currently
     developed API, without affecting behaviour clients of the old
     API are expecting.
     """
+
+    def retrieve(self, request, *args, **kwargs):
+
+        url = self.kwargs.get("url")
+        domain = None
+
+        # `nocache=true` is the same string used by nginx. Using the same params
+        # means we won't have to worry about nginx caching our request before it
+        # hits an app server
+        skip_cache = request.GET.get("nocache") == "true"
+
+        try:
+            domain = self.checker.validate_domain(url)
+        except Exception:
+            # not a valid domain, OR a valid IP. Get rid of it.
+            logger.warning(f"unable to extract domain from {url}")
+            return self.legacy_grey_response(url, log_check=False)
+
+        if skip_cache:
+            # try to fetch domain the long way, clearing it from the
+            # any caches if already present
+            self.clear_from_caches(domain)
+            if http_response := self.build_response_from_full_network_lookup(domain):
+                return http_response
+
+        # Try the database first
+        if http_response := self.build_response_from_database_lookup(domain):
+            return http_response
+
+        # not in database or the cache, try full lookup using network
+        if http_response := self.build_response_from_full_network_lookup(domain):
+            return http_response
+
+        # not in database or the cache, nor can we see find it with
+        # any third party lookups. Fall back to saying we couldn't find anything,
+        # the way the API used to work.
+        return self.legacy_grey_response(url)
 
     def build_response_from_database_lookup(self, domain):
         """
         Return an API reponse listing all the matching providers for an IP.
         """
         instance = gc_models.GreenDomain.objects.filter(url=domain).first()
-        import ipdb
 
-        ipdb.set_trace()
         if instance:
             return self.return_green_response(instance)
+
+    def build_response_from_full_network_lookup(self, domain):
+        """
+        Build a response, returning all the matches for the IP range
+        """
+        try:
+            res = checker.perform_full_lookup(domain)
+            if res.green:
+                return self.return_green_response(res)
+        except socket.gaierror:
+            return self.legacy_grey_response(domain)
+        except UnicodeError:
+            return self.legacy_grey_response(domain)
 
 
 class GreenDomainBatchView(CreateAPIView):

@@ -321,22 +321,21 @@ class TestGreenDomainViewset:
 
     @pytest.mark.only
     def test_check_single_url_matching_two_providers(
-        self,
-        hosting_provider_factory,
-        green_ip_factory,
+        self, hosting_provider_factory, green_ip_factory, mocker
     ):
         """
         Check that a lookup that matches multiple IP ranges
         returns all the matching providers, not just the first one.
         """
 
-        # make a hosting provider with one IP range
+        # Given: a hosting provider with one IP range
 
         hp1 = hosting_provider_factory.create()
         gip1 = green_ip_factory.create()
         hp1.greencheckip_set.add(gip1)
         hp1.save()
 
+        # and a second hosting provider also matching the same IP
         hp2 = hosting_provider_factory.create()
         gip2 = green_ip_factory.create(ip_start=gip1.ip_start, ip_end=gip1.ip_end)
         hp2.greencheckip_set.add(gip2)
@@ -346,10 +345,14 @@ class TestGreenDomainViewset:
 
         domain = hp1.website
         now = timezone.now()
-
         a_year_from_now = now + relativedelta(years=1)
 
-        # create a sample piece of evidence
+        mocker.patch(
+            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+            return_value=gip1.ip_start,
+        )
+
+        # and evidence added to the first provider
         ac_models.HostingProviderSupportingDocument.objects.create(
             hostingprovider=hp1,
             title="Carbon free energy for Google Cloud regions",
@@ -363,28 +366,40 @@ class TestGreenDomainViewset:
             public=False,
         )
 
+        # simulate a check and logging it
         sitecheck = greencheck_sitecheck(domain, hp1, gip1)
-
-        # when we perform a lookup for the IP, we should see two matching responses
-
-        import ipdb
-
-        ipdb.set_trace()
-
         sitecheck_logger.update_green_domain_caches(sitecheck, hp1)
 
+        # first IP range
+        hp1_range = {
+            "start": hp1.greencheckip_set.all().first().ip_start,
+            "end": hp1.greencheckip_set.all().first().ip_end,
+        }
+        hp2_range = {
+            "start": hp2.greencheckip_set.all().first().ip_start,
+            "end": hp2.greencheckip_set.all().first().ip_end,
+        }
+
+        # when we perform a lookup for the IP, we should see two matching responses
+        # in the returned payload
         # assume we just have a link to a url, no uploading of files
         rf = APIRequestFactory()
         url_path = reverse("green-domain-detail", kwargs={"url": domain})
         logger.info(f"url_path: {url_path}")
 
         request = rf.get(url_path)
-
+        qd = request.GET.copy()
+        qd["nocache"] = "true"
+        request.GET = qd
         view = GreenDomainViewset.as_view({"get": "retrieve"})
-
         response = view(request, url=domain)
 
+        import rich
+
+        rich.inspect(response.data)
+
         assert response.status_code == 200
+        assert response.data["green"] is True
         assert response.data["green"] is True
 
 

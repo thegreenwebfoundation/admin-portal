@@ -26,6 +26,8 @@ from ipwhois.net import Net
 from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
 
+from typing import List
+
 logger = logging.getLogger(__name__)
 
 
@@ -57,22 +59,33 @@ class GreenDomainChecker:
                 parsed_url = urllib.parse.urlparse(f"//{url}")
             return parsed_url.netloc
 
-    def perform_full_lookup(self, domain: str) -> GreenDomain:
+    def perform_full_lookup(self, domain: str) -> List[GreenDomain:]
         """
         Return a Green Domain object from doing a lookup.
         """
         from .models import GreenDomain
 
-        res = self.check_domain(domain)
+        domain_matches = []
 
-        if not res.green:
-            return GreenDomain.grey_result(domain=res.url)
+        results = self.check_domain(domain)
+
+        # import ipdb
+
+        # ipdb.set_trace()
+
+        for res in results:
+            if not res.green:
+                domain_matches.append(GreenDomain.grey_result(domain=res.url))
+
+        if domain_matches:
+            return domain_matches
 
         # return a domain result, but don't save it,
         # as persisting it is handled asynchronously
         # by another worker, and logged to both the greencheck
         # table and this 'cache' table
-        return GreenDomain.from_sitecheck(res)
+        domain_matches.append(GreenDomain.from_sitecheck(res))
+        return domain_matches
 
     def asn_from_ip(self, ip_address):
         """
@@ -129,7 +142,9 @@ class GreenDomainChecker:
         )
 
     def grey_sitecheck(
-        self, domain, ip_address,
+        self,
+        domain,
+        ip_address,
     ):
         return SiteCheck(
             url=domain,
@@ -194,8 +209,14 @@ class GreenDomainChecker:
         if not ip_address:
             return self.grey_sitecheck(domain, ip_address)
 
-        if ip_match := self.check_for_matching_ip_ranges(ip_address):
-            return self.green_sitecheck_by_ip_range(domain, ip_address, ip_match)
+        if ip_matches := self.check_for_matching_ip_ranges(ip_address):
+            green_site_checks = []
+            for ip_match in ip_matches:
+                matching_check = self.green_sitecheck_by_ip_range(
+                    domain, ip_address, ip_match
+                )
+                green_site_checks.append(matching_check)
+            return green_site_checks
 
         if matching_asn := self.check_for_matching_asn(ip_address):
             return self.green_sitecheck_by_asn(domain, ip_address, matching_asn)
@@ -219,6 +240,7 @@ class GreenDomainChecker:
         # size of the Ip ranges in order to order them properly
         ordered_matches = self.order_ip_range_by_size(ip_matches)
 
+        return ordered_matches
         if ordered_matches:
             return ordered_matches[0]
 
@@ -297,4 +319,3 @@ class GreenDomainChecker:
 
         # sort to return the smallest first
         return [obj["ip_range"] for obj in ascending_ip_ranges]
-

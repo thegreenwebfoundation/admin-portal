@@ -36,7 +36,6 @@ There will be cases where an organisation isn't running its own servers or other
 
 In this case a domain might be `my-cool-site.com`, which resolving to the IP address, which we then link to Provider A, the organisation.
 
-
 ### Domain, to IP to provider, by ASN
 
 For some larger providers, maintaining a register of every single IP Range with the green web foundation can be cumbersome, so we also support lookups by Autonomous System Network (ASN) instead.
@@ -68,3 +67,20 @@ The final supported approach, which is currently under development, is to avoid 
 Here we follow a link from the domain name to a `carbon.txt` file at one of a few well known locations, somewhat like `robots.txt` works, or how some DNS TXT record lookups work. We then parse the `carbon.txt` file to follow the links to the necessary providers.
 
 For more, please follow the link to the [github repo where the syntax and conventions are being worked at out](https://github.com/thegreenwebfoundation/carbon.txt).
+
+###  Handling multiple IP matches
+
+<div class="admonition note" name="html-admonition">
+<p class="title">This is the **title**</p>
+Ths section below is WIP, and not in production
+</div>
+
+When we get a request for a domain, we convert this to a single IP, and if we find a matching hosting provider, we return the provider.
+
+in the case of multiple matches we return the first match, PLUS the extra matches as a separate property. We account for this ordering in the following places
+
+1. looking up a the response for detail lookup we currently offer in the admin
+2. ~~how we build an API response for the quick lookups from the green domain 'cache' table~~
+3. ~~how we build an API response for the extended lookups when we skip the green domain cache table~~
+4. ~~how we return results for the workers in the message queue writing to the greencheck log table~~
+5. ~~how we build the image badges~~
