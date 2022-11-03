@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "taggit_serializer",
     "waffle",
     "nested_admin",
+    "django_filters",
     # UI
     "tailwind",
     "crispy_forms",
@@ -173,7 +174,9 @@ PASSWORD_HASHERS = [
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa
+        "NAME": (  # noqa
+            "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+        ),
     },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
@@ -248,7 +251,9 @@ REST_FRAMEWORK = {
 
 DRAMATIQ_BROKER = {
     "BROKER": "dramatiq.brokers.rabbitmq.RabbitmqBroker",
-    "OPTIONS": {"url": RABBITMQ_URL,},  # noqa
+    "OPTIONS": {
+        "url": RABBITMQ_URL,
+    },  # noqa
     "MIDDLEWARE": [
         # remove until we are actually using it
         # "dramatiq.middleware.Prometheus"

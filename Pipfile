@@ -28,7 +28,6 @@ sphinxcontrib-mermaid = "==0.7.1"
 furo = "*"
 myst-parser = "*"
 ansible-lint = "*"
-awscli = "*"
 awscli-plugin-endpoint = "*"
 
 [packages]
@@ -86,6 +85,7 @@ pandas = "*"
 rich = "*"
 duckdb = "==0.5.0"
 dateutils = "*"
+django-filter = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.

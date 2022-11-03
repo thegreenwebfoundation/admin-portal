@@ -12,6 +12,8 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic.base import TemplateView
 
+import django_filters
+
 from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.models.checks import GreenDomain
 from apps.greencheck.models.stats import DailyStat
@@ -212,3 +214,32 @@ class GreencheckStatsView(TemplateView):
         context["stats"] = res
 
         return context
+
+
+class ProviderFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(lookup_expr="iexact")
+
+    class Meta:
+        model = Hostingprovider
+        fields = ["country"]
+
+
+class DirectoryView(TemplateView):
+    """
+    A view for filtering our list of providers by various criteria
+    """
+
+    template_name = "greencheck/directory_index.html"
+
+    def get_context_data(self, *args, **kwargs):
+        queryset = Hostingprovider.objects.filter(showonwebsite=True)
+
+        ctx = super().get_context_data(**kwargs)
+
+        filter_results = ProviderFilter(
+            self.request.GET, queryset=queryset, request=self.request
+        )
+
+        ctx["filter"] = filter_results
+
+        return ctx

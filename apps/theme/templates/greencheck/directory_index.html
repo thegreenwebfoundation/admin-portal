@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tailwind_filters %}
+{% block content %}
+
+<div class="container mx-auto">
+  <section class="mx-auto max-w-6xl bg-white border-2 border-dark-gray rounded-md  h-100-l mt-8 py-8">
+
+    <section class="main-content">
+    <form method="get">
+        {{ filter.form.as_p }}
+        <input type="submit" />
+    </form>
+    </section>
+    
+    <section class="main-content">
+    
+    </section>
+    
+  </section>
+{% endblock %}
