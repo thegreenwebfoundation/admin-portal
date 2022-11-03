@@ -39,7 +39,7 @@ from apps.accounts.admin import LabelAutocompleteView
 from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
 
-from apps.greencheck import urls as greencheck_urls
+from apps.greencheck import urls as greencheck_urls, directory_urls
 
 
 urlpatterns = []
@@ -114,7 +114,11 @@ urlpatterns += [
         legacy_views.latest_greenchecks,
         name="legacy-latest-greenchecks",
     ),
-    path("data/directory/", legacy_views.directory, name="legacy-directory-listing",),
+    path(
+        "data/directory/",
+        legacy_views.directory,
+        name="legacy-directory-listing",
+    ),
     path(
         "data/hostingprovider/<id>",
         legacy_views.directory_provider,
@@ -131,4 +135,5 @@ urlpatterns += [
         name="legacy-greencheck-multi",
     ),
     path("stats/", include(greencheck_urls)),
+    path("directory/", include(directory_urls)),
 ]
