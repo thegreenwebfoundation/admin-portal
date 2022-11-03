@@ -217,8 +217,12 @@ class GreencheckStatsView(TemplateView):
 
 
 class ProviderFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr="iexact")
+    name = django_filters.CharFilter(lookup_expr="icontains")
 
+    # TODO - figure our the correct syntax for tag queries
+    # services = django_filters.CharFilter(
+    #     field_name="services", lookup_expr="services__name__in"
+    # )
     class Meta:
         model = Hostingprovider
         fields = ["country"]
