@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block head %}
+{{ wizard.form.media }}
+
+{% endblock %}
+
+{% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#add_more').click(function () {
+            // this assumes only 1 formset on the page!
+            var form_idx = $('#id_1-TOTAL_FORMS').val();
+            $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
+            $('#id_1-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+        });
+    });
+</script>
+<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+<form action="" method="post">
+    {% csrf_token %}
+    {{ wizard.management_form }}
+    {{ wizard.form.management_form }}
+    <div id="form_set">
+        {% for form in wizard.form.forms %}
+        <table>
+            {{ form.as_table }}
+        </table>
+        {% endfor %}
+    </div>
+    <input type="button" value="Add More" id="add_more">
+    <div id="empty_form" style="display:none">
+        <table>
+            {{ wizard.form.empty_form.as_table }}
+        </table>
+    </div>
+    {% if wizard.steps.prev %}
+    <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+    <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+    {% endif %}
+    <input type="submit" value="{% trans " submit" %}" />
+</form>
+{% endblock %}

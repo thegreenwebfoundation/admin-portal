@@ -11,6 +11,7 @@ from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
 
 from apps.accounts.models.hosting import Hostingprovider
+from apps.accounts.models.provider_request import ProviderRequest, EvidenceType
 
 from . import models as ac_models
 from .utils import tags_choices
@@ -253,3 +254,28 @@ class SupplierForm(forms.Form):
 
 
 RegistrationForm3 = forms.formset_factory(SupplierForm, extra=1)
+
+
+class CredentialForm(forms.Form):
+    title = forms.CharField(
+        max_length=255, label="Title", help_text="Add a descriptive title"
+    )
+    credential_type = forms.ChoiceField(
+        choices=EvidenceType.choices,
+        label="Type",
+        help_text="enter the kind of evidence here",
+    )
+    link = forms.URLField(
+        label="Link", help_text="Add a link to the supporting document online"
+    )
+    file = forms.FileField(
+        label="File upload", help_text="Upload the supporting document"
+    )
+    location = forms.ChoiceField(
+        label="Location",
+        # TODO: show available locations form previous step
+        choices=[("A", "location A"), ("B", "location B")],
+        help_text="Select the location which the evidence applies to",
+    )
+
+RegistrationForm4 = forms.formset_factory(CredentialForm, extra=1)

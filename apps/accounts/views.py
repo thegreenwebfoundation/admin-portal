@@ -1,5 +1,8 @@
 import waffle
+import os
 from waffle.mixins import WaffleFlagMixin
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -15,6 +18,7 @@ from django_registration.backends.activation.views import (
     ActivationView,
     RegistrationView,
 )
+
 from django_registration.exceptions import ActivationError
 from django_registration.forms import RegistrationFormCaseInsensitive
 from formtools.wizard.views import SessionWizardView
@@ -24,6 +28,7 @@ from .forms import (
     RegistrationForm1,
     RegistrationForm2,
     RegistrationForm3,
+    RegistrationForm4,
 )
 from .models import User, ProviderRequest
 
@@ -154,10 +159,10 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
 
 
 class ProviderRegistrationView(SessionWizardView):
-    template_name = "provider_request/registration.html"
+    template_name = "provider_registration/formset.html"
     waffle_flag = "provider_request"
-    form_list = [RegistrationForm1, RegistrationForm2, RegistrationForm3]
-
+    form_list = [RegistrationForm1, RegistrationForm2, RegistrationForm3, RegistrationForm4]
+    file_storage = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'registration_evidence'))
     def done(self, form_list, **kwargs):
         return HttpResponseRedirect("/done/")
 
