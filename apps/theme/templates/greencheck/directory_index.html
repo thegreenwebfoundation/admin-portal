@@ -8,17 +8,22 @@
 <div class="container mx-auto">
   <section class="mx-auto max-w-6xl bg-white border-2 border-dark-gray rounded-md  h-100-l mt-8 py-8">
 
-    <section class="main-content">
-    <form method="get">
+
+
+    <section class="main-content p-4">
+
+      <h1 class="text-xl mb-3 pb-4"> this is just a demo view for directory filtering - please forgive the mess</h1>
+
+    <form method="get" class="mt-4">
         {{ filter.form.as_p }}
         <input type="submit" class="p-4 mt-4 mb-4" />
     </form>
     </section>
 
-    <section class="main-content">
+    <section class="main-content px-4">
       <ul>
       {% for obj in filter.qs %}
-      <li class="m-3 px-8 mt-4">
+      <li class="m-3 mt-4">
         <h4 class="my-4 font-bold text-l">
         {{ obj.name }} - {{ obj.country.name }}
         </h4>
