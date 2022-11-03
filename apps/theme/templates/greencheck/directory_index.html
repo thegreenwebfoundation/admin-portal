@@ -11,11 +11,31 @@
     <section class="main-content">
     <form method="get">
         {{ filter.form.as_p }}
-        <input type="submit" />
+        <input type="submit" class="p-4 mt-4 mb-4" />
     </form>
     </section>
-    
+
     <section class="main-content">
+      <ul>
+      {% for obj in filter.qs %}
+      <li class="m-3 px-8 mt-4">
+        <h4 class="my-4 font-bold text-l">
+        {{ obj.name }} - {{ obj.country.name }}
+        </h4>
+
+      <div class="mv-3">
+      {% if obj.services.names %}
+      <p class="leading-5">
+        {% for service in obj.services.names %}
+          <span class="border m-2 p-2 text-sm" style="background-color: #EAF5E0;">{{ service }}</span>
+        {% endfor %}
+      {% endif %}
+      </p>
+      </div>
+
+        </li>
+    {% endfor %}
+    </ul>
     
     </section>
     
