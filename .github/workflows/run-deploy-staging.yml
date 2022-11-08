@@ -31,7 +31,7 @@ jobs:
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: ./ansible/deploy-staging.yml
+          playbook: ./ansible/deploy.yml
           directory: ./
           key: ${{secrets.SSH_PRIVATE_KEY}}
           inventory: |
