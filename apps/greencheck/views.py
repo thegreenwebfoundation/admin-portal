@@ -216,13 +216,26 @@ class GreencheckStatsView(TemplateView):
         return context
 
 
+from taggit.forms import TagField
+
+
+# class TagFilter(django_filters.CharFilter):
+class TagFilter(django_filters.CharFilter):
+    field_class = TagField
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("lookup_expr", "in")
+        super().__init__(*args, **kwargs)
+
+
+from taggit.models import Tag
+
+
 class ProviderFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr="icontains")
 
-    # TODO - figure our the correct syntax for tag queries
-    # services = django_filters.CharFilter(
-    #     field_name="services", lookup_expr="services__name__in"
-    # )
+    services = TagFilter(field_name="services__slug")
+
     class Meta:
         model = Hostingprovider
         fields = ["country"]
@@ -236,7 +249,9 @@ class DirectoryView(TemplateView):
     template_name = "greencheck/directory_index.html"
 
     def get_context_data(self, *args, **kwargs):
-        queryset = Hostingprovider.objects.filter(showonwebsite=True)
+        queryset = Hostingprovider.objects.filter(showonwebsite=True).prefetch_related(
+            "services"
+        )
 
         ctx = super().get_context_data(**kwargs)
 
