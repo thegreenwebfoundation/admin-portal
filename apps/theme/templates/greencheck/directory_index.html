@@ -30,10 +30,10 @@
 
       <div class="mv-3">
       {% if obj.services.names %}
-      <p class="leading-5">
+      <p class="leading-loose" style="line-height:3rem;">
         {% for service in obj.services.all %}
-          <span class="border m-2 p-2 text-sm" style="background-color: #EAF5E0;">
-            {{ service.name }} | {{ service.slug }}
+          <span class="inline-block border m-4 p-2 text-sm" style="background-color: #EAF5E0; margin-right:1rem;">
+            {{ service.name }} |
           </span>
         {% endfor %}
       {% endif %}
