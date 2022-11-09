@@ -12,7 +12,9 @@
 
     <section class="main-content p-4">
 
-      <h1 class="text-xl mb-3 pb-4"> this is just a demo view for directory filtering - please forgive the mess</h1>
+      <h1 class="text-xl mb-3 pb-4">
+        This is
+      a demo view for directory filtering</h1>
 
     <form method="get" class="mt-4">
         {{ filter.form.as_p }}
@@ -33,7 +35,7 @@
       <p class="leading-loose" style="line-height:3rem;">
         {% for service in obj.services.all %}
           <span class="inline-block border m-4 p-2 text-sm" style="background-color: #EAF5E0; margin-right:1rem;">
-            {{ service.name }} |
+            {{ service.name }}
           </span>
         {% endfor %}
       {% endif %}
