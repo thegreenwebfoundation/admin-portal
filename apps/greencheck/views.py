@@ -219,7 +219,7 @@ class GreencheckStatsView(TemplateView):
 class ProviderFilter(django_filters.FilterSet):
 
     services = django_filters.ModelChoiceFilter(
-        field_name="services__slug",
+        field_name="services",
         label="Services offered",
         queryset=Tag.objects.all(),
     )
@@ -245,7 +245,9 @@ class DirectoryView(TemplateView):
         ctx = super().get_context_data(**kwargs)
 
         filter_results = ProviderFilter(
-            self.request.GET, queryset=queryset, request=self.request
+            self.request.GET,
+            queryset=queryset,
+            request=self.request,
         )
 
         ctx["filter"] = filter_results
