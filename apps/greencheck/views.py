@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic.base import TemplateView
-
+from taggit.models import Tag
 import django_filters
 
 from apps.accounts.models.hosting import Hostingprovider
@@ -216,29 +216,18 @@ class GreencheckStatsView(TemplateView):
         return context
 
 
-from taggit.forms import TagField
-
-
-# class TagFilter(django_filters.CharFilter):
-class TagFilter(django_filters.CharFilter):
-    field_class = TagField
-
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("lookup_expr", "in")
-        super().__init__(*args, **kwargs)
-
-
-from taggit.models import Tag
-
-
 class ProviderFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr="icontains")
 
-    services = TagFilter(field_name="services__slug")
+    services = django_filters.ModelChoiceFilter(
+        field_name="services__slug",
+        label="Services offered",
+        queryset=Tag.objects.all(),
+    )
+    name = django_filters.CharFilter(lookup_expr="icontains")
 
     class Meta:
         model = Hostingprovider
-        fields = ["country"]
+        fields = ["services", "country", "name"]
 
 
 class DirectoryView(TemplateView):
