@@ -1,6 +1,7 @@
 import datetime
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, UsernameField
@@ -213,47 +214,25 @@ class RegistrationForm1(forms.Form):
         help_text="Which country is this provider based in?",
     )
     city = forms.CharField(max_length=255, label="City", help_text="Add the city")
-    services = forms.MultipleChoiceField(
-        widget=forms.SelectMultiple,
-        required=False,
-        choices=tags_choices,
-        help_text="Services offered",
-    )
 
 
-class LocationForm(forms.Form):
+class RegistrationForm2(forms.Form):
     country = CountryField().formfield(
         label="Country",
         blank_label="Select country",
         help_text="Which country is this provider based in?",
     )
     city = forms.CharField(
-        max_length=255, label="City", help_text="List the closest city to this location"
+        max_length=255,
+        label="City",
+        help_text="List the closest city to this location",
     )
     services = forms.MultipleChoiceField(
         widget=forms.SelectMultiple,
         required=False,
         choices=tags_choices,
-        help_text="Services offered",
+        help_text="The following services are offered in this location:",
     )
-
-
-RegistrationForm2 = forms.formset_factory(LocationForm, extra=1)
-
-
-class SupplierForm(forms.Form):
-    supplier = forms.ModelChoiceField(
-        queryset=Hostingprovider.objects.all(), label="Supplier"
-    )
-    services = forms.MultipleChoiceField(
-        widget=forms.SelectMultiple,
-        required=False,
-        choices=tags_choices,
-        label="Services used",
-    )
-
-
-RegistrationForm3 = forms.formset_factory(SupplierForm, extra=1)
 
 
 class CredentialForm(forms.Form):
@@ -266,16 +245,31 @@ class CredentialForm(forms.Form):
         help_text="enter the kind of evidence here",
     )
     link = forms.URLField(
-        label="Link", help_text="Add a link to the supporting document online"
+        label="Link",
+        help_text="Add a link to the supporting document online",
+        required=False,
     )
     file = forms.FileField(
-        label="File upload", help_text="Upload the supporting document"
-    )
-    location = forms.ChoiceField(
-        label="Location",
-        # TODO: show available locations form previous step
-        choices=[("A", "location A"), ("B", "location B")],
-        help_text="Select the location which the evidence applies to",
+        label="File upload",
+        help_text="Upload the supporting document",
+        required=False,
     )
 
-RegistrationForm4 = forms.formset_factory(CredentialForm, extra=1)
+    def clean(self):
+        """
+        Perform validation - only accept one of: file or link.
+        """
+        cleaned_data = super().clean()
+        link = bool(cleaned_data.get("link"))
+        file = bool(cleaned_data.get("file"))
+
+        reason = "Please provide exactly one of the following: link or file."
+
+        if not link and not file:
+            raise ValidationError(f"You didn't provide any evidence.\n{reason}")
+        # TODO: this doesn't work because file upload doesn't work
+        if link and file:
+            raise ValidationError(f"You provided both: a link and a file.\n{reason}")
+
+
+RegistrationForm3 = forms.formset_factory(CredentialForm, extra=1)
