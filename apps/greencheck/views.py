@@ -13,6 +13,7 @@ from django.views.decorators.cache import cache_page
 from django.views.generic.base import TemplateView
 from taggit.models import Tag
 import django_filters
+from waffle.mixins import WaffleFlagMixin
 
 from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.models.checks import GreenDomain
@@ -217,6 +218,12 @@ class GreencheckStatsView(TemplateView):
 
 
 class ProviderFilter(django_filters.FilterSet):
+    """
+    A filter set class to support filtering by
+    name, services provided and the country a provider is based in.
+    for more about django filter see:
+    https://django-filter.readthedocs.io/en/main/
+    """
 
     services = django_filters.ModelChoiceFilter(
         field_name="services",
@@ -230,20 +237,29 @@ class ProviderFilter(django_filters.FilterSet):
         fields = ["services", "country", "name"]
 
 
-class DirectoryView(TemplateView):
+class DirectoryView(WaffleFlagMixin, TemplateView):
     """
     A view for filtering our list of providers by various criteria
     """
 
     template_name = "greencheck/directory_index.html"
+    waffle_flag = "directory_listing"
 
     def get_context_data(self, *args, **kwargs):
+        """
+        Populate the page context with the filtered list
+        of providers
+        """
+
         queryset = Hostingprovider.objects.filter(showonwebsite=True).prefetch_related(
             "services"
         )
 
         ctx = super().get_context_data(**kwargs)
 
+        # We need to pass in our request.GET object to know which filters
+        # to apply, and our queryset is needed to know what pre-existing filters
+        # are required
         filter_results = ProviderFilter(
             self.request.GET,
             queryset=queryset,
