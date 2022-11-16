@@ -21,7 +21,10 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "localhost"
 EMAIL_PORT = 1025
 SITE_URL = "http://localhost:9000"
-MEDIA_ROOT = "/home/oliwia"
+
+MEDIA_ROOT = ROOT("media")
+MEDIA_URL = "/media/"
+DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-test"
 
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"

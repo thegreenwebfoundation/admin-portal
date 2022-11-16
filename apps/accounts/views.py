@@ -2,7 +2,7 @@ import waffle
 import os
 from waffle.mixins import WaffleFlagMixin
 from django.conf import settings
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import DefaultStorage
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,7 +12,6 @@ from django.urls import reverse
 from django.utils.encoding import force_text
 from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
-from django.shortcuts import render
 from django_registration import signals
 from django_registration.backends.activation.views import (
     ActivationView,
@@ -173,12 +172,16 @@ class ProviderRegistrationView(SessionWizardView):
 
     waffle_flag = "provider_request"
     form_list = [RegistrationForm1, RegistrationForm2, RegistrationForm3]
-    file_storage = FileSystemStorage(
-        location=os.path.join(settings.MEDIA_ROOT, "registration_evidence")
-    )
+    file_storage = DefaultStorage()
 
     def done(self, form_list, **kwargs):
-        return JsonResponse({"form_data": [form.cleaned_data for form in form_list]})
+        # TODO: implement this! data should be persisted.
+        # for now it returns a JSON summary of the output
+        # with a hack to avoid serializing UploadedFile (uses its name instead)
+        # a single item in form_list is a list in case of a formset!
+        resp = {"form_data": [form.cleaned_data for form in form_list]}
+        resp["form_data"][-1][0]["file"] = resp["form_data"][-1][0]["file"].name
+        return JsonResponse(resp)
 
     def get_template_names(self):
         formset_template = "provider_registration/formset.html"

@@ -259,6 +259,7 @@ class CredentialForm(forms.Form):
         """
         Perform validation - only accept one of: file or link.
         """
+        # TODO: add a test for custom validation
         cleaned_data = super().clean()
         link = bool(cleaned_data.get("link"))
         file = bool(cleaned_data.get("file"))
@@ -267,7 +268,6 @@ class CredentialForm(forms.Form):
 
         if not link and not file:
             raise ValidationError(f"You didn't provide any evidence.\n{reason}")
-        # TODO: this doesn't work because file upload doesn't work
         if link and file:
             raise ValidationError(f"You provided both: a link and a file.\n{reason}")
 
