@@ -26,6 +26,7 @@ from logentry_admin.admin import (
     UserListFilter,
 )
 import rich
+import datetime
 
 from taggit.models import Tag
 from taggit.managers import TaggableManager
@@ -211,6 +212,7 @@ class HostingCertificateInline(admin.StackedInline):
 class HostingProviderSupportingDocumentInline(admin.StackedInline):
     extra = 0
     model = HostingProviderSupportingDocument
+    form = forms.InlineSupportingDocumentForm
 
 
 class HostingProviderNoteInline(admin.StackedInline):
