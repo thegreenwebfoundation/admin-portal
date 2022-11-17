@@ -166,14 +166,24 @@ class PreviewEmailForm(forms.Form):
 
 class InlineSupportingDocumentForm(forms.ModelForm):
     """
-    A custom form for listing and uploading supporting documents in Hostingprovider admin
+    A custom form for listing and uploading supporting documents
+    in the Hostingprovider admin.
     """
 
     def __init__(self, *args, **kwargs):
+        """
+        For new unbound forms, provide initial values for fields:
+        - public
+        - valid_from
+        - valid_to
+        """
         super(InlineSupportingDocumentForm, self).__init__(*args, **kwargs)
-        self.initial["public"] = False
-        self.initial["valid_from"] = datetime.date.today()
-        self.initial["valid_to"] = datetime.date.today() + datetime.timedelta(days=365)
+        if not self.initial:
+            self.initial["public"] = False
+            self.initial["valid_from"] = datetime.date.today()
+            self.initial["valid_to"] = datetime.date.today() + datetime.timedelta(
+                days=365
+            )
 
     class Meta:
         model = ac_models.HostingProviderSupportingDocument
