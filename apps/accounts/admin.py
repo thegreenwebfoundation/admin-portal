@@ -25,8 +25,6 @@ from logentry_admin.admin import (
     ActionListFilter,
     UserListFilter,
 )
-import rich
-import datetime
 
 from taggit.models import Tag
 from taggit.managers import TaggableManager
