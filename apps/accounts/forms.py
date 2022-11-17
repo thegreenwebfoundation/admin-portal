@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
@@ -160,3 +162,19 @@ class PreviewEmailForm(forms.Form):
 
     # TODO
     # check that we have an email before trying to forwarding to an email service
+
+
+class InlineSupportingDocumentForm(forms.ModelForm):
+    """
+    A custom form for listing and uploading supporting documents in Hostingprovider admin
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(InlineSupportingDocumentForm, self).__init__(*args, **kwargs)
+        self.initial["public"] = False
+        self.initial["valid_from"] = datetime.date.today()
+        self.initial["valid_to"] = datetime.date.today() + datetime.timedelta(days=365)
+
+    class Meta:
+        model = ac_models.HostingProviderSupportingDocument
+        fields = "__all__"
