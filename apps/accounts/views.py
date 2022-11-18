@@ -27,6 +27,8 @@ from .forms import (
     RegistrationForm1,
     RegistrationForm2,
     RegistrationForm3,
+    RegistrationForm4,
+    IpRangeForm,
 )
 from .models import User, ProviderRequest
 
@@ -170,8 +172,21 @@ class ProviderRegistrationView(SessionWizardView):
 
     """
 
+    FORMS = [
+        ("0", RegistrationForm1),
+        ("1", RegistrationForm2),
+        ("2", RegistrationForm3),
+        ("3", RegistrationForm4),
+    ]
+
+    TEMPLATES = {
+        "0": "provider_registration/form.html",
+        "1": "provider_registration/form.html",
+        "2": "provider_registration/formset.html",
+        "3": "provider_registration/multiform.html",
+    }
+
     waffle_flag = "provider_request"
-    form_list = [RegistrationForm1, RegistrationForm2, RegistrationForm3]
     file_storage = DefaultStorage()
 
     def done(self, form_list, **kwargs):
@@ -184,13 +199,14 @@ class ProviderRegistrationView(SessionWizardView):
         return JsonResponse(resp)
 
     def get_template_names(self):
-        formset_template = "provider_registration/formset.html"
-        form_template = "provider_registration/form.html"
-        return [form_template] * 4
+        return [self.TEMPLATES[self.steps.current]]
 
     def get_form_initial(self, step):
+        """
+        Populate the location on step1 using data from step0
+        """
         initial = self.initial_dict.get(step, {})
-        # populate the location on step1 using data from step0
+
         if step == "1":
             prev_step_data = self.get_cleaned_data_for_step("0")
             location_keys = [
@@ -204,9 +220,9 @@ class ProviderRegistrationView(SessionWizardView):
 
         return initial
 
-    def process_step_files(self, form):
-        """
-        TODO: somehow no files are passed?
-        """
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+        # if self.steps.current == 'my_step_name':
+        #     context.update({'another_var': True})
         breakpoint()
-        return self.get_form_step_files(form)
+        return context

@@ -10,6 +10,7 @@ from django_countries.fields import CountryField
 from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
+from betterforms.multiform import MultiForm, MultiModelForm
 
 from apps.accounts.models.hosting import Hostingprovider
 from apps.accounts.models.provider_request import ProviderRequest, EvidenceType
@@ -273,3 +274,31 @@ class CredentialForm(forms.Form):
 
 
 RegistrationForm3 = forms.formset_factory(CredentialForm, extra=1)
+
+
+class IpRangeForm(forms.ModelForm):
+    class Meta:
+        model = ac_models.ProviderRequestIPRange
+        exclude = ["location"]
+
+
+class AsnForm(forms.ModelForm):
+    class Meta:
+        model = ac_models.ProviderRequestASN
+        exclude = ["location"]
+
+
+IpRangeFormset = forms.formset_factory(IpRangeForm, extra=2)
+AsnFormset = forms.formset_factory(AsnForm, extra=2)
+
+
+class RegistrationForm4(MultiModelForm):
+    # We have to set base_fields to a dictionary because the WizardView
+    # tries to introspect it.
+    base_fields = {}
+
+    # TODO: check formsets next
+    form_classes = {
+        "ips": IpRangeFormset,
+        "asns": AsnFormset,
+    }
