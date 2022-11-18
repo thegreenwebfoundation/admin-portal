@@ -1,6 +1,6 @@
 import waffle
-import os
 from waffle.mixins import WaffleFlagMixin
+from enum import Enum
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.contrib import messages
@@ -161,29 +161,36 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
 class ProviderRegistrationView(SessionWizardView):
     """
     Uses django-formtools WizardView to display multi-step form
-    over multiple screens:
-
-    0. organisation and location details
-    1. services offered
-    2. green energy evidence
-    3. IP ranges / ASN in operation
-    4. newsletter + partnership interest
-    5. summary
-
+    over multiple screens
     """
 
+    class Steps(Enum):
+        """
+        Pre-defined list of WizardView steps (screens).
+        WizardView uses numbers from 0 up, encoded as strings,
+        to refer to specific steps.
+
+        This Enum structure aims to provide human-readable names
+        for these steps.
+        """
+
+        ORG_DETAILS = "0"
+        SERVICES = "1"
+        GREEN_EVIDENCE = "2"
+        NETWORK_FOOTPRINT = "3"
+
     FORMS = [
-        ("0", RegistrationForm1),
-        ("1", RegistrationForm2),
-        ("2", RegistrationForm3),
-        ("3", RegistrationForm4),
+        (Steps.ORG_DETAILS.value, RegistrationForm1),
+        (Steps.SERVICES.value, RegistrationForm2),
+        (Steps.GREEN_EVIDENCE.value, RegistrationForm3),
+        (Steps.NETWORK_FOOTPRINT.value, RegistrationForm4),
     ]
 
     TEMPLATES = {
-        "0": "provider_registration/form.html",
-        "1": "provider_registration/form.html",
-        "2": "provider_registration/formset.html",
-        "3": "provider_registration/multiform.html",
+        Steps.ORG_DETAILS.value: "provider_registration/form.html",
+        Steps.SERVICES.value: "provider_registration/form.html",
+        Steps.GREEN_EVIDENCE.value: "provider_registration/formset.html",
+        Steps.NETWORK_FOOTPRINT.value: "provider_registration/multiform.html",
     }
 
     waffle_flag = "provider_request"
@@ -206,9 +213,10 @@ class ProviderRegistrationView(SessionWizardView):
         Populate the location on step1 using data from step0
         """
         initial = self.initial_dict.get(step, {})
+        STEPS = ProviderRegistrationView.Steps
 
-        if step == "1":
-            prev_step_data = self.get_cleaned_data_for_step("0")
+        if step == STEPS.SERVICES.value:
+            prev_step_data = self.get_cleaned_data_for_step(STEPS.ORG_DETAILS.value)
             location_keys = [
                 "country",
                 "city",
@@ -221,8 +229,8 @@ class ProviderRegistrationView(SessionWizardView):
         return initial
 
     def get_context_data(self, form, **kwargs):
+        """
+        TODO: remove this if not needed (after debugging is done)
+        """
         context = super().get_context_data(form=form, **kwargs)
-        # if self.steps.current == 'my_step_name':
-        #     context.update({'another_var': True})
-        breakpoint()
         return context
