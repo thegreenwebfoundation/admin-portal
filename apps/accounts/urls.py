@@ -63,7 +63,7 @@ urlpatterns = [
     ),
     path(
         "requests/new/",
-        ProviderRegistrationView.as_view(),
+        ProviderRegistrationView.as_view(ProviderRegistrationView.FORMS),
         name="provider_registration",
     ),
 ]
