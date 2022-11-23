@@ -193,6 +193,7 @@ class ProviderRegistrationView(SessionWizardView):
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/multiform.html",
     }
 
+    # TODO: figure out why the registration page is available regardless of the flag
     waffle_flag = "provider_request"
     file_storage = DefaultStorage()
 
@@ -206,27 +207,34 @@ class ProviderRegistrationView(SessionWizardView):
         return JsonResponse(resp)
 
     def get_template_names(self):
+        """
+        Configures a template for each step of the Wizard
+        """
         return [self.TEMPLATES[self.steps.current]]
 
+    def _get_initial_location(self):
+        """
+        Returns location data from ORG_DETAILS step
+        """
+        org_details_step = ProviderRegistrationView.Steps.ORG_DETAILS
+        org_details_data = self.get_cleaned_data_for_step(org_details_step.value)
+        location_keys = [
+            "country",
+            "city",
+        ]
+        location_data = dict(
+            [(k, v) for k, v in org_details_data.items() if k in location_keys]
+        )
+        return location_data
+
     def get_form_initial(self, step):
-        """
-        Populate the location on step1 using data from step0
-        """
-        initial = self.initial_dict.get(step, {})
-        STEPS = ProviderRegistrationView.Steps
+        # SERVICES step gets its initial data about the location
+        # from the previous step
+        services_step = ProviderRegistrationView.Steps.SERVICES
+        if step == services_step.value:
+            return self._get_initial_location()
 
-        if step == STEPS.SERVICES.value:
-            prev_step_data = self.get_cleaned_data_for_step(STEPS.ORG_DETAILS.value)
-            location_keys = [
-                "country",
-                "city",
-            ]
-            location_data = dict(
-                [(k, v) for k, v in prev_step_data.items() if k in location_keys]
-            )
-            return location_data
-
-        return initial
+        return self.initial_dict.get(step, {})
 
     def get_context_data(self, form, **kwargs):
         """
