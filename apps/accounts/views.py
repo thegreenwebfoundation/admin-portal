@@ -189,7 +189,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
     TEMPLATES = {
         Steps.ORG_DETAILS.value: "provider_registration/form.html",
         Steps.SERVICES.value: "provider_registration/form.html",
-        Steps.GREEN_EVIDENCE.value: "provider_registration/formset.html",
+        Steps.GREEN_EVIDENCE.value: "provider_registration/formset_multipart.html",
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/multiform.html",
     }
 
@@ -260,10 +260,3 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             return self._get_initial_location()
 
         return self.initial_dict.get(step, {})
-
-    def get_context_data(self, form, **kwargs):
-        """
-        TODO: remove this if not needed (after debugging is done)
-        """
-        context = super().get_context_data(form=form, **kwargs)
-        return context

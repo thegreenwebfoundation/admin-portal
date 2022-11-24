@@ -247,22 +247,6 @@ class CredentialForm(forms.ModelForm):
             "file": "Upload the supporting document",
         }
 
-    def clean(self):
-        """
-        Perform validation - only accept one of: file or link.
-        """
-        # TODO: add a test for custom validation
-        cleaned_data = super().clean()
-        link = bool(cleaned_data.get("link"))
-        file = bool(cleaned_data.get("file"))
-
-        reason = "Please provide exactly one of the following: link or file."
-
-        if not link and not file:
-            raise ValidationError(f"You didn't provide any evidence.\n{reason}")
-        if link and file:
-            raise ValidationError(f"You provided both: a link and a file.\n{reason}")
-
 
 GreenEvidenceForm = forms.formset_factory(CredentialForm, extra=1)
 
