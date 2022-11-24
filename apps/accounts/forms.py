@@ -263,16 +263,15 @@ class AsnForm(forms.ModelForm):
         exclude = ["location"]
 
 
-IpRangeFormset = forms.formset_factory(IpRangeForm, extra=2)
-AsnFormset = forms.formset_factory(AsnForm, extra=2)
+IpRangeFormset = forms.formset_factory(IpRangeForm, extra=1)
+AsnFormset = forms.formset_factory(AsnForm, extra=1)
 
 
 class NetworkFootprintForm(MultiModelForm):
-    # We have to set base_fields to a dictionary because the WizardView
-    # tries to introspect it.
+    # We have to set base_fields to a dictionary because 
+    # the WizardView tries to introspect it.
     base_fields = {}
 
-    # TODO: check formsets next
     form_classes = {
         "ips": IpRangeFormset,
         "asns": AsnFormset,
