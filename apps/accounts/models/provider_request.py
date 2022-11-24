@@ -59,30 +59,6 @@ class ProviderRequest(TimeStampedModel):
         return ProviderRequest.objects.create(**pr_data)
 
 
-class ProviderRequestSupplier(models.Model):
-    """
-    Intermediate abstraction to model a relationship between:
-    - a new ProviderRequest, and
-    - existing Hostingprovider that supplies some services to them.
-    """
-
-    # TODO: add filtering and/or validation to check
-    # that the selected services are offered by the selected supplier.
-
-    supplier = models.ForeignKey(Hostingprovider, on_delete=models.CASCADE)
-    services = TaggableManager(
-        verbose_name="Services used",
-        help_text="Click the services that your organisation uses from the selected supplier. These will be listed in the green web directory.",
-        blank=True,
-    )
-    request = models.ForeignKey(
-        ProviderRequest, on_delete=models.CASCADE, related_name="suppliers"
-    )
-
-    def __str__(self) -> str:
-        return f"{self.supplier}"
-
-
 class ProviderRequestLocation(models.Model):
     """
     Each ProviderRequest may be connected to many ProviderRequestLocations,

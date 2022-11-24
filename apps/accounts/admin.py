@@ -78,7 +78,6 @@ from .models import (
     ProviderRequestIPRange,
     ProviderRequestLocation,
     ProviderRequestEvidence,
-    ProviderRequestSupplier,
 )
 
 logger = logging.getLogger(__name__)
@@ -1101,17 +1100,9 @@ class ProviderRequestLocationInline(NestedStackedInline):
     formfield_overrides = {TaggableManager: {"widget": LabelWidget}}
 
 
-class ProviderRequestSupplierInline(NestedStackedInline):
-    model = ProviderRequestSupplier
-    extra = 0
-    verbose_name = "supplier"
-    autocomplete_fields = ("supplier",)
-    formfield_overrides = {TaggableManager: {"widget": LabelWidget}}
-
-
 @admin.register(ProviderRequest, site=greenweb_admin)
 class ProviderRequest(NestedModelAdmin):
     list_display = ("name", "website", "status", "created")
-    inlines = [ProviderRequestLocationInline, ProviderRequestSupplierInline]
+    inlines = [ProviderRequestLocationInline]
     empty_value_display = "(empty)"
     list_filter = ("status",)
