@@ -193,7 +193,7 @@ class InlineSupportingDocumentForm(forms.ModelForm):
         fields = "__all__"
 
 
-class RegistrationForm1(forms.Form):
+class OrgDetailsForm(forms.Form):
     name = forms.CharField(
         max_length=255,
         label="Name",
@@ -221,43 +221,31 @@ class RegistrationForm1(forms.Form):
         Returns model instances of: ProviderRequest, ProviderRequestLocation
         based on the validated data bound to this Form
         """
-        # TODO: clean this mess below
         pr = ac_models.ProviderRequest.from_kwargs(**self.cleaned_data)
-        loc = ac_models.ProviderRequestLocation.from_kwargs(
-            **self.cleaned_data, request=pr
-        )
 
         if commit:
             pr.save()
-            loc.save()
-        return pr, loc  # can I do this?
+
+        return pr
 
 
-class RegistrationForm2(forms.ModelForm):
+class ServicesForm(forms.ModelForm):
     class Meta:
         model = ac_models.ProviderRequestLocation
         exclude = ["request"]
 
 
-class CredentialForm(forms.Form):
-    title = forms.CharField(
-        max_length=255, label="Title", help_text="Add a descriptive title"
-    )
-    credential_type = forms.ChoiceField(
-        choices=EvidenceType.choices,
-        label="Type",
-        help_text="enter the kind of evidence here",
-    )
-    link = forms.URLField(
-        label="Link",
-        help_text="Add a link to the supporting document online",
-        required=False,
-    )
-    file = forms.FileField(
-        label="File upload",
-        help_text="Upload the supporting document",
-        required=False,
-    )
+class CredentialForm(forms.ModelForm):
+    class Meta:
+        model = ac_models.ProviderRequestEvidence
+        exclude = ["location"]
+        labels = {"file": "File upload"}
+        help_texts = {
+            "title": "Add a descriptive title",
+            "type": "Enter the kind of evidence here",
+            "link": "Add a link to the supporting document online",
+            "file": "Upload the supporting document",
+        }
 
     def clean(self):
         """
@@ -276,7 +264,7 @@ class CredentialForm(forms.Form):
             raise ValidationError(f"You provided both: a link and a file.\n{reason}")
 
 
-RegistrationForm3 = forms.formset_factory(CredentialForm, extra=1)
+GreenEvidenceForm = forms.formset_factory(CredentialForm, extra=1)
 
 
 class IpRangeForm(forms.ModelForm):
@@ -295,7 +283,7 @@ IpRangeFormset = forms.formset_factory(IpRangeForm, extra=2)
 AsnFormset = forms.formset_factory(AsnForm, extra=2)
 
 
-class RegistrationForm4(MultiModelForm):
+class NetworkFootprintForm(MultiModelForm):
     # We have to set base_fields to a dictionary because the WizardView
     # tries to introspect it.
     base_fields = {}
