@@ -51,6 +51,13 @@ class ProviderRequest(TimeStampedModel):
     def get_absolute_url(self) -> str:
         return reverse("provider_request_detail", args=[str(self.id)])
 
+    @staticmethod
+    def from_kwargs(**kwargs):
+        pr_keys = ["name", "website", "description", "status", "created_by"]
+        pr_data = {key: value for (key, value) in kwargs.items() if key in pr_keys}
+        pr_data.setdefault("status", ProviderRequestStatus.OPEN.value())
+        return ProviderRequest.objects.create(**pr_data)
+
 
 class ProviderRequestSupplier(models.Model):
     """
@@ -93,6 +100,14 @@ class ProviderRequestLocation(models.Model):
 
     def __str__(self) -> str:
         return f"{self.request.name} | {self.country}/{self.city}"
+
+    @staticmethod
+    def from_kwargs(**kwargs):
+        location_keys = ["city", "country", "services", "request"]
+        location_data = {
+            key: value for (key, value) in kwargs.items() if key in location_keys
+        }
+        return ProviderRequestLocation.objects.create(**location_data)
 
 
 class ProviderRequestASN(models.Model):
