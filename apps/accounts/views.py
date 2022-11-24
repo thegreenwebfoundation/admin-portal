@@ -200,31 +200,32 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         steps = ProviderRegistrationView.Steps
 
         org_details_form = form_dict[steps.ORG_DETAILS.value]
-        pr = org_details_form.save(commit=False)
-        pr.created_by = self.request.user
-        pr.save()
-
-        services_form = form_dict[steps.SERVICES.value]
-        location = services_form.save(commit=False)
+        pr, location = org_details_form.save(commit=False)
         location.request = pr
         location.save()
 
+        services_form = form_dict[steps.SERVICES.value]
+        pr.set_services(**services_form.cleaned_data)
+        pr.created_by = self.request.user
+        pr.save()
+
         evidence_forms = form_dict[steps.GREEN_EVIDENCE.value].forms
         for evidence_form in evidence_forms:
+            breakpoint()
             evidence = evidence_form.save(commit=False)
-            evidence.location = location
+            evidence.request = pr
             evidence.save()
 
         ip_range_forms = form_dict[steps.NETWORK_FOOTPRINT.value].forms["ips"]
         for ip_range_form in ip_range_forms:
             ip_range = ip_range_form.save(commit=False)
-            ip_range.location = location
+            ip_range.request = pr
             ip_range.save()
 
         asn_forms = form_dict[steps.NETWORK_FOOTPRINT.value].forms["asns"]
         for asn_form in asn_forms:
             asn = asn_form.save(commit=False)
-            asn.location = location
+            asn.request = pr
             asn.save()
 
         return redirect(pr)

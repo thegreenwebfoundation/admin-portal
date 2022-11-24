@@ -222,23 +222,24 @@ class OrgDetailsForm(forms.Form):
         based on the validated data bound to this Form
         """
         pr = ac_models.ProviderRequest.from_kwargs(**self.cleaned_data)
+        location = ac_models.ProviderRequestLocation.from_kwargs(**self.cleaned_data, request=pr)
 
         if commit:
             pr.save()
+            location.save()
 
-        return pr
+        return pr, location
 
 
-class ServicesForm(forms.ModelForm):
-    class Meta:
-        model = ac_models.ProviderRequestLocation
-        exclude = ["request"]
+class ServicesForm(forms.Form):   
+    services = forms.MultipleChoiceField(choices=ProviderRequest.all_service_choices)
+
 
 
 class CredentialForm(forms.ModelForm):
     class Meta:
         model = ac_models.ProviderRequestEvidence
-        exclude = ["location"]
+        exclude = ["request"]
         labels = {"file": "File upload"}
         help_texts = {
             "title": "Add a descriptive title",
@@ -254,13 +255,13 @@ GreenEvidenceForm = forms.formset_factory(CredentialForm, extra=1)
 class IpRangeForm(forms.ModelForm):
     class Meta:
         model = ac_models.ProviderRequestIPRange
-        exclude = ["location"]
+        exclude = ["request"]
 
 
 class AsnForm(forms.ModelForm):
     class Meta:
         model = ac_models.ProviderRequestASN
-        exclude = ["location"]
+        exclude = ["request"]
 
 
 IpRangeFormset = forms.formset_factory(IpRangeForm, extra=1)

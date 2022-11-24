@@ -4,10 +4,10 @@ from django_countries.fields import CountryField
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from taggit.managers import TaggableManager
+from taggit.models import Tag
 from apps.greencheck.models import IpAddressField
 from apps.greencheck.validators import validate_ip_range
 from model_utils.models import TimeStampedModel
-from . import Hostingprovider
 
 
 class ProviderRequestStatus(models.TextChoices):
@@ -44,6 +44,11 @@ class ProviderRequest(TimeStampedModel):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
     )
+    services = TaggableManager(
+        verbose_name="Services offered",
+        help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
+        blank=True,
+    )
 
     def __str__(self) -> str:
         return f"{self.name}"
@@ -57,7 +62,20 @@ class ProviderRequest(TimeStampedModel):
         pr_data = {key: value for (key, value) in kwargs.items() if key in pr_keys}
         pr_data.setdefault("status", ProviderRequestStatus.OPEN.value)
         return ProviderRequest.objects.create(**pr_data)
+    
+    @classmethod
+    def all_service_choices(cls):
+        return [(tag, tag.name) for tag in Tag.objects.all()]
+    
+    def set_services(self, **kwargs):
+        """
+        Given list of IDs, apply matching services to ProviderRequest object
+        """
+        tag_ids = kwargs["services"]
+        services = Tag.objects.filter(id__in=tag_ids)
+        self.services.set(services)
 
+    
 
 class ProviderRequestLocation(models.Model):
     """
@@ -67,11 +85,6 @@ class ProviderRequestLocation(models.Model):
 
     city = models.CharField(max_length=255)
     country = CountryField()
-    services = TaggableManager(
-        verbose_name="Services offered",
-        help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
-        blank=True,
-    )
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
@@ -79,7 +92,7 @@ class ProviderRequestLocation(models.Model):
 
     @staticmethod
     def from_kwargs(**kwargs):
-        location_keys = ["city", "country", "services", "request"]
+        location_keys = ["city", "country", "request"]
         location_data = {
             key: value for (key, value) in kwargs.items() if key in location_keys
         }
@@ -92,8 +105,7 @@ class ProviderRequestASN(models.Model):
     """
 
     asn = models.IntegerField()
-    # TODO: link to request rather than location
-    location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
+    request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return f"{self.asn}"
@@ -106,8 +118,7 @@ class ProviderRequestIPRange(models.Model):
 
     start = IpAddressField()
     end = IpAddressField()
-    # TODO: link to request rather than location
-    location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
+    request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return f"{self.start} - {self.end}"
@@ -135,9 +146,8 @@ class ProviderRequestEvidence(models.Model):
     title = models.CharField(max_length=255)
     link = models.URLField(null=True, blank=True)
     file = models.FileField(null=True, blank=True)
-    # TODO: link to request rather than location
-    location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
     type = models.CharField(choices=EvidenceType.choices, max_length=255)
+    request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return f"{self.title} ({self.type})"
