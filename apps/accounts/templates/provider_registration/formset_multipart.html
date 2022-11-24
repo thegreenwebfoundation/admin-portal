@@ -19,7 +19,7 @@
     });
 </script>
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
-<form action="" method="post">
+<form action="" enctype="multipart/form-data" method="post">
     {% csrf_token %}
     {{ wizard.management_form }}
     {{ wizard.form.management_form }}
