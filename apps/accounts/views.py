@@ -24,10 +24,10 @@ from formtools.wizard.views import SessionWizardView
 
 from .forms import (
     UserUpdateForm,
-    RegistrationForm1,
-    RegistrationForm2,
-    RegistrationForm3,
-    RegistrationForm4,
+    OrgDetailsForm,
+    ServicesForm,
+    GreenEvidenceForm,
+    NetworkFootprintForm,
     IpRangeForm,
 )
 from .models import User, ProviderRequest
@@ -158,7 +158,7 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
         return ProviderRequest.objects.filter(created_by=self.request.user)
 
 
-class ProviderRegistrationView(SessionWizardView):
+class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizardView):
     """
     Uses django-formtools WizardView to display multi-step form
     over multiple screens
@@ -180,10 +180,10 @@ class ProviderRegistrationView(SessionWizardView):
         NETWORK_FOOTPRINT = "3"
 
     FORMS = [
-        (Steps.ORG_DETAILS.value, RegistrationForm1),
-        (Steps.SERVICES.value, RegistrationForm2),
-        (Steps.GREEN_EVIDENCE.value, RegistrationForm3),
-        (Steps.NETWORK_FOOTPRINT.value, RegistrationForm4),
+        (Steps.ORG_DETAILS.value, OrgDetailsForm),
+        (Steps.SERVICES.value, ServicesForm),
+        (Steps.GREEN_EVIDENCE.value, GreenEvidenceForm),
+        (Steps.NETWORK_FOOTPRINT.value, NetworkFootprintForm),
     ]
 
     TEMPLATES = {
@@ -193,30 +193,43 @@ class ProviderRegistrationView(SessionWizardView):
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/multiform.html",
     }
 
-    # TODO: figure out why the registration page is available regardless of the flag
     waffle_flag = "provider_request"
     file_storage = DefaultStorage()
 
     def done(self, form_list, form_dict, **kwargs):
-        # TODO: implement this!
-        # - persist data
-        # - redirect to summary view
-        #
-        # do_something_with_the_form_data(form_list)
-        # user = form_dict['user'].save()
-        # credit_card = form_dict['credit_card'].save()
-        # return HttpResponseRedirect('/page-to-redirect-to-when-done/')
-        #
-        org_details_form = form_dict[ProviderRegistrationView.Steps.ORG_DETAILS.value]
-        pr, loc = org_details_form.save(commit=False)
+        steps = ProviderRegistrationView.Steps
+
+        org_details_form = form_dict[steps.ORG_DETAILS.value]
+        pr = org_details_form.save(commit=False)
         pr.created_by = self.request.user
         pr.save()
-        loc.save()
-        breakpoint()
-        # KeyError below
-        resp = {"form_data": [form.cleaned_data for form in form_list]}
-        resp["form_data"][-1][0]["file"] = resp["form_data"][-1][0]["file"].name
-        return JsonResponse(resp)
+
+        services_form = form_dict[steps.SERVICES.value]
+        location = services_form.save(commit=False)
+        location.request = pr
+        location.save()
+
+        evidence_forms = form_dict[steps.GREEN_EVIDENCE.value].forms
+        for evidence_form in evidence_forms:
+            evidence = evidence_form.save(commit=False)
+            evidence.location = location
+            evidence.save()
+
+        ip_range_forms = form_dict[steps.NETWORK_FOOTPRINT.value].forms["ips"]
+        for ip_range_form in ip_range_forms:
+            ip_range = ip_range_form.save(commit=False)
+            ip_range.location = location
+            ip_range.save()
+
+        asn_forms = form_dict[steps.NETWORK_FOOTPRINT.value].forms["asns"]
+        for asn_form in asn_forms:
+            asn = asn_form.save(commit=False)
+            asn.location = location
+            asn.save()
+
+        # TODO: redirect to summary view
+        # return HttpResponseRedirect('/page-to-redirect-to-when-done/')
+        return JsonResponse({"success": "yay"})
 
     def get_template_names(self):
         """

@@ -55,7 +55,7 @@ class ProviderRequest(TimeStampedModel):
     def from_kwargs(**kwargs):
         pr_keys = ["name", "website", "description", "status", "created_by"]
         pr_data = {key: value for (key, value) in kwargs.items() if key in pr_keys}
-        pr_data.setdefault("status", ProviderRequestStatus.OPEN.value())
+        pr_data.setdefault("status", ProviderRequestStatus.OPEN.value)
         return ProviderRequest.objects.create(**pr_data)
 
 
@@ -116,6 +116,7 @@ class ProviderRequestASN(models.Model):
     """
 
     asn = models.IntegerField()
+    # TODO: link to request rather than location
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
@@ -129,6 +130,7 @@ class ProviderRequestIPRange(models.Model):
 
     start = IpAddressField()
     end = IpAddressField()
+    # TODO: link to request rather than location
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
@@ -157,6 +159,7 @@ class ProviderRequestEvidence(models.Model):
     title = models.CharField(max_length=255)
     link = models.URLField(null=True, blank=True)
     file = models.FileField(null=True, blank=True)
+    # TODO: link to request rather than location
     location = models.ForeignKey(ProviderRequestLocation, on_delete=models.CASCADE)
     type = models.CharField(choices=EvidenceType.choices, max_length=255)
 
