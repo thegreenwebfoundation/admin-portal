@@ -1,17 +1,17 @@
 import waffle
 from waffle.mixins import WaffleFlagMixin
 from enum import Enum
-from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.query import QuerySet
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.encoding import force_text
 from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
+from django.shortcuts import redirect
 from django_registration import signals
 from django_registration.backends.activation.views import (
     ActivationView,
@@ -227,9 +227,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             asn.location = location
             asn.save()
 
-        # TODO: redirect to summary view
-        # return HttpResponseRedirect('/page-to-redirect-to-when-done/')
-        return JsonResponse({"success": "yay"})
+        return redirect(pr)
 
     def get_template_names(self):
         """
