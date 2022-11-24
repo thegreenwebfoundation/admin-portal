@@ -197,11 +197,23 @@ class ProviderRegistrationView(SessionWizardView):
     waffle_flag = "provider_request"
     file_storage = DefaultStorage()
 
-    def done(self, form_list, **kwargs):
-        # TODO: implement this! data should be persisted.
-        # for now it returns a JSON summary of the output
-        # with a hack to avoid serializing UploadedFile (uses its name instead)
-        # a single item in form_list is a list in case of a formset!
+    def done(self, form_list, form_dict, **kwargs):
+        # TODO: implement this!
+        # - persist data
+        # - redirect to summary view
+        #
+        # do_something_with_the_form_data(form_list)
+        # user = form_dict['user'].save()
+        # credit_card = form_dict['credit_card'].save()
+        # return HttpResponseRedirect('/page-to-redirect-to-when-done/')
+        #
+        org_details_form = form_dict[ProviderRegistrationView.Steps.ORG_DETAILS.value]
+        pr, loc = org_details_form.save(commit=False)
+        pr.created_by = self.request.user
+        pr.save()
+        loc.save()
+        breakpoint()
+        # KeyError below
         resp = {"form_data": [form.cleaned_data for form in form_list]}
         resp["form_data"][-1][0]["file"] = resp["form_data"][-1][0]["file"].name
         return JsonResponse(resp)

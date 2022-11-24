@@ -216,24 +216,27 @@ class RegistrationForm1(forms.Form):
     )
     city = forms.CharField(max_length=255, label="City", help_text="Add the city")
 
+    def save(self, commit=True):
+        """
+        Returns model instances of: ProviderRequest, ProviderRequestLocation
+        based on the validated data bound to this Form
+        """
+        # TODO: clean this mess below
+        pr = ac_models.ProviderRequest.from_kwargs(**self.cleaned_data)
+        loc = ac_models.ProviderRequestLocation.from_kwargs(
+            **self.cleaned_data, request=pr
+        )
 
-class RegistrationForm2(forms.Form):
-    country = CountryField().formfield(
-        label="Country",
-        blank_label="Select country",
-        help_text="Which country is this provider based in?",
-    )
-    city = forms.CharField(
-        max_length=255,
-        label="City",
-        help_text="List the closest city to this location",
-    )
-    services = forms.MultipleChoiceField(
-        widget=forms.SelectMultiple,
-        required=False,
-        choices=tags_choices,
-        help_text="The following services are offered in this location:",
-    )
+        if commit:
+            pr.save()
+            loc.save()
+        return pr, loc  # can I do this?
+
+
+class RegistrationForm2(forms.ModelForm):
+    class Meta:
+        model = ac_models.ProviderRequestLocation
+        exclude = ["request"]
 
 
 class CredentialForm(forms.Form):
