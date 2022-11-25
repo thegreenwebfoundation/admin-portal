@@ -205,13 +205,12 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         location.save()
 
         services_form = form_dict[steps.SERVICES.value]
-        pr.set_services(**services_form.cleaned_data)
+        pr.set_services(services_form.cleaned_data["services"])
         pr.created_by = self.request.user
         pr.save()
 
         evidence_forms = form_dict[steps.GREEN_EVIDENCE.value].forms
         for evidence_form in evidence_forms:
-            breakpoint()
             evidence = evidence_form.save(commit=False)
             evidence.request = pr
             evidence.save()
