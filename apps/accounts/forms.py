@@ -222,7 +222,9 @@ class OrgDetailsForm(forms.Form):
         based on the validated data bound to this Form
         """
         pr = ac_models.ProviderRequest.from_kwargs(**self.cleaned_data)
-        location = ac_models.ProviderRequestLocation.from_kwargs(**self.cleaned_data, request=pr)
+        location = ac_models.ProviderRequestLocation.from_kwargs(
+            **self.cleaned_data, request=pr
+        )
 
         if commit:
             pr.save()
@@ -231,9 +233,8 @@ class OrgDetailsForm(forms.Form):
         return pr, location
 
 
-class ServicesForm(forms.Form):   
-    services = forms.MultipleChoiceField(choices=ProviderRequest.all_service_choices)
-
+class ServicesForm(forms.Form):
+    services = forms.MultipleChoiceField(choices=ProviderRequest.get_service_choices)
 
 
 class CredentialForm(forms.ModelForm):
@@ -269,7 +270,7 @@ AsnFormset = forms.formset_factory(AsnForm, extra=1)
 
 
 class NetworkFootprintForm(MultiModelForm):
-    # We have to set base_fields to a dictionary because 
+    # We have to set base_fields to a dictionary because
     # the WizardView tries to introspect it.
     base_fields = {}
 

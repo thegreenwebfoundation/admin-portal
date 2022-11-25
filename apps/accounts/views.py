@@ -205,7 +205,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         location.save()
 
         services_form = form_dict[steps.SERVICES.value]
-        pr.set_services(services_form.cleaned_data["services"])
+        pr.set_services_from_slugs(services_form.cleaned_data["services"])
         pr.created_by = self.request.user
         pr.save()
 
