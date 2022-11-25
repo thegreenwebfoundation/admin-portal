@@ -37,7 +37,6 @@ from dal_select2 import views as dal_select2_views
 
 from waffle.models import Flag
 from waffle.admin import FlagAdmin
-from nested_admin import NestedStackedInline, NestedModelAdmin, NestedTabularInline
 
 from apps.greencheck.models import GreencheckASN
 from apps.greencheck.models import GreencheckIp

@@ -40,7 +40,6 @@ django-model-utils = "*"
 django-mysql = "*"
 django-registration = "==3.1.2"
 django-unixdatetimefield = "==1.0.3"
-django-nested-admin = "*"
 gunicorn = "==19.9.0"
 mysqlclient = "*"
 requests = ">=2"
@@ -90,6 +89,7 @@ django-sql-explorer = "*"
 django-admin-multiple-choice-list-filter = "*"
 django-formtools = "*"
 django-betterforms = "*"
+django-convenient-formsets = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
