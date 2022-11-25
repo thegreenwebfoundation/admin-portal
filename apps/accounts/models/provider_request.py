@@ -64,16 +64,21 @@ class ProviderRequest(TimeStampedModel):
         pr_data.setdefault("status", ProviderRequestStatus.OPEN.value)
         return ProviderRequest.objects.create(**pr_data)
 
-    @classmethod
-    def all_service_choices(cls) -> List[Tuple[int, str]]:
-        return [(tag.slug, tag.name) for tag in Tag.objects.all()]
-
-    def set_services(self, service_slugs: Iterable[Tuple[int, str]]):
+    def set_services_from_slugs(self, service_slugs: Iterable[str]):
         """
-        Given list of IDs, apply matching services to ProviderRequest object
+        Given list of service slugs (corresponding to Tag slugs)
+        apply matching services to the ProviderRequest object
         """
         services = Tag.objects.filter(slug__in=service_slugs)
         self.services.set(services)
+
+    @classmethod
+    def get_service_choices(cls) -> List[Tuple[int, str]]:
+        """
+        Returns a list of available services (implemented in the Tag model)
+        in a format expected by ChoiceField
+        """
+        return [(tag.slug, tag.name) for tag in Tag.objects.all()]
 
 
 class ProviderRequestLocation(models.Model):
