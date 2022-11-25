@@ -80,10 +80,10 @@ INSTALLED_APPS = [
     "taggit_labels",
     "taggit_serializer",
     "waffle",
-    "nested_admin",
     "django_filters",
     "django_admin_multiple_choice_list_filter",
     "formtools",
+    "convenient_formsets",
     # UI
     "tailwind",
     "crispy_forms",
