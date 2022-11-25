@@ -10,7 +10,8 @@ from django_countries.fields import CountryField
 from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
-from betterforms.multiform import MultiForm, MultiModelForm
+from betterforms.multiform import MultiModelForm
+from convenient_formsets import ConvenientBaseFormSet
 
 from apps.accounts.models.hosting import Hostingprovider
 from apps.accounts.models.provider_request import ProviderRequest, EvidenceType
@@ -250,7 +251,11 @@ class CredentialForm(forms.ModelForm):
         }
 
 
-GreenEvidenceForm = forms.formset_factory(CredentialForm, extra=1)
+GreenEvidenceForm = forms.formset_factory(
+    CredentialForm,
+    extra=1,
+    formset=ConvenientBaseFormSet,
+)
 
 
 class IpRangeForm(forms.ModelForm):

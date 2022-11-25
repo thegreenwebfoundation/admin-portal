@@ -28,7 +28,6 @@ from .forms import (
     ServicesForm,
     GreenEvidenceForm,
     NetworkFootprintForm,
-    IpRangeForm,
 )
 from .models import User, ProviderRequest
 
