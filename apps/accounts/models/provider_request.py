@@ -8,6 +8,7 @@ from taggit.models import Tag
 from apps.greencheck.models import IpAddressField
 from apps.greencheck.validators import validate_ip_range
 from model_utils.models import TimeStampedModel
+from typing import Iterable, Tuple, List
 
 
 class ProviderRequestStatus(models.TextChoices):
@@ -62,20 +63,18 @@ class ProviderRequest(TimeStampedModel):
         pr_data = {key: value for (key, value) in kwargs.items() if key in pr_keys}
         pr_data.setdefault("status", ProviderRequestStatus.OPEN.value)
         return ProviderRequest.objects.create(**pr_data)
-    
+
     @classmethod
-    def all_service_choices(cls):
-        return [(tag, tag.name) for tag in Tag.objects.all()]
-    
-    def set_services(self, **kwargs):
+    def all_service_choices(cls) -> List[Tuple[int, str]]:
+        return [(tag.slug, tag.name) for tag in Tag.objects.all()]
+
+    def set_services(self, service_slugs: Iterable[Tuple[int, str]]):
         """
         Given list of IDs, apply matching services to ProviderRequest object
         """
-        tag_ids = kwargs["services"]
-        services = Tag.objects.filter(id__in=tag_ids)
+        services = Tag.objects.filter(slug__in=service_slugs)
         self.services.set(services)
 
-    
 
 class ProviderRequestLocation(models.Model):
     """
