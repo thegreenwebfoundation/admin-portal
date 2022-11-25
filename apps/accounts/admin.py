@@ -1074,35 +1074,35 @@ greenweb_admin.register(Flag, FlagAdmin)
 greenweb_admin.register(LogEntry, GWLogEntryAdmin)
 
 
-class ProviderRequestASNInline(NestedTabularInline):
+class ProviderRequestASNInline(admin.TabularInline):
     model = ProviderRequestASN
     extra = 0
 
 
-class ProviderRequestIPRangeInline(NestedTabularInline):
+class ProviderRequestIPRangeInline(admin.TabularInline):
     model = ProviderRequestIPRange
     extra = 0
 
 
-class ProviderRequestEvidenceInline(NestedTabularInline):
+class ProviderRequestEvidenceInline(admin.TabularInline):
     model = ProviderRequestEvidence
     extra = 0
 
 
-class ProviderRequestLocationInline(NestedStackedInline):
+class ProviderRequestLocationInline(admin.StackedInline):
     model = ProviderRequestLocation
     extra = 0
+
+
+@admin.register(ProviderRequest, site=greenweb_admin)
+class ProviderRequest(admin.ModelAdmin):
+    list_display = ("name", "website", "status", "created")
     inlines = [
+        ProviderRequestLocationInline,
         ProviderRequestEvidenceInline,
         ProviderRequestIPRangeInline,
         ProviderRequestASNInline,
     ]
     formfield_overrides = {TaggableManager: {"widget": LabelWidget}}
-
-
-@admin.register(ProviderRequest, site=greenweb_admin)
-class ProviderRequest(NestedModelAdmin):
-    list_display = ("name", "website", "status", "created")
-    inlines = [ProviderRequestLocationInline]
     empty_value_display = "(empty)"
     list_filter = ("status",)
