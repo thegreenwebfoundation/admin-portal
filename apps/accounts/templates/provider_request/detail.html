@@ -11,60 +11,26 @@
     <li>Status: {{ object.status | upper }}</li>
     <li>Website: {{ object.website }}</li>
     <li>Description: {{ object.description }}</li>
-    <li>Locations:
-        <table>
-            <tr>
-                <th>Location</th>
-                <th>Services provided</th>
-                <th>IP ranges</th>
-                <th>ASNs</th>
-                <th>Supporting evidence</th>
-            </tr>
-            {% for loc in object.providerrequestlocation_set.all %}
-            <tr>
-                <td>{{ loc.city }}, {{ loc.country }}</td>
-                <td>
-                    {% for service in loc.services.values %}
-                    {{ service.name }}<br>
-                    {% endfor %}
-                </td>
-                <td>
-                    {% for ip_range in loc.providerrequestiprange_set.all %}
-                    {{ ip_range }}<br>
-                    {% endfor %}
-                </td>
-                <td>
-                    {% for asn in loc.providerrequestasn_set.all %}
-                    {{ asn }}<br>
-                    {% endfor %}
-                </td>
-                <td>
-                    {% for doc in loc.providerrequestevidence_set.all %}
-                    {{ doc }}<br>
-                    {% endfor %}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
+    <li>Locations: <br>
+        {% for loc in object.providerrequestlocation_set.all %}
+        {{ loc }}<br>
+        {% endfor %}
     </li>
-    <li>
-        Suppliers:
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Services used</th>
-            </tr>
-            {% for s in object.suppliers.all %}
-            <tr>
-                <td>{{ s.supplier }}</td>
-                <td>
-                    {% for service in s.services.values %}
-                    {{ service.name }}<br>
-                    {% endfor %}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
+    <li>Services: <br>
+        {% for service in object.services.all %}
+        {{ service.name }}<br>
+        {% endfor %}
     </li>
+    <li>IP ranges: <br>
+        {% for ip_range in object.providerrequestiprange_set.all %}
+        {{ ip_range }}<br>
+        {% endfor %}
+    </li>
+    <li>ASNs: <br>
+        {% for asn in object.providerrequestasn_set.all %}
+        {{ asn }}<br>
+        {% endfor %}
+    </li>
+
 </ul>
 {% endblock %}
