@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+{{ wizard.form.media }}
+<!-- Initialize a ConvenientFormset -->
+<script>
+    window.addEventListener('load', function (event) {
+        new ConvenientFormset({
+            'formsetPrefix': '{{ wizard.form.prefix }}',
+            'formsContainerSelector': '#convenient-formset',
+            'formSelector': '.convenient-form',
+
+            'canAddForms': true,
+            'addFormButtonSelector': '#add-form-button',
+            'emptyFormSelector': '#empty-form .convenient-form',
+
+            'canDeleteForms': true,
+            'deleteFormButtonSelector': '#delete-form-button',
+        });
+    });
+</script>
+
+<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+{% if form.is_multipart %}
+    <form enctype="multipart/form-data" method="post" action="">
+{% else %}
+    <form method="post" action="">
+{% endif %}
+        {% csrf_token %}
+        {{ wizard.management_form }}
+        {{ wizard.form.management_form }}
+        <div id="convenient-formset">
+            {% for form in wizard.form.forms %}
+            <div class="convenient-form">
+                <table>
+                    {{ form.as_table }}
+                </table>
+                <input type="button" id="delete-form-button" value="Delete">
+            </div>
+            {% endfor %}
+        </div>
+        <div><input type="button" id="add-form-button" value="Add another"></div>
+        <div id="empty-form" style="display:none">
+            <div class="convenient-form">
+                <table>
+                    {{ wizard.form.empty_form.as_table }}
+                </table>
+                <input type="button" id="delete-form-button" value="Delete">
+            </div>
+        </div>
+        {% if wizard.steps.prev %}
+        <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+        <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+        {% endif %}
+        <input type="submit" value="{% trans " submit" %}" />
+    </form>
+{% endblock %}

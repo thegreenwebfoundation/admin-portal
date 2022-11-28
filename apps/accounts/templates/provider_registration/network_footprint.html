@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+{{ wizard.form.media }}
+
+<!-- Initialize a ConvenientFormset twice: for IPs form and for ASNs form -->
+<script>
+    window.addEventListener('load', function (event) {
+        new ConvenientFormset({
+            'formsetPrefix': '{{ wizard.form.ips.prefix }}',
+            'formsContainerSelector': '#convenient-formset-ips',
+            'formSelector': '.convenient-form-ips',
+
+            'canAddForms': true,
+            'addFormButtonSelector': '#add-form-button-ips',
+            'emptyFormSelector': '#empty-form-ips .convenient-form-ips',
+
+            'canDeleteForms': true,
+            'deleteFormButtonSelector': '#delete-form-button-ips',
+        });
+    });
+</script>
+<script>
+    window.addEventListener('load', function (event) {
+        new ConvenientFormset({
+            'formsetPrefix': '{{ wizard.form.asns.prefix }}',
+            'formsContainerSelector': '#convenient-formset-asns',
+            'formSelector': '.convenient-form-asns',
+
+            'canAddForms': true,
+            'addFormButtonSelector': '#add-form-button-asns',
+            'emptyFormSelector': '#empty-form-asns .convenient-form-asns',
+
+            'canDeleteForms': true,
+            'deleteFormButtonSelector': '#delete-form-button-asns',
+        });
+    });
+</script>
+
+<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+{% if form.is_multipart %}
+    <form enctype="multipart/form-data" method="post" action="">
+{% else %}
+    <form method="post" action="">
+{% endif %}
+    {% csrf_token %}
+    {{ wizard.management_form }}
+
+    <!-- wizard.form is a MultiForm (from django-betterforms) -->
+    <!-- that has 2 separate forms: ips, asns -->
+
+    <h3>IP ranges</h3>
+    {{ wizard.form.ips.management_form }}
+    <div id="convenient-formset-ips">
+        {% for form in wizard.form.ips %}
+        <div class="convenient-form-ips">
+            <table>
+                {{ form.as_table }}
+            </table>
+            <input type="button" id="delete-form-button-ips" value="Delete">
+        </div>
+        {% endfor %}
+    </div>
+    <div><input type="button" id="add-form-button-ips" value="Add another IP range"></div>
+    <div id="empty-form-ips" style="display:none">
+        <div class="convenient-form-ips">
+            <table>
+                {{ wizard.form.ips.empty_form.as_table }}
+            </table>
+            <input type="button" id="delete-form-button-ips" value="Delete">
+        </div>
+    </div>
+
+    <h3>Autonomous system numbers</h3>
+    {{ wizard.form.asns.management_form }}
+    <div id="convenient-formset-asns">
+        {% for form in wizard.form.asns %}
+        <div class="convenient-form-asns">
+            <table>
+                {{ form.as_table }}
+            </table>
+            <input type="button" id="delete-form-button-asns" value="Delete">
+        </div>
+        {% endfor %}
+    </div>
+    <div><input type="button" id="add-form-button-asns" value="Add another ASN"></div>
+    <div id="empty-form-asns" style="display:none">
+        <div class="convenient-form-asns">
+            <table>
+                {{ wizard.form.asns.empty_form.as_table }}
+            </table>
+            <input type="button" id="delete-form-button-asns" value="Delete">
+        </div>
+    </div>
+
+    {% if wizard.steps.prev %}
+    <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+    <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+    {% endif %}
+    <input type="submit" value="{% trans " submit" %}" />
+</form>
+{% endblock %}
