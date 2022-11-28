@@ -270,8 +270,10 @@ class AsnForm(forms.ModelForm):
         exclude = ["request"]
 
 
-IpRangeFormset = forms.formset_factory(IpRangeForm, extra=1)
-AsnFormset = forms.formset_factory(AsnForm, extra=1)
+IpRangeFormset = forms.formset_factory(
+    IpRangeForm, formset=ConvenientBaseFormSet, extra=1
+)
+AsnFormset = forms.formset_factory(AsnForm, formset=ConvenientBaseFormSet, extra=3)
 
 
 class NetworkFootprintForm(MultiModelForm):
@@ -279,6 +281,8 @@ class NetworkFootprintForm(MultiModelForm):
     # the WizardView tries to introspect it.
     base_fields = {}
 
+    # `form` passed to the template will have 2 separate formsets inside
+    # accessible by the keys defined as below
     form_classes = {
         "ips": IpRangeFormset,
         "asns": AsnFormset,

@@ -188,8 +188,8 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
     TEMPLATES = {
         Steps.ORG_DETAILS.value: "provider_registration/form.html",
         Steps.SERVICES.value: "provider_registration/form.html",
-        Steps.GREEN_EVIDENCE.value: "provider_registration/formset_multipart.html",
-        Steps.NETWORK_FOOTPRINT.value: "provider_registration/multiform.html",
+        Steps.GREEN_EVIDENCE.value: "provider_registration/dynamic_formset_multipart.html",
+        Steps.NETWORK_FOOTPRINT.value: "provider_registration/network_footprint.html",
     }
 
     waffle_flag = "provider_request"
@@ -252,8 +252,12 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
     def get_form_initial(self, step):
         # SERVICES step gets its initial data about the location
         # from the previous step
-        services_step = ProviderRegistrationView.Steps.SERVICES
-        if step == services_step.value:
+        if step == ProviderRegistrationView.Steps.SERVICES.value:
             return self._get_initial_location()
 
         return self.initial_dict.get(step, {})
+
+    # def get_context_data(self, form, **kwargs):
+    #     context = super().get_context_data(form=form, **kwargs)
+    #     breakpoint()
+    #     return context
