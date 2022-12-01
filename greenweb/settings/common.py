@@ -32,8 +32,6 @@ env = environ.Env(
         os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
     ),
     REDIS_HOST=(str, "localhost"),
-    # for nalysis
-    EXPLORER_TOKEN=(str),
 )
 
 environ.Env.read_env(".env")  # Read .env
@@ -164,9 +162,12 @@ EXPLORER_DEFAULT_CONNECTION = "read_only"
 EXPLORER_AUTORUN_QUERY_WITH_PARAMS = False
 EXPLORER_PERMISSION_VIEW = lambda r: r.user.is_admin
 EXPLORER_PERMISSION_CHANGE = lambda r: r.user.is_admin
-EXPLORER_TOKEN_AUTH_ENABLED = True
-EXPLORER_TOKEN = env("EXPLORER_TOKEN")
 
+# only support API access with the sql explorer if we
+# explicitly set the token
+EXPLORER_TOKEN = env("EXPLORER_TOKEN")
+if EXPLORER_TOKEN:
+    EXPLORER_TOKEN_AUTH_ENABLED = True
 
 # Geo IP database
 GEOIP_PATH = pathlib.Path(ROOT) / "data" / "GeoLite2-City.mmdb"
