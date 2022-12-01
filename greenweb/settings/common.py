@@ -21,6 +21,7 @@ env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, os.getenv("SECRET_KEY")),
     DATABASE_URL=(str, os.getenv("DATABASE_URL")),
+    DATABASE_URL_READ_ONLY=(str, os.getenv("DATABASE_URL_READ_ONLY")),
     DOMAIN_SNAPSHOT_BUCKET=(str, os.getenv("DOMAIN_SNAPSHOT_BUCKET")),
     # add for object storage
     OBJECT_STORAGE_ENDPOINT=(str, os.getenv("OBJECT_STORAGE_ENDPOINT")),
@@ -31,6 +32,8 @@ env = environ.Env(
         os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
     ),
     REDIS_HOST=(str, "localhost"),
+    # for nalysis
+    EXPLORER_TOKEN=(str),
 )
 
 environ.Env.read_env(".env")  # Read .env
@@ -86,6 +89,8 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_tailwind",
     "widget_tweaks",
+    # analysis
+    "explorer",
     # project specific
     "apps.theme",
     "apps.accounts",
@@ -152,8 +157,15 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
     "default": env.db(),
-    # 'extra': env.db('SQLITE_URL'),
+    "read_only": env.db_url("DATABASE_URL_READ_ONLY"),
 }
+EXPLORER_CONNECTIONS = {"Default": "read_only"}
+EXPLORER_DEFAULT_CONNECTION = "read_only"
+EXPLORER_AUTORUN_QUERY_WITH_PARAMS = False
+EXPLORER_PERMISSION_VIEW = lambda r: r.user.is_admin
+EXPLORER_PERMISSION_CHANGE = lambda r: r.user.is_admin
+EXPLORER_TOKEN_AUTH_ENABLED = True
+EXPLORER_TOKEN = env("EXPLORER_TOKEN")
 
 
 # Geo IP database

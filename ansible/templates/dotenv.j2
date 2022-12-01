@@ -3,6 +3,8 @@
 
 MAILGUN_API_KEY={{ lookup('env','MAILGUN_API_KEY') }}
 DATABASE_URL="{{ lookup('env','DATABASE_URL') }}"
+DATABASE_URL_READ_ONLY="{{ lookup('env','DATABASE_URL_READ_ONLY') }}"
+EXPLORER_TOKEN="{{ lookup('env','EXPLORER_TOKEN') }}"
 SECRET_KEY="{{ lookup('env','SECRET_KEY') }}"
 DJANGO_SETTINGS_MODULE="{{ lookup('env','DJANGO_SETTINGS_MODULE') }}"
 SENTRY_DSN="{{ lookup('env', "SENTRY_DSN")}}"
