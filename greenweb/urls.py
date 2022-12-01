@@ -136,4 +136,5 @@ urlpatterns += [
     ),
     path("stats/", include(greencheck_urls)),
     path("directory/", include(directory_urls)),
+    path("explorer/", include("explorer.urls")),
 ]
