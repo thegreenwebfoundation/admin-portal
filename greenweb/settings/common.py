@@ -165,7 +165,7 @@ EXPLORER_PERMISSION_CHANGE = lambda r: r.user.is_admin
 
 # only support API access with the sql explorer if we
 # explicitly set the token
-EXPLORER_TOKEN = env("EXPLORER_TOKEN")
+EXPLORER_TOKEN = os.getenv("EXPLORER_TOKEN")
 if EXPLORER_TOKEN:
     EXPLORER_TOKEN_AUTH_ENABLED = True
 
