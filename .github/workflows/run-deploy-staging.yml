@@ -2,7 +2,7 @@ name: Deploy to staging environment
 
 on:
   push:
-    # TODO: decide whether we should to
+    # TODO: decide whether we should
     # parameterize our deploy script instead of
     # duplicating the action
     branches:
