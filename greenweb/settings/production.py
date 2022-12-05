@@ -12,17 +12,12 @@ EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 
 ALLOWED_HOSTS = [
     "localhost",
-    "thegreenwebfoundation.org",
-    "admin.thegreenwebfoundation.org",
-    "newadmin.thegreenwebfoundation.org",
-    "staging-admin.thegreenwebfoundation.org",
-    "api.thegreenwebfoundation.org",
-    # temporary to workaround the acme rate limit issue
-    "app.greenweb.org",
-    "app3.greenweb.org",
-    "app3-staging.greenweb.org",
-    # for staging
-    "admin-staging.greenweb.org",
+    # accept any address ending with .thegreenwebfoundation.org
+    # for more see the docs about setting a subdomain wildcard
+    # https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-ALLOWED_HOSTS
+    ".thegreenwebfoundation.org",
+    # accept any address ending with .greenweb.org too
+    ".greenweb.org",
 ]
 
 
