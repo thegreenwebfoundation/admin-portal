@@ -58,13 +58,17 @@ class ProviderRequest(TimeStampedModel):
         return reverse("provider_request_detail", args=[str(self.id)])
 
     @staticmethod
-    def from_kwargs(**kwargs):
+    def from_kwargs(**kwargs) -> "ProviderRequest":
+        """
+        Given arbitrary kwargs, construct a new ProviderRequest object.
+        No validation is performed on the created object.
+        """
         pr_keys = ["name", "website", "description", "status", "created_by"]
         pr_data = {key: value for (key, value) in kwargs.items() if key in pr_keys}
         pr_data.setdefault("status", ProviderRequestStatus.OPEN.value)
         return ProviderRequest.objects.create(**pr_data)
 
-    def set_services_from_slugs(self, service_slugs: Iterable[str]):
+    def set_services_from_slugs(self, service_slugs: Iterable[str]) -> None:
         """
         Given list of service slugs (corresponding to Tag slugs)
         apply matching services to the ProviderRequest object
@@ -95,7 +99,11 @@ class ProviderRequestLocation(models.Model):
         return f"{self.request.name} | {self.country}/{self.city}"
 
     @staticmethod
-    def from_kwargs(**kwargs):
+    def from_kwargs(**kwargs) -> "ProviderRequestLocation":
+        """
+        Given arbitrary kwargs, construct a new ProviderRequestLocation object.
+        No validation is performed on the created object.
+        """
         location_keys = ["city", "country", "request"]
         location_data = {
             key: value for (key, value) in kwargs.items() if key in location_keys
@@ -105,7 +113,7 @@ class ProviderRequestLocation(models.Model):
 
 class ProviderRequestASN(models.Model):
     """
-    ASN number that is available to the provider in a specific location.
+    ASN number that is operated by the provider.
     """
 
     asn = models.IntegerField()
@@ -117,7 +125,7 @@ class ProviderRequestASN(models.Model):
 
 class ProviderRequestIPRange(models.Model):
     """
-    IP range that is available to the provider in a specific location.
+    IP range that is operated by the provider.
     """
 
     start = IpAddressField()
@@ -143,8 +151,8 @@ class EvidenceType(models.TextChoices):
 
 class ProviderRequestEvidence(models.Model):
     """
-    Document that certifies that green energy is used in a specific location
-    operated by the provider.
+    Document that certifies that green energy is used by the provider.
+    A single evidence is either a web link or a file.
     """
 
     title = models.CharField(max_length=255)

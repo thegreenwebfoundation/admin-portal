@@ -1,10 +1,9 @@
 import datetime
 
 from django import forms
-from django.core.exceptions import ValidationError
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, UsernameField
+from django.contrib.auth.forms import UserChangeForm, UsernameField
 
 from django_countries.fields import CountryField
 from taggit_labels.widgets import LabelWidget
@@ -12,9 +11,12 @@ from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
 from betterforms.multiform import MultiModelForm
 from convenient_formsets import ConvenientBaseFormSet
+from typing import Tuple
 
-from apps.accounts.models.hosting import Hostingprovider
-from apps.accounts.models.provider_request import ProviderRequest, EvidenceType
+from apps.accounts.models.provider_request import (
+    ProviderRequest,
+    ProviderRequestLocation,
+)
 
 from . import models as ac_models
 from .utils import tags_choices
@@ -195,6 +197,10 @@ class InlineSupportingDocumentForm(forms.ModelForm):
 
 
 class OrgDetailsForm(forms.Form):
+    """
+    Part of multi-step registration form (screen 1)
+    """
+
     name = forms.CharField(
         max_length=255,
         label="Name",
@@ -217,15 +223,13 @@ class OrgDetailsForm(forms.Form):
     )
     city = forms.CharField(max_length=255, label="City", help_text="Add the city")
 
-    def save(self, commit=True):
+    def save(self, commit=True) -> Tuple[ProviderRequest, ProviderRequestLocation]:
         """
         Returns model instances of: ProviderRequest, ProviderRequestLocation
         based on the validated data bound to this Form
         """
-        pr = ac_models.ProviderRequest.from_kwargs(**self.cleaned_data)
-        location = ac_models.ProviderRequestLocation.from_kwargs(
-            **self.cleaned_data, request=pr
-        )
+        pr = ProviderRequest.from_kwargs(**self.cleaned_data)
+        location = ProviderRequestLocation.from_kwargs(**self.cleaned_data, request=pr)
 
         if commit:
             pr.save()
@@ -235,6 +239,10 @@ class OrgDetailsForm(forms.Form):
 
 
 class ServicesForm(forms.Form):
+    """
+    Part of multi-step registration form (screen 2)
+    """
+
     services = forms.MultipleChoiceField(choices=ProviderRequest.get_service_choices)
 
 
@@ -251,6 +259,9 @@ class CredentialForm(forms.ModelForm):
         }
 
 
+# Part of multi-step registration form (screen 3).
+# Uses ConvenientBaseFormSet to display add/delete buttons
+# and manage the forms inside the formset dynamically.
 GreenEvidenceForm = forms.formset_factory(
     CredentialForm,
     extra=1,
@@ -273,15 +284,25 @@ class AsnForm(forms.ModelForm):
 IpRangeFormset = forms.formset_factory(
     IpRangeForm, formset=ConvenientBaseFormSet, extra=1
 )
-AsnFormset = forms.formset_factory(AsnForm, formset=ConvenientBaseFormSet, extra=3)
+AsnFormset = forms.formset_factory(AsnForm, formset=ConvenientBaseFormSet, extra=1)
 
 
 class NetworkFootprintForm(MultiModelForm):
+    """
+    Part of multi-step registration form (screen 4).
+
+    Uses MultiModelForm to display 2 different formsets in a single form.
+
+    Uses ConvenientBaseFormSet to display add/delete buttons
+    and manage the forms inside the formsets dynamically.
+    """
+
     # We have to set base_fields to a dictionary because
     # the WizardView tries to introspect it.
     base_fields = {}
 
-    # `form` passed to the template will have 2 separate formsets inside
+    # The `form` object passed to the template will have
+    # 2 separate formsets inside,
     # accessible by the keys defined as below
     form_classes = {
         "ips": IpRangeFormset,

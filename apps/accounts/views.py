@@ -159,17 +159,23 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
 
 class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizardView):
     """
-    Uses django-formtools WizardView to display multi-step form
-    over multiple screens
+    Multi-step registration for providers.
+    - uses `django-formtools` SessionWizardView to display
+      the multi-step form over multiple screens,
+    - requires the flag `provider_request` enabled to access the view,
+
     """
+
+    waffle_flag = "provider_request"
+    file_storage = DefaultStorage()
 
     class Steps(Enum):
         """
-        Pre-defined list of WizardView steps (screens).
+        Pre-defined list of WizardView steps.
         WizardView uses numbers from 0 up, encoded as strings,
         to refer to specific steps.
 
-        This Enum structure aims to provide human-readable names
+        This Enum structure provides human-readable names
         for these steps.
         """
 
@@ -192,34 +198,49 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/network_footprint.html",
     }
 
-    waffle_flag = "provider_request"
-    file_storage = DefaultStorage()
-
     def done(self, form_list, form_dict, **kwargs):
+        """
+        This method is called when all the forms are validated and submitted.
+
+        Here we create objects for ProviderRequest and related models,
+        based on the validated data from all Forms
+        (passed as `form_dict`, where keys are the names of the steps).
+
+        Because this method is called via POST request,
+        it must return a redirect to a DetailView
+        of a created ProviderRequest instance.
+
+        Reference: https://django-formtools.readthedocs.io/en/latest/wizard.html#formtools.wizard.views.WizardView.done
+        """
         steps = ProviderRegistrationView.Steps
 
+        # process ORG_DETAILS form: extract ProviderRequest and Location
         org_details_form = form_dict[steps.ORG_DETAILS.value]
         pr, location = org_details_form.save(commit=False)
         location.request = pr
         location.save()
 
+        # process SERVICES form: assign services to ProviderRequest
         services_form = form_dict[steps.SERVICES.value]
         pr.set_services_from_slugs(services_form.cleaned_data["services"])
         pr.created_by = self.request.user
         pr.save()
 
+        # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_forms = form_dict[steps.GREEN_EVIDENCE.value].forms
         for evidence_form in evidence_forms:
             evidence = evidence_form.save(commit=False)
             evidence.request = pr
             evidence.save()
 
+        # process NETWORK_FOOTPRINT form: retrieve IP ranges
         ip_range_forms = form_dict[steps.NETWORK_FOOTPRINT.value].forms["ips"]
         for ip_range_form in ip_range_forms:
             ip_range = ip_range_form.save(commit=False)
             ip_range.request = pr
             ip_range.save()
 
+        # process NETWORK_FOOTPRINT form: retrieve ASNs
         asn_forms = form_dict[steps.NETWORK_FOOTPRINT.value].forms["asns"]
         for asn_form in asn_forms:
             asn = asn_form.save(commit=False)
@@ -230,34 +251,8 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
     def get_template_names(self):
         """
-        Configures a template for each step of the Wizard
+        Configures a template for each step of the Wizard.
+
+        Reference: https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.TemplateResponseMixin.get_template_names
         """
         return [self.TEMPLATES[self.steps.current]]
-
-    def _get_initial_location(self):
-        """
-        Returns location data from ORG_DETAILS step
-        """
-        org_details_step = ProviderRegistrationView.Steps.ORG_DETAILS
-        org_details_data = self.get_cleaned_data_for_step(org_details_step.value)
-        location_keys = [
-            "country",
-            "city",
-        ]
-        location_data = dict(
-            [(k, v) for k, v in org_details_data.items() if k in location_keys]
-        )
-        return location_data
-
-    def get_form_initial(self, step):
-        # SERVICES step gets its initial data about the location
-        # from the previous step
-        if step == ProviderRegistrationView.Steps.SERVICES.value:
-            return self._get_initial_location()
-
-        return self.initial_dict.get(step, {})
-
-    # def get_context_data(self, form, **kwargs):
-    #     context = super().get_context_data(form=form, **kwargs)
-    #     breakpoint()
-    #     return context
