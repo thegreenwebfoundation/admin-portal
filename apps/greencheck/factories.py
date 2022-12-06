@@ -26,6 +26,7 @@ class UserFactory(dj_factory.DjangoModelFactory):
 
     username = factory.Faker("user_name")
     email = factory.Faker("email")
+    password = factory.Faker("password")
 
     class Meta:
         model = get_user_model()

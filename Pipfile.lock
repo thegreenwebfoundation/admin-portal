@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "42be88bb3d94962276bcedcdf6f01fbd25f8361a0ec09f40007e714d4e79fe79"
+            "sha256": "bad2206420dc28edb26068dac4ad7c34685ca5c2835329653a408a0bdb0b7bcb"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -2069,7 +2069,7 @@
                 "sha256:2d5443724f640ce07658ca8ca8bbd40d26b58914e63eec6549727869aa67e2cc",
                 "sha256:c2a2ff9dd8dfd991109b517ab98d5cb465e857acb45f6b643a0e284a9eb2cc76"
             ],
-            "markers": "python_version >= '3.7'",
+            "index": "pypi",
             "version": "==15.3.4"
         },
         "filelock": {
@@ -2171,7 +2171,7 @@
                 "sha256:6f62d78e2f89b4500b080fe3a81690850cd254227f27f75c3a0c491a1f351ba7",
                 "sha256:e8443a5e7a020e9d7f97f1d7d9cd17c88bcb3bc7e218bf9cf5095fe550be2951"
             ],
-            "markers": "python_version < '4' and python_full_version >= '3.6.1'",
+            "markers": "python_full_version >= '3.6.1' and python_full_version < '4.0.0'",
             "version": "==5.10.1"
         },
         "jedi": {
@@ -2651,7 +2651,7 @@
                 "sha256:78f9a9bf4e7be0c5ded4583326e7461e3a3c5aae24073648b4bdfa797d78c9d2",
                 "sha256:9d689e6ca1b3038bc82bf8d23e944b6b6037bc02301a574935b2dd946e0353b9"
             ],
-            "markers": "python_version >= '3.5' and python_version < '4'",
+            "markers": "python_version >= '3.5' and python_full_version < '4.0.0'",
             "version": "==4.7.2"
         },
         "ruamel.yaml": {

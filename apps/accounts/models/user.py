@@ -99,7 +99,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         # system, which still looks for the `password` column on the
         # fos_user table
         self.legacy_password = self.password
-        super().save(args, **kwargs)
+        super().save(*args, **kwargs)
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
