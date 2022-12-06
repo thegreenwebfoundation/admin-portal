@@ -54,7 +54,12 @@
     <!-- wizard.form is a MultiForm (from django-betterforms) -->
     <!-- that has 2 separate forms: ips, asns -->
 
-    <h3>IP ranges</h3>
+    <h3>Identify this provider by IP range</h3>
+    <div>
+        Any services or websites running on IP addresses within these ranges below
+        will be recognised as being managed by this provider, and any green credentials
+        from the provider will count towards any green checks.
+    </div>
     {{ wizard.form.ips.management_form }}
     <div id="convenient-formset-ips">
         {% for form in wizard.form.ips %}
@@ -66,7 +71,7 @@
         </div>
         {% endfor %}
     </div>
-    <div><input type="button" id="add-form-button-ips" value="Add another IP range"></div>
+    <div><input type="button" id="add-form-button-ips" value="Add a new IP range"></div>
     <div id="empty-form-ips" style="display:none">
         <div class="convenient-form-ips">
             <table>
@@ -76,7 +81,12 @@
         </div>
     </div>
 
-    <h3>Autonomous system numbers</h3>
+    <h3>Identify this provider by Autonomous System (AS) number</h3>
+    <div>
+        For large services, you can list the AS numbers. The green credentials
+        from this provider will count for any IP address shown to belong
+        to the AS numbers listed below.
+    </div>
     {{ wizard.form.asns.management_form }}
     <div id="convenient-formset-asns">
         {% for form in wizard.form.asns %}
@@ -88,7 +98,7 @@
         </div>
         {% endfor %}
     </div>
-    <div><input type="button" id="add-form-button-asns" value="Add another ASN"></div>
+    <div><input type="button" id="add-form-button-asns" value="Add a new AS number"></div>
     <div id="empty-form-asns" style="display:none">
         <div class="convenient-form-asns">
             <table>

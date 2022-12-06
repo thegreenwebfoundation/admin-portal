@@ -1,6 +1,7 @@
 import datetime
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UsernameField
@@ -259,13 +260,43 @@ class CredentialForm(forms.ModelForm):
         }
 
 
+class MoreConvenientFormset(ConvenientBaseFormSet):
+    def clean(self):
+        """
+        ConvenientBaseFormset validates empty forms in a quirky way:
+        it treats them as valid with cleaned_data = {}.
+
+        This helper class overrides this behavior: empty forms are not allowed.
+        Additionally, it validates if there is no duplicated data in the formset.
+        """
+        super().clean()
+
+        seen = []
+        for form in self.forms:
+            if not bool(form.cleaned_data):
+                e = ValidationError(
+                    "Found an empty entry in the form - please fill it in or delete it",
+                    code="empty",
+                )
+                form.add_error(None, e)
+                raise ValidationError(e)
+            if form.cleaned_data in seen:
+                e = ValidationError(
+                    "Found a duplicated entry in the form, please fix it",
+                    code="duplicate",
+                )
+                form.add_error(None, e)
+                raise ValidationError(e)
+            seen.append(form.cleaned_data)
+
+
 # Part of multi-step registration form (screen 3).
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
 GreenEvidenceForm = forms.formset_factory(
     CredentialForm,
     extra=1,
-    formset=ConvenientBaseFormSet,
+    formset=MoreConvenientFormset,
 )
 
 
@@ -282,9 +313,9 @@ class AsnForm(forms.ModelForm):
 
 
 IpRangeFormset = forms.formset_factory(
-    IpRangeForm, formset=ConvenientBaseFormSet, extra=1
+    IpRangeForm, formset=MoreConvenientFormset, extra=0
 )
-AsnFormset = forms.formset_factory(AsnForm, formset=ConvenientBaseFormSet, extra=1)
+AsnFormset = forms.formset_factory(AsnForm, formset=MoreConvenientFormset, extra=0)
 
 
 class NetworkFootprintForm(MultiModelForm):

@@ -136,7 +136,7 @@ class ProviderRequestIPRange(models.Model):
         return f"{self.start} - {self.end}"
 
     def clean(self) -> None:
-        validate_ip_range(self.start, self.end)
+        return validate_ip_range(self.start, self.end)
 
 
 class EvidenceType(models.TextChoices):
