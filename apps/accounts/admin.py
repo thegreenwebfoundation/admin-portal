@@ -295,9 +295,6 @@ class HostingAdmin(admin.ModelAdmin):
 
     @admin.display(description="Services offered")
     def service_list(obj):
-        # import ipdb
-
-        # ipdb.set_trace()
         return [service.name for service in obj.services.all()]
 
     list_display = [
