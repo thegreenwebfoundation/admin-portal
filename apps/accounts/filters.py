@@ -1,4 +1,10 @@
 from django.contrib.admin import SimpleListFilter
+from django_admin_multiple_choice_list_filter.list_filters import (
+    MultipleChoiceListFilter,
+)
+from django.contrib import messages
+
+
 from django_countries.data import COUNTRIES
 from datetime import datetime
 
@@ -120,7 +126,7 @@ class CountryFilter(SimpleListFilter):
         return queryset.filter(country=self.value())
 
 
-class LabelFilter(SimpleListFilter):
+class LabelFilter(MultipleChoiceListFilter):
     title = "Label"
     parameter_name = "label"
 
@@ -130,7 +136,63 @@ class LabelFilter(SimpleListFilter):
         return [(label.slug, label.name) for label in Label.objects.all()]
 
     def queryset(self, request, queryset):
+        """
+        Filter the existing query by a the active tags.
+        We need to do this in a somewhat awkward way to accomodate django
+        taggit's query magic
+        https://stackoverflow.com/questions/17436978/how-do-i-use-djangos-q-with-django-taggit
+
+        """
+
         if self.value() is None:
             return queryset
-        return queryset.filter(staff_labels__slug__in=[self.value()])
 
+        filter_vals = self.value().split(",")
+
+        if len(filter_vals) == 1:
+            return queryset.filter(staff_labels__slug__in=[filter_vals[0]])
+
+        if len(filter_vals) == 2:
+            first = queryset.filter(staff_labels__slug__in=[filter_vals[0]]).values(
+                "id"
+            )
+            second = queryset.model.objects.filter(
+                pk__in=first, staff_labels__slug__in=[filter_vals[1]]
+            )
+            return second
+
+        if len(filter_vals) == 3:
+            first = queryset.filter(staff_labels__slug__in=[filter_vals[0]]).values(
+                "id"
+            )
+            second = queryset.model.objects.filter(
+                pk__in=first, staff_labels__slug__in=[filter_vals[1]]
+            ).values("id")
+            third = queryset.model.objects.filter(
+                pk__in=second, staff_labels__slug__in=[filter_vals[2]]
+            )
+            return third
+
+        if len(filter_vals) == 4:
+            first = queryset.filter(staff_labels__slug__in=[filter_vals[0]]).values(
+                "id"
+            )
+            second = queryset.model.objects.filter(
+                pk__in=first, staff_labels__slug__in=[filter_vals[1]]
+            ).values("id")
+            third = queryset.model.objects.filter(
+                pk__in=second, staff_labels__slug__in=[filter_vals[2]]
+            )
+            fourth = queryset.model.objects.filter(
+                pk__in=third, staff_labels__slug__in=[filter_vals[3]]
+            )
+            return fourth
+
+        if len(filter_vals) > 4:
+            warning_message = (
+                "Sorry, we cant handle more than 4 active filters at a time. "
+                "Please exclude some of your active filters"
+            )
+
+            messages.add_message(request, messages.WARNING, warning_message)
+            return []

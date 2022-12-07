@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     "waffle",
     "nested_admin",
     "django_filters",
+    "django_admin_multiple_choice_list_filter",
     # UI
     "tailwind",
     "crispy_forms",
