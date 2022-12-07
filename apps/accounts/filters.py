@@ -190,8 +190,9 @@ class LabelFilter(MultipleChoiceListFilter):
 
         if len(filter_vals) > 4:
             warning_message = (
-                "Sorry, we cant handle more than 4 active filters at a time. "
-                "Please exclude some of your active filters"
+                "Sorry, this system does not support using more than 4 active filters"
+                " at a time - no filtering by label has been applied. Please exclude"
+                " some of your active label filters to reactivate filtering."
             )
 
             messages.add_message(request, messages.WARNING, warning_message)
