@@ -290,6 +290,14 @@ class HostingAdmin(admin.ModelAdmin):
         HostingProviderNoteInline,
     ]
     search_fields = ("name",)
+
+    @admin.display(description="Services offered")
+    def service_list(obj):
+        # import ipdb
+
+        # ipdb.set_trace()
+        return [service.name for service in obj.services.all()]
+
     list_display = [
         "name",
         "country_str",
@@ -300,7 +308,8 @@ class HostingAdmin(admin.ModelAdmin):
         "certificates_amount",
         "datacenter_amount",
         "ip_addresses",
-        "services",
+        # "services",
+        service_list,
     ]
     # these are not really fields, but buttons
     # see the corresponding methods
