@@ -197,3 +197,70 @@ class LabelFilter(MultipleChoiceListFilter):
 
             messages.add_message(request, messages.WARNING, warning_message)
             return []
+
+
+class ServiceFilter(MultipleChoiceListFilter):
+    title = "Service Offered"
+    parameter_name = "service"
+
+    def lookups(self, request, queryset):
+        from taggit import models as tag_models
+
+        return [(label.slug, label.name) for label in tag_models.Tag.objects.all()]
+
+    def queryset(self, request, queryset):
+        """
+        Filter the existing query by the active services.
+        We need to do this in a somewhat awkward way to accomodate django
+        taggit's query magic
+        https://stackoverflow.com/questions/17436978/how-do-i-use-djangos-q-with-django-taggit
+
+        """
+
+        if self.value() is None:
+            return queryset
+
+        filter_vals = self.value().split(",")
+
+        if len(filter_vals) == 1:
+            return queryset.filter(services__slug__in=[filter_vals[0]])
+
+        if len(filter_vals) == 2:
+            first = queryset.filter(services__slug__in=[filter_vals[0]]).values("id")
+            second = queryset.model.objects.filter(
+                pk__in=first, services__slug__in=[filter_vals[1]]
+            )
+            return second
+
+        if len(filter_vals) == 3:
+            first = queryset.filter(services__slug__in=[filter_vals[0]]).values("id")
+            second = queryset.model.objects.filter(
+                pk__in=first, services__slug__in=[filter_vals[1]]
+            ).values("id")
+            third = queryset.model.objects.filter(
+                pk__in=second, services__slug__in=[filter_vals[2]]
+            )
+            return third
+
+        if len(filter_vals) == 4:
+            first = queryset.filter(services__slug__in=[filter_vals[0]]).values("id")
+            second = queryset.model.objects.filter(
+                pk__in=first, services__slug__in=[filter_vals[1]]
+            ).values("id")
+            third = queryset.model.objects.filter(
+                pk__in=second, services__slug__in=[filter_vals[2]]
+            )
+            fourth = queryset.model.objects.filter(
+                pk__in=third, services__slug__in=[filter_vals[3]]
+            )
+            return fourth
+
+        if len(filter_vals) > 4:
+            warning_message = (
+                "Sorry, this system does not support using more than 4 active filters"
+                " at a time - no filtering by label has been applied. Please exclude"
+                " some of your active label filters to reactivate filtering."
+            )
+
+            messages.add_message(request, messages.WARNING, warning_message)
+            return []
