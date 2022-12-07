@@ -278,7 +278,6 @@ class HostingAdmin(admin.ModelAdmin):
         filters.YearIPFilter,
         filters.ShowWebsiteFilter,
         filters.PartnerFilter,
-        filters.LabelFilter,
         filters.ServiceFilter,
         filters.CountryFilter,
     ]
