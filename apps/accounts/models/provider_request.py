@@ -159,10 +159,14 @@ class ProviderRequestEvidence(models.Model):
     link = models.URLField(null=True, blank=True)
     file = models.FileField(null=True, blank=True)
     type = models.CharField(choices=EvidenceType.choices, max_length=255)
+    public = models.BooleanField(default=True)
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f"{self.title} ({self.type})"
+        name = f"{self.title}, {self.type}"
+        if self.public:
+            return f"{name}, public"
+        return f"{name}, private"
 
     def clean(self) -> None:
         reason = (

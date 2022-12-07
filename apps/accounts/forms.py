@@ -257,6 +257,7 @@ class CredentialForm(forms.ModelForm):
             "type": "Enter the kind of evidence here",
             "link": "Add a link to the supporting document online",
             "file": "Upload the supporting document",
+            "public": "I agree to this evidence being cited publicly to support my organisation's sustainability claims",
         }
 
 

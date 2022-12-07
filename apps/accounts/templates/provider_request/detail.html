@@ -21,6 +21,11 @@
         {{ service.name }}<br>
         {% endfor %}
     </li>
+    <li>Green evidence: <br>
+        {% for evidence in object.providerrequestevidence_set.all %}
+        {{ evidence }}<br>
+        {% endfor %}
+    </li>
     <li>IP ranges: <br>
         {% for ip_range in object.providerrequestiprange_set.all %}
         {{ ip_range }}<br>
