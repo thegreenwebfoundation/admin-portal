@@ -3,7 +3,7 @@ from django_admin_multiple_choice_list_filter.list_filters import (
     MultipleChoiceListFilter,
 )
 from django.contrib import messages
-
+from .models.choices import PartnerChoice
 
 from django_countries.data import COUNTRIES
 from datetime import datetime
@@ -94,7 +94,7 @@ class PartnerFilter(SimpleListFilter):
     parameter_name = "partner"
 
     def lookups(self, request, model_admin):
-        return ((True, "Partners"),)
+        return PartnerChoice.choices
 
     def queryset(self, request, queryset):
         if self.value() is None:
