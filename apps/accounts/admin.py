@@ -294,6 +294,11 @@ class HostingAdmin(admin.ModelAdmin):
     def service_list(obj):
         return [service.name for service in obj.services.all()]
 
+    @admin.display(description="Staff labels")
+    # TODO figure out how to show this only for staff in listings
+    def label_list(obj):
+        return [label.name for label in obj.staff_labels.all()]
+
     list_display = [
         "name",
         "country_str",
@@ -306,6 +311,7 @@ class HostingAdmin(admin.ModelAdmin):
         "ip_addresses",
         # "services",
         service_list,
+        label_list,
     ]
     # these are not really fields, but buttons
     # see the corresponding methods
