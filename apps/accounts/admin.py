@@ -293,28 +293,39 @@ class HostingAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
     @admin.display(description="Services offered")
-    def service_list(obj):
+    def service_list(self, obj):
         return [service.name for service in obj.services.all()]
 
     @admin.display(description="Staff labels")
-    # TODO figure out how to show this only for staff in listings
-    def label_list(obj):
+    def label_list(self, obj):
+
         return [label.name for label in obj.staff_labels.all()]
 
-    list_display = [
-        "name",
-        "country_str",
-        "html_website",
-        "showonwebsite",
-        "partner",
-        "model",
-        "certificates_amount",
-        "datacenter_amount",
-        "ip_addresses",
-        # "services",
-        service_list,
-        label_list,
-    ]
+    def get_list_display(self, request):
+        """
+        Change the columns in the list depending on whether
+        the user is staff admin of not.
+        """
+
+        NON_STAFF_LIST = [
+            "name",
+            "country_str",
+            "html_website",
+            "showonwebsite",
+            "partner",
+            # "model",
+            # "certificates_amount",
+            "datacenter_amount",
+            "ip_addresses",
+            # "services",
+            self.service_list,
+        ]
+
+        if request.user.is_admin:
+            return [*NON_STAFF_LIST, self.label_list]
+
+        return NON_STAFF_LIST
+
     # these are not really fields, but buttons
     # see the corresponding methods
     readonly_fields = ["preview_email_button", "start_csv_import_button"]
