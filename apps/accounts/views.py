@@ -256,8 +256,3 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         Reference: https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.TemplateResponseMixin.get_template_names
         """
         return [self.TEMPLATES[self.steps.current]]
-
-    # def get_context_data(self, form, **kwargs):
-    #     context = super().get_context_data(form=form, **kwargs)
-    #     breakpoint()
-    #     return context
