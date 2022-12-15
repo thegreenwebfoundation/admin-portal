@@ -14,10 +14,10 @@ module.exports = {
         /*  Templates within theme app (e.g. base.html) */
         '../templates/**/*.html',
 
-        /* Templates in other django apps. */
+        /* Look in templates in other django apps too. */
         '../../**/templates/**/*.html',
 
-        /* project root template dir */
+        /* Finally, look in project root template dir */
         '../../../templates/**/*.html',
 
         /**
