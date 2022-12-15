@@ -18,13 +18,23 @@ dev.createsuperuser:
 dev.runserver:
 	python manage.py runserver
 
+# start the tailwind watcher
+dev.tailwind.start:
+	python manage.py tailwind start
+
+# install the front end dependencies
+dev.tailwind.install:
+	python manage.py tailwind install
+
 dev.test:
 	pytest -s --create-db --looponfail --ds=greenweb.settings.testing
 
 dev.test.only:
 	pytest -s --create-db --looponfail -m only -v  --ds=greenweb.settings.testing
 
-# Run a basic test(with pytest) that creates a database using the testing settings 
+
+
+# Run a basic test(with pytest) that creates a database using the testing settings
 test:
 	pytest -s --create-db --ds=greenweb.settings.testing
 
