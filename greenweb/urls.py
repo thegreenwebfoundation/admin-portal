@@ -49,9 +49,18 @@ router.register(r"ip-ranges", IPRangeViewSet, basename="ip-range")
 router.register(r"asns", ASNViewSet, basename="asn")
 
 if settings.DEBUG:
+    import importlib
     import debug_toolbar
 
-    urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
+
+    # only try adding the reload urls if we have the module installed
+    if importlib.util.find_spec("django_browser_reload"):
+        urlpatterns += [
+            path("__reload__/", include("django_browser_reload.urls")),
+        ]
 
 
 urlpatterns += [

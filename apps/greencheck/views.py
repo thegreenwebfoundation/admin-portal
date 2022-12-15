@@ -60,15 +60,10 @@ class GreenUrlsView(TemplateView):
         return context
 
 
-class GreencheckStatsView(TemplateView):
+class GreencheckStatsView(WaffleFlagMixin, TemplateView):
 
     template_name = "greencheck/stats_index.html"
-
-    def get(self, request, *args, **kwargs):
-        if waffle.flag_is_active(request, "greencheck-stats"):
-            return super().get(request, args, kwargs)
-        else:
-            return HttpResponseRedirect(reverse("greenweb_admin:index"))
+    waffle_flag = "greencheck-stats"
 
     def _get_headline_counts(self, daily_stat_queryset=None):
         """

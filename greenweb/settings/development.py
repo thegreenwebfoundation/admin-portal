@@ -8,11 +8,21 @@ INTERNAL_IPS += [ip[:-1] + "1" for ip in ips]
 ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])  # noqa
 
 INSTALLED_APPS.append("debug_toolbar")  # noqa
+
+INSTALLED_APPS.append("django_browser_reload")  # noqa
+
 INSTALLED_APPS.insert(0, "whitenoise.runserver_nostatic")  # noqa
+
 
 # Insert debug_toolbar middleware as first element
 # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#middleware
 MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa
+
+
+MIDDLEWARE.append(
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
+)  # noqa
+
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
