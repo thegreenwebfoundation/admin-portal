@@ -20,19 +20,19 @@ github:
 
 # List the start up tasks. Learn more https://www.gitpod.io/docs/config-start-tasks/
 tasks:
-  - name: set up python dependencies and database
+  # set up python dependencies and database
+  - name: main terminal
     init: |
       cp ./.env.gitpod ./.env
       mysqladmin create greencheck
-      pipenv install --dev
-      pipenv run ./manage.py migrate
-      pipenv run ./manage.py tailwind install
-      pipenv run ./manage.py tailwind build
+      python -m pipenv install --dev
+      python -m pipenv run python ./manage.py migrate
+      python -m pipenv run python ./manage.py tailwind install
+      python -m pipenv run python ./manage.py tailwind build
       cd ./apps/theme/static_src/
       npx rollup --config
       cd ../../../
-      pipenv run ./manage.py collectstatic --no-input
-
+      python -m pipenv run python ./manage.py collectstatic --no-input
     command: ls
 
   - name: rabbitmq
@@ -54,12 +54,17 @@ tasks:
 
   - name: mailhog
     command: >
-      docker run  
+      docker run
       --rm
       --name green-mailhog
       -p 8025:8025
       -p 1025:1025
       mailhog/mailhog
+
+  - name: tailwind
+    command: >
+      echo
+      "to run tailwind, type: make dev.tailwind.start"
 
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
