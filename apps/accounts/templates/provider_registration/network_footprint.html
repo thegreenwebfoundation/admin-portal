@@ -8,7 +8,9 @@
 {% block content %}
 {{ wizard.form.media }}
 
-<!-- Initialize a ConvenientFormset twice: for IPs form and for ASNs form -->
+<div class="container mx-auto">
+<!-- Initialize a ConvenientForm
+    set twice: for IPs form and for ASNs form -->
 <script>
     window.addEventListener('load', function (event) {
         new ConvenientFormset({
@@ -67,17 +69,17 @@
             <table>
                 {{ form.as_table }}
             </table>
-            <input type="button" id="delete-form-button-ips" value="Delete">
+            <input class="btn"  type="button" id="delete-form-button-ips" value="Delete">
         </div>
         {% endfor %}
     </div>
-    <div><input type="button" id="add-form-button-ips" value="Add a new IP range"></div>
+    <div><input class="btn"  type="button" id="add-form-button-ips" value="Add a new IP range"></div>
     <div id="empty-form-ips" style="display:none">
         <div class="convenient-form-ips">
             <table>
                 {{ wizard.form.ips.empty_form.as_table }}
             </table>
-            <input type="button" id="delete-form-button-ips" value="Delete">
+            <input class="btn" type="button" id="delete-form-button-ips" value="Delete">
         </div>
     </div>
 
@@ -94,11 +96,11 @@
             <table>
                 {{ form.as_table }}
             </table>
-            <input type="button" id="delete-form-button-asns" value="Delete">
+            <input class="btn" type="button" id="delete-form-button-asns" value="Delete">
         </div>
         {% endfor %}
     </div>
-    <div><input type="button" id="add-form-button-asns" value="Add a new AS number"></div>
+    <div><input class="btn" type="button" id="add-form-button-asns" value="Add a new AS number"></div>
     <div id="empty-form-asns" style="display:none">
         <div class="convenient-form-asns">
             <table>
@@ -109,9 +111,10 @@
     </div>
 
     {% if wizard.steps.prev %}
-    <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-    <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+    <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+    <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
     {% endif %}
-    <input type="submit" value="{% trans " submit" %}" />
+    <input class="btn" type="submit" value="{% trans " submit" %}" />
 </form>
+</div>
 {% endblock %}
