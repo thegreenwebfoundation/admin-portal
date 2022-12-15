@@ -1,19 +1,31 @@
-{% extends "admin/base_site.html" %}
-{% load i18n static %}
+{% extends 'base.html' %}
+
+{% load i18n static humanize widget_tweaks tailwind_filters %}
 
 {% block content %}
-<ul>
-    <h1>
-        Your requests
-    </h1>
-    {% for request in object_list %}
-    <li>
-        <a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a>
-    </li>
-    {% empty %}
-    <li>
-        You haven't submitted any requests.
-    </li>
-    {% endfor %}
-</ul>
+
+<div class="container mx-auto">
+
+<article class="prose">
+
+    <ul>
+        <h1 >
+            Your requests
+        </h1>
+        {% for request in object_list %}
+        <li>
+            <a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a>
+        </li>
+        {% empty %}
+        <li>
+            You haven't submitted requests.
+        </li>
+        <li>
+            <button class="btn">Add one, yo</button>
+        </li>
+
+        {% endfor %}
+    </ul>
+</article>
+</div>
 {% endblock %}
