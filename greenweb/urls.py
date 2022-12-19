@@ -40,7 +40,7 @@ from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
 
 from apps.greencheck import urls as greencheck_urls, directory_urls
-
+from apps.theme.views import style_guide
 
 urlpatterns = []
 
@@ -146,4 +146,6 @@ urlpatterns += [
     path("stats/", include(greencheck_urls)),
     path("directory/", include(directory_urls)),
     path("explorer/", include("explorer.urls")),
+    # style guide for front end
+    path("style-guide", style_guide, name="style-guide"),
 ]
