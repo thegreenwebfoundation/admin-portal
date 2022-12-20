@@ -37,6 +37,10 @@ module.exports = {
     ],
     theme: {
         extend: {
+			fontFamily: {
+				sans: ['TWKEverett', 'sans-serif'],
+				serif: ['TWKEverett', 'serif'],
+			  },
             colors: {
                 "tgwf-green": {
                     900: "#EAF5E0",
