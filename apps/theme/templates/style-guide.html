@@ -7,8 +7,94 @@
 {% block content %}
 
 <div class="container mx-auto mt-6 px-4">
-  <div class="prose">
-    <h2>Our content goes here</h2>
-  </div>
+
+	<article class="prose mx-auto" id="top">
+
+		<p>Contents:</p>
+		<ul>
+			<li><a href="#typography">Typography</a></li>
+			<li><a href="#list">Lists</a></li>
+		</ul>
+
+		<h1 id="typography">Typography</h1>
+
+		<p>We have two options for styling typography: default styles and prose styles.</p>
+
+		<h2>Default styles</h2>
+		<p>All heading elements are completely unstyled by default, and have the same font-size and font-weight as normal text. The reason for this is two-fold:</p>
+		<ul>
+			<li><strong>It helps you avoid accidentally deviating from your type scale.</strong> By default, browsers assign sizes to headings that don’t exist in Tailwind’s default type scale, and aren’t guaranteed to exist in your own type scale.</li>
+			<li><strong> In UI development, headings should often be visually de-emphasized.</strong> Making headings unstyled by default means any styling you apply to headings happens consciously and deliberately.</p></li>
+		</ul>
+
+		<h2>Prose styles</h2>
+		<p>Use the <code>prose</code> class to add sensible typography styles to any vanilla HTML.
+
+		<h2>Comparing default and prose</h2>
+		<div class="grid grid-cols-2 gap-4">
+			<section >
+				<p>Default styles</p>
+
+				<div class="not-prose">
+					<h1>Heading one</h1>
+					<h2>Heading two</h2>
+					<h3>Heading three</h3>
+					<p>Lorem ipsum dolor sit amet, <a href="#">consectetur adipiscing elit</a>. Nam vestibulum, nunc at eleifend rhoncus, velit ex laoreet est, a hendrerit justo mauris ut orci.</p>
+				</div>
+			</section>
+
+			<section>
+				<p>Prose styles</p>
+
+				<h1>Heading one</h1>
+				<h2>Heading two</h2>
+				<h3>Heading three</h3>
+				<p>Lorem ipsum dolor sit amet, <a href="#">consectetur adipiscing elit</a>. Nam vestibulum, nunc at eleifend rhoncus, velit ex laoreet est, a hendrerit justo mauris ut orci.</p>
+			</section>
+		</div>
+
+		<p><a href="#top">Up to top</a></p>
+
+		<hr />
+
+		<h1 id="lists">Lists</h1>
+
+		<div class="grid grid-cols-2 gap-4">
+
+		<section>
+			<h2>Bullet list</h2>
+
+			<ul>
+				<li>Apples</li>
+				<li>Banana
+					<ul>
+						<li>Split</li>
+						<li>Boat</li>
+						<li>Brain</li>
+					</ul>
+				</li>
+				<li>Pears</li>
+			</ul>
+		</section>
+		
+		<section>
+		<h2>Numbered list</h2>
+
+			<ol>
+				<li>Apples</li>
+				<li>Bananas</li>
+					<ul>
+						<li>Split</li>
+						<li>Boat</li>
+						<li>Brain</li>
+					</ul>
+				<li>Pears</li>
+			</ol>
+		</section>
+
+		<p><a href="#top">Up to top</a></p>
+
+	</article>
 </div>
-{% endblock  %}
+
+{% endblock content %}
