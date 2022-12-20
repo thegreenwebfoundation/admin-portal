@@ -7,25 +7,24 @@
 <div class="container mx-auto">
 
 <article class="prose">
+	<h1>Your registration requests</h1>
 
-    <ul>
-        <h1 >
-            Your requests
-        </h1>
-        {% for request in object_list %}
-        <li>
+	<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam vestibulum, nunc at eleifend rhoncus, velit ex laoreet est, a hendrerit justo mauris ut orci. Morbi in massa venenatis, varius nibh eu, posuere lorem.</p>
+
+    {% for request in object_list %}
+        <p>
             <a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a>
-        </li>
-        {% empty %}
-        <li>
-            You haven't submitted requests.
-        </li>
-        <li>
-            <a href="/requests/new" class="btn">Add one, yo</a>
-        </li>
+		</p>
 
-        {% endfor %}
-    </ul>
+        {% empty %}
+			<section>
+				<p>You haven't submitted any requests yet.</p>
+				<p>
+					<a href="/requests/new" class="btn">Submit new request</a>
+				</p>
+			</section>
+    {% endfor %}
+
 </article>
 </div>
 {% endblock %}
