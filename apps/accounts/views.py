@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
 from django.shortcuts import redirect
@@ -103,12 +103,10 @@ class AdminActivationView(ActivationView):
             )
             message = "Your user is activated, you can now login"
             messages.add_message(self.request, messages.SUCCESS, message)
-            return HttpResponseRedirect(
-                force_text(self.get_success_url(activated_user))
-            )
+            return HttpResponseRedirect(force_str(self.get_success_url(activated_user)))
 
         messages.add_message(self.request, messages.ERROR, error_message)
-        return HttpResponseRedirect(force_text(self.get_success_url()))
+        return HttpResponseRedirect(force_str(self.get_success_url()))
 
 
 class UserUpdateView(UpdateView):

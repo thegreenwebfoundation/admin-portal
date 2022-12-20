@@ -1,5 +1,4 @@
-from django.urls import path
-from django.conf.urls import url
+from django.urls import path, re_path
 from django.contrib.auth import views as auth_views
 
 from apps.accounts.views import (
@@ -24,7 +23,7 @@ urlpatterns = [
         name="admin_password_reset",
     ),
     path("registration/", AdminRegistrationView.as_view(), name="registration"),
-    url(
+    re_path(
         r"activation/(?P<activation_key>[-:\w]+)/",
         AdminActivationView.as_view(),
         name="activation",

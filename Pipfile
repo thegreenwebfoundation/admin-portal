@@ -30,13 +30,14 @@ furo = "*"
 myst-parser = "*"
 ansible-lint = "*"
 awscli-plugin-endpoint = "*"
+django-upgrade = "*"
 
 [packages]
-django = { extras = ["bcrypt"], version = "~=3.2" }
-django-anymail = { extras = ["mailgun"], version = "==7.0.0" }
+django = { extras = ["bcrypt"], version = "~=4.0" }
+django-anymail = { extras = ["mailgun"], version = "~=8.6" }
 django-countries = "*"
 django-environ = "==0.4.5"
-django-extensions = "==2.2.5"
+django-extensions = "~=3.2"
 django-model-utils = "*"
 django-mysql = "*"
 django-registration = "==3.1.2"
@@ -73,7 +74,7 @@ django-widget-tweaks = "*"
 crispy-tailwind = "*"
 django-crispy-forms = "*"
 django-storages = "*"
-django-taggit-serializer = "*"
+dj-taggit-serializer = "*"
 django-autocomplete-light = "*"
 markdown = "*"
 toml = "*"
