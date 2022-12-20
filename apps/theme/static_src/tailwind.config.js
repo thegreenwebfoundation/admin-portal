@@ -37,23 +37,25 @@ module.exports = {
     ],
     theme: {
         extend: {
+            colors: {
+				'green': {
+					50: '#F0FDF0',
+					100: '#DCFCDC',
+					200: '#BBF7BB',
+					300: '#86EF86',
+					400: '#4ADE4A',
+					500: '#00FF00',
+					600: '#16A316',
+					700: '#158015',
+					800: '#166516',
+					900: '#145314',
+					DEFAULT: '#00FF00',
+				},
+            },			
 			fontFamily: {
 				sans: ['TWKEverett', 'sans-serif'],
 				serif: ['TWKEverett', 'serif'],
-			  },
-            colors: {
-                "tgwf-green": {
-                    900: "#EAF5E0",
-                    800: "#D1E9B9",
-                    700: "#C3E3A6",
-                    600: "#8AC850",
-                    500: "#8AC850",
-                    400: "#5A8C2C",
-                    300: "#476F22",
-                    200: "#37561A",
-                    100: "#1E320C"
-                }
-            }
+			},
         },
     },
     plugins: [
@@ -61,6 +63,5 @@ module.exports = {
         require('@tailwindcss/typography'),
         require('@tailwindcss/line-clamp'),
         require('@tailwindcss/aspect-ratio'),
-        require('daisyui')
     ],
 }
