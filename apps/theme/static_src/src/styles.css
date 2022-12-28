@@ -1,56 +1,6 @@
-@tailwind base;
+@import "css/base.css";
+@import "css/components.css";
+@import "css/utilities.css";
 
-@layer base {
-	@font-face {
-	  font-family: TWKEverett;
-	  font-weight: 400;
-	  src: url(../fonts/TWKEverett-Regular-web.woff2) format("woff2");
-	}
-	@font-face {
-	  font-family: TWKEverett;
-	  font-weight: 400;
-	  font-style: italic;
-	  src: url(../fonts/TWKEverett-RegularItalic-web.woff2) format("woff2");
-	}
-	html {
-		@apply text-neutral-700;
-	}
-	*,
-	::before,
-	::after {
-		@apply border-black;
-	}
-	a {
-		@apply underline;
-	}
-	a:hover {
-		@apply no-underline;
-	}
-	h1 {
-		@apply text-4xl;
-		@apply md:text-5xl;
-		@apply uppercase;
-	}
-}
-
-
-@tailwind components;
-
-@layer components {
-	.btn {
-	  	@apply bg-green;
-		@apply rounded-3xl;
-		@apply my-2.5;
-		@apply py-2.5;
-		@apply px-4;
-		@apply no-underline;
-		@apply border;
-		@apply uppercase;
-	}
-	.btn:hover {
-		@apply bg-green-200;
-	}
-}
-
-
-@tailwind utilities;
+/***** custom css files here *****/
+@import "css/custom/tableform.css";

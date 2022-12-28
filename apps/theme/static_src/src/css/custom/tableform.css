@@ -1,0 +1,24 @@
+/* Styles for forms that are laid out as tables */
+
+.form__table {
+	@apply my-4;
+}
+.form__table tr {
+	@apply flex;
+	@apply flex-col;
+	@apply items-start;
+	@apply py-8;
+}
+
+.form__table td {
+	@apply flex;
+	@apply flex-col;
+}
+.form__table td input,
+.form__table td textarea,
+.form__table td select {
+	@apply order-last;
+}
+.form__table span.helptext {
+	@apply py-6;
+}

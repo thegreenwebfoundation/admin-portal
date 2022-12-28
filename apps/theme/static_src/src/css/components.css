@@ -1,0 +1,17 @@
+@tailwind components;
+
+@layer components {
+	.btn {
+	  	@apply bg-green;
+		@apply rounded-3xl;
+		@apply my-2.5;
+		@apply py-2.5;
+		@apply px-4;
+		@apply no-underline;
+		@apply border;
+		@apply uppercase;
+	}
+	.btn:hover {
+		@apply bg-green-200;
+	}
+}
