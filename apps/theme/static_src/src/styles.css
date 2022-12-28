@@ -29,6 +29,7 @@
 	h1 {
 		@apply text-4xl;
 		@apply md:text-5xl;
+		@apply uppercase;
 	}
 }
 
@@ -44,6 +45,7 @@
 		@apply px-4;
 		@apply no-underline;
 		@apply border;
+		@apply uppercase;
 	}
 	.btn:hover {
 		@apply bg-green-200;
