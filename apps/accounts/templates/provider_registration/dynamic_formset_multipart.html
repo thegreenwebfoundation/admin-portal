@@ -28,9 +28,9 @@
 
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 {% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post" action="">
+    <form enctype="multipart/form-data" method="post" action="" class="form__table">
 {% else %}
-    <form method="post" action="">
+    <form method="post" action="" class="form__table>
 {% endif %}
         {% csrf_token %}
         {{ wizard.management_form }}
