@@ -204,25 +204,29 @@ class OrgDetailsForm(forms.Form):
 
     name = forms.CharField(
         max_length=255,
-        label="Name",
-        help_text="What is the brand or commonly used name for this provider? This will be the name listed in the directory",
+        label="What is your organisation\'s name?",
+        help_text="What is the brand or commonly used name? This will be the publicly listed name.",
     )
     website = forms.URLField(
         max_length=255,
-        label="Web address",
-        help_text="Add the full URL - don't forget the https:// part",
+        label="What is your web address?",
+        help_text="Add the full URL - please include the https:// part.",
     )
     description = forms.CharField(
-        label="Description",
-        help_text="Add the description for this organisation, as you would expect to see it in the search results",
+        label="How do you describe this organisation?",
+        help_text="Add a short description for your organisation, as you would expect to see in search results.",
         widget=forms.Textarea,
     )
     country = CountryField().formfield(
-        label="Country",
+        label="Which country is your organisation based in?",
         blank_label="Select country",
-        help_text="Which country is this provider based in?",
+        help_text="Choose a country from the list.",
     )
-    city = forms.CharField(max_length=255, label="City", help_text="Add the city")
+    city = forms.CharField(
+		max_length=255,
+		label="Which city are you based in?",
+		help_text="If your organisation is not based in a city, let us know the nearest city."
+	)
 
     def save(self, commit=True) -> Tuple[ProviderRequest, ProviderRequestLocation]:
         """
