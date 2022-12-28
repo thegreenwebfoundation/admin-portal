@@ -26,12 +26,7 @@
 	a:hover {
 		@apply no-underline;
 	}
-	h1 {
-		@apply text-4xl;
-		@apply md:text-5xl;
-		@apply uppercase;
-	}
 	label {
-		@apply text-3xl;
+		@apply text-4xl;
 	}
 }

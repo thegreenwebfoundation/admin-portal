@@ -36,6 +36,20 @@ module.exports = {
         // '../../**/*.py'
     ],
     theme: {
+		fontSize: {
+			xs: '0.75rem',
+			sm: '0.875rem',
+			base: '1rem',
+			med: '1.125rem',
+			xl: '1.25rem',
+			'2xl': '1.5rem',
+			'3xl': '1.75rem',
+			'4xl': '2rem',
+			'5xl': '2.25rem',
+			'6xl': '2.5rem',
+			'disp-sm': '2.75rem',
+			'disp-lg': '3.25rem',
+		},
         extend: {
             colors: {
 				'green': {
@@ -56,6 +70,28 @@ module.exports = {
 				sans: ['TWKEverett', 'sans-serif'],
 				serif: ['TWKEverett', 'serif'],
 			},
+			typography: (theme) => ({
+				DEFAULT: {
+					css: {
+						h1: {
+							textTransform: 'uppercase',
+							fontSize: theme('fontSize.6xl'),
+						},
+						h2: {
+							fontSize: theme('fontSize.5xl'),
+						},
+						h3: {
+							fontSize: theme('fontSize.4xl'),
+						},
+						h4: {
+							fontSize: theme('fontSize.3xl'),
+						},
+						h5: {
+							fontSize: theme('fontSize.2xl'),
+						},
+					},
+				},
+			}),
         },
     },
     plugins: [
