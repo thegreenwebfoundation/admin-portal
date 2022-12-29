@@ -24,13 +24,13 @@
 			<p class="mb-10">Before starting the verification process, we recommend reading our guide <a href="https://www.thegreenwebfoundation.org/what-you-need-to-register/" target="_blank" rel="noopener noreferrer">What you need to register</a> and preparing your evidence in advance.</p>
 			<p><a href="/requests/new" class="btn">Start a verification request</a></p>
 
+			<h3 class="text-xl pt-10">Your submitted requests</h3>
+
 			{% for request in object_list %}
-				<h3 class="text-xl pt-10">Your submitted requests</h3>
-				<p>
-					<a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a>
-				</p>
+				<p><a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a></p>
 
 				{% empty %}
+				<p>No submitted requests
 			
 			{% endfor %}
 		</section>
