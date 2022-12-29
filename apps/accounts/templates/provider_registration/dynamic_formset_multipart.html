@@ -27,6 +27,14 @@
 </script>
 
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+
+<section class="prose mt-10">
+	<h1>Submit your evidence</h1>
+	<p>To verify that you are a green hosting provider, please provide evidence to show the steps you're taking to <span class="italic">avoid, reduce, or offset</span> the emissions caused by the digital infrastructure you use.</p>
+	<p><a href="https://www.thegreenwebfoundation.org/what-you-need-to-register/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of evidence we request</a>.</p>
+	<p class="font-bold">For each row, add EITHER a link OR upload a file.</p>
+</section>
+
 {% if form.is_multipart %}
     <form enctype="multipart/form-data" method="post" action="" class="form__table">
 {% else %}
@@ -36,18 +44,24 @@
         {{ wizard.management_form }}
         {{ wizard.form.management_form }}
         <div id="convenient-formset">
+
             {% for form in wizard.form.forms %}
-            <div class="convenient-form">
+            <div class="convenient-form form__table--evidence">
+
                 <table>
                     {{ form.as_table }}
                 </table>
-                <input type="button" id="delete-form-button" value="Delete">
+                <input type="button" id="delete-form-button" value="&#x274C; Delete this row">
             </div>
             {% endfor %}
         </div>
-        <div><input type="button" id="add-form-button" value="Add another"></div>
+
+        <div class="my-12">
+			<input type="button" id="add-form-button" value="Add another row of evidence" class="btn btn-white">
+		</div>
+
         <div id="empty-form" style="display:none">
-            <div class="convenient-form">
+            <div class="convenient-form form__table--evidence">
                 <table>
                     {{ wizard.form.empty_form.as_table }}
                 </table>

@@ -262,11 +262,11 @@ class CredentialForm(forms.ModelForm):
         exclude = ["request"]
         labels = {"file": "File upload"}
         help_texts = {
-            "title": "Add a descriptive title",
-            "type": "Enter the kind of evidence here",
-            "link": "Add a link to the supporting document online",
-            "file": "Upload the supporting document",
-            "public": "I agree to this evidence being cited publicly to support my organisation's sustainability claims",
+            "title": "Title this piece of evidence",
+            "type": "Tell us the kind of evidence",
+            "link": "Provide link to supporting document, include the https:// part",
+            "file": "OR upload the supporting document",
+            "public": "By checking this box you agree to this evidence being cited publicly to support your organisation's sustainability claims. NB It is not mandatory to make evidence public to become verified as a green hosting provider.",
         }
 
 
