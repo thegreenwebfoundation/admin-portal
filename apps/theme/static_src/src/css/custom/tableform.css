@@ -35,6 +35,7 @@
 .form__table--evidence {
 	@apply bg-neutral-200;
 	@apply rounded-xl;
+	@apply mb-4;
 	@apply p-4;
 }
 
@@ -43,9 +44,10 @@
 	@apply gap-8;
 }
 .form__table--evidence tbody > * {
-	@apply w-1/5;
 	@apply py-0;
+	@apply w-1/5;
 }
+
 /* Typically within the th element */
 .form__table--evidence label {
 	@apply text-sm;

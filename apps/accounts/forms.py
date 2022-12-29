@@ -265,8 +265,8 @@ class CredentialForm(forms.ModelForm):
             "title": "Title this piece of evidence",
             "type": "Tell us the kind of evidence",
             "link": "Provide link to supporting document, include the https:// part",
-            "file": "OR upload the supporting document",
-            "public": "By checking this box you agree to this evidence being cited publicly to support your organisation's sustainability claims. NB It is not mandatory to make evidence public to become verified as a green hosting provider.",
+            "file": "OR upload a supporting document in PDF or image format",
+            "public": "By checking this box you agree to this evidence being cited publicly to support your organisation's sustainability claims<sup>**</sup>",
         }
 
 
@@ -285,7 +285,7 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
         for form in self.forms:
             if not bool(form.cleaned_data):
                 e = ValidationError(
-                    "Found an empty entry in the form - please fill it in or delete it",
+                    "This row has no information - please complete or delete it",
                     code="empty",
                 )
                 form.add_error(None, e)
