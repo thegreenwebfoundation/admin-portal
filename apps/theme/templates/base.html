@@ -12,7 +12,7 @@
 
 	<body>
 
-		<div class="bg-white border-b-2">
+		<header class="bg-white border-b-2">
 			<div class="container mx-auto px-2 sm:px-4">
 			
 				{% block nav %}
@@ -38,9 +38,14 @@
 				{% endblock nav %}
 
 			</div>
-		</div>
-		
 
+			<div class="bg-black">
+				<div class="container mx-auto px-2 sm:px-4">
+					<p class="py-2 text-green text-sm uppercase">The Green Domains dataset</p>
+				</div>
+			</div>
+		</header>
+		
 		<div class="relative">
 			<div class="hidden lg:block fixed -z-50 right-0 w-11/12 -top-24 bg-no-repeat bg-right bg-[length:100%_100%] bg-gradient-to-l from-green-100 via-green-700" style="background: radial-gradient(circle, rgba(187,247,187,1) 0%, rgba(255,255,255,1) 71%); height: calc(100% + 100px); right: -50vw;"></div>
 
