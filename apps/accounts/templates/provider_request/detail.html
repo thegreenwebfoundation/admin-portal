@@ -2,13 +2,16 @@
 {% load i18n static %}
 
 {% block content %}
-<section class="prose max-w-none">
+<section class="prose mx-auto">
 
-	<p class="text-6xl mb-0"><span class="uppercase">Summary of request for:</span> {{ object.name }}</p>
-	<p>Submitted at: {{ object.created }}</p>
-	<p>Status: <span class="uppercase">{{ object.status }}</span></p>
+	<header class="">
+		<h1 class="text-6xl mb-0"><span class="uppercase">Summary of request</h1>
+		
+		<p>Submitted on: {{ object.created }}</p>
+		<p>Status: <span class="uppercase">{{ object.status }}</span></p>
+	</header>
 
-	<article class="max-w-2xl pb-16">
+	<article class="pb-12">
 
 		<h2>Details submitted</h2>
 
@@ -78,9 +81,7 @@
 
 	</article>
 
-	<div class="my-10">
-		<a class="btn" href="/requests">Back to requests home</a>
-	</div>
+	<a class="btn mb-0" href="/requests">Back to requests home</a>
 
 </section>
 {% endblock %}
