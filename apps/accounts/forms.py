@@ -248,7 +248,12 @@ class ServicesForm(forms.Form):
     Part of multi-step registration form (screen 2)
     """
 
-    services = forms.MultipleChoiceField(choices=ProviderRequest.get_service_choices)
+    services = forms.MultipleChoiceField(
+		choices=ProviderRequest.get_service_choices,
+		widget=forms.CheckboxSelectMultiple,
+		label="What hosting services do you offer?",
+		help_text="Choose all the services that your organisation offers."
+	)
 
 
 class CredentialForm(forms.ModelForm):

@@ -4,6 +4,7 @@
 	.btn {
 		@apply inline-block;
 	  	@apply bg-green;
+		@apply text-black;
 		@apply rounded-3xl;
 		@apply my-2.5;
 		@apply py-2.5;

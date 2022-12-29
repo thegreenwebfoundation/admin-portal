@@ -17,8 +17,9 @@
 .form__table td input,
 .form__table td textarea,
 .form__table td select {
-	@apply order-last;
+	
 }
 .form__table span.helptext {
+	@apply order-first;
 	@apply py-6;
 }

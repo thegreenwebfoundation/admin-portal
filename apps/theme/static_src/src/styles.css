@@ -3,4 +3,5 @@
 @import "css/utilities.css";
 
 /***** custom css files here *****/
+@import "css/custom/forms.css";
 @import "css/custom/tableform.css";
