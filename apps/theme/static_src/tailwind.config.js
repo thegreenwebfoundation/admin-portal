@@ -79,9 +79,16 @@ module.exports = {
 						},
 						h2: {
 							fontSize: theme('fontSize.5xl'),
+							borderTopWidth: '2px',
+							borderBottomWidth: '2px',
+							paddingTop: '1.5rem',
+							paddingBottom: '1.5rem',
 						},
 						h3: {
 							fontSize: theme('fontSize.4xl'),
+							borderBottomWidth: '1px',
+							paddingBottom: '0.5rem',
+							marginBottom: '1rem',
 						},
 						h4: {
 							fontSize: theme('fontSize.3xl'),
