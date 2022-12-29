@@ -46,28 +46,29 @@
         <div id="convenient-formset">
 
             {% for form in wizard.form.forms %}
-            <div class="convenient-form form__table--evidence">
-
-                <table>
+            <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
+                <table class="form__table--evidence">
                     {{ form.as_table }}
                 </table>
-                <input type="button" id="delete-form-button" value="&#x274C; Delete this row">
+                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this row">
             </div>
             {% endfor %}
         </div>
 
-        <div class="my-12">
+        <div class="my-12 prose">
+			<p class="mb-12"><sup>**</sup>NB It is <strong>not</strong> mandatory to make evidence public to become verified as a green hosting provider. However, we encourage you to do so wherever possible to increase your transparency and accountability.</p>
 			<input type="button" id="add-form-button" value="Add another row of evidence" class="btn btn-white">
 		</div>
 
         <div id="empty-form" style="display:none">
-            <div class="convenient-form form__table--evidence">
-                <table>
+            <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
+                <table class="form__table--evidence">
                     {{ wizard.form.empty_form.as_table }}
                 </table>
-                <input type="button" id="delete-form-button" value="Delete">
+                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this row">
             </div>
         </div>
+
         {% if wizard.steps.prev %}
         <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
         <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>

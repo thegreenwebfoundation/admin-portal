@@ -1,10 +1,11 @@
 /* Styles for forms that are laid out as tables */
 
-/* 1. GENERAL form_table    */
-/* 2. EVIDENCE TABLE        */
+/* 1. GENERAL form_table        */
+/* 2. EVIDENCE TABLE            */
+/* 3. NETWORK FOOTPRINT TABLE   */
 
 
-/* 1. GENERAL form_table    */
+/* 1. GENERAL form_table        */
 .form__table {
 	@apply my-4;
 }
@@ -28,28 +29,30 @@
 	@apply order-first;
 	@apply py-6;
 }
-
-
-/* 2. EVIDENCE TABLE        */
-
-.form__table--evidence {
-	@apply bg-neutral-200;
-	@apply rounded-xl;
-	@apply mb-4;
-	@apply p-4;
+.form__table ul {
+	@apply mt-6;
 }
 
-.form__table--evidence tbody {
+.errorlist {
+	@apply text-purple;
+	@apply order-2;
+}
+.errorlist + input,
+.errorlist + select {
+	@apply border-purple;
+}
+
+
+table[class^="form__table--"] tbody {
 	@apply flex;
 	@apply gap-8;
 }
-.form__table--evidence tbody > * {
+table[class^="form__table--"] tbody > * {
 	@apply py-0;
 	@apply w-1/5;
 }
-
 /* Typically within the th element */
-.form__table--evidence label {
+table[class^="form__table--"] label {
 	@apply text-sm;
 	@apply uppercase;
 	@apply font-normal;
@@ -58,6 +61,10 @@
 	@apply pb-1;
 	@apply mb-2;
 }
+
+
+/* 2. EVIDENCE TABLE            */
+
 .form__table--evidence tr > td {
 	@apply w-full;
 	@apply mt-4;
@@ -76,11 +83,8 @@
 	@apply text-sm;
 }
 
-.errorlist {
-	@apply text-purple;
-	@apply order-2;
-}
-.errorlist + input,
-.errorlist + select {
-	@apply border-purple;
+
+/* 3. NETWORK FOOTPRINT TABLE   */
+.form__table--network tbody > tr {
+	@apply w-auto;
 }
