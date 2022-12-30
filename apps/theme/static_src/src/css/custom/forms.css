@@ -1,5 +1,6 @@
 label {
 	@apply text-4xl;
+	@apply text-black;
 }
 
 [type="text"],
@@ -39,8 +40,5 @@ textarea {
 form li label {
 	@apply text-base;
 	@apply uppercase;
-}
-form td ul li {
-	@apply py-2;
 }
 

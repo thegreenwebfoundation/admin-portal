@@ -214,7 +214,7 @@ class OrgDetailsForm(forms.Form):
     )
     description = forms.CharField(
         label="How do you describe this organisation?",
-        help_text="Add a short description for your organisation, as you would expect to see in search results.",
+        help_text="Add a single paragraph about your organisation, as you would expect to see in search results.",
         widget=forms.Textarea,
     )
     country = CountryField().formfield(

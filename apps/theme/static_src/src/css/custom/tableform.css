@@ -19,11 +19,11 @@
 .form__table td {
 	@apply flex;
 	@apply flex-col;
+	@apply pl-0;
 }
-.form__table td input,
-.form__table td textarea,
-.form__table td select {
-
+.form__table label {
+	@apply block;
+	@apply mb-4;
 }
 .form__table span.helptext {
 	@apply order-first;
@@ -59,11 +59,14 @@ table[class^="form__table--"] label {
 	@apply border-b-2;
 	@apply border-green;
 	@apply pb-1;
-	@apply mb-2;
 }
 
 
 /* 2. EVIDENCE TABLE            */
+.form__table--evidence tbody {
+	@apply flex-wrap;
+	@apply xl:flex-nowrap;
+}
 
 .form__table--evidence tr > td {
 	@apply w-full;
@@ -85,6 +88,11 @@ table[class^="form__table--"] label {
 
 
 /* 3. NETWORK FOOTPRINT TABLE   */
+.form__table--network tbody {
+	@apply flex-wrap;
+	@apply 2xl:flex-nowrap;
+}
+
 .form__table--network tbody > tr {
 	@apply w-auto;
 }

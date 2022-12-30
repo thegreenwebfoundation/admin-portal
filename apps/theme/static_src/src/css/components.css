@@ -22,4 +22,15 @@
 	.btn-white:hover {
 		@apply bg-green-200;
 	}
+	.btn-black {
+		@apply bg-black;
+		@apply text-green;
+	}
+	.btn-black:hover {
+		@apply bg-green-200;
+		@apply text-black;
+	}
+	.btn-sm {
+		@apply text-sm;
+	}
 }

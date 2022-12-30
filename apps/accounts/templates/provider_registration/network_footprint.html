@@ -68,15 +68,14 @@
     <!-- wizard.form is a MultiForm (from django-betterforms) -->
     <!-- that has 2 separate forms: ips, asns -->
 
-	<div class="grid grid-cols-2 gap-16 my-10">
+	<div class="lg:grid grid-cols-2 gap-16 my-10">
 
-		<section class="prose border-2 rounded-xl p-6">
-			<div class="prose">
-				<h3 class="text-3xl">Identify this provider by IP range</h3>
-				<p>Any services or websites running on IP addresses within these ranges below will be recognised as being managed by this provider, 
-					and any green credentials from the provider will count towards any green checks.</p>
-				<p>A valid IP address should be in the format of ‘xxx.xxx.xxx.xxx’ where each ‘xxx’ is a number field that ranges from 0-255.</p>
-			</div>
+		<section class="prose border-2 rounded-xl mb-6 lg:mb-0 p-6">
+
+			<h3 class="text-3xl mt-0">Identify this provider by IP range</h3>
+			<p>Any services or websites running on IP addresses within these ranges below will be recognised as being managed by this provider, 
+				and any green credentials from the provider will count towards any green checks.</p>
+			<p>A valid IP address should be in the format of ‘xxx.xxx.xxx.xxx’ where each ‘xxx’ is a number field that ranges from 0-255.</p>
 
 			{{ wizard.form.ips.management_form }}
 			<div id="convenient-formset-ips">
@@ -106,11 +105,9 @@
 
 		<section class="prose border-2 rounded-xl p-6">
 
-			<div class="prose">
-				<h3 class="text-3xl">Identify this provider by ASN</h3>
-				<p>For large services, you can list the AS numbers. The green credentials
-				from this provider will count for any IP address shown to belong to the AS numbers listed below.</p>
-			</div>
+			<h3 class="text-3xl mt-0">Identify this provider by ASN</h3>
+			<p>For large services, you can list the AS numbers. The green credentials
+			from this provider will count for any IP address shown to belong to the AS numbers listed below.</p>
 
 			{{ wizard.form.asns.management_form }}
 			<div id="convenient-formset-asns">
@@ -139,11 +136,15 @@
 		</section>
 	</div>
 
+	<input class="btn" type="submit" value="{% trans "Save and submit" %}" />
+
     {% if wizard.steps.prev %}
-    <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-    <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+	<div>
+    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+	</div>
     {% endif %}
-    <input class="btn" type="submit" value="{% trans " submit" %}" />
+
 </form>
 </div>
 {% endblock %}

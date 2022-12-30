@@ -9,6 +9,12 @@
 <div class="container mx-auto">
 
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+
+<section class="prose mt-10">
+	<h1>About your organisation</h1>
+	<p>A few simple questions about your organisation.</p>
+</section>
+
 {% if form.is_multipart %}
     <form enctype="multipart/form-data" method="post" action="" class="form__table">
 {% else %}
@@ -26,11 +32,16 @@
     {{ wizard.form }}
 {% endif %}
 </table>
+
+<input class="btn" type="submit" value="{% trans "next" %}"/>
+
 {% if wizard.steps.prev %}
-<button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-<button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+<div class="">
+	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+</div>
 {% endif %}
-<input class="btn" type="submit" value="{% trans "submit" %}"/>
+
 </form>
 </div>
 {% endblock %}
