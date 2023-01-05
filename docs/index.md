@@ -18,7 +18,7 @@ This site also provides a summary of the other main libraries maintained by the 
 
 ### Getting started
 
-Need to get going quickly? Start with [installation steps](installation.md), and if you need to push changes for review visit the [deployment instructions](deployment.md).
+Need to get going quickly? Start with [installation steps](installation.md), see [the answers to common questions](how-to.md), and if you need to push changes for review visit the [deployment instructions](deployment.md).
 
 ```{toctree}
 general.md
