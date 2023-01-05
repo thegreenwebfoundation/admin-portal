@@ -1,0 +1,36 @@
+@tailwind components;
+
+@layer components {
+	.btn {
+		@apply inline-block;
+	  	@apply bg-green;
+		@apply text-black;
+		@apply rounded-3xl;
+		@apply my-2.5;
+		@apply py-2.5;
+		@apply px-4;
+		@apply no-underline;
+		@apply border-2;
+		@apply uppercase;
+	}
+	.btn:hover {
+		@apply bg-green-200;
+	}
+	.btn-white {
+		@apply bg-white;
+	}
+	.btn-white:hover {
+		@apply bg-green-200;
+	}
+	.btn-black {
+		@apply bg-black;
+		@apply text-green;
+	}
+	.btn-black:hover {
+		@apply bg-green-200;
+		@apply text-black;
+	}
+	.btn-sm {
+		@apply text-sm;
+	}
+}

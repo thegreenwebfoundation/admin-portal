@@ -1,41 +1,89 @@
-{% extends "admin/base_site.html" %}
+{% extends 'base.html' %}
 {% load i18n static %}
 
 {% block content %}
-<ul>
-    <h1>
-        Summary of your request: {{ object.name }}
-    </h1>
+<section class="prose mx-auto">
 
-    <li>Submitted at: {{ object.created }}</li>
-    <li>Status: {{ object.status | upper }}</li>
-    <li>Website: {{ object.website }}</li>
-    <li>Description: {{ object.description }}</li>
-    <li>Locations: <br>
-        {% for loc in object.providerrequestlocation_set.all %}
-        {{ loc }}<br>
-        {% endfor %}
-    </li>
-    <li>Services: <br>
-        {% for service in object.services.all %}
-        {{ service.name }}<br>
-        {% endfor %}
-    </li>
-    <li>Green evidence: <br>
-        {% for evidence in object.providerrequestevidence_set.all %}
-        {{ evidence }}<br>
-        {% endfor %}
-    </li>
-    <li>IP ranges: <br>
-        {% for ip_range in object.providerrequestiprange_set.all %}
-        {{ ip_range }}<br>
-        {% endfor %}
-    </li>
-    <li>ASNs: <br>
-        {% for asn in object.providerrequestasn_set.all %}
-        {{ asn }}<br>
-        {% endfor %}
-    </li>
+	<header class="">
+		<p class="mb-6 text-sm text-green"><a href="/requests" class="text-neutral-500">< Back to requests home</a></p>
 
-</ul>
+		<h1 class="text-6xl mb-0"><span class="uppercase">Summary of request</h1>
+		
+		<p>Submitted on: {{ object.created }}</p>
+		<p>Status: <span class="uppercase">{{ object.status }}</span></p>
+	</header>
+
+	<article class="pb-12">
+
+		<h2>Details submitted</h2>
+
+		<h3 class="text-2xl">About this provider</h3>
+		<table class="table-fixed">
+			<tr>
+				<td class="w-64">Organisation name</td>
+				<td>{{ object.name }}</td>
+			</tr>
+			<tr>
+				<td>Website</td>
+				<td>{{ object.website }}</td>
+			</tr>
+			<tr>
+				<td>Description</td>
+				<td>{{ object.description }}</td>
+			</tr>
+			<tr>
+				<td>Locations</td>
+				<td>				
+					{% for loc in object.providerrequestlocation_set.all %}
+					{{ loc }}<br>
+					{% endfor %}
+				</td>
+			</tr>
+			<tr>
+				<td>Services</td>
+				<td>
+					{% for service in object.services.all %}
+					{{ service.name }}<br>
+					{% endfor %}
+				</td>
+			</tr>
+		</table>
+
+		<h3 class="text-2xl">Supporting evidence</h3>
+		<table class="table-fixed">
+			<tr>
+				<td class="w-64">Green evidence</td>
+				<td>
+					{% for evidence in object.providerrequestevidence_set.all %}
+					{{ evidence }}<br>
+					{% endfor %}
+				</td>
+			</tr>
+		</table>
+
+		<h3 class="text-2xl">IP and ASN ranges</h3>
+		<table class="table-fixed">			
+			<tr>
+				<td class="w-64">IP ranges</td>
+				<td>
+					{% for ip_range in object.providerrequestiprange_set.all %}
+					{{ ip_range }}<br>
+					{% endfor %}
+				</td>
+			</tr>
+			<tr>
+				<td>ASNs</td>
+				<td>
+					{% for asn in object.providerrequestasn_set.all %}
+					{{ asn }}<br>
+					{% endfor %}
+				</td>
+			</tr>
+		</table>
+
+	</article>
+
+	<a class="btn mb-0" href="/requests">Back to requests home</a>
+
+</section>
 {% endblock %}

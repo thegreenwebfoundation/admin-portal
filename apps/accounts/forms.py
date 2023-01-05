@@ -204,25 +204,29 @@ class OrgDetailsForm(forms.Form):
 
     name = forms.CharField(
         max_length=255,
-        label="Name",
-        help_text="What is the brand or commonly used name for this provider? This will be the name listed in the directory",
+        label="What is your organisation\'s name?",
+        help_text="What is the brand or commonly used name? This will be the publicly listed name.",
     )
     website = forms.URLField(
         max_length=255,
-        label="Web address",
-        help_text="Add the full URL - don't forget the https:// part",
+        label="What is your web address?",
+        help_text="Add the full URL - please include the https:// part.",
     )
     description = forms.CharField(
-        label="Description",
-        help_text="Add the description for this organisation, as you would expect to see it in the search results",
+        label="How do you describe this organisation?",
+        help_text="Add a single paragraph about your organisation, as you would expect to see in search results.",
         widget=forms.Textarea,
     )
     country = CountryField().formfield(
-        label="Country",
+        label="Which country is your organisation based in?",
         blank_label="Select country",
-        help_text="Which country is this provider based in?",
+        help_text="Choose a country from the list.",
     )
-    city = forms.CharField(max_length=255, label="City", help_text="Add the city")
+    city = forms.CharField(
+		max_length=255,
+		label="Which city are you based in?",
+		help_text="If your organisation is not based in a city, let us know the nearest city."
+	)
 
     def save(self, commit=True) -> Tuple[ProviderRequest, ProviderRequestLocation]:
         """
@@ -244,7 +248,12 @@ class ServicesForm(forms.Form):
     Part of multi-step registration form (screen 2)
     """
 
-    services = forms.MultipleChoiceField(choices=ProviderRequest.get_service_choices)
+    services = forms.MultipleChoiceField(
+		choices=ProviderRequest.get_service_choices,
+		widget=forms.CheckboxSelectMultiple,
+		label="What hosting services do you offer?",
+		help_text="Choose all the services that your organisation offers."
+	)
 
 
 class CredentialForm(forms.ModelForm):
@@ -253,11 +262,11 @@ class CredentialForm(forms.ModelForm):
         exclude = ["request"]
         labels = {"file": "File upload"}
         help_texts = {
-            "title": "Add a descriptive title",
-            "type": "Enter the kind of evidence here",
-            "link": "Add a link to the supporting document online",
-            "file": "Upload the supporting document",
-            "public": "I agree to this evidence being cited publicly to support my organisation's sustainability claims",
+            "title": "Title this piece of evidence",
+            "type": "Tell us the kind of evidence",
+            "link": "Provide link to supporting document, include the https:// part",
+            "file": "OR upload a supporting document in PDF or image format",
+            "public": "By checking this box you agree to this evidence being cited publicly to support your organisation's sustainability claims<sup>**</sup>",
         }
 
 
@@ -276,7 +285,7 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
         for form in self.forms:
             if not bool(form.cleaned_data):
                 e = ValidationError(
-                    "Found an empty entry in the form - please fill it in or delete it",
+                    "This row has no information - please complete or delete it",
                     code="empty",
                 )
                 form.add_error(None, e)

@@ -170,9 +170,9 @@ class ProviderRequestEvidence(models.Model):
 
     def clean(self) -> None:
         reason = (
-            "Exactly one of the value for the evidence, link or file, must be provided"
+            "Provide a link OR a file on each row"
         )
         if self.link is None and not bool(self.file):
-            raise ValidationError(f"{reason}. Neither of them were provided")
+            raise ValidationError(f"{reason}, you haven't submitted either.")
         if self.link and bool(self.file):
-            raise ValidationError(f"{reason}. Both of them were provided")
+            raise ValidationError(f"{reason}, you've attempted to submit both - we've removed the file for now.")

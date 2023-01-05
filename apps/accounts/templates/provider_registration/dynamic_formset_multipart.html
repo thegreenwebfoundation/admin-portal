@@ -27,38 +27,57 @@
 </script>
 
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+
+<section class="prose mt-10">
+	<h1>Submit your evidence</h1>
+	<p>To verify that you are a green hosting provider, please provide evidence to show the steps you're taking to <span class="italic">avoid, reduce, or offset</span> the emissions caused by the digital infrastructure you use.</p>
+	<p><a href="https://www.thegreenwebfoundation.org/what-you-need-to-register/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of evidence we request</a>.</p>
+	<p class="font-bold">For each row, add a link OR upload a file.</p>
+</section>
+
 {% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post" action="">
+    <form enctype="multipart/form-data" method="post" action="" class="form__table">
 {% else %}
-    <form method="post" action="">
+    <form method="post" action="" class="form__table>
 {% endif %}
         {% csrf_token %}
         {{ wizard.management_form }}
         {{ wizard.form.management_form }}
         <div id="convenient-formset">
+
             {% for form in wizard.form.forms %}
-            <div class="convenient-form">
-                <table>
+            <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
+                <table class="form__table--evidence">
                     {{ form.as_table }}
                 </table>
-                <input type="button" id="delete-form-button" value="Delete">
+                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this row">
             </div>
             {% endfor %}
         </div>
-        <div><input type="button" id="add-form-button" value="Add another"></div>
+
+        <div class="my-12 prose">
+			<p class="mb-12"><sup>**</sup>NB It is <strong>not</strong> mandatory to make evidence public to become verified as a green hosting provider. However, we encourage you to do so wherever possible to increase your transparency and accountability.</p>
+			<input type="button" id="add-form-button" value="Add another row of evidence" class="btn btn-white">
+		</div>
+
         <div id="empty-form" style="display:none">
-            <div class="convenient-form">
-                <table>
+            <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
+                <table class="form__table--evidence">
                     {{ wizard.form.empty_form.as_table }}
                 </table>
-                <input type="button" id="delete-form-button" value="Delete">
+                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this row">
             </div>
         </div>
+
+		<input class="btn" type="submit" value="{% trans " next" %}" />
+
         {% if wizard.steps.prev %}
-        <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-        <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+		<div>
+       		<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+        	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+		</div>
         {% endif %}
-        <input class="btn" type="submit" value="{% trans " submit" %}" />
+
     </form>
 </div>
 {% endblock %}

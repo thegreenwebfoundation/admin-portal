@@ -1,0 +1,44 @@
+label {
+	@apply text-4xl;
+	@apply text-black;
+}
+
+[type="text"],
+[type="email"],
+[type="url"],
+[type="password"],
+[type="number"],
+[type="date"],
+[type="datetime-local"],
+[type="month"],
+[type="search"],
+[type="tel"],
+[type="time"],
+[type="week"],
+[multiple],
+textarea,
+select {
+	@apply border-black;
+	@apply border-0;
+	@apply border-b-2;
+}
+textarea {
+	@apply border-2;
+}
+[type="checkbox"], 
+[type="radio"] {
+	@apply mb-2;
+	@apply mr-2;
+	@apply text-black;
+}
+[type="checkbox"]:checked, 
+[type="radio"]:checked {
+	@apply bg-black;
+}
+
+/* Form layouts specific to Django HTML output */
+form li label {
+	@apply text-base;
+	@apply uppercase;
+}
+
