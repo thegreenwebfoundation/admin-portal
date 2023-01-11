@@ -10,10 +10,9 @@
 
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
-<section class="prose mt-10">
-	<h1>About your organisation</h1>
-	<p>A few simple questions about your organisation.</p>
-</section>
+<!-- child templates can override this to inject custom HTML content -->
+{% block header_section %}
+{% endblock %}
 
 {% if form.is_multipart %}
     <form enctype="multipart/form-data" method="post" action="" class="form__table">

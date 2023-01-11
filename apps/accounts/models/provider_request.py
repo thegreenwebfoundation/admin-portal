@@ -186,3 +186,18 @@ class ProviderRequestEvidence(models.Model):
             raise ValidationError(
                 f"{reason}, you've attempted to submit both - we've removed the file for now."
             )
+
+
+class ProviderRequestConsent(models.Model):
+    """
+    Set of agreements that the user consents to (or not) to by submitting the request.
+    """
+
+    data_processing_opt_in = models.BooleanField(default=False)
+    newsletter_opt_in = models.BooleanField(default=False)
+    request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        data_processing = f"Data processing: {self.data_processing_opt_in}"
+        newsletter = f"Newsletter signup: {self.newsletter_opt_in}"
+        return f"{data_processing}, {newsletter}"

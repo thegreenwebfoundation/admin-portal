@@ -17,6 +17,7 @@ from typing import Tuple
 from apps.accounts.models.provider_request import (
     ProviderRequest,
     ProviderRequestLocation,
+    ProviderRequestConsent,
 )
 
 from . import models as ac_models
@@ -369,3 +370,28 @@ class NetworkFootprintForm(MultiModelForm):
         "ips": IpRangeFormset,
         "asns": AsnFormset,
     }
+
+
+class ConsentForm(forms.ModelForm):
+    """
+    Part of multi-step registration form (screen 5).
+
+    Gathers consent information.
+    """
+
+    data_processing_opt_in = forms.BooleanField(
+        required=True,
+        initial=False,
+        label="I consent to my submitted information being stored and processed to allow a response to my inquiry",
+        help_text="See our full privacy notice at https://www.thegreenwebfoundation.org/privacy-statement/",
+    )
+    newsletter_opt_in = forms.BooleanField(
+        required=False,
+        initial=False,
+        label="Sign me up to the newsletter",
+        help_text="We run a monthly newsletter, Greening Digital, where we share actionable news about greening the web and a sustainable digital transition. You can unsubscribe at any time.",
+    )
+
+    class Meta:
+        model = ac_models.ProviderRequestConsent
+        exclude = ["request"]

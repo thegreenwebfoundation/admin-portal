@@ -81,6 +81,18 @@
 			</tr>
 		</table>
 
+		<h3 class="text-2xl">Consent</h3>
+		<table class="table-fixed">			
+			<tr>
+				<td>The following consent was submitted:</td>
+				<td>				
+					{% for consent in object.providerrequestconsent_set.all %}
+					{{ consent }}<br>
+					{% endfor %}
+				</td>
+			</tr>
+		</table>
+
 	</article>
 
 	<a class="btn mb-0" href="/requests">Back to requests home</a>

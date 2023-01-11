@@ -28,6 +28,7 @@ from .forms import (
     ServicesForm,
     GreenEvidenceForm,
     NetworkFootprintForm,
+    ConsentForm,
 )
 from .models import User, ProviderRequest
 
@@ -183,19 +184,22 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         SERVICES = "1"
         GREEN_EVIDENCE = "2"
         NETWORK_FOOTPRINT = "3"
+        CONSENT = "4"
 
     FORMS = [
         (Steps.ORG_DETAILS.value, OrgDetailsForm),
         (Steps.SERVICES.value, ServicesForm),
         (Steps.GREEN_EVIDENCE.value, GreenEvidenceForm),
         (Steps.NETWORK_FOOTPRINT.value, NetworkFootprintForm),
+        (Steps.CONSENT.value, ConsentForm),
     ]
 
     TEMPLATES = {
-        Steps.ORG_DETAILS.value: "provider_registration/form.html",
-        Steps.SERVICES.value: "provider_registration/form.html",
+        Steps.ORG_DETAILS.value: "provider_registration/about_org.html",
+        Steps.SERVICES.value: "provider_registration/services.html",
         Steps.GREEN_EVIDENCE.value: "provider_registration/dynamic_formset_multipart.html",
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/network_footprint.html",
+        Steps.CONSENT.value: "provider_registration/consent.html",
     }
 
     def done(self, form_list, form_dict, **kwargs):
@@ -246,6 +250,12 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             asn = asn_form.save(commit=False)
             asn.request = pr
             asn.save()
+
+        # process CONSENT form
+        consent_form = form_dict[steps.CONSENT.value]
+        consent = consent_form.save(commit=False)
+        consent.request = pr
+        consent.save()
 
         return redirect(pr)
 
