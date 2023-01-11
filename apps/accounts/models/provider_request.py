@@ -45,6 +45,7 @@ class ProviderRequest(TimeStampedModel):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
     )
+    authorised_by_org = models.BooleanField()
     services = TaggableManager(
         verbose_name="Services offered",
         help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
@@ -63,7 +64,14 @@ class ProviderRequest(TimeStampedModel):
         Given arbitrary kwargs, construct a new ProviderRequest object.
         No validation is performed on the created object.
         """
-        pr_keys = ["name", "website", "description", "status", "created_by"]
+        pr_keys = [
+            "name",
+            "website",
+            "description",
+            "status",
+            "created_by",
+            "authorised_by_org",
+        ]
         pr_data = {key: value for (key, value) in kwargs.items() if key in pr_keys}
         pr_data.setdefault("status", ProviderRequestStatus.OPEN.value)
         return ProviderRequest.objects.create(**pr_data)
@@ -171,10 +179,10 @@ class ProviderRequestEvidence(models.Model):
         return f"{name}, private"
 
     def clean(self) -> None:
-        reason = (
-            "Provide a link OR a file on each row"
-        )
+        reason = "Provide a link OR a file on each row"
         if self.link is None and not bool(self.file):
             raise ValidationError(f"{reason}, you haven't submitted either.")
         if self.link and bool(self.file):
-            raise ValidationError(f"{reason}, you've attempted to submit both - we've removed the file for now.")
+            raise ValidationError(
+                f"{reason}, you've attempted to submit both - we've removed the file for now."
+            )

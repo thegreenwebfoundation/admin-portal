@@ -176,22 +176,3 @@ def worker(broker):
     worker.start()
     yield worker
     worker.stop()
-
-
-@pytest.fixture()
-def provider_request(sample_hoster_user):
-    return ProviderRequest(
-        name="test provider request",
-        website="www.example.com",
-        description="I want to join GWF dataset",
-        status=ProviderRequestStatus.PENDING_REVIEW,
-        created_by=sample_hoster_user,
-    )
-
-
-@pytest.fixture()
-def provider_request_location(provider_request):
-    provider_request.save()
-    return ProviderRequestLocation(
-        city="Berlin", country="DE", services=None, request=provider_request
-    )
