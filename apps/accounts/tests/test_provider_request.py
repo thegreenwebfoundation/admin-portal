@@ -23,6 +23,7 @@ class ProviderRequestFactory(DjangoModelFactory):
     description = factory.Faker("sentence")
     status = models.ProviderRequestStatus.OPEN
     created_by = factory.SubFactory(UserFactory)
+    authorised_by_org = True
     services = factory.List([factory.SubFactory(TagFactory) for _ in range(3)])
 
     class Meta:
@@ -42,6 +43,7 @@ def wizard_form_org_details_data():
         "0-description": faker.sentence(10),
         "0-country": faker.country_code(),
         "0-city": faker.city(),
+        "0-authorised_by_org": "True",
     }
 
 
@@ -147,9 +149,8 @@ def fake_evidence():
     ],
     ids=["both_file_and_link", "neither_file_nor_link"],
 )
-def test_evidence_validation_fails(evidence_data, provider_request, mock_open):
-    provider_request.save()
-    evidence_data["request"] = provider_request
+def test_evidence_validation_fails(evidence_data, mock_open):
+    evidence_data["request"] = ProviderRequestFactory.create()
 
     evidence = models.ProviderRequestEvidence.objects.create(**evidence_data)
 

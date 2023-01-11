@@ -204,7 +204,7 @@ class OrgDetailsForm(forms.Form):
 
     name = forms.CharField(
         max_length=255,
-        label="What is your organisation\'s name?",
+        label="What is your organisation's name?",
         help_text="What is the brand or commonly used name? This will be the publicly listed name.",
     )
     website = forms.URLField(
@@ -223,10 +223,27 @@ class OrgDetailsForm(forms.Form):
         help_text="Choose a country from the list.",
     )
     city = forms.CharField(
-		max_length=255,
-		label="Which city are you based in?",
-		help_text="If your organisation is not based in a city, let us know the nearest city."
-	)
+        max_length=255,
+        label="Which city are you based in?",
+        help_text="If your organisation is not based in a city, let us know the nearest city.",
+    )
+    authorised_by_org = forms.TypedChoiceField(
+        label="Do you work for this organisation?",
+        help_text="We ask this so we know whether you are speaking on behalf of the organisation or not. It's still ok to submit info if you don't work for them, but we need to know, so we don't misrepresent information.",
+        widget=forms.RadioSelect,
+        choices=(
+            (
+                "True",
+                "Yes, I work for the organisation, and am authorised to speak on behalf of it",
+            ),
+            (
+                "False",
+                "No, I do not",
+            ),
+        ),
+        empty_value=None,
+        coerce=lambda x: x == "True",
+    )
 
     def save(self, commit=True) -> Tuple[ProviderRequest, ProviderRequestLocation]:
         """
@@ -249,11 +266,11 @@ class ServicesForm(forms.Form):
     """
 
     services = forms.MultipleChoiceField(
-		choices=ProviderRequest.get_service_choices,
-		widget=forms.CheckboxSelectMultiple,
-		label="What hosting services do you offer?",
-		help_text="Choose all the services that your organisation offers."
-	)
+        choices=ProviderRequest.get_service_choices,
+        widget=forms.CheckboxSelectMultiple,
+        label="What hosting services do you offer?",
+        help_text="Choose all the services that your organisation offers.",
+    )
 
 
 class CredentialForm(forms.ModelForm):
