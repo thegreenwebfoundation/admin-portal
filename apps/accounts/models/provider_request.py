@@ -147,6 +147,7 @@ class EvidenceType(models.TextChoices):
     ANNUAL_REPORT = "Annual report"
     WEB_PAGE = "Web page"
     CERTIFICATE = "Certificate"
+    OTHER = "Other"
 
 
 class ProviderRequestEvidence(models.Model):
@@ -156,6 +157,7 @@ class ProviderRequestEvidence(models.Model):
     """
 
     title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
     link = models.URLField(null=True, blank=True)
     file = models.FileField(null=True, blank=True)
     type = models.CharField(choices=EvidenceType.choices, max_length=255)

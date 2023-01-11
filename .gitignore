@@ -137,12 +137,12 @@ static/*.*
 deploy.retry
 data
 
+.env.staging
 *.prod
 *.prod.json
 .DS_Store
 cloud-auth.json
-
-
+*.png
 
 cruft
 staticfiles

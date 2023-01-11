@@ -261,8 +261,11 @@ class CredentialForm(forms.ModelForm):
         model = ac_models.ProviderRequestEvidence
         exclude = ["request"]
         labels = {"file": "File upload"}
+        # define the ordering of the fields
+        fields = ["title", "link", "file", "type", "public", "description"]
         help_texts = {
             "title": "Title this piece of evidence",
+            "description": "Anything else we should know about this document?",
             "type": "Tell us the kind of evidence",
             "link": "Provide link to supporting document, include the https:// part",
             "file": "OR upload a supporting document in PDF or image format",
