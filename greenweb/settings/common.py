@@ -32,6 +32,8 @@ env = environ.Env(
         os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
     ),
     REDIS_HOST=(str, "localhost"),
+    BASICAUTH_DISABLE=(bool, True),
+    BASICAUTH_PASSWORD=(str, "strong_password"),
 )
 
 environ.Env.read_env(".env")  # Read .env
@@ -126,7 +128,17 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # see the section below on BASICAUTH
+    "basicauth.middleware.BasicAuthMiddleware",
 ]
+
+# Basic auth for staging
+# we include it, but leave it disabled,
+# except on staging environments
+# https://pypi.org/project/django-basicauth/
+BASICAUTH_DISABLE = env("BASICAUTH_DISABLE")
+BASICAUTH_USERS = {"staging_user": env("BASICAUTH_PASSWORD")}
+
 
 ROOT_URLCONF = "greenweb.urls"
 
