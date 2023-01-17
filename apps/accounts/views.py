@@ -197,7 +197,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
     TEMPLATES = {
         Steps.ORG_DETAILS.value: "provider_registration/about_org.html",
         Steps.SERVICES.value: "provider_registration/services.html",
-        Steps.GREEN_EVIDENCE.value: "provider_registration/dynamic_formset_multipart.html",
+        Steps.GREEN_EVIDENCE.value: "provider_registration/evidence.html",
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/network_footprint.html",
         Steps.CONSENT.value: "provider_registration/consent.html",
     }
