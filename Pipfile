@@ -91,6 +91,7 @@ django-admin-multiple-choice-list-filter = "*"
 django-formtools = "*"
 django-betterforms = "*"
 django-convenient-formsets = "*"
+django-basicauth = "*"
 
 [pipenv]
 # Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
