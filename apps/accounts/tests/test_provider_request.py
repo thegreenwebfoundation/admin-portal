@@ -116,6 +116,19 @@ def wizard_form_network_data(sorted_ips):
 
 
 @pytest.fixture()
+def wizard_form_consent():
+    """
+    Returns valid data for step CONSENT of the wizard,
+    as expected by the POST request.
+    """
+    return {
+        "provider_registration_view-current_step": "4",
+        "4-data_processing_opt_in": "on",
+        "4-newsletter_opt_in": "off",
+    }
+
+
+@pytest.fixture()
 def mock_open(mocker):
     file_mock = mocker.patch("builtins.open")
     file_mock.return_value = io.StringIO("file contents")
@@ -237,6 +250,7 @@ def test_wizard_view_happy_path(
     wizard_form_services_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
+    wizard_form_consent,
 ):
 
     # given: valid form data and authenticated user
@@ -245,6 +259,7 @@ def test_wizard_view_happy_path(
         wizard_form_services_data,
         wizard_form_evidence_data,
         wizard_form_network_data,
+        wizard_form_consent,
     ]
     client.force_login(user)
 

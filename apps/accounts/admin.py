@@ -77,6 +77,7 @@ from .models import (
     ProviderRequestIPRange,
     ProviderRequestLocation,
     ProviderRequestEvidence,
+    ProviderRequestConsent,
 )
 
 logger = logging.getLogger(__name__)
@@ -1110,6 +1111,16 @@ class ProviderRequestLocationInline(admin.StackedInline):
     extra = 0
 
 
+class ProviderRequestConsentInline(admin.StackedInline):
+    model = ProviderRequestConsent
+    extra = 0
+    max_num = 1
+    readonly_fields = (
+        "data_processing_opt_in",
+        "newsletter_opt_in",
+    )
+
+
 @admin.register(ProviderRequest, site=greenweb_admin)
 class ProviderRequest(admin.ModelAdmin):
     list_display = ("name", "website", "status", "created")
@@ -1118,7 +1129,9 @@ class ProviderRequest(admin.ModelAdmin):
         ProviderRequestEvidenceInline,
         ProviderRequestIPRangeInline,
         ProviderRequestASNInline,
+        ProviderRequestConsentInline,
     ]
     formfield_overrides = {TaggableManager: {"widget": LabelWidget}}
     empty_value_display = "(empty)"
     list_filter = ("status",)
+    readonly_fields = ("authorised_by_org",)
