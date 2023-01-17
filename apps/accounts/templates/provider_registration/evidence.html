@@ -32,7 +32,7 @@
 	<h1>Submit your evidence</h1>
 	<p>To verify that you are a green hosting provider, please provide evidence to show the steps you're taking to <span class="italic">avoid, reduce, or offset</span> the emissions caused by the digital infrastructure you use.</p>
 	<p><a href="https://www.thegreenwebfoundation.org/what-you-need-to-register/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of evidence we request</a>.</p>
-	<p class="font-bold">For each row, add a link OR upload a file.</p>
+	<p class="font-bold">For each item, add a link OR upload a file.</p>
 </section>
 
 {% if form.is_multipart %}
@@ -47,25 +47,52 @@
 
             {% for form in wizard.form.forms %}
             <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
-                <table class="form__table--evidence">
-                    {{ form.as_table }}
-                </table>
-                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this row">
+            <div class="form__container--evidence">
+                {{ form.non_field_errors }}
+
+                {% comment %}
+                Iteration over all fields in the evidence form. This is 
+                equivalent to listing a span for each form.field_name 
+                where field_name is in: ["title", "link", "file", "type",
+                "public", "description"]
+                {% endcomment %}
+
+                {% for field in form %}
+                    <div class=".evidence-field">
+                        {{ field.errors }}
+                        {{ field.label_tag }} {{ field }}
+                        {% if field.help_text %}
+                        <p class="help">{{ field.help_text | safe }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
+            </div>
             </div>
             {% endfor %}
         </div>
 
         <div class="my-12 prose">
 			<p class="mb-12"><sup>**</sup>NB It is <strong>not</strong> mandatory to make evidence public to become verified as a green hosting provider. However, we encourage you to do so wherever possible to increase your transparency and accountability.</p>
-			<input type="button" id="add-form-button" value="Add another row of evidence" class="btn btn-white">
+			<input type="button" id="add-form-button" value="Add another evidence" class="btn btn-white">
 		</div>
 
         <div id="empty-form" style="display:none">
             <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
-                <table class="form__table--evidence">
-                    {{ wizard.form.empty_form.as_table }}
-                </table>
-                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this row">
+                <div class="form__container--evidence">
+                    {{ form.non_field_errors }}
+                    {% for field in form %}
+                    <div class=".evidence-field">
+                        {{ field.errors }}
+                        {{ field.label_tag }} {{ field }}
+                        {% if field.help_text %}
+                        <p class="help">{{ field.help_text | safe }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                </div>
+                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
             </div>
         </div>
 
