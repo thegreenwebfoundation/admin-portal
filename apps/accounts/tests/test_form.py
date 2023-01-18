@@ -3,9 +3,14 @@ import logging
 import pytest
 from apps.greencheck import forms as gc_forms
 from apps.greencheck import models as gc_models
+from apps.accounts.forms import GreenEvidenceForm
+from apps.accounts.models import EvidenceType
+
+from faker import Faker
 
 
 logger = logging.getLogger(__name__)
+faker = Faker()
 
 
 class TestGreencheckIpForm:
@@ -85,3 +90,54 @@ class TestGreencheckIpForm:
 
         # have we created an actual green IP, and skipped the approval lifecycle?
         assert gc_models.GreencheckIp.objects.count() == 1
+
+
+def test_green_evidence_form_validation():
+    # given: invalid form data
+    fake_title = " ".join(faker.words(3))
+    fake_url = faker.url()
+    formset_data = {
+        # management form data
+        "form-TOTAL_FORMS": "4",
+        "form-INITIAL_FORMS": "0",
+        # 1st form is valid
+        "form-0-title": fake_title,
+        "form-0-link": fake_url,
+        "form-0-file": "",
+        "form-0-type": EvidenceType.WEB_PAGE.value,
+        "form-0-public": "on",
+        # 2nd form is missing: type, file, link
+        "form-1-title": " ".join(faker.words(3)),
+        "form-1-link": "",
+        "form-1-file": "",
+        "form-1-type": "",
+        "form-1-public": "on",
+        # 3rd form is identical to 1st
+        "form-2-title": fake_title,
+        "form-2-link": fake_url,
+        "form-2-file": "",
+        "form-2-type": EvidenceType.WEB_PAGE.value,
+        "form-2-public": "on",
+        # 4th form is empty
+        "form-3-title": "",
+        "form-3-link": "",
+        "form-3-file": "",
+        "form-3-type": "",
+        "form-3-public": "on",
+    }
+
+    # when: the formset is instantiated and validation is performed
+    formset = GreenEvidenceForm(data=formset_data)
+    formset.full_clean()
+
+    # then: first form is valid
+    assert formset.forms[0].is_valid()
+    # then: 2nd form has a field error (type is empty) and a non-field error (either file or link is required)
+    assert formset.forms[1].has_error(field="type")
+    assert len(formset.forms[1].non_field_errors()) == 1
+    # then: 3rd form has a non-field error (duplicated data)
+    assert len(formset.forms[2].non_field_errors()) == 1
+    # then: 4th form has a non-field error (empty form)
+    assert len(formset.forms[3].non_field_errors()) == 1
+    # then: the whole formset is invalid
+    assert not formset.is_valid()
