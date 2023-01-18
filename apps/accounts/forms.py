@@ -310,14 +310,12 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
                     code="empty",
                 )
                 form.add_error(None, e)
-                raise e
             if form.cleaned_data in seen:
                 e = ValidationError(
                     "Found a duplicated entry in the form, please fix it",
                     code="duplicate",
                 )
                 form.add_error(None, e)
-                raise e
             seen.append(form.cleaned_data)
 
 

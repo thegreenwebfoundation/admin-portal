@@ -179,7 +179,7 @@ class ProviderRequestEvidence(models.Model):
         return f"{name}, private"
 
     def clean(self) -> None:
-        reason = "Provide a link OR a file on each row"
+        reason = "Provide a link OR a file for this evidence"
         if self.link is None and not bool(self.file):
             raise ValidationError(f"{reason}, you haven't submitted either.")
         if self.link and bool(self.file):
