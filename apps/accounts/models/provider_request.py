@@ -48,7 +48,10 @@ class ProviderRequest(TimeStampedModel):
     authorised_by_org = models.BooleanField()
     services = TaggableManager(
         verbose_name="Services offered",
-        help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
+        help_text=(
+            "Click the services that your organisation offers. These will be listed in"
+            " the green web directory."
+        ),
         blank=True,
     )
 
@@ -104,19 +107,7 @@ class ProviderRequestLocation(models.Model):
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f"{self.request.name} | {self.country}/{self.city}"
-
-    @staticmethod
-    def from_kwargs(**kwargs) -> "ProviderRequestLocation":
-        """
-        Given arbitrary kwargs, construct a new ProviderRequestLocation object.
-        No validation is performed on the created object.
-        """
-        location_keys = ["city", "country", "request"]
-        location_data = {
-            key: value for (key, value) in kwargs.items() if key in location_keys
-        }
-        return ProviderRequestLocation.objects.create(**location_data)
+        return f"{self.request.name} | {self.country.name}/{self.city}"
 
 
 class ProviderRequestASN(models.Model):
@@ -195,7 +186,8 @@ class ProviderRequestEvidence(models.Model):
             raise ValidationError(f"{reason}, you haven't submitted either.")
         if self.link and bool(self.file):
             raise ValidationError(
-                f"{reason}, you've attempted to submit both - we've removed the file for now."
+                f"{reason}, you've attempted to submit both - we've removed the file"
+                " for now."
             )
 
 

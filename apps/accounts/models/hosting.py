@@ -156,15 +156,21 @@ class ProviderLabel(tag_models.TaggedItemBase):
     to help us categorise and segment providers.
     """
 
-    content_object = models.ForeignKey("Hostingprovider", on_delete=models.CASCADE,)
+    content_object = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+    )
     tag = models.ForeignKey(
-        Label, related_name="%(app_label)s_%(class)s_items", on_delete=models.CASCADE,
+        Label,
+        related_name="%(app_label)s_%(class)s_items",
+        on_delete=models.CASCADE,
     )
 
 
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
+    city = models.CharField(max_length=255, blank=True)
     customer = models.BooleanField(default=False)
     icon = models.CharField(max_length=50, blank=True)
     iconurl = models.CharField(max_length=255, blank=True)
@@ -179,7 +185,10 @@ class Hostingprovider(models.Model):
     )
     services = TaggableManager(
         verbose_name="Services Offered",
-        help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
+        help_text=(
+            "Click the services that your organisation offers. These will be listed in"
+            " the green web directory."
+        ),
         blank=True,
     )
     # this should not be exposed publicly to end users.
@@ -304,7 +313,9 @@ class Hostingprovider(models.Model):
         """
 
         msg = AnymailMessage(
-            subject=subject, body=email_txt, to=["support@thegreenwebfoundation.org"],
+            subject=subject,
+            body=email_txt,
+            to=["support@thegreenwebfoundation.org"],
         )
 
         if email_html:
@@ -329,7 +340,7 @@ class Hostingprovider(models.Model):
             "link_url": link_url,
         }
         notification_subject = (
-            f"TGWF: {self.name} - " "has been updated and needs a review"
+            f"TGWF: {self.name} - has been updated and needs a review"
         )
 
         notification_email_copy = render_to_string("flag_for_review_text.txt", ctx)
@@ -481,13 +492,22 @@ class AbstractSupportingDocument(models.Model):
     attachment = models.FileField(
         upload_to="uploads/",
         blank=True,
-        help_text="If you have a sustainability report, or bill from a energy provider provider, or similar certificate of supply from a green tariff add it here.",
+        help_text=(
+            "If you have a sustainability report, or bill from a energy provider"
+            " provider, or similar certificate of supply from a green tariff add it"
+            " here."
+        ),
     )
     url = models.URLField(
         blank=True,
-        help_text="Alternatively, if you add a link, we'll fetch a copy at the URL you list, so we can point to the version when you listed it",
+        help_text=(
+            "Alternatively, if you add a link, we'll fetch a copy at the URL you list,"
+            " so we can point to the version when you listed it"
+        ),
     )
-    description = models.TextField(blank=True,)
+    description = models.TextField(
+        blank=True,
+    )
     valid_from = models.DateField()
     valid_to = models.DateField()
 

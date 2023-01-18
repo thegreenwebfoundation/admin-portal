@@ -206,7 +206,10 @@ class OrgDetailsForm(forms.Form):
     name = forms.CharField(
         max_length=255,
         label="What is your organisation's name?",
-        help_text="What is the brand or commonly used name? This will be the publicly listed name.",
+        help_text=(
+            "What is the brand or commonly used name? This will be the publicly listed"
+            " name."
+        ),
     )
     website = forms.URLField(
         max_length=255,
@@ -215,27 +218,27 @@ class OrgDetailsForm(forms.Form):
     )
     description = forms.CharField(
         label="How do you describe this organisation?",
-        help_text="Add a single paragraph about your organisation, as you would expect to see in search results.",
+        help_text=(
+            "Add a single paragraph about your organisation, as you would expect to see"
+            " in search results."
+        ),
         widget=forms.Textarea,
-    )
-    country = CountryField().formfield(
-        label="Which country is your organisation based in?",
-        blank_label="Select country",
-        help_text="Choose a country from the list.",
-    )
-    city = forms.CharField(
-        max_length=255,
-        label="Which city are you based in?",
-        help_text="If your organisation is not based in a city, let us know the nearest city.",
     )
     authorised_by_org = forms.TypedChoiceField(
         label="Do you work for this organisation?",
-        help_text="We ask this so we know whether you are speaking on behalf of the organisation or not. It's still ok to submit info if you don't work for them, but we need to know, so we don't misrepresent information.",
+        help_text=(
+            "We ask this so we know whether you are speaking on behalf of the"
+            " organisation or not. It's still ok to submit info if you don't work for"
+            " them, but we need to know, so we don't misrepresent information."
+        ),
         widget=forms.RadioSelect,
         choices=(
             (
                 "True",
-                "Yes, I work for the organisation, and am authorised to speak on behalf of it",
+                (
+                    "Yes, I work for the organisation, and am authorised to speak on"
+                    " behalf of it"
+                ),
             ),
             (
                 "False",
@@ -252,13 +255,12 @@ class OrgDetailsForm(forms.Form):
         based on the validated data bound to this Form
         """
         pr = ProviderRequest.from_kwargs(**self.cleaned_data)
-        location = ProviderRequestLocation.from_kwargs(**self.cleaned_data, request=pr)
+        # location = ProviderRequestLocation.from_kwargs(**self.cleaned_data, request=pr)
 
         if commit:
             pr.save()
-            location.save()
 
-        return pr, location
+        return pr
 
 
 class ServicesForm(forms.Form):
@@ -282,12 +284,17 @@ class CredentialForm(forms.ModelForm):
         # define the ordering of the fields
         fields = ["type", "title", "link", "file", "description", "public"]
         help_texts = {
-            "type": "What kind of evidence are you adding? Choose from the dropdown list.",
+            "type": (
+                "What kind of evidence are you adding? Choose from the dropdown list."
+            ),
             "title": "Give this piece of evidence a title.",
             "description": "What else should we know about this document?",
             "link": "Provide link to supporting document, include the https:// part.",
             "file": "OR upload a supporting document in PDF or image format.",
-            "public": "By checking this box you agree to this evidence being cited publicly to support your organisation's sustainability claims<sup>**</sup>.",
+            "public": (
+                "By checking this box you agree to this evidence being cited publicly"
+                " to support your organisation's sustainability claims<sup>**</sup>."
+            ),
         }
 
 
@@ -384,16 +391,59 @@ class ConsentForm(forms.ModelForm):
     data_processing_opt_in = forms.BooleanField(
         required=True,
         initial=False,
-        label="I consent to my submitted information being stored and processed to allow a response to my inquiry",
-        help_text="See our full privacy notice at https://www.thegreenwebfoundation.org/privacy-statement/",
+        label=(
+            "I consent to my submitted information being stored and processed to allow"
+            " a response to my inquiry"
+        ),
+        help_text=(
+            "See our full privacy notice at"
+            " https://www.thegreenwebfoundation.org/privacy-statement/"
+        ),
     )
     newsletter_opt_in = forms.BooleanField(
         required=False,
         initial=False,
         label="Sign me up to the newsletter",
-        help_text="We run a newsletter, Greening Digital, where we share actionable news about greening the web and a sustainable digital transition. You can unsubscribe at any time.",
+        help_text=(
+            "We run a newsletter, Greening Digital, where we share actionable news"
+            " about greening the web and a sustainable digital transition. You can"
+            " unsubscribe at any time."
+        ),
     )
 
     class Meta:
         model = ac_models.ProviderRequestConsent
         exclude = ["request"]
+
+
+class LocationForm(forms.ModelForm):
+
+    country = CountryField().formfield(
+        label="Which country is your organisation based in?",
+        blank_label="Select country",
+        help_text="Choose a country from the list.",
+    )
+    city = forms.CharField(
+        max_length=255,
+        label="Which city are you based in?",
+        help_text=(
+            "If your organisation is not based in a city, let us know the nearest city."
+        ),
+    )
+
+    class Meta:
+        model = ac_models.ProviderRequestLocation
+        exclude = ["request"]
+
+
+# we need a formset containing multiple locations
+
+
+# Part of multi-step registration form (screen 2).
+# Uses ConvenientBaseFormSet to display add/delete buttons
+# and manage the forms inside the formset dynamically.
+OrgLocationsForm = forms.formset_factory(
+    LocationForm,
+    extra=1,
+    formset=MoreConvenientFormset,
+)
