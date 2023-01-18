@@ -25,6 +25,7 @@ from formtools.wizard.views import SessionWizardView
 from .forms import (
     UserUpdateForm,
     OrgDetailsForm,
+    OrgLocationsForm,
     ServicesForm,
     GreenEvidenceForm,
     NetworkFootprintForm,
@@ -181,13 +182,15 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         """
 
         ORG_DETAILS = "0"
-        SERVICES = "1"
-        GREEN_EVIDENCE = "2"
-        NETWORK_FOOTPRINT = "3"
-        CONSENT = "4"
+        LOCATIONS = "1"
+        SERVICES = "2"
+        GREEN_EVIDENCE = "3"
+        NETWORK_FOOTPRINT = "4"
+        CONSENT = "5"
 
     FORMS = [
         (Steps.ORG_DETAILS.value, OrgDetailsForm),
+        (Steps.LOCATIONS.value, OrgLocationsForm),
         (Steps.SERVICES.value, ServicesForm),
         (Steps.GREEN_EVIDENCE.value, GreenEvidenceForm),
         (Steps.NETWORK_FOOTPRINT.value, NetworkFootprintForm),
@@ -196,6 +199,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
     TEMPLATES = {
         Steps.ORG_DETAILS.value: "provider_registration/about_org.html",
+        Steps.LOCATIONS.value: "provider_registration/locations.html",
         Steps.SERVICES.value: "provider_registration/services.html",
         Steps.GREEN_EVIDENCE.value: "provider_registration/evidence.html",
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/network_footprint.html",
@@ -220,9 +224,15 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
         # process ORG_DETAILS form: extract ProviderRequest and Location
         org_details_form = form_dict[steps.ORG_DETAILS.value]
-        pr, location = org_details_form.save(commit=False)
-        location.request = pr
-        location.save()
+        pr = org_details_form.save(commit=False)
+
+        # process ORG_LOCATIONS form: extract locations
+        org_locations_forms = form_dict[steps.LOCATIONS.value]
+        for org_location_form in org_locations_forms:
+
+            location = org_location_form.save(commit=False)
+            location.request = pr
+            location.save()
 
         # process SERVICES form: assign services to ProviderRequest
         services_form = form_dict[steps.SERVICES.value]
