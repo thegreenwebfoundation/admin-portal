@@ -1,0 +1,127 @@
+/* 0. GENERAL CUSTOM FORM STYLES */
+
+/* Styles for forms that are laid out as tables */
+/* 1. GENERAL form_table         */
+/* 2. NETWORK FOOTPRINT TABLE    */
+
+/* Other kinds of form layout. */
+/* 3. EVIDENCE FORM             */
+
+
+/* 0. GENERAL CUSTOM FORM STYLES */
+.errorlist {
+	@apply text-purple;
+}
+.errorlist + input,
+.errorlist + select {
+	@apply border-purple;
+}
+
+
+/* 1. GENERAL form_table        */
+.form__table {
+	@apply my-8;
+}
+.form__table tr {
+	@apply flex;
+	@apply flex-col;
+	@apply items-start;
+	@apply py-8;
+}
+
+.form__table td {
+	@apply flex;
+	@apply flex-col;
+	@apply pl-0;
+}
+.form__table label {
+	@apply block;
+	@apply mb-4;
+}
+.form__table span.helptext {
+	@apply order-first;
+	@apply pb-6;
+}
+.form__table ul {
+	@apply mt-6;
+}
+.form__table .errorlist {
+	@apply order-2;
+}
+
+table[class^="form__table--"] tbody {
+	@apply flex;
+	@apply gap-8;
+}
+table[class^="form__table--"] tbody > * {
+	@apply py-0;
+	@apply w-1/5;
+}
+/* Typically within the th element */
+table[class^="form__table--"] label {
+	@apply text-sm;
+	@apply uppercase;
+	@apply font-normal;
+	@apply border-b-2;
+	@apply border-green;
+	@apply pb-1;
+}
+
+
+/* 2. NETWORK FOOTPRINT TABLE   */
+.form__table--network tbody {
+	@apply flex-wrap;
+	@apply 2xl:flex-nowrap;
+}
+
+.form__table--network tbody > tr {
+	@apply w-auto;
+}
+
+
+/* 3. EVIDENCE FORM              */
+.form__evidence .convenient-form {
+	@apply md:flex;
+	@apply flex-wrap;
+}
+
+.form__evidence .convenient-form > .errorlist {
+	@apply mb-4;
+}
+.form__evidence .convenient-form > * {
+	@apply w-full;
+	@apply px-8;
+	@apply pt-6;
+}
+.form__evidence .form__evidence--field-type,
+.form__evidence .form__evidence--field-title,
+.form__evidence .form__evidence--field-link,
+.form__evidence .form__evidence--field-file {
+	@apply md:w-1/2;
+}
+.form__evidence input[type="button"] {
+	@apply w-auto;
+}
+.form__evidence--field .helptext {
+	@apply mb-4;
+}
+.form__evidence--field select,
+.form__evidence--field input[type="text"],
+.form__evidence--field input[type="url"] {
+	@apply w-full;
+}
+.form__evidence--field label {
+	@apply sr-only;
+	@apply text-base;
+}
+.form__evidence--field-public {
+	@apply flex;
+	@apply items-center;
+}
+.form__evidence--field-public .helptext {
+	@apply mb-0;
+}
+.form__evidence--field-public input[type="checkbox"] {
+	@apply order-first;
+	@apply mb-0;
+}

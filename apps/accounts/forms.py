@@ -280,14 +280,14 @@ class CredentialForm(forms.ModelForm):
         exclude = ["request"]
         labels = {"file": "File upload"}
         # define the ordering of the fields
-        fields = ["title", "link", "file", "type", "public", "description"]
+        fields = ["type", "title", "link", "file", "description", "public"]
         help_texts = {
-            "title": "Title this piece of evidence",
-            "description": "Anything else we should know about this document?",
-            "type": "Tell us the kind of evidence",
-            "link": "Provide link to supporting document, include the https:// part",
-            "file": "OR upload a supporting document in PDF or image format",
-            "public": "By checking this box you agree to this evidence being cited publicly to support your organisation's sustainability claims<sup>**</sup>",
+            "type": "What kind of evidence are you adding? Choose from the dropdown list.",
+			"title": "Give this piece of evidence a title.",
+            "description": "What else should we know about this document?",
+            "link": "Provide link to supporting document, include the https:// part.",
+            "file": "OR upload a supporting document in PDF or image format.",
+            "public": "By checking this box you agree to this evidence being cited publicly to support your organisation's sustainability claims<sup>**</sup>.",
         }
 
 
