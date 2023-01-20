@@ -144,7 +144,18 @@ class ProviderRequestIPRange(models.Model):
         return f"{self.start} - {self.end}"
 
     def clean(self) -> None:
-        return validate_ip_range(self.start, self.end)
+        """
+        Validates an IP range.
+
+        Checking if values are not falsy is a workaround
+        for a surprising ModelForm implementation detail:
+
+        ModelForm connected to this Model executes Model.full_clean
+        with "None" values in case the values were considered invalid
+        according to the ModelForm validation logic.
+        """
+        if self.start and self.end:
+            validate_ip_range(self.start, self.end)
 
 
 class EvidenceType(models.TextChoices):

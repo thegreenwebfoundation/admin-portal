@@ -283,7 +283,7 @@ class CredentialForm(forms.ModelForm):
         fields = ["type", "title", "link", "file", "description", "public"]
         help_texts = {
             "type": "What kind of evidence are you adding? Choose from the dropdown list.",
-			"title": "Give this piece of evidence a title.",
+            "title": "Give this piece of evidence a title.",
             "description": "What else should we know about this document?",
             "link": "Provide link to supporting document, include the https:// part.",
             "file": "OR upload a supporting document in PDF or image format.",
@@ -330,6 +330,10 @@ GreenEvidenceForm = forms.formset_factory(
 
 
 class IpRangeForm(forms.ModelForm):
+
+    start = forms.GenericIPAddressField()
+    end = forms.GenericIPAddressField()
+
     class Meta:
         model = ac_models.ProviderRequestIPRange
         exclude = ["request"]
