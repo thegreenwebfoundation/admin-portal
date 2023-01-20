@@ -442,7 +442,7 @@ class LocationForm(forms.ModelForm):
 # Part of multi-step registration form (screen 2).
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
-OrgLocationsForm = forms.formset_factory(
+LocationsForm = forms.formset_factory(
     LocationForm,
     extra=1,
     formset=MoreConvenientFormset,

@@ -25,7 +25,7 @@ from formtools.wizard.views import SessionWizardView
 from .forms import (
     UserUpdateForm,
     OrgDetailsForm,
-    OrgLocationsForm,
+    LocationsForm,
     ServicesForm,
     GreenEvidenceForm,
     NetworkFootprintForm,
@@ -190,7 +190,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
     FORMS = [
         (Steps.ORG_DETAILS.value, OrgDetailsForm),
-        (Steps.LOCATIONS.value, OrgLocationsForm),
+        (Steps.LOCATIONS.value, LocationsForm),
         (Steps.SERVICES.value, ServicesForm),
         (Steps.GREEN_EVIDENCE.value, GreenEvidenceForm),
         (Steps.NETWORK_FOOTPRINT.value, NetworkFootprintForm),
@@ -226,7 +226,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         org_details_form = form_dict[steps.ORG_DETAILS.value]
         pr = org_details_form.save(commit=False)
 
-        # process ORG_LOCATIONS form: extract locations
+        # process LOCATIONS form: extract locations
         org_locations_forms = form_dict[steps.LOCATIONS.value]
         for org_location_form in org_locations_forms:
 

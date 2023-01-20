@@ -6,26 +6,25 @@
 {% endblock %}
 
 {% block content %}
-
-
 <div class="container mx-auto">
     {{ wizard.form.media }}
+    <!-- Initialize a ConvenientFormset -->
     <script>
-      window.addEventListener('load', function (event) {
-          new ConvenientFormset({
-              'formsetPrefix': '{{ wizard.form.prefix }}',
-              'formsContainerSelector': '#convenient-formset',
-              'formSelector': '.convenient-form',
-  
-              'canAddForms': true,
-              'addFormButtonSelector': '#add-form-button',
-              'emptyFormSelector': '#empty-form .convenient-form',
-  
-              'canDeleteForms': true,
-              'deleteFormButtonSelector': '#delete-form-button',
-          });
-      });
-  </script>
+    window.addEventListener('load', function (event) {
+        new ConvenientFormset({
+            'formsetPrefix': '{{ wizard.form.prefix }}',
+            'formsContainerSelector': '#convenient-formset',
+            'formSelector': '.convenient-form',
+
+            'canAddForms': true,
+            'addFormButtonSelector': '#add-form-button',
+            'emptyFormSelector': '#empty-form .convenient-form',
+
+            'canDeleteForms': true,
+            'deleteFormButtonSelector': '#delete-form-button',
+        });
+    });
+</script>
 
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
@@ -44,39 +43,38 @@
     {{ wizard.management_form }}
     {{ wizard.form.management_form }}
 
-
     <div id="convenient-formset">
 
-      {% for form in wizard.form.forms %}
-      <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
-      <div class="form__container--location">
-          {{ form.non_field_errors }}
+    {% for form in wizard.form.forms %}
+    <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
+        <div class="form__container--location">
+            {{ form.non_field_errors }}
 
-          {% comment %}
-          Iteration over all fields in the evidence form. This is
-          equivalent to listing a span for each form.field_name
-          where field_name is in: ["title", "link", "file", "type",
-          "public", "description"]
-          {% endcomment %}
+            {% comment %}
+            Iteration over all fields in the location form. This is
+            equivalent to listing a span for each form.field_name
+            where field_name is in: ["title", "link", "file", "type",
+            "public", "description"]
+            {% endcomment %}
 
-          {% for field in form %}
-              <div class=".location-field">
-                  {{ field.errors }}
-                  {{ field.label_tag }} {{ field }}
-                  {% if field.help_text %}
-                  <p class="help">{{ field.help_text | safe }}</p>
-                  {% endif %}
-              </div>
-          {% endfor %}
-          
-          <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this location">
-      </div>
-      </div>
-      {% endfor %}
-  </div>
+            {% for field in form %}
+                <div class=".location-field">
+                    {{ field.errors }}
+                    {{ field.label_tag }} {{ field }}
+                    {% if field.help_text %}
+                    <p class="help">{{ field.help_text | safe }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this location">
+        </div>
+    </div>
+    {% endfor %}
+</div>
 
   <input type="button" id="add-form-button" value="Add another location" class="btn btn-white">
-  
+
   <div id="empty-form" style="display:none">
     <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
         <div class="form__container--evidence">

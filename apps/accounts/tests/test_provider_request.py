@@ -41,9 +41,22 @@ def wizard_form_org_details_data():
         "0-name": " ".join(faker.words(5)),
         "0-website": faker.url(),
         "0-description": faker.sentence(10),
-        "0-country": faker.country_code(),
-        "0-city": faker.city(),
         "0-authorised_by_org": "True",
+    }
+
+
+@pytest.fixture()
+def wizard_form_org_location_data():
+    """
+    Returns valid data for the step ORG_LOCATIONS of the wizard,
+    as expected by the POST request.
+    """
+    return {
+        "provider_registration_view-current_step": "1",
+        "1-TOTAL_FORMS": "1",
+        "1-INITIAL_FORMS": "0",
+        "1-0-country": faker.country_code(),
+        "1-0-city": faker.city(),
     }
 
 
@@ -59,8 +72,8 @@ def wizard_form_services_data():
     tags_choices = models.Tag.objects.all()
 
     return {
-        "provider_registration_view-current_step": "1",
-        "1-services": random.sample([tag.slug for tag in tags_choices], 3),
+        "provider_registration_view-current_step": "2",
+        "2-services": random.sample([tag.slug for tag in tags_choices], 3),
     }
 
 
@@ -71,19 +84,19 @@ def wizard_form_evidence_data(fake_evidence):
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "2",
-        "2-TOTAL_FORMS": 2,
-        "2-INITIAL_FORMS": 0,
-        "2-0-title": " ".join(faker.words(3)),
-        "2-0-link": faker.url(),
-        "2-0-file": "",
-        "2-0-type": models.EvidenceType.WEB_PAGE.value,
-        "2-0-public": "on",
-        "2-1-title": " ".join(faker.words(3)),
-        "2-1-link": "",
-        "2-1-file": fake_evidence,
-        "2-1-type": models.EvidenceType.ANNUAL_REPORT.value,
-        "2-1-public": "on",
+        "provider_registration_view-current_step": "3",
+        "3-TOTAL_FORMS": 2,
+        "3-INITIAL_FORMS": 0,
+        "3-0-title": " ".join(faker.words(3)),
+        "3-0-link": faker.url(),
+        "3-0-file": "",
+        "3-0-type": models.EvidenceType.WEB_PAGE.value,
+        "3-0-public": "on",
+        "3-1-title": " ".join(faker.words(3)),
+        "3-1-link": "",
+        "3-1-file": fake_evidence,
+        "3-1-type": models.EvidenceType.ANNUAL_REPORT.value,
+        "3-1-public": "on",
     }
 
 
@@ -102,16 +115,16 @@ def wizard_form_network_data(sorted_ips):
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "3",
-        "ips__3-TOTAL_FORMS": "2",
-        "ips__3-INITIAL_FORMS": "0",
-        "ips__3-0-start": sorted_ips[0],
-        "ips__3-0-end": sorted_ips[1],
-        "ips__3-1-start": sorted_ips[2],
-        "ips__3-1-end": sorted_ips[3],
-        "asns__3-TOTAL_FORMS": "1",
-        "asns__3-INITIAL_FORMS": "0",
-        "asns__3-0-asn": faker.random_int(min=100, max=999),
+        "provider_registration_view-current_step": "4",
+        "ips__4-TOTAL_FORMS": "2",
+        "ips__4-INITIAL_FORMS": "0",
+        "ips__4-0-start": sorted_ips[0],
+        "ips__4-0-end": sorted_ips[1],
+        "ips__4-1-start": sorted_ips[2],
+        "ips__4-1-end": sorted_ips[3],
+        "asns__4-TOTAL_FORMS": "1",
+        "asns__4-INITIAL_FORMS": "0",
+        "asns__4-0-asn": faker.random_int(min=100, max=999),
     }
 
 
@@ -122,9 +135,9 @@ def wizard_form_consent():
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "4",
-        "4-data_processing_opt_in": "on",
-        "4-newsletter_opt_in": "off",
+        "provider_registration_view-current_step": "5",
+        "5-data_processing_opt_in": "on",
+        "5-newsletter_opt_in": "off",
     }
 
 
@@ -247,6 +260,7 @@ def test_wizard_view_happy_path(
     user,
     client,
     wizard_form_org_details_data,
+    wizard_form_org_location_data,
     wizard_form_services_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
@@ -256,6 +270,7 @@ def test_wizard_view_happy_path(
     # given: valid form data and authenticated user
     form_data = [
         wizard_form_org_details_data,
+        wizard_form_org_location_data,
         wizard_form_services_data,
         wizard_form_evidence_data,
         wizard_form_network_data,
