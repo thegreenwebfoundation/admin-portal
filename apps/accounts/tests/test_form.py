@@ -3,7 +3,7 @@ import logging
 import pytest
 from apps.greencheck import forms as gc_forms
 from apps.greencheck import models as gc_models
-from apps.accounts.forms import GreenEvidenceForm
+from apps.accounts.forms import GreenEvidenceForm, IpRangeForm
 from apps.accounts.models import EvidenceType
 
 from faker import Faker
@@ -141,3 +141,29 @@ def test_green_evidence_form_validation():
     assert len(formset.forms[3].non_field_errors()) == 1
     # then: the whole formset is invalid
     assert not formset.is_valid()
+
+
+@pytest.mark.parametrize(
+    "form_data",
+    [
+        {
+            "start": "127.0.0.100",
+            "end": "127.0.0.1",
+        },
+        {
+            "start": "127.0.0.100",
+            "end": "this one is not a valid IP address",
+        },
+        {
+            "start": "127.0.0.3/32",
+            "end": "127.0.0.100",
+        },
+    ],
+    ids=["end_before_start", "invalid_range_end", "invalid_range_start"],
+)
+def test_ip_range_form_validation(form_data):
+    # when: the form is instantiated with invalid data
+    ip_form = IpRangeForm(data=form_data)
+
+    # then: the form is invalid
+    assert ip_form.is_valid() is False
