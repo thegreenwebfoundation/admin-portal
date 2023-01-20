@@ -7,7 +7,7 @@ from urllib import parse
 
 from dateutil import relativedelta
 
-
+import django
 from django.utils import timezone
 from ..accounts import models as ac_models
 from . import models as gc_models
@@ -64,9 +64,7 @@ class CarbonTxtParser:
 
         return [prov, provider_set]
 
-    def _create_green_domain_for_provider(
-        self, domain: str, provider: Hostingprovider
-    ):
+    def _create_green_domain_for_provider(self, domain: str, provider: Hostingprovider):
         """
         Create a Greendomain to match the newly created hosting provider
         """
@@ -114,7 +112,7 @@ class CarbonTxtParser:
             if not res:
                 self._create_green_domain_for_provider(domain, prov)
 
-            aliases = provider.get('aliases')
+            aliases = provider.get("aliases")
             if aliases:
                 for alias in aliases:
                     logger.info(f"Adding alias domain {alias} for {domain}")
@@ -125,18 +123,17 @@ class CarbonTxtParser:
 
         for org in org_creds:
             prov, org_providers = self._create_provider(org, org_providers)
-            domain =  org["domain"]
+            domain = org["domain"]
 
             res = gc_models.GreenDomain.objects.filter(url=domain).first()
             if not res:
                 self._create_green_domain_for_provider(domain, prov)
 
-            aliases = org.get('aliases')
+            aliases = org.get("aliases")
             if aliases:
                 for alias in aliases:
                     logger.info(f"Adding alias domain {alias} for {domain}")
                     self._create_green_domain_for_provider(alias, prov)
-
 
             org_domains.add(org["domain"])
 
@@ -148,16 +145,61 @@ class CarbonTxtParser:
             "org": {"providers": [*org_providers]},
         }
 
-    def parse_and_preview(self, url: str, carbon_txt: str = None) -> Dict:
+    def parse_and_preview(
+        self, checked_domain: str = None, carbon_txt: str = None
+    ) -> Dict:
         """
-        Parses a carbon.txt string and returns a preview of the objects that would be created if it was imported.
+        Parses a carbon.txt string and returns a datastructure of the objects that
+        the system was able to find, and what the new additions would look like.
 
         Used to show a preview for an administrator to approve
         before running an import.
 
         """
-        # not implemented
-        pass
+        parsed_txt = toml.loads(carbon_txt)
+        result_data = {"upstream": {"providers": set()}, "org": None}
+
+        # find our upstream
+        for provider_representation in parsed_txt["upstream"]["providers"]:
+
+            if isinstance(provider_representation, str):
+                # is it a domain string? if so, look for the matching provider
+                try:
+                    provider = gc_models.GreenDomain.objects.get(
+                        url=provider_representation
+                    ).hosting_provider
+                    result_data["upstream"]["providers"].add(provider)
+                except django.core.exceptions.ObjectDoesNotExist:
+                    logger.warn(f"No provider found to match {provider_representation}")
+                    pass
+
+                # is it a dict-like object? If so,
+                # find the matching provider for the domain property
+            if isinstance(provider_representation, dict):
+                # TODO one day we will use a better name than 'url'
+                domain = provider_representation["domain"]
+                try:
+                    provider = gc_models.GreenDomain.objects.get(
+                        url=domain
+                    ).hosting_provider
+                    result_data["upstream"]["providers"].add(provider)
+                except django.core.exceptions.ObjectDoesNotExist:
+                    logger.warn(f"No provider found to match {domain}")
+                    pass
+
+        # find our org. If information already exists, fetch it, so there's only one canonical carbon.txt needed if there are multiple domains referring to the same
+        # organisation
+        try:
+            provider = gc_models.GreenDomain.objects.get(
+                url=checked_domain
+            ).hosting_provider
+
+            result_data["org"] = provider
+        except django.core.exceptions.ObjectDoesNotExist:
+            logger.warn(f"No provider found to match {domain}")
+            pass
+
+        return result_data
 
     def import_from_url(self, url: str):
         """
@@ -169,4 +211,3 @@ class CarbonTxtParser:
         carbon_txt_string = res.content.decode("utf-8")
 
         return self.parse_and_import(domain, carbon_txt_string)
-

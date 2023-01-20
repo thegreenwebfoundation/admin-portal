@@ -1,22 +1,107 @@
 import logging
 import typing
+from urllib import parse
 
 from django import forms
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
+
 from django.urls import path, reverse
 from django.views.generic.edit import FormView
 from waffle import flag_is_active
 
+from django.shortcuts import render
+from django.urls import path, reverse
+from django.views.generic.edit import FormView
+
+import ipwhois
+import requests
+import toml
+from waffle.mixins import WaffleFlagMixin
+
 from apps.greencheck.views import GreenUrlsView
 
-from ..greencheck import domain_check
+from ..greencheck import carbon_txt, domain_check
 from ..greencheck import models as gc_models
 
-checker = domain_check.GreenDomainChecker()
 
+checker = domain_check.GreenDomainChecker()
 logger = logging.getLogger(__name__)
+
+
+class CarbonTxtForm(forms.Form):
+    """
+    A form for previewing what is in the database given a carbon txt file,
+    at a specific domain.
+    You can also paste the carbon.txt contents into a textfield, for convenience.
+    """
+
+    url = forms.URLField()
+    body = forms.CharField(widget=forms.Textarea(attrs={"rows": 30}), required=False)
+
+    preview = None
+    parser = carbon_txt.CarbonTxtParser()
+
+    def clean(self):
+        submitted_text = self.cleaned_data["body"]
+        url = self.cleaned_data["url"]
+        parsed_toml = None
+
+        # check that the submitted text is valid TOML
+
+        if not submitted_text:
+            try:
+                response = requests.get(url)
+                if response.ok:
+                    submitted_text = response.content
+            except requests.HTTPError:
+                # flag up an error about the domain
+                raise forms.ValidationError(
+                    f"Unable to fetch content from url: %(url)s",
+                    code="bad_http_lookup",
+                    params={"url": url},
+                )
+
+        if submitted_text:
+            if isinstance(submitted_text, bytes):
+                submitted_text = submitted_text.decode("utf-8")
+            try:
+                parsed_toml = toml.loads(submitted_text)
+            except toml.decoder.TomlDecodeError as ex:
+                logger.warn(f"Unable to read TOML at {url}")
+                raise forms.ValidationError(
+                    f"Unable to parse the provided TOML.", code="toml_parse_error"
+                )
+
+            parsed_url = parse.urlparse(url)
+            domain = parsed_url.netloc
+
+            if parsed_toml:
+                self.cleaned_data["preview"] = self.parser.parse_and_preview(
+                    domain, submitted_text
+                )
+
+
+class CarbonTxtCheckView(LoginRequiredMixin, WaffleFlagMixin, FormView):
+    template_name = "carbon_txt_preview.html"
+    form_class = CarbonTxtForm
+    success_url = "/admin/carbon-txt-preview"
+
+    def form_valid(self, form):
+        """Show the valid"""
+
+        ctx = self.get_context_data()
+
+        preview = form.cleaned_data.get("preview")
+
+        if preview:
+            ctx["preview"] = form.cleaned_data["preview"]
+
+        # return early if no submitted text
+        return render(self.request, self.template_name, ctx)
+
 
 class CheckUrlForm(forms.Form):
     """
@@ -137,6 +222,11 @@ class GreenWebAdmin(AdminSite):
             path("extended-greencheck/", CheckUrlView.as_view(), name="check_url"),
             path("green-urls", GreenUrlsView.as_view(), name="green_urls"),
             path("import-ip-ranges", GreenUrlsView.as_view(), name="import_ip_ranges"),
+            path(
+                "carbon-txt-preview",
+                CarbonTxtCheckView.as_view(),
+                name="carbon_txt_preview",
+            ),
         ]
         return patterns + urls
 

@@ -1,0 +1,28 @@
+[upstream]
+providers = [
+  { domain = 'syseleven.com', doctype = 'sustainability-page', url = 'https://www.syseleven.de/en/about-us/our-data-centers/' },
+  { domain = 'akamai.com', doctype = 'sustainability-page', url = 'https://www.akamai.com/company/corporate-responsibility/sustainability' },
+]
+
+[org]
+credentials = [
+  # this is the 'primary' entity, and these are included on any of the other pages
+  { domain = 'www.bergfreunde.de', doctype = 'sustainability-page', url = 'https://www.bergfreunde.de/klimaneutral/' },
+  { domain = 'www.bergfreunde.de', doctype = 'carbon-compensation', url = 'https://fpm.climatepartner.com/tracking/13467-1912-1001/en' },
+  # these are secondary entities. These are displayed listed first in when checking
+  # against the domain, followed by the bergfruende.de credentials above
+  #
+  { domain = 'alpinetrek.co.uk', doctype = 'sustainability-page', url = 'https://www.alpinetrek.co.uk/climate-neutral/' },
+  { domain = 'bergfreunde.nl', doctype = 'sustainability-page', url = 'https://www.bergfreunde.nl/klimaatneutraliteit/' },
+  { domain = 'alpiniste.fr', doctype = 'sustainability-page', url = 'https://www.alpiniste.fr/carbone-neutre/' },
+  { domain = 'bergfreunde.eu', doctype = 'sustainability-page', url = 'https://www.bergfreunde.eu/climate-neutral/' },
+  { domain = 'berg-freunde.at', doctype = 'sustainability-page', url = 'https://www.berg-freunde.at/klimaneutral/' },
+  { domain = 'berg-freunde.ch', doctype = 'sustainability-page', url = 'https://www.berg-freunde.ch/klimaneutral/' },
+  { domain = 'bergfreunde.dk', doctype = 'sustainability-page', url = 'https://www.bergfreunde.eu/climate-neutral/' },
+  { domain = 'bergfreunde.se', doctype = 'sustainability-page', url = 'https://www.bergfreunde.eu/climate-neutral/' },
+  { domain = 'bergfreunde.no', doctype = 'sustainability-page', url = 'https://www.bergfreunde.eu/climate-neutral/' },
+  { domain = 'bergfreunde.fi', doctype = 'sustainability-page', url = 'https://www.bergfreunde.eu/climate-neutral/' },
+  { domain = 'bergfreunde.it', doctype = 'sustainability-page', url = 'https://www.bergfreunde.eu/climate-neutral/' },
+  { domain = 'bergfreunde.es', doctype = 'sustainability-page', url = 'https://www.bergfreunde.eu/climate-neutral/' },
+  { domain = 'bfgcdn.com', doctype = 'sustainability-page', url = 'https://www.bergfreunde.eu/climate-neutral/' },
+]

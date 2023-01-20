@@ -1,4 +1,3 @@
-
 import pytest
 import pathlib
 
@@ -23,6 +22,24 @@ def carbon_txt_string():
         carbon_txt_string = carb_file.read()
 
     return carbon_txt_string
+
+
+@pytest.fixture
+def shorter_carbon_txt_string():
+    """use a minimal carbon.txt file"""
+
+    short_string = """
+        [upstream]
+        providers = [
+        'sys-ten.com',
+        'cdn.com',
+        ]
+        [org]
+        credentials = [
+            { doctype = 'sustainability-page', url = 'https://www.hillbob.de/klimaneutral'}
+        ]
+    """
+    return short_string
 
 
 class TestCarbonTxtParser:
@@ -96,7 +113,7 @@ class TestCarbonTxtParser:
 
     def test_check_with_domain_aliases(self, db, carbon_txt_string):
         """
-        Does 
+        Does
         """
         psr = carbon_txt.CarbonTxtParser()
         psr.parse_and_import("www.hillbob.de", carbon_txt_string)
@@ -131,6 +148,33 @@ class TestCarbonTxtParser:
         refer to the correct corporate grouping too?
         """
         pass
+
+    @pytest.mark.parametrize(
+        "text_string", ("carbon_txt_string", "shorter_carbon_txt_string")
+    )
+    def test_parse_and_preview_carbon_text_file(
+        self, db, carbon_txt_string, request, text_string
+    ):
+        # you can not parametrize fixtures, you need to fetch the value this way.
+        # More below
+        # https://doc.pytest.org/en/latest/reference/reference.html#pytest.FixtureRequest.getfixturevalue # noqa
+        fixture_val = request.getfixturevalue(text_string)
+
+        psr = carbon_txt.CarbonTxtParser()
+        psr.parse_and_import("www.hillbob.de", carbon_txt_string)
+
+        # we want to check that both forms work - the short and long versions
+        parsed_result = psr.parse_and_preview("www.hillbob.de", fixture_val)
+
+        sys_ten = gc_models.GreenDomain.objects.get(url="sys-ten.com").hosting_provider
+        cdn_com = gc_models.GreenDomain.objects.get(url="cdn.com").hosting_provider
+        hillbob = gc_models.GreenDomain.objects.get(
+            url="www.hillbob.de"
+        ).hosting_provider
+
+        assert sys_ten in parsed_result["upstream"]["providers"]
+        assert cdn_com in parsed_result["upstream"]["providers"]
+        assert parsed_result["org"] == hillbob
 
 
 class TestLogCarbonTxtCheck:

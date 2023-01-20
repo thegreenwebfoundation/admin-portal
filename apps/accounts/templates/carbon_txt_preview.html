@@ -1,0 +1,105 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}
+    The Green Web Foundation Member portal: Carbon text preview
+{% endblock %}
+
+
+{% block pretitle %}
+<h1>Preview how your carbon.txt would be parsed</h1>
+{% endblock %}
+
+{% block content %}
+
+<style>
+    form div {
+      margin-top:1rem;
+      margin-bottom:1rem;
+    }
+    form input[type='url'],
+    form textarea {
+        min-width:30rem;
+    }
+    form div label {
+      display: inline-block;
+      min-width: 10rem;
+    }
+</style>
+
+<form action="{{ form_url }}" method="post" class="try_out">
+    {% csrf_token %}
+
+    {{ form.url.errors }}
+    <div>
+      <label for="{{ form.url.id_for_label }}">Url: </label>
+    {{ form.url }}
+    </div>
+
+    <div>
+      <label for="{{ form.body.id_for_label }}">body: </label>
+      {{ form.body }}
+    </div>
+
+    <input type="submit" value="Submit"
+        style="margin-top: 0px; padding: 6px 15px">
+</form>
+
+<hr />
+
+<section>
+
+{% if preview %}
+
+  {% if preview.upstream %}
+    <h2>Upstream providers</h2>
+
+    {% if preview.upstream.providers %}
+      <p>
+        We were able to find the following upstream providers in the green web database
+      </p>
+    {% else %}
+      <p>
+        Sorry, we could not find any of the named upstream providers in the green web database.
+      </p>
+    {% endif %}
+
+    <ul>
+    {% for provider in preview.upstream.providers %}
+
+      <li>
+        <h3>
+          <a href="{{ provider.admin_url }}">
+            {{ provider.name}}
+          </a>
+        </h3>
+
+          {% comment %} Add the supporting evidence here {% endcomment %}
+      </li>
+      {% endfor %}
+
+    </ul>
+  {% endif %}
+
+
+  {% if preview.org %}
+    <h2>Primary Organisation</h2>
+
+    <p>This is the organisation hosting the carbon.txt file being viewed and processed</p>
+
+    <h3>
+      <a href="{{ preview.org.admin_url }}">
+      {{ preview.org }}
+      </a>
+    </h3>
+
+{% endif %}
+
+
+{% endif %}
+
+
+</section>
+
+
+{% endblock content %}
