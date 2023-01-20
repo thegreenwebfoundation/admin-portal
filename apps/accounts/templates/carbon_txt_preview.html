@@ -30,6 +30,8 @@
 <form action="{{ form_url }}" method="post" class="try_out">
     {% csrf_token %}
 
+    {{ form.non_field_errors }}
+
     {{ form.url.errors }}
     <div>
       <label for="{{ form.url.id_for_label }}">Url: </label>

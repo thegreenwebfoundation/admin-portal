@@ -56,6 +56,13 @@ class CarbonTxtForm(forms.Form):
                 response = requests.get(url)
                 if response.ok:
                     submitted_text = response.content
+                else:
+                    raise forms.ValidationError(
+                        f"Unable to fetch content from url: %(url)s. HTTP response"
+                        f" code: %(response_code)s",
+                        code="bad_http_lookup",
+                        params={"url": url, "response_code": response.status_code},
+                    )
             except requests.HTTPError:
                 # flag up an error about the domain
                 raise forms.ValidationError(
@@ -88,6 +95,7 @@ class CarbonTxtCheckView(LoginRequiredMixin, WaffleFlagMixin, FormView):
     template_name = "carbon_txt_preview.html"
     form_class = CarbonTxtForm
     success_url = "/admin/carbon-txt-preview"
+    waffle_flag = "carbon_txt_preview"
 
     def form_valid(self, form):
         """Show the valid"""
