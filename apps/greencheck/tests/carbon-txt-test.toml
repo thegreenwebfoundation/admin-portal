@@ -1,13 +1,19 @@
 [upstream]
 providers = [
-  { domain = 'sys-ten.com', doctype = 'sustainability-page', url = 'https://www.sys-ten.de/en/about-us/our-data-centers/', aliases = ["www.sys-ten.com", "www.systen.com"]},
+  { domain = 'sys-ten.com', doctype = 'sustainability-page', url = 'https://www.sys-ten.de/en/about-us/our-data-centers/', aliases = [
+    "www.sys-ten.com",
+    "www.systen.com",
+  ] },
   { domain = 'cdn.com', doctype = 'sustainability-page', url = 'https://cdn.com/company/corporate-responsibility/sustainability' },
 ]
 
 [org]
+# we don't represent location here right now, and it's important to our model
+# TODO figure out how to represent this
 credentials = [
   { domain = 'www.hillbob.de', doctype = 'sustainability-page', url = 'https://www.hillbob.de/klimaneutral/', aliases = [
-    "hillbob.de", "hill-bob.de"
+    "hillbob.de",
+    "hill-bob.de",
   ] },
   { domain = 'www.hillbob.de', doctype = 'carbon-compensation', url = 'https://fpm.climatepartner.com/tracking/13467-1912-1001/en' },
 
@@ -26,7 +32,11 @@ credentials = [
   { domain = 'hillbob.at', doctype = 'sustainability-page', url = 'https://www.hillbob.at/klimaneutral/' },
   { domain = 'hillbob.at', doctype = 'carbon-compensation', url = 'https://fpm.climatepartner.com/tracking/13467-1912-1001/en' },
 
-  { domain = 'hillbob.ch', doctype = 'sustainability-page', url = 'https://www.hillbob.ch/klimaneutral/', aliases = ["hill-bob.ch", "www.hilbob.ch", "www.hill-bob.ch"]},
+  { domain = 'hillbob.ch', doctype = 'sustainability-page', url = 'https://www.hillbob.ch/klimaneutral/', aliases = [
+    "hill-bob.ch",
+    "www.hilbob.ch",
+    "www.hill-bob.ch",
+  ] },
   { domain = 'hillbob.ch', doctype = 'carbon-compensation', url = 'https://fpm.climatepartner.com/tracking/13467-1912-1001/en' },
 
   { domain = 'hillbob.dk', doctype = 'sustainability-page', url = 'https://www.hillbob.eu/climate-neutral/' },

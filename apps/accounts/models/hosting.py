@@ -228,6 +228,12 @@ class Hostingprovider(models.Model):
         """
         return AWAITING_REVIEW_SLUG in self.staff_labels.slugs()
 
+    @property
+    def admin_url(self) -> str:
+        return reverse(
+            "greenweb_admin:accounts_hostingprovider_change", args=[str(self.id)]
+        )
+
     def label_as_awaiting_review(self, notify_admins=False):
         """
         Mark this hosting provider as in need of review by staff.
