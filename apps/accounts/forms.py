@@ -391,7 +391,7 @@ class ConsentForm(forms.ModelForm):
         required=False,
         initial=False,
         label="Sign me up to the newsletter",
-        help_text="We run a monthly newsletter, Greening Digital, where we share actionable news about greening the web and a sustainable digital transition. You can unsubscribe at any time.",
+        help_text="We run a newsletter, Greening Digital, where we share actionable news about greening the web and a sustainable digital transition. You can unsubscribe at any time.",
     )
 
     class Meta:
