@@ -4,13 +4,13 @@
 	@font-face {
 	  font-family: TWKEverett;
 	  font-weight: 400;
-	  src: url(../fonts/TWKEverett-Regular-web.woff2) format("woff2");
+	  src: url(../../fonts/TWKEverett-Regular-web.woff2) format("woff2");
 	}
 	@font-face {
 	  font-family: TWKEverett;
 	  font-weight: 400;
 	  font-style: italic;
-	  src: url(../fonts/TWKEverett-RegularItalic-web.woff2) format("woff2");
+	  src: url(../../fonts/TWKEverett-RegularItalic-web.woff2) format("woff2");
 	}
 	html {
 		@apply text-neutral-700;
