@@ -64,7 +64,6 @@ table[class^="form__table--"] label {
 	@apply font-normal;
 	@apply border-b-2;
 	@apply border-green;
-	@apply pb-1;
 }
 
 
@@ -73,9 +72,11 @@ table[class^="form__table--"] label {
 	@apply flex-wrap;
 	@apply 2xl:flex-nowrap;
 }
-
 .form__table--network tbody > tr {
 	@apply w-auto;
+}
+.form__table--network label {
+	@apply mb-1;
 }
 
 

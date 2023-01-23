@@ -50,9 +50,9 @@
 	<h1>Network footprint</h1>
 	<p>We need a way to identify any 'downstream' service as coming from you in a way machines can check quickly. We do this in the following ways:</p>
 	<ul>
-		<li>checking a service against a list of machine-readable public addresses – usually IPv4 and IPv6 addresses</li>
+		<li>checking a service against a list of machine-readable public addresses – usually IPv4 and IPv6 addresses;</li>
 		<li>for some large providers providers, we support checking if a service is coming from an network address that belong 
-			to one or more Autonomous System Numbers (a kind of shorthand for a large part of the internet)</li>
+			to one or more Autonomous System Numbers (a kind of shorthand for a large part of the internet).</li>
 	</ul>
 </section>
 
@@ -81,7 +81,7 @@
 			<div id="convenient-formset-ips">
 				{% for form in wizard.form.ips %}
 				<div class="convenient-form-ips bg-neutral-200 rounded-xl my-6 p-4">
-					<table class="form__table--network">
+					<table class="form__table--network mt-0 mb-2">
 						{{ form.as_table }}
 					</table>
 					<input class="text-sm hover:text-base" type="button" id="delete-form-button-ips" value="&#x274C; Delete this IP range">
@@ -95,7 +95,7 @@
 			
 			<div id="empty-form-ips" style="display:none">
 				<div class="convenient-form-ips bg-neutral-200 rounded-xl my-6 p-4">
-					<table class="form__table--network">
+					<table class="form__table--network mt-0 mb-2">
 						{{ wizard.form.ips.empty_form.as_table }}
 					</table>
 					<input class="text-sm hover:text-base" type="button" id="delete-form-button-ips" value="&#x274C; Delete this IP range">
@@ -108,12 +108,13 @@
 			<h3 class="text-3xl mt-0">Identify this provider by ASN</h3>
 			<p>For large services, you can list the AS numbers. The green credentials
 			from this provider will count for any IP address shown to belong to the AS numbers listed below.</p>
+			<p>Important: only add when you <span class="font-bold">fully</span> operate this AS number. 
 
 			{{ wizard.form.asns.management_form }}
 			<div id="convenient-formset-asns">
 				{% for form in wizard.form.asns %}
 				<div class="convenient-form-asns bg-neutral-200 rounded-xl my-6 p-4">
-					<table class="form__table--network">
+					<table class="form__table--network mt-0 mb-2">
 						{{ form.as_table }}
 					</table>
 					<input class="text-sm hover:text-base" type="button" id="delete-form-button-asns" value="&#x274C; Delete this ASN number">
@@ -127,7 +128,7 @@
 
 			<div id="empty-form-asns" style="display:none">
 				<div class="convenient-form-asns bg-neutral-200 rounded-xl my-6 p-4">
-					<table class="form__table--network">
+					<table class="form__table--network mt-0 mb-2">
 						{{ wizard.form.asns.empty_form.as_table }}
 					</table>
 					<input class="text-sm hover:text-base" type="button" id="delete-form-button-asns" value="&#x274C; Delete this ASN number">
