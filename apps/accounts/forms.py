@@ -249,13 +249,12 @@ class OrgDetailsForm(forms.Form):
         coerce=lambda x: x == "True",
     )
 
-    def save(self, commit=True) -> Tuple[ProviderRequest, ProviderRequestLocation]:
+    def save(self, commit=True) -> ProviderRequest:
         """
-        Returns model instances of: ProviderRequest, ProviderRequestLocation
+        Returns model instances of: ProviderRequest
         based on the validated data bound to this Form
         """
         pr = ProviderRequest.from_kwargs(**self.cleaned_data)
-        # location = ProviderRequestLocation.from_kwargs(**self.cleaned_data, request=pr)
 
         if commit:
             pr.save()
@@ -434,12 +433,6 @@ class LocationForm(forms.ModelForm):
             },
         ),
     )
-    description = forms.CharField(
-        label="Description",
-        help_text="If needed, add a description to help tell locations apart.",
-        required=False,
-        widget=forms.widgets.Textarea(attrs={"rows": 2, "cols": 80}),
-    )
 
     city = forms.CharField(
         max_length=255,
@@ -457,11 +450,7 @@ class LocationForm(forms.ModelForm):
 
     class Meta:
         model = ac_models.ProviderRequestLocation
-        # exclude = ["request"]
-        fields = ["name", "description", "city", "country"]
-
-
-# we need a formset containing multiple locations
+        fields = ["name", "city", "country"]
 
 
 # Part of multi-step registration form (screen 2).

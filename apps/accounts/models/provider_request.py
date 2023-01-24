@@ -103,13 +103,12 @@ class ProviderRequestLocation(models.Model):
     """
 
     name = models.CharField(max_length=255, blank=True)
-    description = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=255)
     country = CountryField()
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f"{self.request.name} | {self.country.name}/{self.city}"
+        return f"{self.request.name} | { self.name } {self.country.name}/{self.city}"
 
 
 class ProviderRequestASN(models.Model):

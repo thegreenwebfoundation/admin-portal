@@ -1,0 +1,17 @@
+<div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
+  <div class="form__container--location">
+      {{ form.non_field_errors }}
+
+      {% for field in form %}
+          <div class=".location-field">
+              {{ field.errors }}
+              {{ field.label_tag }} {{ field }}
+              {% if field.help_text %}
+              <p class="help">{{ field.help_text | safe }}</p>
+              {% endif %}
+          </div>
+      {% endfor %}
+
+      <input class="text-sm hover:text-base mt-4" type="button" id="delete-form-button" value="&#x274C; Delete this location">
+  </div>
+</div>
