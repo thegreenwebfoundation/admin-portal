@@ -102,6 +102,8 @@ class ProviderRequestLocation(models.Model):
     in which the new provider offers services.
     """
 
+    name = models.CharField(max_length=255, blank=True)
+    description = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=255)
     country = CountryField()
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
