@@ -222,7 +222,7 @@ class OrgDetailsForm(forms.Form):
             "Add a single paragraph about your organisation, as you would expect to see"
             " in search results."
         ),
-        widget=forms.Textarea,
+        widget=forms.widgets.Textarea,
     )
     authorised_by_org = forms.TypedChoiceField(
         label="Do you work for this organisation?",
@@ -418,22 +418,47 @@ class ConsentForm(forms.ModelForm):
 
 class LocationForm(forms.ModelForm):
 
-    country = CountryField().formfield(
-        label="Which country is your organisation based in?",
-        blank_label="Select country",
-        help_text="Choose a country from the list.",
+    name = forms.CharField(
+        max_length=255,
+        label="Location name",
+        help_text=(
+            "Use the name you that your customers would recognise for this location."
+        ),
+        required=False,
+        widget=forms.widgets.TextInput(
+            attrs={
+                "placeholder": (
+                    "i.e. main headquarters for an office, or eu-west for a datacentre"
+                ),
+                "size": 60,
+            },
+        ),
     )
+    description = forms.CharField(
+        label="Description",
+        help_text="If needed, add a description to help tell locations apart.",
+        required=False,
+        widget=forms.widgets.Textarea(attrs={"rows": 2, "cols": 80}),
+    )
+
     city = forms.CharField(
         max_length=255,
-        label="Which city are you based in?",
+        label="City",
         help_text=(
-            "If your organisation is not based in a city, let us know the nearest city."
+            "If this location is not within a given city, choose the nearest city."
         ),
+    )
+
+    country = CountryField().formfield(
+        label="Country",
+        blank_label="Select country",
+        help_text="Choose a country from the list.",
     )
 
     class Meta:
         model = ac_models.ProviderRequestLocation
-        exclude = ["request"]
+        # exclude = ["request"]
+        fields = ["name", "description", "city", "country"]
 
 
 # we need a formset containing multiple locations

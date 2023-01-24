@@ -29,7 +29,11 @@
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
 <section class="prose my-10">
-	<h1>Org locations</h1>
+	<h1>Which parts of the world is your organisation active in?</h1>
+
+    <p>Starting with your main headquarters in your home country, list the locations your organisation is actively selling services in. We collect this information to help people looking for services available in a given country or region.</p>
+
+    <p>If your organisation runs services in a datacentre in given city, list the city and country for each region you offer. If you operate from a single datacentre or region, but have offices selling services in different countries, please list the cities you operate in.</p>
 
 </section>
 
@@ -66,8 +70,8 @@
                     {% endif %}
                 </div>
             {% endfor %}
-            
-            <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this location">
+
+            <input class="text-sm hover:text-base mt-4" type="button" id="delete-form-button" value="&#x274C; Delete this location">
         </div>
     </div>
     {% endfor %}
@@ -77,7 +81,7 @@
 
   <div id="empty-form" style="display:none">
     <div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
-        <div class="form__container--evidence">
+        <div class="form__container--location mb-4">
             {{ wizard.form.empty_form.non_field_errors }}
             {% for field in wizard.form.empty_form %}
             <div class=".location-field">
@@ -89,7 +93,8 @@
             </div>
         {% endfor %}
         </div>
-        <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="Delete this location">
+        <input class="text-sm hover:text-base mb-4" type="button" id="delete-form-button" value="&#x274C; Delete this location">
+
     </div>
 </div>
 
