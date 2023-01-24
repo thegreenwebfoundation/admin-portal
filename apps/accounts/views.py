@@ -30,6 +30,7 @@ from .forms import (
     GreenEvidenceForm,
     NetworkFootprintForm,
     ConsentForm,
+    PreviewForm
 )
 from .models import User, ProviderRequest
 
@@ -173,6 +174,8 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
     class Steps(Enum):
         """
+        TODO: remove this + refactor elsewhere, use forms.WizardSteps instead
+
         Pre-defined list of WizardView steps.
         WizardView uses numbers from 0 up, encoded as strings,
         to refer to specific steps.
@@ -187,6 +190,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         GREEN_EVIDENCE = "3"
         NETWORK_FOOTPRINT = "4"
         CONSENT = "5"
+        PREVIEW = "6"
 
     FORMS = [
         (Steps.ORG_DETAILS.value, OrgDetailsForm),
@@ -195,6 +199,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         (Steps.GREEN_EVIDENCE.value, GreenEvidenceForm),
         (Steps.NETWORK_FOOTPRINT.value, NetworkFootprintForm),
         (Steps.CONSENT.value, ConsentForm),
+        (Steps.PREVIEW.value, PreviewForm),
     ]
 
     TEMPLATES = {
@@ -204,6 +209,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         Steps.GREEN_EVIDENCE.value: "provider_registration/evidence.html",
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/network_footprint.html",
         Steps.CONSENT.value: "provider_registration/consent.html",
+        Steps.PREVIEW.value: "provider_registration/preview.html",
     }
 
     def done(self, form_list, form_dict, **kwargs):
@@ -276,3 +282,24 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         Reference: https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.TemplateResponseMixin.get_template_names
         """
         return [self.TEMPLATES[self.steps.current]]
+    
+    def _get_data_for_preview(self):
+        """
+        Returns cleaned data from all the steps before the PREVIEW step
+        """
+        initial = {}
+        # iterate over all forms without the last one (PREVIEW)
+        for step, _ in self.FORMS[:-1]:
+            initial[step] = self.get_cleaned_data_for_step(step)
+        return initial
+
+    def get_form_initial(self, step):
+        # populate the data for the PREVIEW step
+        if step == "6":
+            return self._get_data_for_preview()
+        # keep compatibility with the default implementation
+        return self.initial_dict.get(step, {})
+
+    def get_context_data(self, form, **kwargs):
+        breakpoint()
+        return super().get_context_data(form, **kwargs)
