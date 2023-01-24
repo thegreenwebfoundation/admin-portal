@@ -1,4 +1,5 @@
 import datetime
+from enum import Enum
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -10,7 +11,7 @@ from django_countries.fields import CountryField
 from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
-from betterforms.multiform import MultiModelForm
+from betterforms.multiform import MultiModelForm, MultiForm
 from convenient_formsets import ConvenientBaseFormSet
 from typing import Tuple
 
@@ -461,3 +462,39 @@ LocationsForm = forms.formset_factory(
     extra=1,
     formset=MoreConvenientFormset,
 )
+
+
+class WizardSteps(Enum):
+    """
+    Pre-defined list of verification request forms.
+    WizardView uses numbers from 0 up, encoded as strings,
+    to refer to specific steps.
+
+    This Enum structure provides human-readable names
+    for these steps.
+    """
+    # TODO: change values to be meaningful after switching to NamedWizard
+    ORG_DETAILS = "0"
+    SERVICES = "1"
+    GREEN_EVIDENCE = "2"
+    NETWORK_FOOTPRINT = "3"
+    CONSENT = "4"
+    PREVIEW = "5"
+
+
+class PreviewForm(MultiForm):
+    """
+    Gathers all forms from the verification request for a preview before submitting.
+    """
+
+    # We have to set base_fields to a dictionary because
+    # the WizardView tries to introspect it.
+    base_fields = {}
+
+    form_classes = {
+        WizardSteps.ORG_DETAILS.value: OrgDetailsForm,
+        WizardSteps.SERVICES.value: ServicesForm,
+        WizardSteps.GREEN_EVIDENCE.value: GreenEvidenceForm,
+        WizardSteps.NETWORK_FOOTPRINT.value: NetworkFootprintForm,
+        WizardSteps.CONSENT.value: ConsentForm,
+    }

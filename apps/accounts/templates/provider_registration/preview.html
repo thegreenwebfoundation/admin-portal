@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+{{ wizard.form.media }}
+
+<div class="container mx-auto">
+
+<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+
+<section class="prose my-10">
+	<h1>Preview of your request</h1>
+	<p>Take a look if everything is aight, then submit</p>
+</section>
+
+    {% csrf_token %}
+    {{ wizard.management_form }}
+
+    <!-- wizard.form is a MultiForm (from django-betterforms) -->
+
+	<div class="lg:grid grid-cols-2 gap-16 my-10">
+
+		<section class="prose border-2 rounded-xl mb-6 lg:mb-0 p-6">
+
+            {% for form in wizard.form.forms.values %}
+            <div class="bg-neutral-200 rounded-xl my-6 p-4">
+                <table class="form__table mt-0 mb-2">
+                    {{ form.as_table }}
+                </table>
+            </div>
+            {% endfor %}
+		</section>
+
+	</div>
+
+	<input class="btn" type="submit" value="{% trans "SUBMIT THIS ALREADY" %}" />
+
+    {% if wizard.steps.prev %}
+	<div>
+    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+	</div>
+    {% endif %}
+
+</form>
+</div>
+{% endblock %}
