@@ -301,5 +301,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         return self.initial_dict.get(step, {})
 
     def get_context_data(self, form, **kwargs):
-        breakpoint()
-        return super().get_context_data(form, **kwargs)
+        context = super().get_context_data(form, **kwargs)
+        # uncomment here to peek inside `context["form"]` on page reload
+        # breakpoint()
+        return context

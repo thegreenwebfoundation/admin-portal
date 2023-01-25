@@ -9,43 +9,69 @@
 {{ wizard.form.media }}
 
 <div class="container mx-auto">
+    <form method="post" action="">
+        {% csrf_token %}
+        {{ wizard.management_form }}
+        
+        {% comment %}
+            This is a "dummy" form - no data is actually being submitted.
+        {% endcomment %}
 
-<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+        <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
-<section class="prose my-10">
-	<h1>Preview of your request</h1>
-	<p>Take a look if everything is aight, then submit</p>
-</section>
+        <section class="prose my-10">
+            <h1>Your verification request</h1>
+            <p>If everything is correct, submit your request</p>
+        </section>
 
-    {% csrf_token %}
-    {{ wizard.management_form }}
+        <div>
+            <section class="prose my-10">
+                <h3>About your organisation</h3>
+                {% include "provider_registration/partials/_preview.html" with form=wizard.form.forms.0 %}
+            </section>
+            <section class="prose my-10">
+                <h3>Locations</h3>
+                {% for location_form in wizard.form.forms.1.forms %}
+                {% include "provider_registration/partials/_preview.html" with form=location_form %}
+                {% endfor %}
+            </section>
+            <section class="prose my-10">
+                <h3>Services provided by your organisation</h3>
+                {% include "provider_registration/partials/_preview.html" with form=wizard.form.forms.2 %}
+            </section>
+            <section class="prose my-10">
+                <h3>Green evidence</h3>
+                {% for evidence_form in wizard.form.forms.3.forms %}
+                {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
+                {% endfor %}
+            </section>
+            <section class="prose my-10">
+                <h3>Network footprint</h3>
 
-    <!-- wizard.form is a MultiForm (from django-betterforms) -->
+                {% for ip_form in wizard.form.forms.4.ips.forms %}
+                {% include "provider_registration/partials/_preview.html" with form=ip_form %}
+                {% endfor %}
 
-	<div class="lg:grid grid-cols-2 gap-16 my-10">
+                {% for asn_form in wizard.form.forms.4.asns.forms %}
+                {% include "provider_registration/partials/_preview.html" with form=asn_form %}
+                {% endfor %}
+            </section>
+            <section class="prose my-10">
+                <h3>Consent</h3>
+                {% include "provider_registration/partials/_preview.html" with form=wizard.form.forms.5 %}
+            </section>
+        </div>
 
-		<section class="prose border-2 rounded-xl mb-6 lg:mb-0 p-6">
+        <input class="btn" type="submit" value="{% trans " submit" %}" />
 
-            {% for form in wizard.form.forms.values %}
-            <div class="bg-neutral-200 rounded-xl my-6 p-4">
-                <table class="form__table mt-0 mb-2">
-                    {{ form.as_table }}
-                </table>
-            </div>
-            {% endfor %}
-		</section>
-
-	</div>
-
-	<input class="btn" type="submit" value="{% trans "SUBMIT THIS ALREADY" %}" />
-
-    {% if wizard.steps.prev %}
-	<div>
-    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
-	</div>
-    {% endif %}
-
-</form>
+        {% if wizard.steps.prev %}
+        <div>
+            <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit"
+                value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+            <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit"
+                value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+        </div>
+        {% endif %}
+    </form>
 </div>
 {% endblock %}
