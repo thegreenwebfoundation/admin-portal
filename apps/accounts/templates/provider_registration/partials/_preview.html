@@ -1,0 +1,10 @@
+<div class="bg-neutral-200 rounded-xl my-6 p-4">
+    <div>
+        {% for field in form %}
+        <div>
+            <b>{{ field.label }}</b>
+            {{ field.value }}
+        </div>
+        {% endfor %}
+    </div>
+</div>
