@@ -473,13 +473,15 @@ class WizardSteps(Enum):
     This Enum structure provides human-readable names
     for these steps.
     """
+
     # TODO: change values to be meaningful after switching to NamedWizard
     ORG_DETAILS = "0"
-    SERVICES = "1"
-    GREEN_EVIDENCE = "2"
-    NETWORK_FOOTPRINT = "3"
-    CONSENT = "4"
-    PREVIEW = "5"
+    LOCATIONS = "1"
+    SERVICES = "2"
+    GREEN_EVIDENCE = "3"
+    NETWORK_FOOTPRINT = "4"
+    CONSENT = "5"
+    PREVIEW = "6"
 
 
 class PreviewForm(MultiForm):
@@ -493,6 +495,7 @@ class PreviewForm(MultiForm):
 
     form_classes = {
         WizardSteps.ORG_DETAILS.value: OrgDetailsForm,
+        WizardSteps.LOCATIONS.value: LocationsForm,
         WizardSteps.SERVICES.value: ServicesForm,
         WizardSteps.GREEN_EVIDENCE.value: GreenEvidenceForm,
         WizardSteps.NETWORK_FOOTPRINT.value: NetworkFootprintForm,

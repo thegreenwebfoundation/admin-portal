@@ -30,7 +30,7 @@ from .forms import (
     GreenEvidenceForm,
     NetworkFootprintForm,
     ConsentForm,
-    PreviewForm
+    PreviewForm,
 )
 from .models import User, ProviderRequest
 
@@ -282,7 +282,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         Reference: https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.TemplateResponseMixin.get_template_names
         """
         return [self.TEMPLATES[self.steps.current]]
-    
+
     def _get_data_for_preview(self):
         """
         Returns cleaned data from all the steps before the PREVIEW step
