@@ -484,20 +484,12 @@ class WizardSteps(Enum):
     PREVIEW = "6"
 
 
-class PreviewForm(MultiForm):
+class PreviewForm(forms.Form):
     """
-    Gathers all forms from the verification request for a preview before submitting.
+    A dummy Form without any data.
+
+    It is used as a placeholder for the last step of the Wizard,
+    in order to render a preview of all data from the previous steps.
     """
 
-    # We have to set base_fields to a dictionary because
-    # the WizardView tries to introspect it.
-    base_fields = {}
-
-    form_classes = {
-        WizardSteps.ORG_DETAILS.value: OrgDetailsForm,
-        WizardSteps.LOCATIONS.value: LocationsForm,
-        WizardSteps.SERVICES.value: ServicesForm,
-        WizardSteps.GREEN_EVIDENCE.value: GreenEvidenceForm,
-        WizardSteps.NETWORK_FOOTPRINT.value: NetworkFootprintForm,
-        WizardSteps.CONSENT.value: ConsentForm,
-    }
+    pass
