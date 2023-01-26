@@ -142,6 +142,17 @@ def wizard_form_consent():
 
 
 @pytest.fixture()
+def wizard_form_preview():
+    """
+    Returns valid data for step PREVIEW of the wizard,
+    as expected by the POST request.
+    """
+    return {
+        "provider_registration_view-current_step": "6",
+    }
+
+
+@pytest.fixture()
 def mock_open(mocker):
     file_mock = mocker.patch("builtins.open")
     file_mock.return_value = io.StringIO("file contents")
@@ -265,6 +276,7 @@ def test_wizard_view_happy_path(
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
+    wizard_form_preview,
 ):
 
     # given: valid form data and authenticated user
@@ -275,6 +287,7 @@ def test_wizard_view_happy_path(
         wizard_form_evidence_data,
         wizard_form_network_data,
         wizard_form_consent,
+        wizard_form_preview,
     ]
     client.force_login(user)
 
