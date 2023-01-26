@@ -3,22 +3,7 @@
         {% for field in form %}
         <div>
             <b>{{ field.label }}</b><br>
-
-            {% if field.widget_type == "checkboxselectmultiple" %}
-
-                {% comment %}
-                    Special treatment for MultipleSelectField in order to
-                    display human-readable labels instead of slugs,
-                    (e.g. "Platform as a Service" instead of "paas")
-                {% endcomment %}
-
-                {% for choice in field %}
-                    {{ choice.choice_label }}<br>
-                {% endfor %}
-            
-            {% else %}
-                {{ field.value }}
-            {% endif %}
+            {{ field.value }}
         </div>
         {% endfor %}
     </div>
