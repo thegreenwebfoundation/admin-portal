@@ -174,8 +174,6 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
     class Steps(Enum):
         """
-        TODO: remove this + refactor elsewhere, use forms.WizardSteps instead
-
         Pre-defined list of WizardView steps.
         WizardView uses numbers from 0 up, encoded as strings,
         to refer to specific steps.
@@ -285,23 +283,35 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
     def _get_data_for_preview(self):
         """
-        Returns cleaned data from all the steps before the PREVIEW step
-        """
-        initial = {}
-        # iterate over all forms without the last one (PREVIEW)
-        for step, _ in self.FORMS[:-1]:
-            initial[step] = self.get_cleaned_data_for_step(step)
-        return initial
+        Gathers cleaned data from all the steps preceding the PREVIEW step,
+        so that it can be rendered on a single page.
 
-    def get_form_initial(self, step):
-        # populate the data for the PREVIEW step
-        if step == "6":
-            return self._get_data_for_preview()
-        # keep compatibility with the default implementation
-        return self.initial_dict.get(step, {})
+        Returns a dictionary with key-value pairs:
+        - key: name of the step,
+        - value: an unbound form from that step, with initial data populated.
+
+        _______
+        Gotchas:
+
+        - The forms are not bound: `form.data` will return {}.
+        The initial data should be accessed through iterating over bound fields:
+        `field.value for field in form`.
+
+        - In case of a formset instance, accessing `formset.forms`
+        will include extra (empty) forms as defined per formset factory.
+        Templates should use `formset.initial_forms` for rendering non-empty forms.
+        """
+        preview_forms = {}
+        # iterate over all forms without the last one (PREVIEW)
+        for step, form in self.FORMS[:-1]:
+            cleaned_data = self.get_cleaned_data_for_step(step)
+            preview_forms[step] = form(initial=cleaned_data)
+
+        return preview_forms
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form, **kwargs)
-        # uncomment here to peek inside `context["form"]` on page reload
-        # breakpoint()
+        if self.steps.current == self.Steps.PREVIEW.value:
+            # inject data from all previous steps for rendering
+            context["preview_forms"] = self._get_data_for_preview()
         return context
