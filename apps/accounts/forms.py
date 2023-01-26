@@ -1,5 +1,4 @@
 import datetime
-from enum import Enum
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -11,14 +10,11 @@ from django_countries.fields import CountryField
 from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
-from betterforms.multiform import MultiModelForm, MultiForm
+from betterforms.multiform import MultiModelForm
 from convenient_formsets import ConvenientBaseFormSet
-from typing import Tuple
 
 from apps.accounts.models.provider_request import (
     ProviderRequest,
-    ProviderRequestLocation,
-    ProviderRequestConsent,
 )
 
 from . import models as ac_models
@@ -464,26 +460,6 @@ LocationsForm = forms.formset_factory(
 )
 
 
-class WizardSteps(Enum):
-    """
-    Pre-defined list of verification request forms.
-    WizardView uses numbers from 0 up, encoded as strings,
-    to refer to specific steps.
-
-    This Enum structure provides human-readable names
-    for these steps.
-    """
-
-    # TODO: change values to be meaningful after switching to NamedWizard
-    ORG_DETAILS = "0"
-    LOCATIONS = "1"
-    SERVICES = "2"
-    GREEN_EVIDENCE = "3"
-    NETWORK_FOOTPRINT = "4"
-    CONSENT = "5"
-    PREVIEW = "6"
-
-
 class PreviewForm(forms.Form):
     """
     A dummy Form without any data.
@@ -491,5 +467,4 @@ class PreviewForm(forms.Form):
     It is used as a placeholder for the last step of the Wizard,
     in order to render a preview of all data from the previous steps.
     """
-
     pass
