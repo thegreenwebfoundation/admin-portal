@@ -3,51 +3,51 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tailwind_filters %}
+
+
 {% block content %}
+<div class="full-width bg-neutral-900 relative -top-4 md:-top-8">
+    <section class="container mx-auto text-white px-2 sm:px-4 p-12">
 
-<div class="container mx-auto">
-  <section class="mx-auto max-w-6xl bg-white border-2 border-dark-gray rounded-md  h-100-l mt-8 py-8">
+		<p class="uppercase text-green">Green Web Directory</p>
 
-    <section class="main-content p-4">
+      	<h1 class="text-disp-sm mt-12 pb-4">
+        	I am looking for
+      	</h1>
 
-      <h1 class="text-xl mb-3 pb-4">
-        This is a demo view for directory filtering.
-      </h1>
+		<form method="get" class="form__directory mt-4 md:grid grid-cols-4 grid-rows-1 gap-8">
+			{{ filter.form.as_p }}
 
-      <form method="get" class="mt-4">
-          {{ filter.form.as_p }}
-          <input type="submit" class="p-4 mt-4 mb-4" />
-      </form>
-
+			<input type="submit" class="btn p-4 mt-4 mb-4" value="Find"/>
+		</form>
     </section>
 
     <section class="main-content px-4">
+		<ul>
+		{% for obj in filter.qs %}
+			<li class="m-3 mt-4">
+			
+				<h4 class="my-4 font-bold text-l">
+					{{ obj.name }} - {{ obj.country.name }}
+				</h4>
 
-      <ul>
-      {% for obj in filter.qs %}
-        <li class="m-3 mt-4">
-          
-          <h4 class="my-4 font-bold text-l">
-            {{ obj.name }} - {{ obj.country.name }}
-          </h4>
+				<div class="mv-3">
+				{% if obj.services.names %}
+					<div class="leading-loose" style="line-height:3rem;">
 
-          <div class="mv-3">
-          {% if obj.services.names %}
-            <p class="leading-loose" style="line-height:3rem;">
-              {% for service in obj.services.all %}
-                <span class="inline-block border m-4 p-2 text-sm" style="background-color: #EAF5E0; margin-right:1rem;">
-                  {{ service.name }}
-                </span>
-              {% endfor %}
-            </p>
-          {% endif %}
-          </div>
+						{% for service in obj.services.all %}
+							<span class="inline-block border m-4 p-2 text-sm" style="background-color: #EAF5E0; margin-right:1rem;">
+							{{ service.name }}
+							</span>
+						{% endfor %}
+					</div>
+				{% endif %}
+				</div>
 
-        </li>
-      {% endfor %}
-    </ul>
-    
+			</li>
+		{% endfor %}
+		</ul>
     </section>
-    
-  </section>
+</div>
+
 {% endblock %}

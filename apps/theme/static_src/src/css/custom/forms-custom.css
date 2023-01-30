@@ -6,6 +6,7 @@
 
 /* Other kinds of form layout. */
 /* 3. EVIDENCE FORM             */
+/* 4. DIRECTORY FORMS           */
 
 
 /* 0. GENERAL CUSTOM FORM STYLES */
@@ -125,4 +126,19 @@ table[class^="form__table--"] label {
 .form__evidence--field-public input[type="checkbox"] {
 	@apply order-first;
 	@apply mb-0;
+}
+
+
+/* 4. DIRECTORY FORMS           */
+.form__directory label {
+	@apply block;
+	@apply text-white;
+	@apply text-base;
+}
+.form__directory select {
+	@apply text-neutral-400;
+	@apply text-3xl;
+	@apply bg-neutral-900;
+	@apply border-green;
+	@apply h-16;
 }
