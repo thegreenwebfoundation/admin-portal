@@ -86,6 +86,8 @@ module.exports = {
 			typography: (theme) => ({
 				DEFAULT: {
 					css: {
+						'--tw-prose-body': theme('colors.neutral[900]'),
+						'--tw-prose-headings': theme('colors.neutral[900]'),
 						h1: {
 							textTransform: 'uppercase',
 							fontSize: theme('fontSize.6xl'),

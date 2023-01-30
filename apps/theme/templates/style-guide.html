@@ -10,12 +10,14 @@
 
 	<article class="prose mx-auto" id="top">
 
-		<p>Contents:</p>
-		<ul>
-			<li><a href="#typography">Typography</a></li>
-			<li><a href="#list">Lists</a></li>
-			<li><a href="#forms">Forms</a></li>
-		</ul>
+		<div class="bg-gray-50 rounded-md mb-16 px-4 py-2">
+			<p class="font-bold">Contents:</p>
+			<ul>
+				<li><a href="#typography">Typography</a></li>
+				<li><a href="#list">Lists</a></li>
+				<li><a href="#forms">Forms</a></li>
+			</ul>
+		</div>
 
 		<h1 id="typography">Typography</h1>
 
@@ -128,6 +130,28 @@
 		<hr />
 
 		<h1 id="forms">Forms</h1>
+
+		<form>
+			<div class="">
+				<label for="id_username" class="text-base uppercase">Name</label>
+				
+				<div>
+					<input type="text" name="username" autofocus="" autocapitalize="none" autocomplete="username" maxlength="255" class="bg-gray-100 border-gray-100 w-full" required="" id="id_username">
+				</div>
+			</div>
+
+			<div class="my-6">
+				<label for="id_password" class="text-base uppercase">Title</label>
+				
+				<div>
+					<input type="password" name="password" autocomplete="current-password" class="bg-gray-100 border-gray-100 w-full" required="" id="id_password">
+				</div>
+			</div>
+
+			<button type="submit" class="btn">Sign in</button>
+
+			<input type="hidden" name="next" value="">
+		</form>
 
 		<p><a href="#top">Up to top</a></p>
 

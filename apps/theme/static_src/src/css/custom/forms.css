@@ -21,6 +21,7 @@ select {
 	@apply border-black;
 	@apply border-0;
 	@apply border-b-2;
+	@apply bg-green-50;
 }
 textarea {
 	@apply border-2;
