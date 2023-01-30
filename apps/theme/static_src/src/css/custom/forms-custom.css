@@ -6,6 +6,7 @@
 
 /* Other kinds of form layout. */
 /* 3. EVIDENCE FORM             */
+/* 4. BASE TEXT FIELDS          */
 
 
 /* 0. GENERAL CUSTOM FORM STYLES */
@@ -125,4 +126,18 @@ table[class^="form__table--"] label {
 .form__evidence--field-public input[type="checkbox"] {
 	@apply order-first;
 	@apply mb-0;
+}
+
+
+/* 4. BASE TEXT FIELDS          */
+.form__basetext-fields .form__row {
+	@apply my-6;
+}
+.form__basetext-fields label {
+	@apply text-base;
+}
+
+.form__basetext-fields input[type="text"],
+.form__basetext-fields input[type="password"] {
+	@apply w-full;
 }
