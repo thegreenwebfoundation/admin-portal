@@ -61,7 +61,6 @@ class GreenUrlsView(TemplateView):
 
 
 class GreencheckStatsView(WaffleFlagMixin, TemplateView):
-
     template_name = "greencheck/stats_index.html"
     waffle_flag = "greencheck-stats"
 
@@ -225,11 +224,12 @@ class ProviderFilter(django_filters.FilterSet):
         label="Services offered",
         queryset=Tag.objects.all(),
     )
-    name = django_filters.CharFilter(lookup_expr="icontains")
+    # note: this is commented out for Han,
+    # name = django_filters.CharFilter(lookup_expr="icontains")
 
     class Meta:
         model = Hostingprovider
-        fields = ["services", "country", "name"]
+        fields = ["services", "country"]
 
 
 class DirectoryView(WaffleFlagMixin, TemplateView):
