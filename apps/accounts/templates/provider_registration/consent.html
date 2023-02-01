@@ -5,3 +5,45 @@
 	<p>We want to check you consent to us storing and processing the data you provided in different ways.</p>
 </section>
 {% endblock %}
+
+
+{% block content %}
+<div class="container mx-auto">
+
+<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+
+<!-- child templates can override this to inject custom HTML content -->
+{% block header_section %}
+{% endblock %}
+
+{% if form.is_multipart %}
+    <form enctype="multipart/form-data" method="post" action="" class="form__table">
+{% else %}
+    <form method="post" action="" class="form__table">
+{% endif %}
+{% csrf_token %}
+
+<table class="form__table--consent">
+{{ wizard.management_form }}
+{% if wizard.form.forms %}
+    {{ wizard.form.management_form }}
+    {% for form in wizard.form.forms %}
+        {{ form.as_table }}
+    {% endfor %}
+{% else %}
+    {{ wizard.form }}
+{% endif %}
+</table>
+
+<input class="btn" type="submit" value="{% trans "next" %}"/>
+
+{% if wizard.steps.prev %}
+<div class="">
+	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+</div>
+{% endif %}
+
+</form>
+</div>
+{% endblock %}
