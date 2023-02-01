@@ -1,69 +1,106 @@
-{% extends "admin/base_site.html" %}
+{% extends "base.html" %}
 {% load i18n static %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
-<link rel="stylesheet" type="text/css" href="{% static "accounts/css/registration.css" %}">
-{{ form.media }}
+{% block bg-image %}
+<div class="block fixed -z-50 right-0 w-1/2 -top-24 bg-no-repeat bg-right bg-[length:100%_100%] bg-gradient-to-l from-green-500" style="height: calc(100% + 100px);"></div>
 {% endblock %}
 
-{% block bodyclass %}{{ block.super }} login{% endblock %}
-
-{% block usertools %}{% endblock %}
-
-{% block nav-global %}{% endblock %}
-
-{% block content_title %}{% endblock %}
-
-{% block breadcrumbs %}{% endblock %}
-
 {% block content %}
-{% if form.errors and not form.non_field_errors %}
-<p class="errornote">
-{% if form.errors.items|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
-</p>
-{% endif %}
 
-{% if form.non_field_errors %}
-{% for error in form.non_field_errors %}
-<p class="errornote">
-    {{ error }}
-</p>
-{% endfor %}
-{% endif %}
+<section class="flex justify-center items-center" style="min-height: calc(100vh - 603px);">
+	<div class="lg:grid grid-cols-2 grid-rows-1 gap-20 height-full">
 
-<div id="content-main">
+		<div class="hidden lg:flex justify-center">
+			<img width="350px" height="380px" src="{% static 'img/GWF-icon-sunburst--green.svg' %}" alt="The Green Web Foundation logo"/>
+		</div>
 
-{% if user.is_authenticated %}
-<p class="errornote">
-{% blocktrans trimmed %}
-    You are authenticated as {{ username }}, but are not authorized to
-    access this page. Would you like to login to a different account?
-{% endblocktrans %}
-</p>
-{% endif %}
+		<article class="mx-auto w-full lg:min-w-[500px] bg-white border-2 border-dark-gray rounded-3xl h-100-l p-8">
 
-<form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
-  <div class="form-row">
-    {{ form.username.errors }}
-    {{ form.username.label_tag }} {{ form.username }}
-  </div>
-  <div class="form-row">
-    {{ form.email.errors }}
-    {{ form.email.label_tag }} {{ form.email }}
-  </div>
-  <div class="form-row">
-    {{ form.password1.errors }}
-    {{ form.password1.label_tag }} {{ form.password1 }}
-    <input type="hidden" name="next" value="{{ next }}">
-  </div>
-  <div class="form-row">
-    {{ form.password2.errors }}
-    {{ form.password2.label_tag }} {{ form.password2 }}
-  </div>
-  <div class="submit-row">
-    <label>&nbsp;</label><input type="submit" value="{% trans 'Register' %}">
-  </div>
-</form>
+			<h1 class="text-6xl uppercase text-center pb-4">Create new account</h1>
+			<p class="mb-6">Having an account is the first step for hosting providers who wish to show as verified green when 
+				checks are made against their services in our Green Web Dataset. 
+				<a href="https://www.thegreenwebfoundation.org/support/why-does-my-website-show-up-as-grey-in-the-green-web-checker/" target="_blank" rel="noopener noreferrer">More info</a>.</p>
 
-</div>
+			{% if form.errors and not form.non_field_errors %}
+				<p class="text-purple errornote">
+					{% if form.errors.items|length == 1 %}
+						{% trans "Please correct the error below." %}
+					{% else %}
+						{% trans "Please correct the errors below." %}
+					{% endif %}
+				</p>
+			{% endif %}
+
+			{% if form.non_field_errors %}
+				{% for error in form.non_field_errors %}
+					<p class="text-purple errornote">
+						{{ error }}
+					</p>
+				{% endfor %}
+			{% endif %}
+
+			<div id="content-main">
+
+				{% if user.is_authenticated %}
+					<p class="text-purple errornote">
+						{% blocktrans trimmed %}
+							You are authenticated as {{ username }}, but are not authorized to
+							access this page. Would you like to login to a different account?
+						{% endblocktrans %}
+					</p>
+				{% endif %}
+
+				<form action="{{ app_path }}" method="post" id="login-form" class="form__basetext-fields">
+					{% csrf_token %}
+					
+					<div class="form__row">
+						{{ form.username.errors }}
+
+						{{ form.username.label_tag }} 
+
+						<div class="w-full">
+							{{ form.username }}
+						</div>
+					</div>
+
+					<div class="form__row">
+						{{ form.email.errors }}
+						{{ form.email.label_tag }} 
+
+						<div class="w-full">
+							{{ form.email }}
+						</div>
+					</div>
+
+					<div class="form__row">
+						{{ form.password1.errors }}
+						{{ form.password1.label_tag }} 
+
+						<div class="w-full">
+							{{ form.password1 }}
+						</div>
+
+						<input type="hidden" name="next" value="{{ next }}">
+					</div>
+
+					<div class="form__row">
+						{{ form.password2.errors }}
+						{{ form.password2.label_tag }} 
+
+						<div class="w-full">
+							{{ form.password2 }}
+						</div>
+					</div>
+
+					<button class="btn block m-auto w-2/3" type="submit">{% trans 'Create new account' %}</button>
+
+				</form>
+
+				<p class="mt-8">Already have an account? <a href="{% url 'login' %}">Log in.</a></p>
+
+			</div>
+		</article>
+	</div>
+</section>
+
 {% endblock %}

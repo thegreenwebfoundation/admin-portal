@@ -1,4 +1,5 @@
-/* 0. GENERAL CUSTOM FORM STYLES */
+/* 0.  GENERAL CUSTOM FORM STYLES */
+/* 0.1 BASE SIZED TEXT FIELDS     */
 
 /* Styles for forms that are laid out as tables */
 /* 1. GENERAL form_table         */
@@ -7,6 +8,7 @@
 /* Other kinds of form layout. */
 /* 3. EVIDENCE FORM             */
 /* 4. DIRECTORY FORMS           */
+
 
 
 /* 0. GENERAL CUSTOM FORM STYLES */
@@ -18,7 +20,20 @@
 	@apply border-purple;
 }
 
+/* 0.1 BASE SIZED TEXT FIELDS     */
+.form__basetext-fields .form__row {
+	@apply my-6;
+}
+.form__basetext-fields label {
+	@apply text-base;
+}
 
+.form__basetext-fields input[type="text"],
+.form__basetext-fields input[type="password"] {
+	@apply w-full;
+}
+
+/* **************************** */
 /* 1. GENERAL form_table        */
 .form__table {
 	@apply my-8;

@@ -13,7 +13,8 @@
 	  src: url(../../fonts/twkeverett-regularitalic.woff2) format("woff2");
 	}
 	html {
-		@apply text-neutral-700;
+		@apply text-neutral-900;
+		@apply font-normal;
 	}
 	*,
 	::before,
@@ -25,5 +26,8 @@
 	}
 	a:hover {
 		@apply no-underline;
-	}	
+	}
+	h1, h2, h3, h4, h5, h6 {
+		@apply font-bold;
+	}
 }

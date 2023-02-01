@@ -18,10 +18,11 @@ label {
 [multiple],
 textarea,
 select {
-	@apply border-black;
+	@apply w-full;
+	@apply bg-green-50;
 	@apply border-0;
 	@apply border-b-2;
-	@apply w-full;
+	@apply border-black;
 }
 textarea {
 	@apply border-2;
