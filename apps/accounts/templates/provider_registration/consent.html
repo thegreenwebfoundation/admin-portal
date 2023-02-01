@@ -1,47 +1,48 @@
 {% extends "./base_form.html" %}
-
+{% load i18n static %}
 
 {% block content %}
 <div class="container mx-auto">
 
-<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+	<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
-<!-- override the parent block to add our custom HTML content inside the block -->
-{% block header_section %}
-<section class="prose mt-10">
-	<h1>One last thing...</h1>
-	<p>We want to check you consent to us storing and processing the data you provided in different ways.</p>
-</section>
-{% endblock %}
+	<!-- override the parent block to add our custom HTML content inside the block -->
+	{% block header_section %}
+		<section class="prose mt-10">
+			<h1>One last thing...</h1>
+			<p>We want to check you consent to us storing and processing the data you provided in different ways.</p>
+		</section>
+	{% endblock %}
 
-{% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post" action="" class="form__table">
-{% else %}
-    <form method="post" action="" class="form__table">
-{% endif %}
-{% csrf_token %}
+	{% if form.is_multipart %}
+		<form enctype="multipart/form-data" method="post" action="" class="form__table form__table--consent">
+	{% else %}
+		<form method="post" action="" class="form__table form__table--consent max-w-4xl">
+	{% endif %}
+	
+		{% csrf_token %}
 
-<table class="form__table--consent">
-{{ wizard.management_form }}
-{% if wizard.form.forms %}
-    {{ wizard.form.management_form }}
-    {% for form in wizard.form.forms %}
-        {{ form.as_table }}
-    {% endfor %}
-{% else %}
-    {{ wizard.form }}
-{% endif %}
-</table>
+		<table class="">
+			{{ wizard.management_form }}
+			
+			{% if wizard.form.forms %}
+				{{ wizard.form.management_form }}
+				{% for form in wizard.form.forms %}
+					{{ form.as_table }}
+				{% endfor %}
+			{% else %}
+				{{ wizard.form }}
+			{% endif %}
+		</table>
 
-<input class="btn" type="submit" value="{% trans "next" %}"/>
+		<input class="btn" type="submit" value="{% trans " next" %}" />
 
-{% if wizard.steps.prev %}
-<div class="">
-	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
-</div>
-{% endif %}
-
-</form>
+		{% if wizard.steps.prev %}
+			<div class="">
+				<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+				<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+			</div>
+		{% endif %}
+	</form>
 </div>
 {% endblock %}
