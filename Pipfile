@@ -83,7 +83,7 @@ iso3166 = "*"
 django-logentry-admin = "*"
 pandas = "*"
 rich = "*"
-duckdb = "==0.5.0"
+duckdb = "*"
 dateutils = "*"
 django-filter = "*"
 django-sql-explorer = "*"
@@ -92,7 +92,3 @@ django-formtools = "*"
 django-betterforms = "*"
 django-convenient-formsets = "*"
 django-basicauth = "*"
-
-[pipenv]
-# Needed for `black`. See https://github.com/microsoft/vscode-python/pull/5967.
-allow_prereleases = true
