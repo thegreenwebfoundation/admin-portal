@@ -1,10 +1,4 @@
 {% extends "./base_form.html" %}
-{% block header_section %}
-<section class="prose mt-10">
-	<h1>One last thing...</h1>
-	<p>We want to check you consent to us storing and processing the data you provided in different ways.</p>
-</section>
-{% endblock %}
 
 
 {% block content %}
@@ -12,7 +6,14 @@
 
 <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
-<!-- child templates can override this to inject custom HTML content -->
+<!-- override the parent block to add our custom HTML content inside the block -->
+{% block header_section %}
+<section class="prose mt-10">
+	<h1>One last thing...</h1>
+	<p>We want to check you consent to us storing and processing the data you provided in different ways.</p>
+</section>
+{% endblock %}
+
 {% if form.is_multipart %}
     <form enctype="multipart/form-data" method="post" action="" class="form__table">
 {% else %}
