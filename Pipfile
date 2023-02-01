@@ -1,3 +1,4 @@
+
 [[source]]
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -12,7 +13,7 @@ codecov = "*"
 flake8 = "*"
 ipython = "*"
 ipdb = "*"
-pytest = "*"
+pytest = "7.1.3"
 pytest-django = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
