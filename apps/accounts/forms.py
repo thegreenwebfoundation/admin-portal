@@ -19,6 +19,7 @@ from apps.accounts.models.provider_request import (
 
 from . import models as ac_models
 from .utils import tags_choices
+from django.utils.safestring import mark_safe
 
 User = get_user_model()
 
@@ -268,7 +269,7 @@ class ServicesForm(forms.Form):
         choices=ProviderRequest.get_service_choices,
         widget=forms.CheckboxSelectMultiple,
         label="What hosting services do you offer?",
-        help_text="Choose all the services that your organisation offers.",
+        help_text=mark_safe('Choose all the services that your organisation offers. <a href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">More information on our services</a>.'),
     )
 
 
