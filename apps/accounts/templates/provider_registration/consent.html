@@ -2,7 +2,7 @@
 {% load i18n static %}
 
 {% block content %}
-<div class="container mx-auto">
+<div class="prose mx-auto">
 
 	<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
@@ -44,5 +44,6 @@
 			</div>
 		{% endif %}
 	</form>
+
 </div>
 {% endblock %}

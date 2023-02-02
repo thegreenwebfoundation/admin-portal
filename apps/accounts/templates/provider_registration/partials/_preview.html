@@ -1,10 +1,10 @@
-<div class="bg-neutral-200 rounded-xl my-6 p-4">
-    <div>
-        {% for field in form %}
-        <div>
-            <b>{{ field.label }}</b><br>
-            {{ field.value }}
-        </div>
-        {% endfor %}
-    </div>
+<div class="bg-neutral-50 rounded-xl my-6 p-4">
+
+	{% for field in form %}
+	<div class="mb-4 last-of-type:mb-0">
+		<p class="font-bold m-0">{{ field.label }}</p>
+		<p class="m-0">{{ field.value }}</p>
+	</div>
+	{% endfor %}
+
 </div>

@@ -20,6 +20,13 @@
 .errorlist + select {
 	@apply border-purple;
 }
+.errorlist li {
+	@apply mb-4;
+}
+
+.helptext {
+	@apply text-base;
+}
 
 /* 0.1 BASE SIZED TEXT FIELDS     */
 .form__basetext-fields .form__row {
@@ -27,12 +34,14 @@
 }
 .form__basetext-fields label {
 	@apply text-base;
+	@apply font-bold;
 }
 
 .form__basetext-fields input[type="text"],
 .form__basetext-fields input[type="password"] {
 	@apply w-full;
 }
+
 
 /* **************************** */
 /* 1. GENERAL form_table        */
@@ -44,6 +53,10 @@
 	@apply flex-col;
 	@apply items-start;
 	@apply py-8;
+	@apply border-b-0;
+}
+.form__table tr > * {
+	@apply w-full;
 }
 
 .form__table td {
@@ -53,7 +66,6 @@
 }
 .form__table label {
 	@apply block;
-	@apply mb-4;
 	@apply text-left;
 }
 .form__table span.helptext {
@@ -61,7 +73,9 @@
 	@apply pb-6;
 }
 .form__table ul {
-	@apply mt-6;
+	@apply my-0;
+	@apply list-none;
+	@apply pl-0;
 }
 .form__table .errorlist {
 	@apply order-2;
@@ -80,8 +94,6 @@ table[class^="form__table--"] label {
 	@apply text-sm;
 	@apply uppercase;
 	@apply font-normal;
-	@apply border-b-2;
-	@apply border-green;
 }
 
 
@@ -122,10 +134,6 @@ table[class^="form__table--"] label {
 .form__evidence .convenient-form {
 	@apply md:flex;
 	@apply flex-wrap;
-}
-
-.form__evidence .convenient-form > .errorlist {
-	@apply mb-4;
 }
 .form__evidence .convenient-form > * {
 	@apply w-full;

@@ -19,6 +19,7 @@ from apps.accounts.models.provider_request import (
 
 from . import models as ac_models
 from .utils import tags_choices
+from django.utils.safestring import mark_safe
 
 User = get_user_model()
 
@@ -210,7 +211,7 @@ class OrgDetailsForm(forms.Form):
     )
     website = forms.URLField(
         max_length=255,
-        label="What is your web address?",
+        label="What is your primary website?",
         help_text="Add the full URL - please include the https:// part.",
     )
     description = forms.CharField(
@@ -226,14 +227,14 @@ class OrgDetailsForm(forms.Form):
         help_text=(
             "We ask this so we know whether you are speaking on behalf of the"
             " organisation or not. It's still ok to submit info if you don't work for"
-            " them, but we need to know, so we don't misrepresent information."
+            " them, but we need to know, so we don't misrepresent anything."
         ),
         widget=forms.RadioSelect,
         choices=(
             (
                 "True",
                 (
-                    "Yes, I work for the organisation, and am authorised to speak on"
+                    "Yes, I work for the organisation and am authorised to speak on"
                     " behalf of it"
                 ),
             ),
@@ -315,7 +316,7 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
                 form.add_error(None, e)
             if form.cleaned_data in seen:
                 e = ValidationError(
-                    "Found a duplicated entry in the form, please fix it",
+                    "Found a duplicated entry in the form, please remove the duplicate",
                     code="duplicate",
                 )
                 form.add_error(None, e)
@@ -391,10 +392,8 @@ class ConsentForm(forms.ModelForm):
             "I consent to my submitted information being stored and processed to allow"
             " a response to my inquiry"
         ),
-        help_text=(
-            "See our full privacy notice at"
-            " https://www.thegreenwebfoundation.org/privacy-statement/"
-        ),
+        help_text=mark_safe(
+            '<a href="https://www.thegreenwebfoundation.org/privacy-statement/" target="_blank" rel="noopener noreferrer">See our full privacy notice</a>'),
     )
     newsletter_opt_in = forms.BooleanField(
         required=False,
@@ -418,13 +417,13 @@ class LocationForm(forms.ModelForm):
         max_length=255,
         label="Location name",
         help_text=(
-            "Use the name you that your customers would recognise for this location."
+            "Use the name your customers would recognise for this location. i.e. main headquarters for an office, or eu-west for a datacentre."
         ),
         required=False,
         widget=forms.widgets.TextInput(
             attrs={
                 "placeholder": (
-                    "i.e. main headquarters for an office, or eu-west for a datacentre"
+                    "Location name"
                 ),
                 "size": 60,
             },
@@ -437,6 +436,14 @@ class LocationForm(forms.ModelForm):
         help_text=(
             "If this location is not within a given city, choose the nearest city."
         ),
+		widget=forms.widgets.TextInput(
+            attrs={
+                "placeholder": (
+                    "City"
+                ),
+                "size": 60,
+            },
+        ),
     )
 
     country = CountryField().formfield(
@@ -447,7 +454,7 @@ class LocationForm(forms.ModelForm):
 
     class Meta:
         model = ac_models.ProviderRequestLocation
-        fields = ["name", "city", "country"]
+        fields = ["name", "country", "city"]
 
 
 # Part of multi-step registration form (screen 2).
