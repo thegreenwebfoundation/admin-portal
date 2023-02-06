@@ -1,0 +1,73 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+
+    <title>The Green Web Foundation</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		{% tailwind_css %}
+	</head>
+
+	<body>
+
+		<header class="bg-white border-b-2">
+			<div class="container mx-auto px-2 sm:px-4">
+			
+				{% block nav %}
+				<nav class="flex gap-8 justify-between items-center bg-white py-6">
+					<div class="">
+						<a href="/">
+							<img width="200px" height="48px" src="{% static 'img/TGWF-logo.svg' %}" alt="The Green Web Foundation logo"/>
+						</a>
+					</div>
+
+					{% block nav-menu %}
+					<div class="flex-grow border-l text-medium pl-8 h-12 flex items-center">
+						<p class="font-bold">Directory</p>
+					</div>
+					{% endblock nav-menu %}
+
+				</nav>
+				{% endblock nav %}
+
+			</div>
+		</header>
+		
+		<div class="relative">
+
+			<div class="container mx-auto pt-6 md:pt-8 px-2 sm:px-4">
+		
+				{% block content %}
+				<section class="flex items-center justify-center h-screen">
+					<h1 class="text-5xl">Django + Tailwind = ❤️</h1>
+				</section>
+				{% endblock  %}
+
+			</div>
+		</div>
+
+
+		{% block footer-open %}
+		<footer class="bg-green mt-12 py-12 border-t-2">
+		{% endblock  %}
+
+		{% block footer-content %}
+			<div class="container mx-auto px-2 sm:px-4 md:p-0 prose">
+				<div class="p-6 bg-white border-2 rounded-xl">
+					<h3 class="text-xl uppercase">Need help?</h3>
+					<p>Our friendly support team are on hand to clarify anything you're not sure about.</p>
+					<p class="mt-10 mb-6"><a href="https://www.thegreenwebfoundation.org/support-form/" class="btn btn-white" target="_blank" rel="noopener noreferrer">Contact our support team</a></p>
+				</div>
+			</div>
+		</footer>
+		{% endblock  %}
+
+		
+		{% block extra_js %}
+
+		{% endblock %}
+
+	</body>
+</html>
