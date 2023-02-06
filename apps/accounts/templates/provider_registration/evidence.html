@@ -6,108 +6,117 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto">
+
 {{ wizard.form.media }}
 <!-- Initialize a ConvenientFormset -->
 <script>
-    window.addEventListener('load', function (event) {
-        new ConvenientFormset({
-            'formsetPrefix': '{{ wizard.form.prefix }}',
-            'formsContainerSelector': '#convenient-formset',
-            'formSelector': '.convenient-form',
+	window.addEventListener('load', function (event) {
+		new ConvenientFormset({
+			'formsetPrefix': '{{ wizard.form.prefix }}',
+			'formsContainerSelector': '#convenient-formset',
+			'formSelector': '.convenient-form',
 
-            'canAddForms': true,
-            'addFormButtonSelector': '#add-form-button',
-            'emptyFormSelector': '#empty-form .convenient-form',
+			'canAddForms': true,
+			'addFormButtonSelector': '#add-form-button',
+			'emptyFormSelector': '#empty-form .convenient-form',
 
-            'canDeleteForms': true,
-            'deleteFormButtonSelector': '#delete-form-button',
-        });
-    });
+			'canDeleteForms': true,
+			'deleteFormButtonSelector': '#delete-form-button',
+		});
+	});
 </script>
 
-<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+<div class="prose mx-auto">
 
-<section class="prose mt-10">
-	<h1>Submit your evidence</h1>
-	<p>To verify that you are a green hosting provider, please provide evidence to show the 
-		steps you're taking to <span class="italic">avoid, reduce, or offset</span> the 
-		emissions caused by the digital infrastructure you use. There is no limit on the 
-		number of documents you can upload.</p>
+	<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
-	<p><a href="https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of evidence we request</a>.</p>
-	<p class="uppercase">For each item, add a link <span class="font-bold">OR</span> upload a file.</p>
-</section>
+	<section class="my-8">
+		<h1>Submit your evidence</h1>
+		<p>To verify that you are a green hosting provider, please provide evidence to show the 
+			steps you're taking to <span class="italic">avoid, reduce, or offset</span> the 
+			emissions caused by the digital infrastructure you use. There is no limit on the 
+			number of documents you can upload.</p>
+
+		<p><a href="https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of evidence we request</a>.</p>
+		<p class="uppercase font-bold">For each item, add a link <span class="uppercase">or</span> upload a file.</p>
+	</section>
+</div>
 
 {% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post" action="" class="form__evidence">
+<form enctype="multipart/form-data" method="post" action="" class="form__evidence">
 {% else %}
-    <form method="post" action="" class="form--evidence">
+<form method="post" action="" class="form--evidence">
 {% endif %}
-        {% csrf_token %}
-        {{ wizard.management_form }}
-        {{ wizard.form.management_form }}
-        <div id="convenient-formset">
 
-            {% for form in wizard.form.forms %}
-            <div class="convenient-form bg-neutral-200 rounded-xl my-6 pb-6">
+	{% csrf_token %}
+	{{ wizard.management_form }}
+	{{ wizard.form.management_form }}
 
-                {{ form.non_field_errors }}
+	<div id="convenient-formset">
 
-                {% comment %}
-                Iteration over all fields in the evidence form. This is 
-                equivalent to listing a span for each form.field_name 
-                where field_name is in: ["title", "link", "file", "type",
-                "public", "description"]
-                {% endcomment %}
+		{% for form in wizard.form.forms %}
+		<div class="convenient-form bg-neutral-50 rounded-xl my-6 pb-6">
 
-                {% for field in form %}
-                    <div class="form__evidence--field mb-4 form__evidence--field-{{ field.name }}">
-						{{ field.label_tag }}
+			{{ form.non_field_errors }}
 
-						{% if field.help_text %}
-                        	<p class="helptext">{{ field.help_text | safe }}</p>
-                        {% endif %}
+			{% comment %}
+			Iteration over all fields in the evidence form. This is 
+			equivalent to listing a span for each form.field_name 
+			where field_name is in: ["title", "link", "file", "type",
+			"public", "description"]
+			{% endcomment %}
 
-                        {{ field }}
+			{% for field in form %}
+				<div class="form__evidence--field mb-4 form__evidence--field-{{ field.name }}">
+					{{ field.label_tag }}
 
-						{{ field.errors }}
-                    </div>
-                {% endfor %}
-                
-                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
+					{% if field.help_text %}
+						<p class="helptext">{{ field.help_text | safe }}</p>
+					{% endif %}
 
-            </div>
-            {% endfor %}
-        </div>
+					{{ field }}
 
-        <div class="my-12 prose">
-			<p class="mb-12"><sup>**</sup>NB It is <strong>not</strong> mandatory to make evidence public to become verified as a green hosting provider. However, we encourage you to do so wherever possible to increase your transparency and accountability.</p>
+					{{ field.errors }}
+				</div>
+			{% endfor %}
+			
+			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
+
+		</div>
+		{% endfor %}
+	</div>
+
+	<div id="empty-form" style="display:none">
+		<div class="convenient-form bg-neutral-50 rounded-xl my-6 pb-6">
+
+			{{ wizard.form.empty_form.non_field_errors }}
+			{% for field in wizard.form.empty_form %}
+				<div class="form__evidence--field mb-4 form__evidence--field-{{ field.name }}">
+					{{ field.label_tag }} 
+
+					{% if field.help_text %}
+						<p class="helptext">{{ field.help_text | safe }}</p>
+					{% endif %}
+
+					{{ field }}
+
+					{{ field.errors }}
+				</div>
+			{% endfor %}
+			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
+		</div>
+	</div>
+
+	<div class="prose mx-auto my-12">
+		<p class="mb-12"><sup>**</sup>NB It is <strong>not</strong> mandatory to make evidence public to become verified as a green hosting provider. However, we encourage you to do so wherever possible to increase your transparency and accountability.</p>
+		
+		<div class="mb-8">
 			<input type="button" id="add-form-button" value="Add another evidence" class="btn btn-white">
 		</div>
 
-        <div id="empty-form" style="display:none">
-            <div class="convenient-form bg-neutral-200 rounded-xl my-6 pb-6">
-   
-                {{ wizard.form.empty_form.non_field_errors }}
-                {% for field in wizard.form.empty_form %}
-                    <div class="form__evidence--field mb-4 form__evidence--field-{{ field.name }}">
-                        {{ field.label_tag }} 
-
-                        {% if field.help_text %}
-                        	<p class="helptext">{{ field.help_text | safe }}</p>
-                        {% endif %}
-
-						{{ field }}
-
-						{{ field.errors }}
-                    </div>
-                {% endfor %}
-                <input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
-            </div>
-        </div>
-
-		<input class="btn" type="submit" value="{% trans " next" %}" />
+		<div>
+			<input class="btn" type="submit" value="{% trans " next" %}" />
+		</div>
 
         {% if wizard.steps.prev %}
 		<div>
@@ -115,7 +124,7 @@
         	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
 		</div>
         {% endif %}
+	</div>
 
-    </form>
-</div>
+</form>
 {% endblock %}

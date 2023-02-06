@@ -6,73 +6,73 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto">
-    {{ wizard.form.media }}
-    <!-- Initialize a ConvenientFormset -->
-    <script>
-    window.addEventListener('load', function (event) {
-        new ConvenientFormset({
-            'formsetPrefix': '{{ wizard.form.prefix }}',
-            'formsContainerSelector': '#convenient-formset',
-            'formSelector': '.convenient-form',
 
-            'canAddForms': true,
-            'addFormButtonSelector': '#add-form-button',
-            'emptyFormSelector': '#empty-form .convenient-form',
+	{{ wizard.form.media }}
+	<!-- Initialize a ConvenientFormset -->
+	<script>
+	window.addEventListener('load', function (event) {
+		new ConvenientFormset({
+			'formsetPrefix': '{{ wizard.form.prefix }}',
+			'formsContainerSelector': '#convenient-formset',
+			'formSelector': '.convenient-form',
 
-            'canDeleteForms': true,
-            'deleteFormButtonSelector': '#delete-form-button',
-        });
-    });
-</script>
+			'canAddForms': true,
+			'addFormButtonSelector': '#add-form-button',
+			'emptyFormSelector': '#empty-form .convenient-form',
 
-<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+			'canDeleteForms': true,
+			'deleteFormButtonSelector': '#delete-form-button',
+		});
+	});
+	</script>
 
-<section class="prose my-10">
-	<h1>Which parts of the world is your organisation active in?</h1>
+	<p class="max-w-prose mx-auto">Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
-    <p>Starting with your main headquarters in your home country, list the locations your organisation is actively selling services in. We collect this information to help people looking for services available in a given country or region.</p>
+	<section class="prose my-10 mx-auto">
+		<h1>Which parts of the world is your organisation active in?</h1>
 
-    <p>If your organisation runs services in a datacentre in given city, list the city and country for each region you offer. If you operate from a single datacentre or region, but have offices selling services in different countries, please list the cities you operate in.</p>
+		<p>Starting with your main headquarters in your home country, list the locations your organisation is actively selling services in. We collect this information to help people looking for services available in a given country or region.</p>
 
-</section>
+		<p>If your organisation runs services in a datacentre in given city, list the city and country for each region you offer. If you operate from a single datacentre or region, but have offices selling services in different countries, please list the cities you operate in.</p>
 
-{% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post" action="" class="form__table">
-{% else %}
-    <form method="post" action="" class="form__table">
-{% endif %}
+	</section>
 
-    {% csrf_token %}
-    {{ wizard.management_form }}
-    {{ wizard.form.management_form }}
+	{% if form.is_multipart %}
+		<form enctype="multipart/form-data" method="post" action="" class="">
+	{% else %}
+		<form method="post" action="" class="">
+	{% endif %}
 
-    <div id="convenient-formset">
+		{% csrf_token %}
+		{{ wizard.management_form }}
+		{{ wizard.form.management_form }}
 
-    {% comment %}  {% endcomment %}
+		<div id="convenient-formset">
+			{% comment %}  {% endcomment %}
 
-    {% for form in wizard.form.forms %}
-        {% include "provider_registration/partials/_location_form.html" with form=form %}
-    {% endfor %}
-</div>
+			{% for form in wizard.form.forms %}
+				{% include "provider_registration/partials/_location_form.html" with form=form %}
+			{% endfor %}
+		</div>
 
-  <input type="button" id="add-form-button" value="Add another location" class="btn btn-white">
+		<div class="max-w-prose mx-auto">
+			<div>
+				<input type="button" id="add-form-button" value="Add another location" class="btn btn-white">
+			</div>
 
-  <div id="empty-form" style="display:none">
-    {% include "provider_registration/partials/_location_form.html" with form=wizard.form.empty_form %}
-</div>
+			<div id="empty-form" style="display:none">
+				{% include "provider_registration/partials/_location_form.html" with form=wizard.form.empty_form %}
+			</div>
 
-	</div>
+			<input class="btn mt-8" type="submit" value="{% trans "next" %}" />
 
-	<input class="btn" type="submit" value="{% trans "next" %}" />
+			{% if wizard.steps.prev %}
+			<div>
+				<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+				<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+			</div>
+			{% endif %}
+		</div>
+	</form>
 
-    {% if wizard.steps.prev %}
-	<div>
-    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
-	</div>
-    {% endif %}
-
-</form>
-</div>
 {% endblock %}

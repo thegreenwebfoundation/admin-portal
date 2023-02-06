@@ -8,69 +8,71 @@
 {% block content %}
 {{ wizard.form.media }}
 
-<div class="container mx-auto">
 <!-- Initialize a ConvenientForm
-    set twice: for IPs form and for ASNs form -->
+	set twice: for IPs form and for ASNs form -->
 <script>
-    window.addEventListener('load', function (event) {
-        new ConvenientFormset({
-            'formsetPrefix': '{{ wizard.form.ips.prefix }}',
-            'formsContainerSelector': '#convenient-formset-ips',
-            'formSelector': '.convenient-form-ips',
+	window.addEventListener('load', function (event) {
+		new ConvenientFormset({
+			'formsetPrefix': '{{ wizard.form.ips.prefix }}',
+			'formsContainerSelector': '#convenient-formset-ips',
+			'formSelector': '.convenient-form-ips',
 
-            'canAddForms': true,
-            'addFormButtonSelector': '#add-form-button-ips',
-            'emptyFormSelector': '#empty-form-ips .convenient-form-ips',
+			'canAddForms': true,
+			'addFormButtonSelector': '#add-form-button-ips',
+			'emptyFormSelector': '#empty-form-ips .convenient-form-ips',
 
-            'canDeleteForms': true,
-            'deleteFormButtonSelector': '#delete-form-button-ips',
-        });
-    });
-</script>
-<script>
-    window.addEventListener('load', function (event) {
-        new ConvenientFormset({
-            'formsetPrefix': '{{ wizard.form.asns.prefix }}',
-            'formsContainerSelector': '#convenient-formset-asns',
-            'formSelector': '.convenient-form-asns',
-
-            'canAddForms': true,
-            'addFormButtonSelector': '#add-form-button-asns',
-            'emptyFormSelector': '#empty-form-asns .convenient-form-asns',
-
-            'canDeleteForms': true,
-            'deleteFormButtonSelector': '#delete-form-button-asns',
-        });
-    });
+			'canDeleteForms': true,
+			'deleteFormButtonSelector': '#delete-form-button-ips',
+		});
+	});
 </script>
 
-<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+<script>
+	window.addEventListener('load', function (event) {
+		new ConvenientFormset({
+			'formsetPrefix': '{{ wizard.form.asns.prefix }}',
+			'formsContainerSelector': '#convenient-formset-asns',
+			'formSelector': '.convenient-form-asns',
 
-<section class="prose my-10">
-	<h1>Network footprint</h1>
-	<p>We need a way to identify any 'downstream' service as coming from you in a way machines can check quickly. We do this in the following ways:</p>
-	<ul>
-		<li>checking a service against a list of machine-readable public addresses – usually IPv4 and IPv6 addresses;</li>
-		<li>for some large providers providers, we support checking if a service is coming from an network address that belong 
-			to one or more Autonomous System Numbers (a kind of shorthand for a large part of the internet).</li>
-	</ul>
-</section>
+			'canAddForms': true,
+			'addFormButtonSelector': '#add-form-button-asns',
+			'emptyFormSelector': '#empty-form-asns .convenient-form-asns',
+
+			'canDeleteForms': true,
+			'deleteFormButtonSelector': '#delete-form-button-asns',
+		});
+	});
+</script>
+
+<div class="prose mx-auto">
+	<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+
+	<section class="my-10">
+		<h1>Network footprint</h1>
+		<p>We need a way to identify any 'downstream' service as coming from you in a way machines can check quickly. We do this in the following ways:</p>
+		<ul>
+			<li>checking a service against a list of machine-readable public addresses – usually IPv4 and IPv6 addresses;</li>
+			<li>for some large providers providers, we support checking if a service is coming from an network address that belong 
+				to one or more Autonomous System Numbers (a kind of shorthand for a large part of the internet).</li>
+		</ul>
+	</section>
+</div>
 
 {% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post" action="" class="form__table">
+<form enctype="multipart/form-data" method="post" action="" class="form__table">
 {% else %}
-    <form method="post" action="" class="form__table">
+<form method="post" action="" class="form__table">
 {% endif %}
 
-    {% csrf_token %}
-    {{ wizard.management_form }}
+	{% csrf_token %}
+	{{ wizard.management_form }}
 
-    <!-- wizard.form is a MultiForm (from django-betterforms) -->
-    <!-- that has 2 separate forms: ips, asns -->
+	<!-- wizard.form is a MultiForm (from django-betterforms) -->
+	<!-- that has 2 separate forms: ips, asns -->
 
 	<div class="lg:grid grid-cols-2 gap-16 my-10">
 
-		<section class="prose border-2 rounded-xl mb-6 lg:mb-0 p-6">
+		<section class="prose mx-auto bg-white border-2 rounded-xl mb-6 lg:mb-0 p-6">
 
 			<h3 class="text-3xl mt-0">Identify this provider by IP range</h3>
 			<p>Any services or websites running on IP addresses within these ranges below will be recognised as being managed by this provider, 
@@ -80,7 +82,7 @@
 			{{ wizard.form.ips.management_form }}
 			<div id="convenient-formset-ips">
 				{% for form in wizard.form.ips %}
-				<div class="convenient-form-ips bg-neutral-200 rounded-xl my-6 p-4">
+				<div class="convenient-form-ips bg-neutral-50 rounded-xl my-6 p-4">
 					<table class="form__table--network mt-0 mb-2">
 						{{ form.as_table }}
 					</table>
@@ -94,7 +96,7 @@
 			</div>
 			
 			<div id="empty-form-ips" style="display:none">
-				<div class="convenient-form-ips bg-neutral-200 rounded-xl my-6 p-4">
+				<div class="convenient-form-ips bg-neutral-50 rounded-xl my-6 p-4">
 					<table class="form__table--network mt-0 mb-2">
 						{{ wizard.form.ips.empty_form.as_table }}
 					</table>
@@ -103,7 +105,7 @@
 			</div>
 		</section>
 
-		<section class="prose border-2 rounded-xl p-6">
+		<section class="prose border-2 bg-white rounded-xl p-6">
 
 			<h3 class="text-3xl mt-0">Identify this provider by ASN</h3>
 			<p>For large services, you can list the AS numbers. The green credentials
@@ -113,7 +115,7 @@
 			{{ wizard.form.asns.management_form }}
 			<div id="convenient-formset-asns">
 				{% for form in wizard.form.asns %}
-				<div class="convenient-form-asns bg-neutral-200 rounded-xl my-6 p-4">
+				<div class="convenient-form-asns bg-neutral-50 rounded-xl my-6 p-4">
 					<table class="form__table--network mt-0 mb-2">
 						{{ form.as_table }}
 					</table>
@@ -127,7 +129,7 @@
 			</div>
 
 			<div id="empty-form-asns" style="display:none">
-				<div class="convenient-form-asns bg-neutral-200 rounded-xl my-6 p-4">
+				<div class="convenient-form-asns bg-neutral-50 rounded-xl my-6 p-4">
 					<table class="form__table--network mt-0 mb-2">
 						{{ wizard.form.asns.empty_form.as_table }}
 					</table>
@@ -137,15 +139,16 @@
 		</section>
 	</div>
 
-	<input class="btn" type="submit" value="{% trans "next" %}" />
+	<div class="prose mx-auto">
+		<input class="btn" type="submit" value="{% trans "next" %}" />
 
-    {% if wizard.steps.prev %}
-	<div>
-    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-    	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+		{% if wizard.steps.prev %}
+		<div>
+			<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+			<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+		</div>
+		{% endif %}
 	</div>
-    {% endif %}
 
 </form>
-</div>
 {% endblock %}

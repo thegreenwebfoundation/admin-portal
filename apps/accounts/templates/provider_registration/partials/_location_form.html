@@ -1,17 +1,28 @@
-<div class="convenient-form bg-neutral-200 rounded-xl my-6 p-4">
-  <div class="form__container--location">
-      {{ form.non_field_errors }}
+<div class="convenient-form bg-neutral-50 rounded-xl my-6 px-4 py-6">
+	<div class="form__basetext-fields form--location lg:flex lg:flex-wrap">
+		<div class="w-full">
+			{{ form.non_field_errors }}
+		</div>
 
-      {% for field in form %}
-          <div class=".location-field">
-              {{ field.errors }}
-              {{ field.label_tag }} {{ field }}
-              {% if field.help_text %}
-              <p class="help">{{ field.help_text | safe }}</p>
-              {% endif %}
-          </div>
-      {% endfor %}
+		{% for field in form %}
+			<div class="location-field form__fields_in_row--field lg:w-1/3 lg:pr-8 last-of-type:pr-0">
+				
+				<span class="sr-only">{{ field.label_tag }}</span>
+				
+				{{ field }}
 
-      <input class="text-sm hover:text-base mt-4" type="button" id="delete-form-button" value="&#x274C; Delete this location">
-  </div>
+				<div class="mt-4">
+					{{ field.errors }}
+				</div>
+
+				{% if field.help_text %}
+					<p class="helptext mt-4">{{ field.help_text | safe }}</p>
+				{% endif %}
+			</div>
+		{% endfor %}
+
+		<p class="lg:w-full mt-8">
+			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this location">
+		</p>
+	</div>
 </div>
