@@ -42,4 +42,24 @@
 		right: 50%;
 		width: 100vw;
 	}
+	.service-label {
+		@apply bg-green-100;
+		@apply rounded-3xl;
+		@apply mb-4;
+		@apply mr-6;
+		@apply last:mr-0;
+		@apply px-4;
+		@apply py-2;
+		@apply text-sm;
+	}
+	.service-label:before {
+		@apply inline-block;
+		@apply rounded-xl;
+		content: '';
+		@apply bg-green;
+		@apply w-4;
+		@apply h-4;
+		@apply mt-1;
+		@apply mr-2;
+	}
 }
