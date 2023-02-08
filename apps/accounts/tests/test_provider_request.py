@@ -356,10 +356,14 @@ def test_wizard_sends_email_on_submission(
     pr = response.context_data["providerrequest"]
     assert models.ProviderRequest.objects.filter(id=pr.id).exists()
 
-    # check email exists
+    # then: an email is in the outbox waiting to be sent
     assert len(mailoutbox) == 1
     eml = mailoutbox[0]
 
-    # check our email looks how we expect
+    # then: our email is addressed to the people we expect it to be
+    assert "support@thegreenwebfoundation.org" in eml.to
+    assert user.email in eml.to
+
+    # then: our email has the subject and copy we were expecting
     assert eml.body == "Thank you for taking the time to complete a verification request."
     assert eml.subject == "Your verification request for the Green Web Database"
