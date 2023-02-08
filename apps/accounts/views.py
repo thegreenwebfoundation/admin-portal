@@ -17,7 +17,7 @@ from django_registration.backends.activation.views import (
     ActivationView,
     RegistrationView,
 )
-
+from anymail.message import AnymailMessage
 from django_registration.exceptions import ActivationError
 from django_registration.forms import RegistrationFormCaseInsensitive
 from formtools.wizard.views import SessionWizardView
@@ -34,6 +34,9 @@ from .forms import (
 )
 from .models import User, ProviderRequest
 
+
+import logging
+logger = logging.getLogger(__name__)
 
 class RegistrationForm(RegistrationFormCaseInsensitive):
     class Meta(RegistrationFormCaseInsensitive.Meta):
@@ -271,6 +274,9 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         consent.request = pr
         consent.save()
 
+
+        self._send_notification_email(self.request.user, pr)
+
         return redirect(pr)
 
     def get_template_names(self):
@@ -315,3 +321,18 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             # inject data from all previous steps for rendering
             context["preview_forms"] = self._get_data_for_preview()
         return context
+
+    def _send_notification_email(self, user: User, form_data: dict):
+        """
+        Send notification to support staff, and the user to acknoweldge their submission
+        """
+        email_subject = "Your verification request for the Green Web Database"
+        email_body = "Thank you for taking the time to complete a verification request."
+
+        msg = AnymailMessage(
+            subject=email_subject,
+            body=email_body,
+            to=[user.email],
+            cc=["support@thegreenwebfoundation.org"],
+        )
+        msg.send()

@@ -322,11 +322,11 @@ def test_wizard_sends_email_on_submission(
     wizard_form_preview,
     mailoutbox
 ):
-"""
-Given: a working set of data
-When: a user has completed a form submission,
-Then: an email should have been sent to the user and internal staff
-"""
+    """
+    Given: a working set of data
+    When: a user has completed a form submission,
+    Then: an email should have been sent to the user and internal staff
+    """
 
     # given: valid form data and authenticated user
     form_data = [
