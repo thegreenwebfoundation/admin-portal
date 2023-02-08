@@ -1,0 +1,21 @@
+Hello,
+
+Thank you for taking the time to complete a verification request for { company_name } in the Green Web Database.
+
+You can see your submitted request at the link below:
+
+{{ link_to_verification_request }}
+
+Your request is currently {{ status }}
+
+What happens next?
+
+Assuming your request contains all the information we need to verify your organisation, you can expect to hear from us again, notifying you that you have been verified and how to tell others.
+
+We normally get back to people within 48 hours.
+
+If you have further questions, please contact support@thegreenwebfoundation.org, and please include the above link to your request.
+
+Many thanks,
+
+The Green Web Foundation Support Team
