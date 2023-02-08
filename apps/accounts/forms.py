@@ -269,7 +269,9 @@ class ServicesForm(forms.Form):
         choices=ProviderRequest.get_service_choices,
         widget=forms.CheckboxSelectMultiple,
         label="What hosting services do you offer?",
-        help_text=mark_safe('Choose all the services that your organisation offers. <a href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">More information on our services</a>.'),
+        help_text=mark_safe(
+            'Choose all the services that your organisation offers. <a href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">More information on our services</a>.'
+        ),
     )
 
 
@@ -392,13 +394,16 @@ class ConsentForm(forms.ModelForm):
             "I consent to my submitted information being stored and processed to allow"
             " a response to my inquiry"
         ),
+        label_suffix="",
         help_text=mark_safe(
-            '<a href="https://www.thegreenwebfoundation.org/privacy-statement/" target="_blank" rel="noopener noreferrer">See our full privacy notice</a>'),
+            '<a href="https://www.thegreenwebfoundation.org/privacy-statement/" target="_blank" rel="noopener noreferrer">See our full privacy notice</a>'
+        ),
     )
     newsletter_opt_in = forms.BooleanField(
         required=False,
         initial=False,
         label="Sign me up to the newsletter",
+        label_suffix="",
         help_text=(
             "We run a newsletter, Greening Digital, where we share actionable news"
             " about greening the web and a sustainable digital transition. You can"
@@ -422,9 +427,7 @@ class LocationForm(forms.ModelForm):
         required=False,
         widget=forms.widgets.TextInput(
             attrs={
-                "placeholder": (
-                    "Location name"
-                ),
+                "placeholder": ("Location name"),
                 "size": 60,
             },
         ),
@@ -436,11 +439,9 @@ class LocationForm(forms.ModelForm):
         help_text=(
             "If this location is not within a given city, choose the nearest city."
         ),
-		widget=forms.widgets.TextInput(
+        widget=forms.widgets.TextInput(
             attrs={
-                "placeholder": (
-                    "City"
-                ),
+                "placeholder": ("City"),
                 "size": 60,
             },
         ),
@@ -474,4 +475,5 @@ class PreviewForm(forms.Form):
     It is used as a placeholder for the last step of the Wizard,
     in order to render a preview of all data from the previous steps.
     """
+
     pass
