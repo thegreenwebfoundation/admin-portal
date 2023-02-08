@@ -176,10 +176,11 @@ class ProviderRequestEvidence(models.Model):
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        name = f"{self.title}, {self.type}"
+        name = self.link or self.file.name
+        long_name = f"{name}: {self.title}"
         if self.public:
-            return f"{name}, public"
-        return f"{name}, private"
+            return f"{long_name} (public)"
+        return f"{long_name} (private)"
 
     def clean(self) -> None:
         reason = "Provide a link OR a file for this evidence"
