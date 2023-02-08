@@ -30,4 +30,13 @@
 	h1, h2, h3, h4, h5, h6 {
 		@apply font-bold;
 	}
+
+	/* SUCCESS NOTIFICATION */
+	.messages .success {
+		@apply p-6;
+		@apply bg-green-50;
+		@apply border-2;
+		@apply rounded-xl;
+		margin-bottom: 50px;
+	}
 }

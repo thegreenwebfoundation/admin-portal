@@ -2,6 +2,15 @@
 {% load i18n static %}
 
 {% block content %}
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <section class="prose mx-auto">
 
 	<header class="">
