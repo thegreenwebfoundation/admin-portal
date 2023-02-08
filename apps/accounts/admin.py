@@ -702,6 +702,7 @@ class HostingAdmin(admin.ModelAdmin):
                             "website",
                         ),
                         "country",
+                        "city",
                         "services",
                     )
                 },
