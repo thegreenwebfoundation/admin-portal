@@ -282,6 +282,16 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         # send an email notification to the author and green web staff
         self._send_notification_email(pr)
 
+        # display a notification on the next page
+        messages.success(
+            self.request,
+            """
+            Thank you! 
+            
+            Your verification request was submitted successfully.
+            We are now reviewing your request - we'll be in touch.
+            """,
+        )
         return redirect(pr)
 
     def get_template_names(self):
