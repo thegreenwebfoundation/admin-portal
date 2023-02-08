@@ -361,9 +361,12 @@ def test_wizard_sends_email_on_submission(
     eml = mailoutbox[0]
 
     # then: our email is addressed to the people we expect it to be
-    assert "support@thegreenwebfoundation.org" in eml.to
     assert user.email in eml.to
+    assert "support@thegreenwebfoundation.org" in eml.cc
 
     # then: our email has the subject and copy we were expecting
-    assert eml.body == "Thank you for taking the time to complete a verification request."
+    # import ipdb; ipdb.set_trace()
     assert eml.subject == "Your verification request for the Green Web Database"
+    assert "Thank you for taking the time to complete a verification request" in eml.body
+
+    # then: our email links back to the submission, contains the status, and the correct organisation

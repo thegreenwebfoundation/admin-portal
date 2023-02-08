@@ -5,13 +5,16 @@ from django.core.files.storage import DefaultStorage
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.sites.shortcuts import get_current_site
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.encoding import force_text
 from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
+
 from django_registration import signals
 from django_registration.backends.activation.views import (
     ActivationView,
@@ -322,12 +325,24 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             context["preview_forms"] = self._get_data_for_preview()
         return context
 
-    def _send_notification_email(self, user: User, form_data: dict):
+    def _send_notification_email(self, user: User, provider_request: ProviderRequest):
         """
-        Send notification to support staff, and the user to acknoweldge their submission
+        Send notification to support staff, and the user to acknowledge their submission
         """
+
+        current_site = get_current_site(self.request)
+        request_path = reverse("provider_request_detail", args=[provider_request.id])
+        link_to_verification_request = f"{current_site.domain}/{request_path}"
+
+        ctx = {
+            "org_name": provider_request.name,
+            "status": provider_request.status,
+            "link_to_verification_request": link_to_verification_request
+        }
+
         email_subject = "Your verification request for the Green Web Database"
-        email_body = "Thank you for taking the time to complete a verification request."
+        email_body = render_to_string("emails/verification-request-notify.txt", context=ctx)
+
 
         msg = AnymailMessage(
             subject=email_subject,
