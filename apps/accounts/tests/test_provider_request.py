@@ -306,3 +306,60 @@ def test_wizard_view_happy_path(
     # then: a ProviderRequest object exists in the db
     pr = response.context_data["providerrequest"]
     assert models.ProviderRequest.objects.filter(id=pr.id).exists()
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_wizard_sends_email_on_submission(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+    mailoutbox
+):
+"""
+Given: a working set of data
+When: a user has completed a form submission,
+Then: an email should have been sent to the user and internal staff
+"""
+
+    # given: valid form data and authenticated user
+    form_data = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        wizard_form_evidence_data,
+        wizard_form_network_data,
+        wizard_form_consent,
+        wizard_form_preview,
+    ]
+    client.force_login(user)
+
+    # when: submitting form data for consecutive wizard steps
+    for step, data in enumerate(form_data, 1):
+        response = client.post(urls.reverse("provider_registration"), data, follow=True)
+        # then: for all steps except the last one,
+        # next wizard step is rendered upon submitting the data
+        if step < len(form_data):
+            assert response.context_data["wizard"]["steps"].current == str(step)
+        assert response.status_code == 200
+
+    # then: submitting the final step redirects to the detail view
+    assert response.resolver_match.func.view_class is views.ProviderRequestDetailView
+
+    # then: a ProviderRequest object exists in the db
+    pr = response.context_data["providerrequest"]
+    assert models.ProviderRequest.objects.filter(id=pr.id).exists()
+
+    # check email exists
+    assert len(mailoutbox) == 1
+    eml = mailoutbox[0]
+
+    # check our email looks how we expect
+    assert eml.body == "Thank you for taking the time to complete a verification request."
+    assert eml.subject == "Your verification request for the Green Web Database"
