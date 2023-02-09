@@ -333,8 +333,10 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         """
 
         current_site = get_current_site(self.request)
+
         request_path = reverse("provider_request_detail", args=[provider_request.id])
-        link_to_verification_request = f"{current_site.domain}/{request_path}"
+
+        link_to_verification_request = f"{self.request.scheme}://{current_site.domain}/{request_path}"
 
         ctx = {
             "org_name": provider_request.name,
@@ -344,6 +346,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
         email_subject = "Your verification request for the Green Web Database"
         email_body = render_to_string("emails/verification-request-notify.txt", context=ctx)
+        email_html = render_to_string("emails/verification-request-notify.html", context=ctx)
 
         msg = AnymailMessage(
             subject=email_subject,
@@ -351,6 +354,9 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             to=[user.email],
             cc=["support@thegreenwebfoundation.org"],
         )
+        msg.attach_alternative(email_html, "text/html")
+
+
         try:
             msg.send()
         except smtplib.SMTPException as err:
