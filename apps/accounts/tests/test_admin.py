@@ -5,6 +5,7 @@ import pytest
 from apps.accounts.models.hosting import Hostingprovider
 from django import urls
 from django.contrib.auth import models as auth_models
+from unittest.mock import MagicMock
 
 from ...greencheck.tests import view_in_browser
 from .. import admin as ac_admin
@@ -438,3 +439,42 @@ class TestUserCreationAdmin:
         created_user = ac_models.User.objects.get(email=new_user_data["email"])
         for group in created_user.groups.all():
             assert group in provider_groups
+
+
+def test_provider_request_accessible_by_admin(
+    db,
+    provider_request_factory,
+    greenweb_staff_user,
+):
+    pr = provider_request_factory()
+
+    pr_admin = ac_admin.ProviderRequest(pr.__class__, admin_site.greenweb_admin)
+    request = MagicMock()
+    request.user = greenweb_staff_user
+
+    inline_instances = pr_admin.get_inline_instances(request, pr)
+    assert len(inline_instances) == 5
+
+    assert pr_admin.has_add_permission(request)
+    assert pr_admin.has_view_permission(request)
+    assert pr_admin.has_change_permission(request)
+
+    assert pr_admin.has_delete_permission(request) is False
+
+
+def test_provider_request_not_accessible_by_regular_user(
+    db, sample_hoster_user, provider_request_factory
+):
+    pr = provider_request_factory()
+
+    pr_admin = ac_admin.ProviderRequest(pr.__class__, admin_site.greenweb_admin)
+    request = MagicMock()
+    request.user = sample_hoster_user
+
+    inline_instances = pr_admin.get_inline_instances(request, pr)
+    assert len(inline_instances) == 0
+
+    assert pr_admin.has_add_permission(request) is False
+    assert pr_admin.has_view_permission(request) is False
+    assert pr_admin.has_change_permission(request) is False
+    assert pr_admin.has_delete_permission(request) is False
