@@ -1,6 +1,8 @@
 import waffle
 from waffle.mixins import WaffleFlagMixin
 from enum import Enum
+
+import smtplib
 from django.core.files.storage import DefaultStorage
 from django.contrib import messages
 from django.contrib.auth.models import Group
@@ -343,11 +345,15 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         email_subject = "Your verification request for the Green Web Database"
         email_body = render_to_string("emails/verification-request-notify.txt", context=ctx)
 
-
         msg = AnymailMessage(
             subject=email_subject,
             body=email_body,
             to=[user.email],
             cc=["support@thegreenwebfoundation.org"],
         )
-        msg.send()
+        try:
+            msg.send()
+        except smtplib.SMTPException as err:
+            logger.warn(f"Failed to send because of {err}. See https://docs.python.org/3/library/smtplib.html for more")
+        except Exception as err:
+            logger.exception("Unexpected fatal error sending email: {err}")
