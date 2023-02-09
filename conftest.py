@@ -1,26 +1,17 @@
-from ipaddress import ip_address
 import pathlib
-
 import pytest
 import dramatiq
+import factory
+
+import apps.accounts.models as ac_models
+
 from django.contrib.auth import get_user_model
-
 from django.contrib.auth import models as auth_models
-
-from apps.accounts.models import (
-    Hostingprovider,
-    Datacenter,
-    ProviderRequest,
-    ProviderRequestStatus,
-    ProviderRequestLocation,
-)
-from apps.greencheck.models import GreencheckIp, GreencheckASN
-
-# from apps.greencheck.management.commands import update_aws_ip_ranges
-
-from apps.greencheck.factories import UserFactory, SiteCheckFactory
-
 from pytest_factoryboy import register
+from ipaddress import ip_address
+
+from apps.greencheck.models import GreencheckIp, GreencheckASN
+from apps.greencheck.factories import UserFactory, SiteCheckFactory
 from apps.greencheck import factories as gc_factories
 
 User = get_user_model()
@@ -34,6 +25,79 @@ register(gc_factories.GreenIpFactory)
 register(gc_factories.GreenDomainFactory)
 register(gc_factories.DailyStatFactory)
 register(gc_factories.SiteCheckFactory)
+
+
+class ProviderRequestFactory(factory.django.DjangoModelFactory):
+    name = factory.Faker("word")
+    website = factory.Faker("domain_name")
+    description = factory.Faker("sentence")
+    status = ac_models.ProviderRequestStatus.OPEN
+    created_by = factory.SubFactory(UserFactory)
+    authorised_by_org = True
+    services = factory.List(
+        [factory.SubFactory(gc_factories.TagFactory) for _ in range(3)]
+    )
+
+    class Meta:
+        model = ac_models.ProviderRequest
+
+
+class ProviderRequestLocationFactory(factory.django.DjangoModelFactory):
+    name = factory.Faker("word")
+    city = factory.Faker("city")
+    country = factory.Faker("country_code")
+    request = factory.SubFactory(ProviderRequestFactory)
+
+    class Meta:
+        model = ac_models.ProviderRequestLocation
+
+
+class ProviderRequestEvidenceFactory(factory.django.DjangoModelFactory):
+    title = factory.Faker("words", nb=3)
+    description = factory.Faker("sentence", nb_words=6)
+    link = factory.Faker("url")
+    file = None
+    type = factory.Faker("random_element", elements=ac_models.EvidenceType.choices)
+    public = factory.Faker("random_element", elements=[True, False])
+    request = factory.SubFactory(ProviderRequestFactory)
+
+    class Meta:
+        model = ac_models.ProviderRequestEvidence
+
+
+class ProviderRequestIPRangeFactory(factory.django.DjangoModelFactory):
+    start = factory.Faker("ipv4")
+    end = factory.LazyAttribute(lambda o: str(ip_address(o.start) + 10))
+    request = factory.SubFactory(ProviderRequestFactory)
+
+    class Meta:
+        model = ac_models.ProviderRequestIPRange
+
+
+class ProviderRequestASNFactory(factory.django.DjangoModelFactory):
+    asn = factory.Faker("random_int")
+    request = factory.SubFactory(ProviderRequestFactory)
+
+    class Meta:
+        model = ac_models.ProviderRequestASN
+
+
+class ProviderRequestConsentFactory(factory.django.DjangoModelFactory):
+
+    data_processing_opt_in = True
+    newsletter_opt_in = factory.Faker("random_element", elements=[True, False])
+    request = factory.SubFactory(ProviderRequestFactory)
+
+    class Meta:
+        model = ac_models.ProviderRequestConsent
+
+
+register(ProviderRequestFactory)
+register(ProviderRequestLocationFactory)
+register(ProviderRequestEvidenceFactory)
+register(ProviderRequestIPRangeFactory)
+register(ProviderRequestASNFactory)
+register(ProviderRequestConsentFactory)
 
 
 @pytest.fixture
@@ -86,7 +150,7 @@ def sample_sitecheck():
 @pytest.fixture
 def hosting_provider():
 
-    return Hostingprovider(
+    return ac_models.Hostingprovider(
         archived=False,
         country="US",
         customer=False,
@@ -115,7 +179,7 @@ def hosting_provider_with_sample_user(hosting_provider, sample_hoster_user):
 @pytest.fixture
 def datacenter():
 
-    return Datacenter(
+    return ac_models.Datacenter(
         country="NL",
         dc12v=False,
         greengrid=True,

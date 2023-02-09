@@ -1092,27 +1092,45 @@ greenweb_admin.register(Flag, FlagAdmin)
 greenweb_admin.register(LogEntry, GWLogEntryAdmin)
 
 
-class ProviderRequestASNInline(admin.TabularInline):
+class AdminOnlyTabularInline(admin.TabularInline):
+    """
+    Specifies a TabularInline admin with all permissions for the admin group
+    """
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_admin
+
+    def has_add_permission(self, request, obj=None):
+        return request.user.is_admin
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_admin
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_admin
+
+
+class ProviderRequestASNInline(AdminOnlyTabularInline):
     model = ProviderRequestASN
     extra = 0
 
 
-class ProviderRequestIPRangeInline(admin.TabularInline):
+class ProviderRequestIPRangeInline(AdminOnlyTabularInline):
     model = ProviderRequestIPRange
     extra = 0
 
 
-class ProviderRequestEvidenceInline(admin.TabularInline):
+class ProviderRequestEvidenceInline(AdminOnlyTabularInline):
     model = ProviderRequestEvidence
     extra = 0
 
 
-class ProviderRequestLocationInline(admin.StackedInline):
+class ProviderRequestLocationInline(AdminOnlyTabularInline):
     model = ProviderRequestLocation
     extra = 0
 
 
-class ProviderRequestConsentInline(admin.StackedInline):
+class ProviderRequestConsentInline(AdminOnlyTabularInline):
     model = ProviderRequestConsent
     extra = 0
     max_num = 1

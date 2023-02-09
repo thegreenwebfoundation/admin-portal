@@ -1,6 +1,5 @@
 import pytest
 import io
-import factory
 import random
 
 from django import urls
@@ -8,27 +7,14 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.shortcuts import reverse
 from waffle.testutils import override_flag
-from factory.django import DjangoModelFactory
 from faker import Faker
 from ipaddress import ip_address
 
+from conftest import ProviderRequestFactory
 from .. import views, models
-from apps.greencheck.factories import UserFactory, TagFactory
+from apps.greencheck.factories import TagFactory
 
 faker = Faker()
-
-
-class ProviderRequestFactory(DjangoModelFactory):
-    name = factory.Faker("word")
-    website = factory.Faker("domain_name")
-    description = factory.Faker("sentence")
-    status = models.ProviderRequestStatus.OPEN
-    created_by = factory.SubFactory(UserFactory)
-    authorised_by_org = True
-    services = factory.List([factory.SubFactory(TagFactory) for _ in range(3)])
-
-    class Meta:
-        model = models.ProviderRequest
 
 
 @pytest.fixture()
