@@ -279,7 +279,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         consent.request = pr
         consent.save()
 
-
+        # send an email notification to the author and green web staff
         self._send_notification_email(self.request.user, pr)
 
         return redirect(pr)
