@@ -11,6 +11,9 @@ from django.shortcuts import render
 from django.views.generic.edit import FormView
 from django import forms
 
+from waffle import flag_is_active
+
+
 import ipwhois
 
 from apps.greencheck.views import GreenUrlsView
@@ -144,8 +147,31 @@ class GreenWebAdmin(AdminSite):
         return patterns + urls
 
     def get_app_list(self, request):
+
         app_list = super().get_app_list(request)
+
+        if flag_is_active(request, "provider_request"):
+
+            verification_request_item = {
+                "name": "Verification requests",
+                "app_label": "greencheck",
+                "app_url": reverse("provider_request_list"),
+                "models": [
+                    {
+                        "name": "See verification requests",
+                        "object_name": "greencheck_url",
+                        "admin_url": reverse("provider_request_list"),
+                        "view_only": True,
+                    }
+                ],
+            }
+            app_list.insert(0, verification_request_item)
+
+
+
         app_list += [
+
+
             {
                 "name": "Try out greencheck",
                 "app_label": "greencheck",
