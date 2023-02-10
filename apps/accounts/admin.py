@@ -66,13 +66,13 @@ from .models import (
     HostingproviderCertificate,
     Hostingprovider,
     Label,
-    ProviderLabel,
     HostingProviderNote,
     User,
     DatacenterSupportingDocument,
     HostingProviderSupportingDocument,
     SupportMessage,
     ProviderRequest,
+    ProviderRequestStatus,
     ProviderRequestASN,
     ProviderRequestIPRange,
     ProviderRequestLocation,
@@ -1154,3 +1154,27 @@ class ProviderRequest(admin.ModelAdmin):
     empty_value_display = "(empty)"
     list_filter = ("status",)
     readonly_fields = ("authorised_by_org",)
+    actions = [
+        "mark_accepted",
+    ]
+
+    @admin.action(description="Approve selected requests", permissions=["change"])
+    def mark_accepted(self, request, queryset):
+        for provider_request in queryset:
+            try:
+                hp = provider_request.approve()
+                message = mark_safe(
+                    f"""
+                    Successfully approved the request '{provider_request}'.
+                    Created a Hosting provider: <a hfef="#">'completely new provider'</a>
+                    """
+                )
+                self.message_user(request, message="SUCCESS!", level=messages.SUCCESS)
+            except Exception as e:
+                message = mark_safe(
+                    f"""
+                    Failed to approve the request '{provider_request}'.<br><br>
+                    Detailed error:<br>{e}
+                    """
+                )
+                self.message_user(request, message=message, level=messages.ERROR)
