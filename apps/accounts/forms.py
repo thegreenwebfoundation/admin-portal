@@ -352,6 +352,18 @@ IpRangeFormset = forms.formset_factory(
 )
 AsnFormset = forms.formset_factory(AsnForm, formset=MoreConvenientFormset, extra=0)
 
+class ExtraNetworkForm(forms.Form):
+
+    description = forms.CharField(
+        label="Alternative network explanation",
+
+        widget=forms.widgets.Textarea,
+    )
+
+    class Meta:
+        exclude = ["request"]
+
+
 
 class NetworkFootprintForm(MultiModelForm):
     """
@@ -373,6 +385,7 @@ class NetworkFootprintForm(MultiModelForm):
     form_classes = {
         "ips": IpRangeFormset,
         "asns": AsnFormset,
+        "extra": ExtraNetworkForm
     }
 
 
