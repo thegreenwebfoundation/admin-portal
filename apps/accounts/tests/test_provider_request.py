@@ -6,6 +6,7 @@ import random
 from django import urls
 from django.core.exceptions import ValidationError
 from django.core.files import File
+from django.shortcuts import reverse
 from waffle.testutils import override_flag
 from factory.django import DjangoModelFactory
 from faker import Faker
@@ -308,6 +309,15 @@ def test_wizard_view_happy_path(
     assert models.ProviderRequest.objects.filter(id=pr.id).exists()
 
 
+def _create_provider_request(client, form_data):
+    """
+    Run through the steps the form wizard with the provided form data,
+    to create a new provider request.
+    """
+    for step, data in enumerate(form_data, 1):
+        response = client.post(urls.reverse("provider_registration"), data, follow=True)
+
+
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
 def test_wizard_sends_email_on_submission(
@@ -340,33 +350,36 @@ def test_wizard_sends_email_on_submission(
     ]
     client.force_login(user)
 
-    # when: submitting form data for consecutive wizard steps
-    for step, data in enumerate(form_data, 1):
-        response = client.post(urls.reverse("provider_registration"), data, follow=True)
-        # then: for all steps except the last one,
-        # next wizard step is rendered upon submitting the data
-        if step < len(form_data):
-            assert response.context_data["wizard"]["steps"].current == str(step)
-        assert response.status_code == 200
+    # when: a multi step submission has been successfully completed
+    _create_provider_request(client, form_data)
 
-    # then: submitting the final step redirects to the detail view
-    assert response.resolver_match.func.view_class is views.ProviderRequestDetailView
-
-    # then: a ProviderRequest object exists in the db
-    pr = response.context_data["providerrequest"]
-    assert models.ProviderRequest.objects.filter(id=pr.id).exists()
-
-    # then: an email is in the outbox waiting to be sent
+    # then: we should see an email being sent
     assert len(mailoutbox) == 1
     eml = mailoutbox[0]
 
-    # then: our email is addressed to the people we expect it to be
+    msg_body_txt = eml.body
+    msg_body_html = eml.alternatives[0][0]
+
+    # then: and our email is addressed to the people we expect it to be
     assert user.email in eml.to
     assert "support@thegreenwebfoundation.org" in eml.cc
 
-    # then: our email has the subject and copy we were expecting
-    # import ipdb; ipdb.set_trace()
+    # then: and our email has the subject and copy we were expecting
     assert eml.subject == "Your verification request for the Green Web Database"
-    assert "Thank you for taking the time to complete a verification request" in eml.body
+    assert "Thank you for taking the time to complete a verification request" in msg_body_txt
+    assert "Thank you for taking the time to complete a verification request" in msg_body_html
 
-    # then: our email links back to the submission, contains the status, and the correct organisation
+    # then: and finally our email links back to the submission, contains the status, and the correct organisation
+    provider_name = wizard_form_org_details_data['0-name']
+    provider_request = models.ProviderRequest.objects.get(name=provider_name)
+    request_path = reverse("provider_request_detail", args=[provider_request.id])
+
+    assert provider_request.name in msg_body_txt
+    assert provider_request.name in msg_body_html
+
+    assert provider_request.status == models.ProviderRequestStatus.OPEN
+    assert provider_request.status in msg_body_txt
+    assert provider_request.status in msg_body_html
+
+    assert request_path in msg_body_txt
+    assert request_path in msg_body_html

@@ -280,7 +280,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         consent.save()
 
         # send an email notification to the author and green web staff
-        self._send_notification_email(self.request.user, pr)
+        self._send_notification_email(pr)
 
         return redirect(pr)
 
@@ -327,16 +327,17 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             context["preview_forms"] = self._get_data_for_preview()
         return context
 
-    def _send_notification_email(self, user: User, provider_request: ProviderRequest):
+    def _send_notification_email(self, provider_request: ProviderRequest):
         """
-        Send notification to support staff, and the user to acknowledge their submission
+        Send notification to support staff, and the user to acknowledge their submission.
         """
 
         current_site = get_current_site(self.request)
-
+        connection_scheme = self.request.scheme
+        user = self.request.user
         request_path = reverse("provider_request_detail", args=[provider_request.id])
 
-        link_to_verification_request = f"{self.request.scheme}://{current_site.domain}/{request_path}"
+        link_to_verification_request = f"{connection_scheme}://{current_site.domain}/{request_path}"
 
         ctx = {
             "org_name": provider_request.name,
