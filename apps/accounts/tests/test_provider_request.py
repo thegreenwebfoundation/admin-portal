@@ -374,12 +374,16 @@ def test_wizard_sends_email_on_submission(
     provider_request = models.ProviderRequest.objects.get(name=provider_name)
     request_path = reverse("provider_request_detail", args=[provider_request.id])
 
+    # should be something like http://testserver/requests/1 ,
+    # but more like https://app.greenweb/requests/1 when live
+    link_to_verification_request = f"http://testserver{request_path}"
+
+    assert link_to_verification_request in msg_body_txt
+    assert link_to_verification_request in msg_body_html
+
     assert provider_request.name in msg_body_txt
     assert provider_request.name in msg_body_html
 
     assert provider_request.status == models.ProviderRequestStatus.OPEN
     assert provider_request.status in msg_body_txt
     assert provider_request.status in msg_body_html
-
-    assert request_path in msg_body_txt
-    assert request_path in msg_body_html
