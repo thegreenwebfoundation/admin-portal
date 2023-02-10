@@ -337,7 +337,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         user = self.request.user
         request_path = reverse("provider_request_detail", args=[provider_request.id])
 
-        link_to_verification_request = f"{connection_scheme}://{current_site.domain}/{request_path}"
+        link_to_verification_request = f"{connection_scheme}://{current_site.domain}{request_path}"
 
         ctx = {
             "org_name": provider_request.name,
