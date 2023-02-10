@@ -6,149 +6,158 @@
 {% endblock %}
 
 {% block content %}
-{{ wizard.form.media }}
+  {{ wizard.form.media }}
 
-<!-- Initialize a ConvenientForm
+  <!-- Initialize a ConvenientForm
 	set twice: for IPs form and for ASNs form -->
-<script>
-	window.addEventListener('load', function (event) {
-		new ConvenientFormset({
-			'formsetPrefix': '{{ wizard.form.ips.prefix }}',
-			'formsContainerSelector': '#convenient-formset-ips',
-			'formSelector': '.convenient-form-ips',
+  <script>
+    window.addEventListener('load', function (event) {
+      new ConvenientFormset({
+        'formsetPrefix': '{{ wizard.form.ips.prefix }}',
+        'formsContainerSelector': '#convenient-formset-ips',
+        'formSelector': '.convenient-form-ips',
 
-			'canAddForms': true,
-			'addFormButtonSelector': '#add-form-button-ips',
-			'emptyFormSelector': '#empty-form-ips .convenient-form-ips',
+        'canAddForms': true,
+        'addFormButtonSelector': '#add-form-button-ips',
+        'emptyFormSelector': '#empty-form-ips .convenient-form-ips',
 
-			'canDeleteForms': true,
-			'deleteFormButtonSelector': '#delete-form-button-ips',
-		});
-	});
-</script>
+        'canDeleteForms': true,
+        'deleteFormButtonSelector': '#delete-form-button-ips',
+      });
+    });
+  </script>
 
-<script>
-	window.addEventListener('load', function (event) {
-		new ConvenientFormset({
-			'formsetPrefix': '{{ wizard.form.asns.prefix }}',
-			'formsContainerSelector': '#convenient-formset-asns',
-			'formSelector': '.convenient-form-asns',
+  <script>
+    window.addEventListener('load', function (event) {
+      new ConvenientFormset({
+        'formsetPrefix': '{{ wizard.form.asns.prefix }}',
+        'formsContainerSelector': '#convenient-formset-asns',
+        'formSelector': '.convenient-form-asns',
 
-			'canAddForms': true,
-			'addFormButtonSelector': '#add-form-button-asns',
-			'emptyFormSelector': '#empty-form-asns .convenient-form-asns',
+        'canAddForms': true,
+        'addFormButtonSelector': '#add-form-button-asns',
+        'emptyFormSelector': '#empty-form-asns .convenient-form-asns',
 
-			'canDeleteForms': true,
-			'deleteFormButtonSelector': '#delete-form-button-asns',
-		});
-	});
-</script>
+        'canDeleteForms': true,
+        'deleteFormButtonSelector': '#delete-form-button-asns',
+      });
+    });
+  </script>
 
-<div class="prose mx-auto">
-	<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+  <div class="prose mx-auto">
+    <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
-	<section class="my-10">
-		<h1>Network footprint</h1>
-		<p>We need a way to identify any 'downstream' service as coming from you in a way machines can check quickly. We do this in the following ways:</p>
-		<ul>
-			<li>checking a service against a list of machine-readable public addresses – usually IPv4 and IPv6 addresses;</li>
-			<li>for some large providers providers, we support checking if a service is coming from an network address that belong 
-				to one or more Autonomous System Numbers (a kind of shorthand for a large part of the internet).</li>
-		</ul>
-	</section>
-</div>
+    <section class="my-10">
+      <h1>Network footprint</h1>
+      <p>We need a way to identify any 'downstream' service as coming from you in a way machines can check quickly. We do this in the following ways:</p>
+      <ul>
+        <li>checking a service against a list of machine-readable public addresses – usually IPv4 and IPv6 addresses;</li>
+        <li>for some large providers providers, we support checking if a service is coming from an network address that belong
+          to one or more Autonomous System Numbers (a kind of shorthand for a large part of the internet).</li>
+      </ul>
+    </section>
+  </div>
 
-{% if form.is_multipart %}
-<form enctype="multipart/form-data" method="post" action="" class="form__table">
-{% else %}
-<form method="post" action="" class="form__table">
-{% endif %}
+  {% if form.is_multipart %}
+    <form enctype="multipart/form-data" method="post" action="" class="form__table">
+  {% else %}
+    <form method="post" action="" class="form__table">
+  {% endif %}
 
-	{% csrf_token %}
-	{{ wizard.management_form }}
+  {% csrf_token %}
+  {{ wizard.management_form }}
 
-	<!-- wizard.form is a MultiForm (from django-betterforms) -->
-	<!-- that has 2 separate forms: ips, asns -->
+  <!-- wizard.form is a MultiForm (from django-betterforms) -->
+  <!-- that has 2 separate forms: ips, asns -->
 
-	<div class="lg:grid grid-cols-2 gap-16 my-10">
+  <div class="lg:grid grid-cols-2 gap-16 my-10">
 
-		<section class="prose mx-auto bg-white border-2 rounded-xl mb-6 lg:mb-0 p-6">
+    <section class="prose mx-auto bg-white border-2 rounded-xl mb-6 lg:mb-0 p-6">
 
-			<h3 class="text-3xl mt-0">Identify this provider by IP range</h3>
-			<p>Any services or websites running on IP addresses within these ranges below will be recognised as being managed by this provider, 
-				and any green credentials from the provider will count towards any green checks.</p>
-			<p>A valid IP address should be in the format of ‘xxx.xxx.xxx.xxx’ where each ‘xxx’ is a number field that ranges from 0-255.</p>
+      <h3 class="text-3xl mt-0">Identify this provider by IP range</h3>
+      <p>Any services or websites running on IP addresses within these ranges below will be recognised as being managed by this provider,
+        and any green credentials from the provider will count towards any green checks.</p>
+      <p>A valid IP address should be in the format of ‘xxx.xxx.xxx.xxx’ where each ‘xxx’ is a number field that ranges from 0-255.</p>
 
-			{{ wizard.form.ips.management_form }}
-			<div id="convenient-formset-ips">
-				{% for form in wizard.form.ips %}
-				<div class="convenient-form-ips bg-neutral-50 rounded-xl my-6 p-4">
-					<table class="form__table--network mt-0 mb-2">
-						{{ form.as_table }}
-					</table>
-					<input class="text-sm hover:text-base" type="button" id="delete-form-button-ips" value="&#x274C; Delete this IP range">
-				</div>
-				{% endfor %}
-			</div>
+      {{ wizard.form.ips.management_form }}
+      <div id="convenient-formset-ips">
+        {% for form in wizard.form.ips %}
+          <div class="convenient-form-ips bg-neutral-50 rounded-xl my-6 p-4">
+            <table class="form__table--network mt-0 mb-2">
+              {{ form.as_table }}
+            </table>
+            <input class="text-sm hover:text-base" type="button" id="delete-form-button-ips" value="&#x274C; Delete this IP range">
+          </div>
+        {% endfor %}
+      </div>
 
-			<div class="my-12">
-				<input class="btn btn-white"  type="button" id="add-form-button-ips" value="Add an IP range">
-			</div>
-			
-			<div id="empty-form-ips" style="display:none">
-				<div class="convenient-form-ips bg-neutral-50 rounded-xl my-6 p-4">
-					<table class="form__table--network mt-0 mb-2">
-						{{ wizard.form.ips.empty_form.as_table }}
-					</table>
-					<input class="text-sm hover:text-base" type="button" id="delete-form-button-ips" value="&#x274C; Delete this IP range">
-				</div>
-			</div>
-		</section>
+      <div class="my-12">
+        <input class="btn btn-white"  type="button" id="add-form-button-ips" value="Add an IP range">
+      </div>
 
-		<section class="prose border-2 bg-white rounded-xl p-6">
+      <div id="empty-form-ips" style="display:none">
+        <div class="convenient-form-ips bg-neutral-50 rounded-xl my-6 p-4">
+          <table class="form__table--network mt-0 mb-2">
+            {{ wizard.form.ips.empty_form.as_table }}
+          </table>
+          <input class="text-sm hover:text-base" type="button" id="delete-form-button-ips" value="&#x274C; Delete this IP range">
+        </div>
+      </div>
+    </section>
 
-			<h3 class="text-3xl mt-0">Identify this provider by ASN</h3>
-			<p>For large services, you can list the AS numbers. The green credentials
-			from this provider will count for any IP address shown to belong to the AS numbers listed below.</p>
-			<p>Important: only add when you <span class="font-bold">fully</span> operate this AS number. 
+    <section class="prose border-2 bg-white rounded-xl p-6">
 
-			{{ wizard.form.asns.management_form }}
-			<div id="convenient-formset-asns">
-				{% for form in wizard.form.asns %}
-				<div class="convenient-form-asns bg-neutral-50 rounded-xl my-6 p-4">
-					<table class="form__table--network mt-0 mb-2">
-						{{ form.as_table }}
-					</table>
-					<input class="text-sm hover:text-base" type="button" id="delete-form-button-asns" value="&#x274C; Delete this ASN number">
-				</div>
-				{% endfor %}
-			</div>
+      <h3 class="text-3xl mt-0">Identify this provider by ASN</h3>
+      <p>For large services, you can list the AS numbers. The green credentials
+        from this provider will count for any IP address shown to belong to the AS numbers listed below.</p>
+      <p>Important: only add when you <span class="font-bold">fully</span> operate this AS number.
 
-			<div class="my-12">
-				<input class="btn btn-white" type="button" id="add-form-button-asns" value="Add an AS number">
-			</div>
+        {{ wizard.form.asns.management_form }}
+        <div id="convenient-formset-asns">
+          {% for form in wizard.form.asns %}
+            <div class="convenient-form-asns bg-neutral-50 rounded-xl my-6 p-4">
+              <table class="form__table--network mt-0 mb-2">
+                {{ form.as_table }}
+              </table>
+              <input class="text-sm hover:text-base" type="button" id="delete-form-button-asns" value="&#x274C; Delete this ASN number">
+            </div>
+          {% endfor %}
+        </div>
 
-			<div id="empty-form-asns" style="display:none">
-				<div class="convenient-form-asns bg-neutral-50 rounded-xl my-6 p-4">
-					<table class="form__table--network mt-0 mb-2">
-						{{ wizard.form.asns.empty_form.as_table }}
-					</table>
-					<input class="text-sm hover:text-base" type="button" id="delete-form-button-asns" value="&#x274C; Delete this ASN number">
-				</div>
-			</div>
-		</section>
-	</div>
+        <div class="my-12">
+          <input class="btn btn-white" type="button" id="add-form-button-asns" value="Add an AS number">
+        </div>
 
-	<div class="prose mx-auto">
-		<input class="btn" type="submit" value="{% trans "next" %}" />
+        <div id="empty-form-asns" style="display:none">
+          <div class="convenient-form-asns bg-neutral-50 rounded-xl my-6 p-4">
+            <table class="form__table--network mt-0 mb-2">
+              {{ wizard.form.asns.empty_form.as_table }}
+            </table>
+            <input class="text-sm hover:text-base" type="button" id="delete-form-button-asns" value="&#x274C; Delete this ASN number">
+          </div>
+        </div>
+      </section>
+    </div>
 
-		{% if wizard.steps.prev %}
-		<div>
-			<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-			<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
-		</div>
-		{% endif %}
-	</div>
+    <section class="mt-4 ">
+      <p>We know that in some cases a provider isn't allocated exclusive use of an IP range or an AS number. If this applies to you, please add some information why this might be the case, so we can account for it when people look up your service.</p>
 
-</form>
+      <div class="mt-4">
+        {{ wizard.form.extra }}
+      </div>
+
+    </section>
+
+    <div class="prose mx-auto">
+      <input class="btn" type="submit" value="{% trans "next" %}" />
+
+      {% if wizard.steps.prev %}
+        <div>
+          <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+          <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+        </div>
+      {% endif %}
+    </div>
+
+  </form>
 {% endblock %}

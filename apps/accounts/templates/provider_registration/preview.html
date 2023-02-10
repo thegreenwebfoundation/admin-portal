@@ -6,85 +6,89 @@
 {% endblock %}
 
 {% block content %}
-{{ wizard.form.media }}
+  {{ wizard.form.media }}
 
-<div class="prose mx-auto">
+  <div class="prose mx-auto">
 
     <form method="post" action="">
-        {% csrf_token %}
-        {{ wizard.management_form }}
+      {% csrf_token %}
+      {{ wizard.management_form }}
 
-        {% comment %}
+      {% comment %}
         This is a placeholder form - only wizard metadata is being submitted.
         {% endcomment %}
 
-        <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+      <p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
+      <div>
         <section class="my-10">
             <h1>Your verification request</h1>
 
-			<div class="alert__warning">
-				<p>Please check your data is correct before you submit your request.</p>
-				<p>On completion of the form, your submission will be reviewed by our staff. 
-					If we have all the evidence we need, we’ll notify you to let you know that checks 
-					against your site or services show as green. If we can't find the evidence we need, 
-					we’ll reply letting you know what else is required.</p>
-			</div>
-		</section>
+          <div class="alert__warning">
+            <p>Please check your data is correct before you submit your request.</p>
+            <p>On completion of the form, your submission will be reviewed by our staff. 
+              If we have all the evidence we need, we’ll notify you to let you know that checks 
+              against your site or services show as green. If we can't find the evidence we need, 
+              we’ll reply letting you know what else is required.</p>
+          </div>
+        </section>
+        
+        <section>
+          <h3>About your organisation</h3>
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.0 %}
+        </section>
 
+        <section class="my-10">
+          <h3>Locations</h3>
+          {% for location_form in preview_forms.1.initial_forms %}
+            {% include "provider_registration/partials/_preview.html" with form=location_form %}
+          {% endfor %}
+        </section>
+
+        <section class="my-10">
+          <h3>Services provided by your organisation</h3>
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.2 %}
+        </section>
+
+        <section class="my-10">
+          <h3>Green evidence</h3>
+          {% for evidence_form in preview_forms.3.initial_forms %}
+            {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
+          {% endfor %}
+        </section>
+
+        <section class="my-10">
+          <h3>Network footprint</h3>
+
+          {% for ip_form in preview_forms.4.ips.initial_forms %}
+            {% include "provider_registration/partials/_preview.html" with form=ip_form %}
+          {% endfor %}
+
+          {% for asn_form in preview_forms.4.asns.initial_forms %}
+            {% include "provider_registration/partials/_preview.html" with form=asn_form %}
+          {% endfor %}
+
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.4.extra %}
+
+
+        </section>
+
+        <section class="my-10">
+          <h3>Consent</h3>
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.5 %}
+        </section>
+      </div>
+
+      <input class="btn" type="submit" value="{% trans " submit" %}" />
+
+      {% if wizard.steps.prev %}
         <div>
-            <section class="my-10">
-                <h3>About your organisation</h3>
-                {% include "provider_registration/partials/_preview.html" with form=preview_forms.0 %}
-            </section>
-
-            <section class="my-10">
-                <h3>Locations</h3>
-                {% for location_form in preview_forms.1.initial_forms %}
-                {% include "provider_registration/partials/_preview.html" with form=location_form %}
-                {% endfor %}
-            </section>
-
-            <section class="my-10">
-                <h3>Services provided by your organisation</h3>
-                {% include "provider_registration/partials/_preview.html" with form=preview_forms.2 %}
-            </section>
-
-            <section class="my-10">
-                <h3>Green evidence</h3>
-                {% for evidence_form in preview_forms.3.initial_forms %}
-                {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
-                {% endfor %}
-            </section>
-
-            <section class="my-10">
-                <h3>Network footprint</h3>
-
-                {% for ip_form in preview_forms.4.ips.initial_forms %}
-                {% include "provider_registration/partials/_preview.html" with form=ip_form %}
-                {% endfor %}
-
-                {% for asn_form in preview_forms.4.asns.initial_forms %}
-                {% include "provider_registration/partials/_preview.html" with form=asn_form %}
-                {% endfor %}
-            </section>
-
-            <section class="my-10">
-                <h3>Consent</h3>
-                {% include "provider_registration/partials/_preview.html" with form=preview_forms.5 %}
-            </section>
+          <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit"
+            value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+          <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit"
+            value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
         </div>
-
-        <input class="btn" type="submit" value="{% trans " submit" %}" />
-
-        {% if wizard.steps.prev %}
-        <div>
-            <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit"
-                value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-            <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit"
-                value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
-        </div>
-        {% endif %}
+      {% endif %}
     </form>
-</div>
+  </div>
 {% endblock %}
