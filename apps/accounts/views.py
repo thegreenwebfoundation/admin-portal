@@ -84,7 +84,7 @@ class AdminRegistrationView(RegistrationView):
         """
         Return the URL to redirect to after successful redirection.
         """
-        return reverse("admin:index")
+        return reverse("provider_request_list")
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
