@@ -356,7 +356,7 @@ class ExtraNetworkForm(forms.Form):
 
     description = forms.CharField(
         label="Alternative network explanation",
-
+        required=False,
         widget=forms.widgets.Textarea,
     )
 
