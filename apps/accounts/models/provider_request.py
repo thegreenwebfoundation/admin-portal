@@ -1,14 +1,18 @@
-from django.db import models
+from django.db import models, IntegrityError, transaction
 from django.urls import reverse
-from django_countries.fields import CountryField
 from django.conf import settings
 from django.core.exceptions import ValidationError
+
+from django_countries.fields import CountryField
 from taggit.managers import TaggableManager
 from taggit.models import Tag
-from apps.greencheck.models import IpAddressField
+from datetime import date, timedelta
+
+from apps.greencheck.models import IpAddressField, GreencheckASN, GreencheckIp
 from apps.greencheck.validators import validate_ip_range
 from model_utils.models import TimeStampedModel
 from typing import Iterable, Tuple, List
+from .hosting import Hostingprovider, HostingProviderSupportingDocument
 
 
 class ProviderRequestStatus(models.TextChoices):
@@ -94,6 +98,69 @@ class ProviderRequest(TimeStampedModel):
         in a format expected by ChoiceField
         """
         return [(tag.slug, tag.name) for tag in Tag.objects.all()]
+
+    @transaction.atomic
+    def approve(self) -> Hostingprovider:
+        """
+        Create a new Hostingprovider and underlying objects.
+
+        This is
+        """
+        # Fail when user is already attached to an existing Hostingprovider
+        # TODO: change this once User can be attached to multiple Hostingproviders
+        user = self.created_by
+        if user.hostingprovider:
+            raise ValueError(
+                f"Failed to approve the request `{self}` because the user '{user}' "
+                f"is already assigned to a hosting provider '{user.hostingprovider}'"
+            )
+
+        # Temporarily use only the first location
+        # TODO: change this once Hostingprovider model has multiple locations attached
+        first_location = self.providerrequestlocation_set.first()
+
+        hp = Hostingprovider.objects.create(
+            name=self.name,
+            # set the first location from the list
+            country=first_location.country,
+            city=first_location.city,
+            services=self.services,
+            website=self.website,
+        )
+        # TODO: test whether user.hostingprovider needs to be manually reverted in case of a rollback
+        user.hostingprovider = hp
+        user.save()
+
+        for asn in self.providerrequestasn_set.all():
+            try:
+                GreencheckASN.objects.create(active=True, asn=asn, hostingprovider=hp)
+            except IntegrityError as e:
+                raise ValueError(
+                    f"Failed to approve the request `{self}` because the ASN '{asn}' already exists in the database"
+                ) from e
+
+        for ip_range in self.providerrequestiprange_set.all():
+            GreencheckIp.objects.create(
+                active=True,
+                ip_start=ip_range.start,
+                ip_end=ip_range.end,
+                hostingprovider=hp,
+            )
+
+        for evidence in self.providerrequestevidence_set.all():
+            HostingProviderSupportingDocument.objects.create(
+                hostingprovider=hp,
+                title=evidence.title,
+                attachment=evidence.file,
+                url=evidence.link,
+                description=evidence.description,
+                # evidence is valid for 1 year from the time the request is approved
+                valid_from=date.today(),
+                valid_to=date.today() + timedelta(days=365),
+                public=evidence.public,
+            )
+
+        return hp
 
 
 class ProviderRequestLocation(models.Model):
