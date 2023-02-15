@@ -398,12 +398,9 @@ class NetworkFootprintForm(MultiModelForm):
         super().clean()
 
         # fetch our forms
-        ip_form, asn_form, explanation_form = [form for form in self.forms.values()]
-
-        # check our forms and formsets are what we expect them to be
-        assert isinstance(ip_form, self.form_classes["ips"])
-        assert isinstance(asn_form, self.form_classes["asns"])
-        assert isinstance(explanation_form, self.form_classes["extra"])
+        ip_form = self.forms["ips"]
+        asn_form = self.forms["asns"]
+        explanation_form = self.forms['extra']
 
         # is there any description we can read?
         explanation_present = any(explanation_form.cleaned_data.values())
