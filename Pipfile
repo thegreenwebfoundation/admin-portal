@@ -30,6 +30,7 @@ furo = "*"
 myst-parser = "*"
 ansible-lint = "*"
 awscli-plugin-endpoint = "*"
+freezegun = "*"
 
 [packages]
 django = { extras = ["bcrypt"], version = "~=3.2" }
