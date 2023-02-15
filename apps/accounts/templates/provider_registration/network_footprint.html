@@ -140,10 +140,18 @@
     </div>
 
     <section class="mt-4 ">
-      <p>We know that in some cases a provider isn't allocated exclusive use of an IP range or an AS number. If this applies to you, please add some information why this might be the case, so we can account for it when people look up your service.</p>
 
       <div class="mt-4">
-        {{ wizard.form.extra }}
+
+        <label for="{{ wizard.form.extra.description.id_for_label }}">
+          {{ wizard.form.extra.description.label }}
+        </label>
+
+        <p class="mt-3 mb-3">
+          We know that in some cases a provider isn't allocated exclusive use of an IP range or an AS number. If this applies to you, please add some information why this might be the case, so we can account for it when people look up your service.
+        </p>
+
+        {{ wizard.form.extra.description.as_widget }}
       </div>
 
     </section>
