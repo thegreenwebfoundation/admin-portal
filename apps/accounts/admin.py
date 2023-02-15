@@ -297,7 +297,6 @@ class HostingAdmin(admin.ModelAdmin):
 
     @admin.display(description="Staff labels")
     def label_list(self, obj):
-
         return [label.name for label in obj.staff_labels.all()]
 
     def get_list_display(self, request):
@@ -525,7 +524,6 @@ class HostingAdmin(admin.ModelAdmin):
     # Mutators
 
     def save_model(self, request, obj, form, change):
-
         super().save_model(request, obj, form, change)
 
         if form.has_changed():
@@ -599,7 +597,6 @@ class HostingAdmin(admin.ModelAdmin):
             form.instance.label_as_awaiting_review(notify_admins=True)
 
     def approve_asn(self, request, *args, **kwargs):
-
         pk = request.GET.get("approval_id")
         action = request.GET.get("action")
         obj = GreencheckASNapprove.objects.get(pk=pk)
@@ -990,7 +987,6 @@ class DatacenterAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
 
         if object_id is not None:
-
             datacentre = self.model.objects.get(id=object_id)
             associated_providers_count = datacentre.hostingproviders.all().count()
 
@@ -1045,7 +1041,6 @@ class DatacenterAdmin(admin.ModelAdmin):
 
 @admin.register(SupportMessage, site=greenweb_admin)
 class SupportMessageAdmin(admin.ModelAdmin):
-
     # only staff should see this
     pass
 
@@ -1166,10 +1161,10 @@ class ProviderRequest(admin.ModelAdmin):
                 message = mark_safe(
                     f"""
                     Successfully approved the request '{provider_request}'.
-                    Created a Hosting provider: <a hfef="#">'completely new provider'</a>
+                    Created a Hosting provider: '{hp}'
                     """
                 )
-                self.message_user(request, message="SUCCESS!", level=messages.SUCCESS)
+                self.message_user(request, message=message, level=messages.SUCCESS)
             except Exception as e:
                 message = mark_safe(
                     f"""

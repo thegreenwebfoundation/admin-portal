@@ -176,6 +176,10 @@ class ProviderRequest(TimeStampedModel):
                 public=evidence.public,
             )
 
+        # change status of the request
+        self.status = ProviderRequestStatus.ACCEPTED
+        self.save()
+
         return hp
 
 
