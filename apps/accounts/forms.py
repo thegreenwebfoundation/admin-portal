@@ -287,8 +287,8 @@ class CredentialForm(forms.ModelForm):
                 "What kind of evidence are you adding? Choose from the dropdown list."
             ),
             "title": "Give this piece of evidence a title.",
-            "description": "What else should we know about this document? If your organisation is not named, please add a sentence outlining why.",
-            "link": "Provide a link to supporting document. Include the https:// part.",
+            "description": "What else should we know about this evidence? It does not clearly name your organisation, please add a sentence outlining why.",
+            "link": "Provide a link to a supporting document. Include the https:// part.",
             "file": "OR upload a supporting document in PDF or image format.",
             "public": (
                 "By checking this box you agree to place this evidence in the public domain, and it being cited publicly"
