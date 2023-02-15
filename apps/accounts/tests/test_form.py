@@ -1,13 +1,14 @@
 import logging
+from ipaddress import ip_address
 
 import pytest
-from apps.greencheck import forms as gc_forms
-from apps.greencheck import models as gc_models
-from apps.accounts.forms import GreenEvidenceForm, IpRangeForm, NetworkFootprintForm
-from apps.accounts.models import EvidenceType
-
 from faker import Faker
 
+from apps.accounts.forms import (GreenEvidenceForm, IpRangeForm,
+                                 NetworkFootprintForm)
+from apps.accounts.models import EvidenceType
+from apps.greencheck import forms as gc_forms
+from apps.greencheck import models as gc_models
 
 logger = logging.getLogger(__name__)
 faker = Faker()
@@ -169,7 +170,7 @@ def test_ip_range_form_validation(form_data):
     assert ip_form.is_valid() is False
 
 
-from ipaddress import ip_address
+
 
 @pytest.fixture()
 def sorted_ips():
@@ -217,8 +218,8 @@ def wizard_form_network_explanation_only():
 @pytest.fixture()
 def wizard_form_empty_network_data():
     """
-    Returns valid data for step NETWORK_FOOTPRINT of the wizard
-    as expected by the POST request.
+    Returns a form payload to simulate someone adding neither network info
+    nor any explanation
     """
     return {
 
@@ -230,13 +231,10 @@ def wizard_form_empty_network_data():
     }
 
 
-
-
 class TestNetworkFootprintForm:
 
     @pytest.mark.skip(reason="Not now")
     def test_form_valid_with_network_address_info_no_explanation(self, wizard_form_network_data):
-
 
         # given a valid submission
         multiform = NetworkFootprintForm(wizard_form_network_data)
@@ -247,9 +245,11 @@ class TestNetworkFootprintForm:
 
         assert validation_result is True
 
-
+    @pytest.mark.skip(reason="Not now")
     def test_form_valid_with_just_explanation(self, wizard_form_network_explanation_only):
-
+        """
+        When we have no network data, but some explanation, we should count it as valid.
+        """
 
         # given a valid submission
         multiform = NetworkFootprintForm(wizard_form_network_explanation_only)
@@ -260,15 +260,20 @@ class TestNetworkFootprintForm:
 
         assert validation_result is True
 
-    # @pytest.mark.skip(reason="Not now")
+
     def test_form_not_valid_if_no_explanation_or_network_data(self, wizard_form_empty_network_data):
+        """
+        Check that when we have no information provided about the network or an explanation, we raise
+        a meaningful error
+        """
 
+        # given a valid submission
+        multiform = NetworkFootprintForm(wizard_form_empty_network_data)
 
-            # given a valid submission
-            multiform = NetworkFootprintForm(wizard_form_network_explanation_only)
+        # when: a validation check has been run
+        validation_result = multiform.is_valid()
+        assert validation_result is False
 
-            # when: a validation check has been run
-
-            validation_result = multiform.is_valid()
-
-            assert validation_result is False
+        form_errors = multiform.errors['__all__']
+        assert len(form_errors) > 0
+        assert "no_network_no_explanation" in [error.code for error in form_errors]
