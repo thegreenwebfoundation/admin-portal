@@ -20,9 +20,6 @@ from .utils import tags_choices
 from django.utils.safestring import mark_safe
 
 
-import logging
-logger = logging.getLogger(__name__)
-
 User = get_user_model()
 
 
@@ -404,11 +401,16 @@ class NetworkFootprintForm(MultiModelForm):
         # fetch our forms
         ip_form, asn_form, explanation_form = [form for form in self.forms.values()]
 
+        # check our forms and formsets are what we expect them to be
+        assert isinstance(ip_form, self.form_classes['ips'])
+        assert isinstance(asn_form, self.form_classes['asns'])
+        assert isinstance(explanation_form, self.form_classes['extra'])
+
         # is there any description we can read?
         explanation_present = any(explanation_form.cleaned_data.values())
 
-        # do we have any in the two forms asking for network data?
-        network_data_present = ip_form.forms and asn_form.forms
+        # do any of the two network formsets contain valid  network data?
+        network_data_present = ip_form.forms or asn_form.forms
 
         if not network_data_present and not explanation_present:
             e = ValidationError(

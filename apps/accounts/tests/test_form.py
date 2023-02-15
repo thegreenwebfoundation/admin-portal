@@ -4,8 +4,7 @@ from ipaddress import ip_address
 import pytest
 from faker import Faker
 
-from apps.accounts.forms import (GreenEvidenceForm, IpRangeForm,
-                                 NetworkFootprintForm)
+from apps.accounts.forms import GreenEvidenceForm, IpRangeForm, NetworkFootprintForm
 from apps.accounts.models import EvidenceType
 from apps.greencheck import forms as gc_forms
 from apps.greencheck import models as gc_models
@@ -170,8 +169,6 @@ def test_ip_range_form_validation(form_data):
     assert ip_form.is_valid() is False
 
 
-
-
 @pytest.fixture()
 def sorted_ips():
     """
@@ -187,18 +184,17 @@ def wizard_form_network_data(sorted_ips):
     as expected by the POST request.
     """
     return {
-
         "ips-TOTAL_FORMS": "2",
         "ips-INITIAL_FORMS": "0",
         "ips-0-start": sorted_ips[0],
         "ips-0-end": sorted_ips[1],
         "ips-1-start": sorted_ips[2],
         "ips-1-end": sorted_ips[3],
-
         "asns-TOTAL_FORMS": "1",
         "asns-INITIAL_FORMS": "0",
         "asns-0-asn": faker.random_int(min=100, max=999),
     }
+
 
 @pytest.fixture()
 def wizard_form_network_explanation_only():
@@ -207,13 +203,13 @@ def wizard_form_network_explanation_only():
     as expected by the POST request.
     """
     return {
-
         "ips-TOTAL_FORMS": "0",
         "ips-INITIAL_FORMS": "0",
         "asns-TOTAL_FORMS": "0",
         "asns-INITIAL_FORMS": "0",
-        "extra-description": "Some information"
+        "extra-description": "Some information",
     }
+
 
 @pytest.fixture()
 def wizard_form_empty_network_data():
@@ -222,58 +218,59 @@ def wizard_form_empty_network_data():
     nor any explanation
     """
     return {
-
         "ips-TOTAL_FORMS": "0",
         "ips-INITIAL_FORMS": "0",
         "asns-TOTAL_FORMS": "0",
         "asns-INITIAL_FORMS": "0",
-        "extra-description": ""
+        "extra-description": "",
     }
 
 
 class TestNetworkFootprintForm:
-
-    @pytest.mark.skip(reason="Not now")
-    def test_form_valid_with_network_address_info_no_explanation(self, wizard_form_network_data):
+    def test_form_valid_with_network_address_info_no_explanation(
+        self, wizard_form_network_data
+    ):
+        """
+        When we have network data but no explanationm count it as valid.
+        """
 
         # given a valid submission
         multiform = NetworkFootprintForm(wizard_form_network_data)
 
-        # when: a validation check has been run
+        # then our form should be valid
+        assert multiform.is_valid()
 
-        validation_result = multiform.is_valid()
-
-        assert validation_result is True
-
-    @pytest.mark.skip(reason="Not now")
-    def test_form_valid_with_just_explanation(self, wizard_form_network_explanation_only):
+    def test_form_valid_with_just_explanation(
+        self, wizard_form_network_explanation_only
+    ):
         """
-        When we have no network data, but some explanation, we should count it as valid.
+        When we have no network data, but some explanation, count it as valid.
         """
 
         # given a valid submission
         multiform = NetworkFootprintForm(wizard_form_network_explanation_only)
 
-        # when: a validation check has been run
+        # then our form should be valid
+        assert multiform.is_valid()
 
-        validation_result = multiform.is_valid()
-
-        assert validation_result is True
-
-
-    def test_form_not_valid_if_no_explanation_or_network_data(self, wizard_form_empty_network_data):
+    def test_form_not_valid_if_no_explanation_or_network_data(
+        self, wizard_form_empty_network_data
+    ):
         """
-        Check that when we have no information provided about the network or an explanation, we raise
-        a meaningful error
+        When we have no information provided about the  network
+        or an explanation, raise a meaningful error
         """
 
-        # given a valid submission
+        # given a invalid submission
         multiform = NetworkFootprintForm(wizard_form_empty_network_data)
 
         # when: a validation check has been run
         validation_result = multiform.is_valid()
+
+        # then: our form should not be valid
         assert validation_result is False
 
-        form_errors = multiform.errors['__all__']
+        # and: we should have the appropriate error
+        form_errors = multiform.errors["__all__"]
         assert len(form_errors) > 0
         assert "no_network_no_explanation" in [error.code for error in form_errors]
