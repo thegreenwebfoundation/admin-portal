@@ -21,7 +21,6 @@ from conftest import (
     ProviderRequestLocationFactory,
     ProviderRequestIPRangeFactory,
     ProviderRequestASNFactory,
-    ProviderRequestConsentFactory,
     ProviderRequestEvidenceFactory,
 )
 from .. import views, models
@@ -306,6 +305,10 @@ def test_wizard_view_happy_path(
     pr = response.context_data["providerrequest"]
     assert models.ProviderRequest.objects.filter(id=pr.id).exists()
 
+    # then: the status is set to PENDING_REVIEW
+    created_pr = models.ProviderRequest.objects.get(id=pr.id)
+    assert created_pr.status == models.ProviderRequestStatus.PENDING_REVIEW
+
 
 def _create_provider_request(client, form_data):
     """
@@ -431,6 +434,22 @@ def test_approve_asn_already_exists(db, green_asn):
     assert models.User.objects.get(pk=pr.created_by.pk).hostingprovider is None
     # TODO: filter by reference rather than name (once it's implemented)
     assert models.Hostingprovider.objects.filter(name=pr.name).exists() is False
+
+
+def test_approve_changes_status_to_approved(db):
+    # given: a provider request is created
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+
+    # when: the request is approved
+    pr.approve()
+
+    # then: the request status is changed
+    assert (
+        models.ProviderRequest.objects.get(pk=pr.pk).status
+        == models.ProviderRequestStatus.ACCEPTED
+    )
 
 
 def test_approve_creates_hosting_provider(db):

@@ -13,9 +13,7 @@ from dal_select2_taggit import widgets as dal_widgets
 from betterforms.multiform import MultiModelForm
 from convenient_formsets import ConvenientBaseFormSet
 
-from apps.accounts.models.provider_request import (
-    ProviderRequest,
-)
+from apps.accounts.models.provider_request import ProviderRequest, ProviderRequestStatus
 
 from . import models as ac_models
 from .utils import tags_choices
@@ -39,7 +37,6 @@ class CustomUserCreationForm(forms.ModelForm):
     """
 
     class Meta:
-
         model = User
 
         # we need at least one field defined in a ModelForm.
@@ -84,7 +81,6 @@ class UserUpdateForm(UserChangeForm):
 
 
 class HostingAdminForm(forms.ModelForm):
-
     email_template = forms.ModelChoiceField(
         queryset=ac_models.SupportMessage.objects.all(),
         required=False,
@@ -122,7 +118,6 @@ class DatacenterAdminForm(forms.ModelForm):
             ].initial = self.instance.hostingproviders.all()
 
     def save(self, commit=True):
-
         datacenter = super().save(commit=False)
 
         if commit:
@@ -252,7 +247,9 @@ class OrgDetailsForm(forms.Form):
         Returns model instances of: ProviderRequest
         based on the validated data bound to this Form
         """
-        pr = ProviderRequest.from_kwargs(**self.cleaned_data)
+        pr = ProviderRequest.from_kwargs(
+            **self.cleaned_data, status=ProviderRequestStatus.PENDING_REVIEW.value
+        )
 
         if commit:
             pr.save()
@@ -336,7 +333,6 @@ GreenEvidenceForm = forms.formset_factory(
 
 
 class IpRangeForm(forms.ModelForm):
-
     start = forms.GenericIPAddressField()
     end = forms.GenericIPAddressField()
 
@@ -417,7 +413,6 @@ class ConsentForm(forms.ModelForm):
 
 
 class LocationForm(forms.ModelForm):
-
     name = forms.CharField(
         max_length=255,
         label="Location name",
