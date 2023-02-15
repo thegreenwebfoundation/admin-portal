@@ -353,8 +353,8 @@ IpRangeFormset = forms.formset_factory(
 )
 AsnFormset = forms.formset_factory(AsnForm, formset=MoreConvenientFormset, extra=0)
 
-class ExtraNetworkForm(forms.Form):
 
+class ExtraNetworkForm(forms.Form):
     description = forms.CharField(
         label="Alternative network explanation",
         required=False,
@@ -363,7 +363,6 @@ class ExtraNetworkForm(forms.Form):
 
     class Meta:
         exclude = ["request"]
-
 
 
 class NetworkFootprintForm(MultiModelForm):
@@ -386,7 +385,7 @@ class NetworkFootprintForm(MultiModelForm):
     form_classes = {
         "ips": IpRangeFormset,
         "asns": AsnFormset,
-        "extra": ExtraNetworkForm
+        "extra": ExtraNetworkForm,
     }
 
     def clean(self):
@@ -402,9 +401,9 @@ class NetworkFootprintForm(MultiModelForm):
         ip_form, asn_form, explanation_form = [form for form in self.forms.values()]
 
         # check our forms and formsets are what we expect them to be
-        assert isinstance(ip_form, self.form_classes['ips'])
-        assert isinstance(asn_form, self.form_classes['asns'])
-        assert isinstance(explanation_form, self.form_classes['extra'])
+        assert isinstance(ip_form, self.form_classes["ips"])
+        assert isinstance(asn_form, self.form_classes["asns"])
+        assert isinstance(explanation_form, self.form_classes["extra"])
 
         # is there any description we can read?
         explanation_present = any(explanation_form.cleaned_data.values())
@@ -414,14 +413,13 @@ class NetworkFootprintForm(MultiModelForm):
 
         if not network_data_present and not explanation_present:
             e = ValidationError(
-                    "If you don't have any network info, you need to at least provide "
-                    "an explanation for why this is the case.",
-                    code="no_network_no_explanation",
-                )
+                "If you don't have any network info, you need to at least provide "
+                "an explanation for why this is the case.",
+                code="no_network_no_explanation",
+            )
             self.add_crossform_error(e)
 
         return self.cleaned_data
-
 
 
 class ConsentForm(forms.ModelForm):
