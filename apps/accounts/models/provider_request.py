@@ -104,7 +104,15 @@ class ProviderRequest(TimeStampedModel):
         """
         Create a new Hostingprovider and underlying objects.
 
-        This is
+        This method is defined as an atomic transaction:
+        in case any exception occurs, all changes will be rolled back,
+        allowing to keep a consistent database state.
+
+        Please note that the rolled back transactions *do not reset*
+        the state of models - to reflect the correct state,
+        models need to be retrieved from the database again.
+        See more details here:
+        https://docs.djangoproject.com/en/4.1/topics/db/transactions/#controlling-transactions-explicitly
         """
         # Fail when user is already attached to an existing Hostingprovider
         # TODO: change this once User can be attached to multiple Hostingproviders
@@ -119,6 +127,7 @@ class ProviderRequest(TimeStampedModel):
         # TODO: change this once Hostingprovider model has multiple locations attached
         first_location = self.providerrequestlocation_set.first()
 
+        # create a Hostingprovider and assign it to the user who created ProviderRequest
         hp = Hostingprovider.objects.create(
             name=self.name,
             # set the first location from the list
@@ -127,18 +136,21 @@ class ProviderRequest(TimeStampedModel):
             services=self.services,
             website=self.website,
         )
-        # TODO: test whether user.hostingprovider needs to be manually reverted in case of a rollback
         user.hostingprovider = hp
         user.save()
 
+        # create related objects: ASNs
         for asn in self.providerrequestasn_set.all():
             try:
-                GreencheckASN.objects.create(active=True, asn=asn, hostingprovider=hp)
+                GreencheckASN.objects.create(
+                    active=True, asn=asn.asn, hostingprovider=hp
+                )
             except IntegrityError as e:
                 raise ValueError(
                     f"Failed to approve the request `{self}` because the ASN '{asn}' already exists in the database"
                 ) from e
 
+        # create related objects: IP ranges
         for ip_range in self.providerrequestiprange_set.all():
             GreencheckIp.objects.create(
                 active=True,
@@ -147,12 +159,16 @@ class ProviderRequest(TimeStampedModel):
                 hostingprovider=hp,
             )
 
+        # create related objects: supporting documents
         for evidence in self.providerrequestevidence_set.all():
+            # AbstractSupportingDocuments does not accept null values for `url` and `attachment` fields
+            url = evidence.link or ""
+            attachment = evidence.file or ""
             HostingProviderSupportingDocument.objects.create(
                 hostingprovider=hp,
                 title=evidence.title,
-                attachment=evidence.file,
-                url=evidence.link,
+                attachment=attachment,
+                url=url,
                 description=evidence.description,
                 # evidence is valid for 1 year from the time the request is approved
                 valid_from=date.today(),

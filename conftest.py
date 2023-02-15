@@ -53,7 +53,7 @@ class ProviderRequestLocationFactory(factory.django.DjangoModelFactory):
 
 
 class ProviderRequestEvidenceFactory(factory.django.DjangoModelFactory):
-    title = factory.Faker("words", nb=3)
+    title = factory.Faker("sentence", nb_words=3)
     description = factory.Faker("sentence", nb_words=6)
     link = factory.Faker("url")
     file = None
@@ -83,7 +83,6 @@ class ProviderRequestASNFactory(factory.django.DjangoModelFactory):
 
 
 class ProviderRequestConsentFactory(factory.django.DjangoModelFactory):
-
     data_processing_opt_in = True
     newsletter_opt_in = factory.Faker("random_element", elements=[True, False])
     request = factory.SubFactory(ProviderRequestFactory)
@@ -149,7 +148,6 @@ def sample_sitecheck():
 
 @pytest.fixture
 def hosting_provider():
-
     return ac_models.Hostingprovider(
         archived=False,
         country="US",
@@ -162,6 +160,18 @@ def hosting_provider():
         showonwebsite=True,
         website="http://aws.amazon.com",
     )
+
+
+@pytest.fixture
+def user_with_provider(sample_hoster_user):
+    """
+    Return a user that's been persisted to the database,
+    and has a hosting provider associated with it
+    """
+    hp = gc_factories.HostingProviderFactory.create()
+    sample_hoster_user.hostingprovider = hp
+    sample_hoster_user.save()
+    return sample_hoster_user
 
 
 @pytest.fixture
@@ -178,7 +188,6 @@ def hosting_provider_with_sample_user(hosting_provider, sample_hoster_user):
 
 @pytest.fixture
 def datacenter():
-
     return ac_models.Datacenter(
         country="NL",
         dc12v=False,
