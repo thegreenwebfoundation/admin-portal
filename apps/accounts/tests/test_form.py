@@ -3,7 +3,7 @@ import logging
 import pytest
 from apps.greencheck import forms as gc_forms
 from apps.greencheck import models as gc_models
-from apps.accounts.forms import GreenEvidenceForm, IpRangeForm
+from apps.accounts.forms import GreenEvidenceForm, IpRangeForm, NetworkFootprintForm
 from apps.accounts.models import EvidenceType
 
 from faker import Faker
@@ -167,3 +167,108 @@ def test_ip_range_form_validation(form_data):
 
     # then: the form is invalid
     assert ip_form.is_valid() is False
+
+
+from ipaddress import ip_address
+
+@pytest.fixture()
+def sorted_ips():
+    """
+    Returns a list of fake IPv4 addresses, sorted in ascending order
+    """
+    return sorted([faker.ipv4() for _ in range(10)], key=lambda x: ip_address(x))
+
+
+@pytest.fixture()
+def wizard_form_network_data(sorted_ips):
+    """
+    Returns valid data for step NETWORK_FOOTPRINT of the wizard
+    as expected by the POST request.
+    """
+    return {
+
+        "ips-TOTAL_FORMS": "2",
+        "ips-INITIAL_FORMS": "0",
+        "ips-0-start": sorted_ips[0],
+        "ips-0-end": sorted_ips[1],
+        "ips-1-start": sorted_ips[2],
+        "ips-1-end": sorted_ips[3],
+
+        "asns-TOTAL_FORMS": "1",
+        "asns-INITIAL_FORMS": "0",
+        "asns-0-asn": faker.random_int(min=100, max=999),
+    }
+
+@pytest.fixture()
+def wizard_form_network_explanation_only():
+    """
+    Returns valid data for step NETWORK_FOOTPRINT of the wizard
+    as expected by the POST request.
+    """
+    return {
+
+        "ips-TOTAL_FORMS": "0",
+        "ips-INITIAL_FORMS": "0",
+        "asns-TOTAL_FORMS": "0",
+        "asns-INITIAL_FORMS": "0",
+        "extra-description": "Some information"
+    }
+
+@pytest.fixture()
+def wizard_form_empty_network_data():
+    """
+    Returns valid data for step NETWORK_FOOTPRINT of the wizard
+    as expected by the POST request.
+    """
+    return {
+
+        "ips-TOTAL_FORMS": "0",
+        "ips-INITIAL_FORMS": "0",
+        "asns-TOTAL_FORMS": "0",
+        "asns-INITIAL_FORMS": "0",
+        "extra-description": ""
+    }
+
+
+
+
+class TestNetworkFootprintForm:
+
+    @pytest.mark.skip(reason="Not now")
+    def test_form_valid_with_network_address_info_no_explanation(self, wizard_form_network_data):
+
+
+        # given a valid submission
+        multiform = NetworkFootprintForm(wizard_form_network_data)
+
+        # when: a validation check has been run
+
+        validation_result = multiform.is_valid()
+
+        assert validation_result is True
+
+
+    def test_form_valid_with_just_explanation(self, wizard_form_network_explanation_only):
+
+
+        # given a valid submission
+        multiform = NetworkFootprintForm(wizard_form_network_explanation_only)
+
+        # when: a validation check has been run
+
+        validation_result = multiform.is_valid()
+
+        assert validation_result is True
+
+    # @pytest.mark.skip(reason="Not now")
+    def test_form_not_valid_if_no_explanation_or_network_data(self, wizard_form_empty_network_data):
+
+
+            # given a valid submission
+            multiform = NetworkFootprintForm(wizard_form_network_explanation_only)
+
+            # when: a validation check has been run
+
+            validation_result = multiform.is_valid()
+
+            assert validation_result is False

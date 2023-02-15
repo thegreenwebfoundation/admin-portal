@@ -19,6 +19,10 @@ from . import models as ac_models
 from .utils import tags_choices
 from django.utils.safestring import mark_safe
 
+
+import logging
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 
 
@@ -387,6 +391,50 @@ class NetworkFootprintForm(MultiModelForm):
         "asns": AsnFormset,
         "extra": ExtraNetworkForm
     }
+
+    def clean(self):
+        """
+        Validate that a form at least has:
+        1. some IP and/or AS data
+        2. or some explanation
+
+        """
+        super().clean()
+
+
+        ip_form, asn_form, explanation_form = [form for form in self.forms.values()]
+
+        explanation_present = any(explanation_form.cleaned_data.values())
+
+        if not any([ip_form.is_valid(), asn_form.is_valid()]) and not explanation_present:
+            # logger.info(f"{ip_form=}")
+            # logger.info(f"{asn_form=}")
+            # logger.info(f"{explanation_form=}")
+            e = ValidationError(
+                    "If you don't have any network info, you need to at least provide "
+                    "an explanation for why this is the case.",
+                    code="no_network_no_explanation",
+                )
+            self.add_crossform_error(e)
+
+        # seen = []
+        # for form in self.forms:
+        #     if not bool(form.cleaned_data):
+        #         e = ValidationError(
+        #             "This row has no information - please complete or delete it",
+        #             code="empty",
+        #         )
+        #         form.add_error(None, e)
+        #     if form.cleaned_data in seen:
+        #         e = ValidationError(
+        #             "Found a duplicated entry in the form, please remove the duplicate",
+        #             code="duplicate",
+        #         )
+        #         form.add_error(None, e)
+        #     seen.append(form.cleaned_data)
+
+        return self.cleaned_data
+
 
 
 class ConsentForm(forms.ModelForm):
