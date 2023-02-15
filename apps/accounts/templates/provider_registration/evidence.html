@@ -32,9 +32,9 @@
 
 	<section class="my-8">
 		<h1>Submit your evidence</h1>
-		<p>To verify that you are a green hosting provider, please provide evidence to show the 
-			steps you're taking to <span class="italic">avoid, reduce, or offset</span> the 
-			emissions caused by the digital infrastructure you use. There is no limit on the 
+		<p>To verify that you are a green hosting provider, please provide evidence to show the
+			steps you're taking to <span class="italic">avoid, reduce, or offset</span> the
+			emissions caused by the digital infrastructure you use. There is no limit on the
 			number of documents you can upload.</p>
 
 		<p><a href="https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of evidence we request</a>.</p>
@@ -60,8 +60,8 @@
 			{{ form.non_field_errors }}
 
 			{% comment %}
-			Iteration over all fields in the evidence form. This is 
-			equivalent to listing a span for each form.field_name 
+			Iteration over all fields in the evidence form. This is
+			equivalent to listing a span for each form.field_name
 			where field_name is in: ["title", "link", "file", "type",
 			"public", "description"]
 			{% endcomment %}
@@ -79,7 +79,7 @@
 					{{ field.errors }}
 				</div>
 			{% endfor %}
-			
+
 			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
 
 		</div>
@@ -92,7 +92,7 @@
 			{{ wizard.form.empty_form.non_field_errors }}
 			{% for field in wizard.form.empty_form %}
 				<div class="form__evidence--field mb-4 form__evidence--field-{{ field.name }}">
-					{{ field.label_tag }} 
+					{{ field.label_tag }}
 
 					{% if field.help_text %}
 						<p class="helptext">{{ field.help_text | safe }}</p>
@@ -108,8 +108,8 @@
 	</div>
 
 	<div class="prose mx-auto my-12">
-		<p class="mb-12"><sup>**</sup>NB It is <strong>not</strong> mandatory to make evidence public to become verified as a green hosting provider. However, we encourage you to do so wherever possible to increase your transparency and accountability.</p>
-		
+		<p class="mb-12"><sup>**</sup>NB It is <strong>not</strong> mandatory to place evidence in the public domain to become verified as a green hosting provider. However, we encourage you to do so wherever possible to increase your transparency and accountability.</p>
+
 		<div class="mb-8">
 			<input type="button" id="add-form-button" value="Add another evidence" class="btn btn-white">
 		</div>
