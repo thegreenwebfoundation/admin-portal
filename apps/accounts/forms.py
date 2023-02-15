@@ -401,37 +401,22 @@ class NetworkFootprintForm(MultiModelForm):
         """
         super().clean()
 
-
+        # fetch our forms
         ip_form, asn_form, explanation_form = [form for form in self.forms.values()]
 
+        # is there any description we can read?
         explanation_present = any(explanation_form.cleaned_data.values())
 
-        if not any([ip_form.is_valid(), asn_form.is_valid()]) and not explanation_present:
-            # logger.info(f"{ip_form=}")
-            # logger.info(f"{asn_form=}")
-            # logger.info(f"{explanation_form=}")
+        # do we have any in the two forms asking for network data?
+        network_data_present = ip_form.forms and asn_form.forms
+
+        if not network_data_present and not explanation_present:
             e = ValidationError(
                     "If you don't have any network info, you need to at least provide "
                     "an explanation for why this is the case.",
                     code="no_network_no_explanation",
                 )
             self.add_crossform_error(e)
-
-        # seen = []
-        # for form in self.forms:
-        #     if not bool(form.cleaned_data):
-        #         e = ValidationError(
-        #             "This row has no information - please complete or delete it",
-        #             code="empty",
-        #         )
-        #         form.add_error(None, e)
-        #     if form.cleaned_data in seen:
-        #         e = ValidationError(
-        #             "Found a duplicated entry in the form, please remove the duplicate",
-        #             code="duplicate",
-        #         )
-        #         form.add_error(None, e)
-        #     seen.append(form.cleaned_data)
 
         return self.cleaned_data
 
