@@ -5,12 +5,25 @@ import random
 from django import urls
 from django.core.exceptions import ValidationError
 from django.core.files import File
+<<<<<<< HEAD
 from django.shortcuts import reverse
+=======
+from django.core.files.uploadedfile import SimpleUploadedFile
+>>>>>>> 7c8bf21 (Tests for ProviderRequest.approve())
 from waffle.testutils import override_flag
 from faker import Faker
 from ipaddress import ip_address
+from freezegun import freeze_time
+from datetime import date
 
-from conftest import ProviderRequestFactory
+from conftest import (
+    ProviderRequestFactory,
+    ProviderRequestLocationFactory,
+    ProviderRequestIPRangeFactory,
+    ProviderRequestASNFactory,
+    ProviderRequestConsentFactory,
+    ProviderRequestEvidenceFactory,
+)
 from .. import views, models
 from apps.greencheck.factories import TagFactory
 
@@ -152,7 +165,7 @@ def fake_evidence():
     Returns a file-like object with fake content
     """
     file = io.BytesIO(faker.text().encode())
-    file.name = "evidence.txt"
+    file.name = faker.file_name()
     return file
 
 
@@ -265,7 +278,6 @@ def test_wizard_view_happy_path(
     wizard_form_consent,
     wizard_form_preview,
 ):
-
     # given: valid form data and authenticated user
     form_data = [
         wizard_form_org_details_data,
@@ -373,3 +385,141 @@ def test_wizard_sends_email_on_submission(
     assert provider_request.status == models.ProviderRequestStatus.OPEN
     assert provider_request.status in msg_body_txt
     assert provider_request.status in msg_body_html
+
+
+def test_approve_fails_when_hostingprovider_for_user_exists(db, user_with_provider):
+    # given: provider request submitted by a user that already has a Hostingprovider assigned
+    pr = ProviderRequestFactory.create(created_by=user_with_provider)
+    existing_provider = user_with_provider.hostingprovider
+
+    # then: approving the request fails
+    with pytest.raises(ValueError):
+        pr.approve()
+
+    # then: user is still assigned to the old provider
+    assert user_with_provider.hostingprovider == existing_provider
+
+
+def test_approve_first_location_is_persisted(db):
+    # given: provider request with 2 locations
+    pr = ProviderRequestFactory.create()
+    loc1 = ProviderRequestLocationFactory.create(request=pr)
+    loc2 = ProviderRequestLocationFactory.create(request=pr)
+
+    # when: provider request is approved
+    hp = pr.approve()
+
+    # then: first location is persisted
+    assert hp.city == loc1.city
+    assert hp.country == loc1.country
+
+
+def test_approve_asn_already_exists(db, green_asn):
+    # given: provider request with ASN that already exists
+    green_asn.save()
+    pr = ProviderRequestFactory.create()
+    loc = ProviderRequestLocationFactory(request=pr)
+    asn = ProviderRequestASNFactory(request=pr, asn=green_asn.asn)
+
+    # then: provider request approval fails
+    with pytest.raises(ValueError):
+        pr.approve()
+
+    # then: changes to Hostingprovider and User models are rolled back
+    # GOTCHA: we retrieve the User from the database again
+    #         because User model state (pr.created_by) is not reset by the rollback
+    assert models.User.objects.get(pk=pr.created_by.pk).hostingprovider is None
+    # TODO: filter by reference rather than name (once it's implemented)
+    assert models.Hostingprovider.objects.filter(name=pr.name).exists() is False
+
+
+def test_approve_creates_hosting_provider(db):
+    # given: a provider request is created
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+
+    # when: the request is approved
+    hp = pr.approve()
+
+    # then: resulting Hostingprovider is configured properly
+    assert hp.name == pr.name
+    assert hp.services == pr.services
+    assert hp.website == pr.website
+
+
+def test_approve_creates_ip_ranges(db):
+    # given: a provider request with multiple IP ranges
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+
+    ip1 = ProviderRequestIPRangeFactory.create(request=pr)
+    ip2 = ProviderRequestIPRangeFactory.create(request=pr)
+    ip3 = ProviderRequestIPRangeFactory.create(request=pr)
+
+    # when: the request is approved
+    hp = pr.approve()
+
+    # then: IP ranges are created
+    for ip_range in [ip1, ip2, ip3]:
+        assert hp.greencheckip_set.filter(
+            ip_start=ip_range.start, ip_end=ip_range.end, active=True
+        ).exists()
+
+
+def test_approve_creates_asns(db):
+    # given: a provider request with multiple locations, IP ranges, ASNs, evidence and consent
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+
+    asn1 = ProviderRequestASNFactory.create(request=pr)
+    asn2 = ProviderRequestASNFactory.create(request=pr)
+    asn2 = ProviderRequestASNFactory.create(request=pr)
+
+    # when: the request is approved
+    hp = pr.approve()
+
+    # then: ASNs are created
+    for asn in [asn1, asn2]:
+        assert hp.greencheckasn_set.filter(asn=asn.asn, active=True).exists()
+
+
+@freeze_time("Feb 15th, 2023")
+def test_approve_creates_evidence_documents(db):
+    # given: a provider request with multiple locations, IP ranges, ASNs, evidence and consent
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+
+    # given: we are frozen in time
+    today = date(2023, 2, 15)
+    a_year_from_now = date(2024, 2, 15)
+
+    ev1 = ProviderRequestEvidenceFactory.create(request=pr)
+    ev2 = ProviderRequestEvidenceFactory.create(
+        request=pr,
+        link=None,
+        file=SimpleUploadedFile(name=faker.file_name(), content=faker.text().encode()),
+    )
+
+    # when: the request is approved
+    hp = pr.approve()
+
+    # then: evidence documents are created and configured as expected
+    evidence_with_link = hp.supporting_documents.filter(
+        title=ev1.title, description=ev1.description
+    ).get()
+    evidence_with_file = hp.supporting_documents.filter(
+        title=ev2.title, description=ev2.description
+    ).get()
+
+    assert evidence_with_link.url == ev1.link
+    assert evidence_with_link.public == ev1.public
+    assert evidence_with_link.valid_from == today
+    assert evidence_with_link.valid_to == a_year_from_now
+
+    assert evidence_with_file.attachment == ev2.file
+    assert evidence_with_file.public == ev2.public
+    assert evidence_with_file.valid_from == today
+    assert evidence_with_file.valid_to == a_year_from_now
