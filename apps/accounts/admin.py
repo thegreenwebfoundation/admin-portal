@@ -1155,11 +1155,11 @@ class ProviderRequest(admin.ModelAdmin):
     list_filter = ("status",)
     readonly_fields = ("authorised_by_org",)
     actions = [
-        "mark_accepted",
+        "mark_approved",
     ]
 
     @admin.action(description="Approve selected requests", permissions=["change"])
-    def mark_accepted(self, request, queryset):
+    def mark_approved(self, request, queryset):
         for provider_request in queryset:
             try:
                 hp = provider_request.approve()
