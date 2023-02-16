@@ -1,7 +1,6 @@
 import datetime
 import ipaddress
 import random
-from typing import Any, Sequence
 
 import factory
 import factory.django as dj_factory
@@ -14,16 +13,14 @@ from apps.accounts import models as ac_models
 from apps.accounts.models import choices as ac_choices
 from apps.greencheck.models.checks import GreenDomain
 
-from . import choices as gc_choices
 from . import models as gc_models
 
-# RelatedFactory,
-# SubFactory,
-# post_generation,
+
+# https://factoryboy.readthedocs.io/en/stable/recipes.html#using-reproducible-randomness
+factory.random.reseed_random("venture not into the land of flaky tests")
 
 
 class UserFactory(dj_factory.DjangoModelFactory):
-
     username = factory.Faker("user_name")
     email = factory.Faker("email")
     password = factory.Faker("password")
@@ -34,7 +31,6 @@ class UserFactory(dj_factory.DjangoModelFactory):
 
 
 class SiteCheckFactory(factory.Factory):
-
     url = factory.Faker("domain_name")
     ip = factory.Faker("ipv4")
     data = False
@@ -60,15 +56,15 @@ class SiteCheckFactory(factory.Factory):
 
 
 class TagFactory(dj_factory.DjangoModelFactory):
-
     name = factory.Faker("word")
 
     class Meta:
         model = Tag
+        # avoid creating duplicate entries
+        django_get_or_create = ("name",)
 
 
 class GreencheckFactory(dj_factory.DjangoModelFactory):
-
     hostingprovider = factory.Faker("random_int")
     greencheck_ip = factory.Faker("random_int")
     date = facfuzzy.FuzzyDateTime(datetime.datetime(2009, 1, 1, tzinfo=timezone.utc))
@@ -128,7 +124,6 @@ class HostingProviderFactory(dj_factory.DjangoModelFactory):
 
 
 class GreenIpFactory(dj_factory.DjangoModelFactory):
-
     active = True
     ip_start = factory.Faker("ipv4_public")
     ip_end = factory.Faker("ipv4_public")
@@ -152,7 +147,6 @@ class GreenIpFactory(dj_factory.DjangoModelFactory):
 
 
 class GreenDomainFactory(dj_factory.DjangoModelFactory):
-
     url = factory.Faker("domain_name")
     green = True
     hosted_by = factory.SubFactory(HostingProviderFactory)

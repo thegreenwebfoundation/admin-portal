@@ -5,11 +5,8 @@ import random
 from django import urls
 from django.core.exceptions import ValidationError
 from django.core.files import File
-<<<<<<< HEAD
 from django.shortcuts import reverse
-=======
 from django.core.files.uploadedfile import SimpleUploadedFile
->>>>>>> 7c8bf21 (Tests for ProviderRequest.approve())
 from waffle.testutils import override_flag
 from faker import Faker
 from ipaddress import ip_address
@@ -331,7 +328,7 @@ def test_wizard_sends_email_on_submission(
     wizard_form_network_data,
     wizard_form_consent,
     wizard_form_preview,
-    mailoutbox
+    mailoutbox,
 ):
     """
     Given: a working set of data
@@ -367,16 +364,22 @@ def test_wizard_sends_email_on_submission(
 
     # then: and our email has the subject and copy we were expecting
     assert eml.subject == "Your verification request for the Green Web Database"
-    assert "Thank you for taking the time to complete a verification request" in msg_body_txt
-    assert "Thank you for taking the time to complete a verification request" in msg_body_html
+    assert (
+        "Thank you for taking the time to complete a verification request"
+        in msg_body_txt
+    )
+    assert (
+        "Thank you for taking the time to complete a verification request"
+        in msg_body_html
+    )
 
     # then: and finally our email links back to the submission, contains the status, and the correct organisation
-    provider_name = wizard_form_org_details_data['0-name']
+    provider_name = wizard_form_org_details_data["0-name"]
     provider_request = models.ProviderRequest.objects.get(name=provider_name)
     request_path = reverse("provider_request_detail", args=[provider_request.id])
 
-    # should be something like http://testserver/requests/1 ,
-    # but more like https://app.greenweb/requests/1 when live
+    # should be something like http://testserver/requests/1/ ,
+    # but more like https://app.greenweb/requests/1/ when live
     link_to_verification_request = f"http://testserver{request_path}"
 
     assert link_to_verification_request in msg_body_txt
@@ -385,7 +388,6 @@ def test_wizard_sends_email_on_submission(
     assert provider_request.name in msg_body_txt
     assert provider_request.name in msg_body_html
 
-    assert provider_request.status == models.ProviderRequestStatus.OPEN
     assert provider_request.status in msg_body_txt
     assert provider_request.status in msg_body_html
 

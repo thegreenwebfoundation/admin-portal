@@ -14,6 +14,10 @@ from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.greencheck.factories import UserFactory, SiteCheckFactory
 from apps.greencheck import factories as gc_factories
 
+
+# https://factoryboy.readthedocs.io/en/stable/recipes.html#using-reproducible-randomness
+factory.random.reseed_random("venture not into the land of flaky tests")
+
 User = get_user_model()
 
 register(gc_factories.UserFactory)
