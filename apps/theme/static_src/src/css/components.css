@@ -42,6 +42,34 @@
 		right: 50%;
 		width: 100vw;
 	}
+	/* SUCCESS NOTIFICATION */
+	div[class^="alert__"] {
+		@apply p-6;
+		@apply border-2;
+		@apply rounded-xl;
+		@apply mb-8;
+	}
+	div[class^="alert__"] > *:first-child {
+		@apply mt-0;
+	}
+	div[class^="alert__"] > *:last-child {
+		@apply mb-0;
+	}
+	.alert__success {
+		@apply bg-green-50;
+		@apply text-green-800;
+		@apply border-green-800;
+	}
+	.alert__warning {
+		@apply bg-orange-50;
+		@apply text-orange-700;
+		@apply border-orange-700;
+	}
+	.alert__error {
+		@apply bg-purple-50;
+		@apply text-purple-600;
+		@apply border-purple-600;
+	}
 	.service-label {
 		@apply bg-green-100;
 		@apply rounded-3xl;
