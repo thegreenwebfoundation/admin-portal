@@ -61,7 +61,7 @@ class ProviderRequestEvidenceFactory(factory.django.DjangoModelFactory):
     description = factory.Faker("sentence", nb_words=6)
     link = factory.Faker("url")
     file = None
-    type = factory.Faker("random_element", elements=ac_models.EvidenceType.choices)
+    type = factory.Faker("random_element", elements=ac_models.EvidenceType.values)
     public = factory.Faker("random_element", elements=[True, False])
     request = factory.SubFactory(ProviderRequestFactory)
 

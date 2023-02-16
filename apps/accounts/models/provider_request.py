@@ -12,7 +12,7 @@ from apps.greencheck.models import IpAddressField, GreencheckASN, GreencheckIp
 from apps.greencheck.validators import validate_ip_range
 from model_utils.models import TimeStampedModel
 from typing import Iterable, Tuple, List
-from .hosting import Hostingprovider, HostingProviderSupportingDocument
+from .hosting import Hostingprovider, HostingProviderSupportingDocument, EvidenceType
 
 
 class ProviderRequestStatus(models.TextChoices):
@@ -130,11 +130,13 @@ class ProviderRequest(TimeStampedModel):
         # create a Hostingprovider and assign it to the user who created ProviderRequest
         hp = Hostingprovider.objects.create(
             name=self.name,
+            description=self.description,
             # set the first location from the list
             country=first_location.country,
             city=first_location.city,
             services=self.services,
             website=self.website,
+            request=self,
         )
         user.hostingprovider = hp
         user.save()
@@ -173,6 +175,7 @@ class ProviderRequest(TimeStampedModel):
                 # evidence is valid for 1 year from the time the request is approved
                 valid_from=date.today(),
                 valid_to=date.today() + timedelta(days=365),
+                type=evidence.type,
                 public=evidence.public,
             )
 
@@ -235,17 +238,6 @@ class ProviderRequestIPRange(models.Model):
         """
         if self.start and self.end:
             validate_ip_range(self.start, self.end)
-
-
-class EvidenceType(models.TextChoices):
-    """
-    Type of the supporting evidence, that certifies that green energy is used
-    """
-
-    ANNUAL_REPORT = "Annual report"
-    WEB_PAGE = "Web page"
-    CERTIFICATE = "Certificate"
-    OTHER = "Other"
 
 
 class ProviderRequestEvidence(models.Model):

@@ -6,7 +6,6 @@ from django_countries.fields import CountryField
 from django.urls import reverse
 from django_mysql.models import EnumField
 from anymail.message import AnymailMessage
-from django.utils import timezone
 from django.template.loader import render_to_string
 from taggit.managers import TaggableManager
 from taggit import models as tag_models
@@ -176,6 +175,7 @@ class Hostingprovider(models.Model):
     iconurl = models.CharField(max_length=255, blank=True)
     model = EnumField(choices=ModelType.choices, default=ModelType.COMPENSATION)
     name = models.CharField(max_length=255, db_column="naam")
+    description = models.TextField(blank=True, null=True)
     partner = models.CharField(
         max_length=255,
         null=True,
@@ -211,6 +211,10 @@ class Hostingprovider(models.Model):
         through="HostingproviderDatacenter",
         through_fields=("hostingprovider", "datacenter"),
         related_name="hostingproviders",
+    )
+    # prevent circular imports by lazy-loading the ProviderRequest model
+    request = models.ForeignKey(
+        "accounts.ProviderRequest", null=True, on_delete=models.SET_NULL
     )
 
     def __str__(self):
@@ -476,6 +480,17 @@ class HostingproviderDatacenter(models.Model):
         # managed = False
 
 
+class EvidenceType(models.TextChoices):
+    """
+    Type of the supporting evidence, that certifies that green energy is used
+    """
+
+    ANNUAL_REPORT = "Annual report"
+    WEB_PAGE = "Web page"
+    CERTIFICATE = "Certificate"
+    OTHER = "Other"
+
+
 class AbstractSupportingDocument(models.Model):
     """
     When a hosting provider makes claims about running on green energy,
@@ -510,7 +525,7 @@ class AbstractSupportingDocument(models.Model):
     )
     valid_from = models.DateField()
     valid_to = models.DateField()
-
+    type = models.CharField(choices=EvidenceType.choices, max_length=255, null=True)
     public = models.BooleanField(
         default=True,
         help_text=(
