@@ -465,8 +465,10 @@ def test_approve_creates_hosting_provider(db):
 
     # then: resulting Hostingprovider is configured properly
     assert hp.name == pr.name
+    assert hp.description == pr.description
     assert hp.services == pr.services
     assert hp.website == pr.website
+    assert hp.request == pr
 
 
 def test_approve_creates_ip_ranges(db):
@@ -537,10 +539,12 @@ def test_approve_creates_evidence_documents(db):
 
     assert evidence_with_link.url == ev1.link
     assert evidence_with_link.public == ev1.public
+    assert evidence_with_link.type == ev1.type
     assert evidence_with_link.valid_from == today
     assert evidence_with_link.valid_to == a_year_from_now
 
     assert evidence_with_file.attachment == ev2.file
     assert evidence_with_file.public == ev2.public
+    assert evidence_with_file.type == ev2.type
     assert evidence_with_file.valid_from == today
     assert evidence_with_file.valid_to == a_year_from_now
