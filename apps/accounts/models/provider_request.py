@@ -66,7 +66,7 @@ class ProviderRequest(TimeStampedModel):
         ),
         blank=True,
     )
-
+    location_import_required = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.name}"
