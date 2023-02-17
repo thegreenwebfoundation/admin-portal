@@ -412,7 +412,8 @@ def test_approve_first_location_is_persisted(db):
     loc2 = ProviderRequestLocationFactory.create(request=pr)
 
     # when: provider request is approved
-    hp = pr.approve()
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
 
     # then: first location is persisted
     assert hp.city == loc1.city
@@ -455,18 +456,19 @@ def test_approve_changes_status_to_approved(db):
 
 
 def test_approve_creates_hosting_provider(db):
-    # given: a provider request is created
-    pr = ProviderRequestFactory.create()
+    # given: a provider request with services is created
+    pr = ProviderRequestFactory.create(services=faker.words(nb=4))
     ProviderRequestLocationFactory.create(request=pr)
     ProviderRequestEvidenceFactory.create(request=pr)
 
     # when: the request is approved
-    hp = pr.approve()
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
 
     # then: resulting Hostingprovider is configured properly
     assert hp.name == pr.name
     assert hp.description == pr.description
-    assert hp.services == pr.services
+    assert list(hp.services.all()) == list(pr.services.all())
     assert hp.website == pr.website
     assert hp.request == pr
 
@@ -482,7 +484,8 @@ def test_approve_creates_ip_ranges(db):
     ip3 = ProviderRequestIPRangeFactory.create(request=pr)
 
     # when: the request is approved
-    hp = pr.approve()
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
 
     # then: IP ranges are created
     for ip_range in [ip1, ip2, ip3]:
@@ -502,7 +505,8 @@ def test_approve_creates_asns(db):
     asn2 = ProviderRequestASNFactory.create(request=pr)
 
     # when: the request is approved
-    hp = pr.approve()
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
 
     # then: ASNs are created
     for asn in [asn1, asn2]:
@@ -527,7 +531,8 @@ def test_approve_creates_evidence_documents(db):
     )
 
     # when: the request is approved
-    hp = pr.approve()
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
 
     # then: evidence documents are created and configured as expected
     evidence_with_link = hp.supporting_documents.filter(

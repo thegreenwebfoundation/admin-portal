@@ -7,6 +7,7 @@ from django import urls
 from django.contrib.auth import models as auth_models
 from unittest.mock import MagicMock
 
+from conftest import ProviderRequestFactory
 from ...greencheck.tests import view_in_browser
 from .. import admin as ac_admin
 from .. import admin_site
@@ -443,10 +444,9 @@ class TestUserCreationAdmin:
 
 def test_provider_request_accessible_by_admin(
     db,
-    provider_request_factory,
     greenweb_staff_user,
 ):
-    pr = provider_request_factory()
+    pr = ProviderRequestFactory()
 
     pr_admin = ac_admin.ProviderRequest(pr.__class__, admin_site.greenweb_admin)
     request = MagicMock()
@@ -462,10 +462,8 @@ def test_provider_request_accessible_by_admin(
     assert pr_admin.has_delete_permission(request) is False
 
 
-def test_provider_request_not_accessible_by_regular_user(
-    db, sample_hoster_user, provider_request_factory
-):
-    pr = provider_request_factory()
+def test_provider_request_not_accessible_by_regular_user(db, sample_hoster_user):
+    pr = ProviderRequestFactory()
 
     pr_admin = ac_admin.ProviderRequest(pr.__class__, admin_site.greenweb_admin)
     request = MagicMock()
