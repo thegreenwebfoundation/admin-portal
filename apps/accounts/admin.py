@@ -690,10 +690,7 @@ class HostingAdmin(admin.ModelAdmin):
                 "Hostingprovider info",
                 {
                     "fields": (
-                        (
-                            "name",
-                            "website",
-                        ),
+                        ("name", "website", "description"),
                         "country",
                         "city",
                         "services",
