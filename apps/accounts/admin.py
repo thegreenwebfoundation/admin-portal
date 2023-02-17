@@ -1094,9 +1094,6 @@ class AdminOnlyTabularInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return request.user.is_admin
 
-    def has_delete_permission(self, request, obj=None):
-        return request.user.is_admin
-
 
 class ProviderRequestASNInline(AdminOnlyTabularInline):
     model = ProviderRequestASN
