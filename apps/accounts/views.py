@@ -273,6 +273,12 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             asn.request = pr
             asn.save()
 
+        extra_network_form = form_dict[steps.NETWORK_FOOTPRINT.value]["extra"]
+        network_explanation = extra_network_form.cleaned_data.get("missing_network_explanation")
+        if network_explanation:
+            pr.missing_network_explanation = network_explanation
+            pr.save()
+
         # process CONSENT form
         consent_form = form_dict[steps.CONSENT.value]
         consent = consent_form.save(commit=False)
@@ -286,7 +292,9 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         messages.success(
             self.request,
             """
-            Thank you! Your verification request was submitted successfully.
+            Thank you!
+
+            Your verification request was submitted successfully.
             We are now reviewing your request - we'll be in touch.
             """,
         )

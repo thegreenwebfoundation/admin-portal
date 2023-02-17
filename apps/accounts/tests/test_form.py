@@ -207,7 +207,7 @@ def wizard_form_network_explanation_only():
         "ips-INITIAL_FORMS": "0",
         "asns-TOTAL_FORMS": "0",
         "asns-INITIAL_FORMS": "0",
-        "extra-description": "Some information",
+        "extra-missing_network_explanation": "Some information",
     }
 
 
@@ -222,7 +222,7 @@ def wizard_form_empty_network_data():
         "ips-INITIAL_FORMS": "0",
         "asns-TOTAL_FORMS": "0",
         "asns-INITIAL_FORMS": "0",
-        "extra-description": "",
+        "extra-missing_network_explanation": "",
     }
 
 
