@@ -296,6 +296,8 @@ class CredentialForm(forms.ModelForm):
 
 
 class MoreConvenientFormset(ConvenientBaseFormSet):
+
+
     def clean(self):
         """
         ConvenientBaseFormset validates empty forms in a quirky way:
@@ -304,11 +306,10 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
         This helper class overrides this behavior: empty forms are not allowed.
         Additionally, it validates if there is no duplicated data in the formset.
         """
+
         super().clean()
-
-
-
         seen = []
+
         for form in self.forms:
             if not bool(form.cleaned_data):
                 e = ValidationError(
@@ -324,6 +325,25 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
                 form.add_error(None, e)
             seen.append(form.cleaned_data)
 
+        return seen
+
+
+class AtLeastOneSubmissionFormset(MoreConvenientFormset):
+    """
+    "A variant of our MoreConvenientFormset that validates that there is
+    at *least one* entry in a formset. This catches submissions in our
+    wizard form where we need to see at least one location, piece of evidence
+    and so on.
+    """
+
+    def clean(self):
+        """
+        Act like MoreConvenientFormset.clean, but if we haven't seen any
+        form submissions in our formset either, then we raise an validation
+        error
+        """
+        seen = super().clean()
+
         if not seen:
             raise ValidationError("There needs to be at least one submission", code="no_submissions_in_formset")
 
@@ -334,7 +354,7 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
 GreenEvidenceForm = forms.formset_factory(
     CredentialForm,
     extra=1,
-    formset=MoreConvenientFormset,
+    formset=AtLeastOneSubmissionFormset,
 )
 
 
@@ -515,7 +535,7 @@ class LocationForm(forms.ModelForm):
 LocationsForm = forms.formset_factory(
     LocationForm,
     extra=1,
-    formset=MoreConvenientFormset,
+    formset=AtLeastOneSubmissionFormset,
 )
 
 
