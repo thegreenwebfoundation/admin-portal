@@ -306,6 +306,8 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
         """
         super().clean()
 
+
+
         seen = []
         for form in self.forms:
             if not bool(form.cleaned_data):
@@ -321,6 +323,9 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
                 )
                 form.add_error(None, e)
             seen.append(form.cleaned_data)
+
+        if not seen:
+            raise ValidationError("There needs to be at least one submission", code="no_submissions_in_formset")
 
 
 # Part of multi-step registration form (screen 3).
@@ -512,6 +517,7 @@ LocationsForm = forms.formset_factory(
     extra=1,
     formset=MoreConvenientFormset,
 )
+
 
 
 class PreviewForm(forms.Form):
