@@ -354,8 +354,12 @@ IpRangeFormset = forms.formset_factory(
 AsnFormset = forms.formset_factory(AsnForm, formset=MoreConvenientFormset, extra=0)
 
 
-class ExtraNetworkForm(forms.ModelForm):
-    """A """
+class ExtraNetworkInfoForm(forms.ModelForm):
+    """
+    A form to capture other information relating to a provider's
+    network footprint. If data is missing, or a provider is using a
+    carbon.txt file to share information they would add using this form.
+    """
 
     missing_network_explanation = forms.CharField(
         label="Alternative network explanation",
@@ -372,7 +376,8 @@ class NetworkFootprintForm(MultiModelForm):
     """
     Part of multi-step registration form (screen 4).
 
-    Uses MultiModelForm to display 2 different formsets in a single form.
+    Uses MultiModelForm to display different forms and formsets in
+    a single form.
 
     Uses ConvenientBaseFormSet to display add/delete buttons
     and manage the forms inside the formsets dynamically.
@@ -388,14 +393,14 @@ class NetworkFootprintForm(MultiModelForm):
     form_classes = {
         "ips": IpRangeFormset,
         "asns": AsnFormset,
-        "extra": ExtraNetworkForm,
+        "extra": ExtraNetworkInfoForm,
     }
 
     def clean(self):
         """
         Validate that a form at least has:
         1. some IP and/or AS data
-        2. or some explanation
+        2. or some explanation as to why this network data is missing
 
         """
         super().clean()
