@@ -273,6 +273,8 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             asn.request = pr
             asn.save()
 
+        # process NETWORK_FOOTPRINT form: retrieve network explanation
+        # if network data is missing
         extra_network_form = form_dict[steps.NETWORK_FOOTPRINT.value]["extra"]
         network_explanation = extra_network_form.cleaned_data.get("missing_network_explanation")
         if network_explanation:
