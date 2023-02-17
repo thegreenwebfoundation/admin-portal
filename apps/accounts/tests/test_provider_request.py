@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.shortcuts import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import HttpResponse
 from waffle.testutils import override_flag
 from faker import Faker
 from ipaddress import ip_address
@@ -49,10 +50,11 @@ def wizard_form_org_location_data():
     """
     return {
         "provider_registration_view-current_step": "1",
-        "1-TOTAL_FORMS": "1",
-        "1-INITIAL_FORMS": "0",
-        "1-0-country": faker.country_code(),
-        "1-0-city": faker.city(),
+        "locations__1-TOTAL_FORMS": "0",
+        "locations__1-INITIAL_FORMS": "0",
+        "locations__1-0-country": faker.country_code(),
+        "locations__1-0-city": faker.city(),
+        "extra__1-location_import_required": "True",
     }
 
 
@@ -124,7 +126,6 @@ def wizard_form_network_data(sorted_ips):
     }
 
 
-
 @pytest.fixture()
 def wizard_form_network_explanation_only():
     """
@@ -137,9 +138,8 @@ def wizard_form_network_explanation_only():
         "ips__4-INITIAL_FORMS": "0",
         "asns__4-TOTAL_FORMS": "0",
         "asns__4-INITIAL_FORMS": "0",
-        "extra__4-missing_network_explanation": faker.sentence(10)
+        "extra__4-missing_network_explanation": faker.sentence(10),
     }
-
 
 
 @pytest.fixture()
@@ -325,7 +325,7 @@ def test_wizard_view_happy_path(
     assert created_pr.status == models.ProviderRequestStatus.PENDING_REVIEW
 
 
-def _create_provider_request(client, form_data):
+def _create_provider_request(client, form_data) -> HttpResponse:
     """
     Run through the steps the form wizard with the provided form data,
     to create a new provider request.
@@ -410,6 +410,7 @@ def test_wizard_sends_email_on_submission(
 
     assert provider_request.status in msg_body_txt
     assert provider_request.status in msg_body_html
+
 
 def test_approve_fails_when_hostingprovider_for_user_exists(db, user_with_provider):
     # given: provider request submitted by a user that already has a Hostingprovider assigned
@@ -611,7 +612,6 @@ def test_wizard_view_with_just_network_explanation(
 ):
     client.force_login(user)
 
-    # given: valid form data and authenticated user
     form_data = [
         wizard_form_org_details_data,
         wizard_form_org_location_data,
@@ -638,3 +638,45 @@ def test_wizard_view_with_just_network_explanation(
 
     assert pr.missing_network_explanation == explanation
     assert pr_from_db.missing_network_explanation == explanation
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_wizard_records_if_location_import_needed(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    """
+    Given: a working set of data
+    When: a user has flagged up that they have too many locations to add manually
+    Then: the provider request captures this detail
+    """
+
+    # given: valid form data and authenticated user
+    form_data = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        wizard_form_evidence_data,
+        wizard_form_network_data,
+        wizard_form_consent,
+        wizard_form_preview,
+    ]
+    client.force_login(user)
+
+    # when: a multi step submission has been successfully completed
+    response = _create_provider_request(client, form_data)
+
+    pr = response.context_data["providerrequest"]
+    assert models.ProviderRequest.objects.filter(id=pr.id).exists()
+
+    pr_from_db = models.ProviderRequest.objects.filter(id=pr.id).first()
+
+    assert pr_from_db.location_import_required is True

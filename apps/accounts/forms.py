@@ -507,11 +507,51 @@ class LocationForm(forms.ModelForm):
 # Part of multi-step registration form (screen 2).
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
-LocationsForm = forms.formset_factory(
+LocationsFormSet = forms.formset_factory(
     LocationForm,
     extra=1,
     formset=MoreConvenientFormset,
 )
+
+class LocationExtraForm(forms.Form):
+    """
+    A form for information relating to the location step, not a to a
+    single one of the locations listed on the location step.
+    """
+
+    location_import_required = forms.BooleanField(
+        label="Bulk location import required",
+        help_text=(
+            "I have more than ten locations to add. Please contact me separately "
+            "to arrange a bulk import of this information."
+        ),
+        required=False
+    )
+
+    class Meta:
+        exclude = ["request"]
+
+
+
+class LocationStepForm(MultiModelForm):
+    """
+    A form to support at least one location as well as
+    allowing a provider to flag up that they have a
+    significant number of locations to import
+    """
+
+    # We have to set base_fields to a dictionary because
+    # the WizardView tries to introspect it.
+    base_fields = {}
+
+    # The `form` object passed to the template will have
+    # 1 formset and one form, accessible by the
+    # keys defined as below
+    form_classes = {
+        "locations": LocationsFormSet,
+        "extra": LocationExtraForm,
+
+    }
 
 
 class PreviewForm(forms.Form):

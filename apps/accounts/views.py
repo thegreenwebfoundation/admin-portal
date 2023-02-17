@@ -30,7 +30,7 @@ from formtools.wizard.views import SessionWizardView
 from .forms import (
     UserUpdateForm,
     OrgDetailsForm,
-    LocationsForm,
+    LocationStepForm,
     ServicesForm,
     GreenEvidenceForm,
     NetworkFootprintForm,
@@ -200,7 +200,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
     FORMS = [
         (Steps.ORG_DETAILS.value, OrgDetailsForm),
-        (Steps.LOCATIONS.value, LocationsForm),
+        (Steps.LOCATIONS.value, LocationStepForm),
         (Steps.SERVICES.value, ServicesForm),
         (Steps.GREEN_EVIDENCE.value, GreenEvidenceForm),
         (Steps.NETWORK_FOOTPRINT.value, NetworkFootprintForm),
@@ -239,12 +239,19 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         pr = org_details_form.save(commit=False)
 
         # process LOCATIONS form: extract locations
-        org_locations_forms = form_dict[steps.LOCATIONS.value]
-        for org_location_form in org_locations_forms:
+        locations_formset = form_dict[steps.LOCATIONS.value].forms['locations']
+        for location_form in locations_formset:
 
-            location = org_location_form.save(commit=False)
+            location = location_form.save(commit=False)
             location.request = pr
             location.save()
+
+        # process LOCATION: check if a bulk location import is needed
+        extra_location_form = form_dict[steps.LOCATIONS.value].forms['extra']
+        location_import_required = extra_location_form.cleaned_data['location_import_required']
+
+        if location_import_required:
+            pr.location_import_required = location_import_required
 
         # process SERVICES form: assign services to ProviderRequest
         services_form = form_dict[steps.SERVICES.value]
