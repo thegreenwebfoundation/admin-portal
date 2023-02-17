@@ -286,9 +286,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         messages.success(
             self.request,
             """
-            Thank you! 
-            
-            Your verification request was submitted successfully.
+            Thank you! Your verification request was submitted successfully.
             We are now reviewing your request - we'll be in touch.
             """,
         )
