@@ -4,16 +4,14 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib import admin
 from django.urls import reverse
+from django.http import HttpResponseRedirect
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 import django.forms as dj_forms
-from django.contrib.auth.forms import UserCreationForm
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
-from django.utils.translation import gettext, gettext_lazy as _
-from django.template.loader import render_to_string
+from django.utils.translation import gettext_lazy as _
 from django import template as dj_template
 from apps.greencheck.admin import (
-    GreencheckASNApprove,
     GreencheckIpApproveInline,
     GreencheckIpInline,
     GreencheckAsnInline,
@@ -23,7 +21,6 @@ from logentry_admin.admin import (
     LogEntry,
     LogEntryAdmin,
     ActionListFilter,
-    UserListFilter,
 )
 
 from taggit.models import Tag
@@ -1135,8 +1132,42 @@ class ProviderRequestConsentInline(AdminOnlyTabularInline):
     )
 
 
+class ActionInChangeFormMixin(object):
+    """
+    Adds custom admin actions (https://docs.djangoproject.com/en/4.1/ref/contrib/admin/actions/)
+    to the change view of the model.
+    """
+
+    def response_action(self, request, queryset):
+        """
+        Prefer HTTP_REFERER for redirect
+        """
+        response = super(ActionInChangeFormMixin, self).response_action(
+            request, queryset
+        )
+        if isinstance(response, HttpResponseRedirect):
+            response["Location"] = request.META.get("HTTP_REFERER", response.url)
+        return response
+
+    def change_view(self, request, object_id, extra_context=None):
+        """
+        Supply custom action form to the admin change_view as a part of context
+        """
+        actions = self.get_actions(request)
+        if actions:
+            action_form = self.action_form(auto_id=None)
+            action_form.fields["action"].choices = self.get_action_choices(request)
+        else:
+            action_form = None
+        extra_context = extra_context or {}
+        extra_context["action_form"] = action_form
+        return super(ActionInChangeFormMixin, self).change_view(
+            request, object_id, extra_context=extra_context
+        )
+
+
 @admin.register(ProviderRequest, site=greenweb_admin)
-class ProviderRequest(admin.ModelAdmin):
+class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
     list_display = ("name", "website", "status", "created")
     inlines = [
         ProviderRequestLocationInline,
@@ -1152,8 +1183,9 @@ class ProviderRequest(admin.ModelAdmin):
     actions = [
         "mark_approved",
     ]
+    change_form_template = "admin/provider_request/change_form.html"
 
-    @admin.action(description="Approve selected requests", permissions=["change"])
+    @admin.action(description="Approve", permissions=["change"])
     def mark_approved(self, request, queryset):
         for provider_request in queryset:
             try:
