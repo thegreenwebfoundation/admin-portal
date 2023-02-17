@@ -1158,10 +1158,13 @@ class ProviderRequest(admin.ModelAdmin):
         for provider_request in queryset:
             try:
                 hp = provider_request.approve()
+                hp_href = reverse(
+                    "greenweb_admin:accounts_hostingprovider_change", args=[hp.id]
+                )
                 message = mark_safe(
                     f"""
                     Successfully approved the request '{provider_request}'.
-                    Created a Hosting provider: '{hp}'
+                    Created a Hosting provider: <a href={hp_href}>'{hp}'</a>
                     """
                 )
                 self.message_user(request, message=message, level=messages.SUCCESS)
