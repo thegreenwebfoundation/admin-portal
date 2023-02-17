@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
 from pytest_factoryboy import register
 from ipaddress import ip_address
+from faker import Faker
 
 from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.greencheck.factories import UserFactory, SiteCheckFactory
@@ -32,18 +33,39 @@ register(gc_factories.SiteCheckFactory)
 
 
 class ProviderRequestFactory(factory.django.DjangoModelFactory):
+    """
+    By default ProviderRequestFactory() or ProviderRequestFactory.create()
+    will return an object with no services. This is because of
+    how factory-boy manages many-to-many relationships.
+
+    Services can be set in the following ways:
+    - pr = ProviderRequestFactory(); pr.services.set(["service1", "service2"])
+    - ProviderRequestFactory.create(services=["service1", "service2"])
+    """
+
     name = factory.Faker("word")
     website = factory.Faker("domain_name")
     description = factory.Faker("sentence")
     status = ac_models.ProviderRequestStatus.OPEN
     created_by = factory.SubFactory(UserFactory)
     authorised_by_org = True
-    services = factory.List(
-        [factory.SubFactory(gc_factories.TagFactory) for _ in range(3)]
-    )
 
     class Meta:
         model = ac_models.ProviderRequest
+
+    @factory.post_generation
+    def services(self, create, extracted, **kwargs):
+        """
+        This handles many-to-many relationship between ProviderRequest and Tag.
+
+        More details: https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
+        """
+        # nothing passed as an argument
+        if not create or not extracted:
+            return
+        # set tags
+        for tag in extracted:
+            self.services.add(tag)
 
 
 class ProviderRequestLocationFactory(factory.django.DjangoModelFactory):
@@ -93,14 +115,6 @@ class ProviderRequestConsentFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = ac_models.ProviderRequestConsent
-
-
-register(ProviderRequestFactory)
-register(ProviderRequestLocationFactory)
-register(ProviderRequestEvidenceFactory)
-register(ProviderRequestIPRangeFactory)
-register(ProviderRequestASNFactory)
-register(ProviderRequestConsentFactory)
 
 
 @pytest.fixture

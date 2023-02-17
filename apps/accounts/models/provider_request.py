@@ -134,10 +134,15 @@ class ProviderRequest(TimeStampedModel):
             # set the first location from the list
             country=first_location.country,
             city=first_location.city,
-            services=self.services,
             website=self.website,
             request=self,
         )
+
+        # set services (https://django-taggit.readthedocs.io/en/latest/api.html)
+        hp.services.set(list(self.services.all()))
+        hp.save()
+
+        # set user
         user.hostingprovider = hp
         user.save()
 
@@ -163,7 +168,7 @@ class ProviderRequest(TimeStampedModel):
 
         # create related objects: supporting documents
         for evidence in self.providerrequestevidence_set.all():
-            # AbstractSupportingDocuments does not accept null values for `url` and `attachment` fields
+            # AbstractSupportingDocument does not accept null values for `url` and `attachment` fields
             url = evidence.link or ""
             attachment = evidence.file or ""
             HostingProviderSupportingDocument.objects.create(
