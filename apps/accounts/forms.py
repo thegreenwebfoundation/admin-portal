@@ -354,15 +354,18 @@ IpRangeFormset = forms.formset_factory(
 AsnFormset = forms.formset_factory(AsnForm, formset=MoreConvenientFormset, extra=0)
 
 
-class ExtraNetworkForm(forms.Form):
-    description = forms.CharField(
+class ExtraNetworkForm(forms.ModelForm):
+    """A """
+
+    missing_network_explanation = forms.CharField(
         label="Alternative network explanation",
         required=False,
         widget=forms.widgets.Textarea,
     )
 
     class Meta:
-        exclude = ["request"]
+        model = ac_models.ProviderRequest
+        fields = ["missing_network_explanation"]
 
 
 class NetworkFootprintForm(MultiModelForm):
@@ -405,7 +408,7 @@ class NetworkFootprintForm(MultiModelForm):
         # is there any description we can read?
         explanation_present = any(explanation_form.cleaned_data.values())
 
-        # do any of the two network formsets contain valid  network data?
+        # do any of the two network formsets contain valid network data?
         network_data_present = ip_form.forms or asn_form.forms
 
         if not network_data_present and not explanation_present:

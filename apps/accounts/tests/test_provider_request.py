@@ -124,6 +124,24 @@ def wizard_form_network_data(sorted_ips):
     }
 
 
+
+@pytest.fixture()
+def wizard_form_network_explanation_only():
+    """
+    Returns valid explanation for step NETWORK_FOOTPRINT of the
+    form wizard, without any IP or AS information.
+    """
+    return {
+        "provider_registration_view-current_step": "4",
+        "ips__4-TOTAL_FORMS": "0",
+        "ips__4-INITIAL_FORMS": "0",
+        "asns__4-TOTAL_FORMS": "0",
+        "asns__4-INITIAL_FORMS": "0",
+        "extra__4-missing_network_explanation": faker.sentence(10)
+    }
+
+
+
 @pytest.fixture()
 def wizard_form_consent():
     """
@@ -312,8 +330,10 @@ def _create_provider_request(client, form_data):
     Run through the steps the form wizard with the provided form data,
     to create a new provider request.
     """
+    response = None
     for step, data in enumerate(form_data, 1):
         response = client.post(urls.reverse("provider_registration"), data, follow=True)
+    return response
 
 
 @pytest.mark.django_db
@@ -392,6 +412,7 @@ def test_wizard_sends_email_on_submission(
     assert provider_request.status in msg_body_html
 
 
+<<<<<<< HEAD
 def test_approve_fails_when_hostingprovider_for_user_exists(db, user_with_provider):
     # given: provider request submitted by a user that already has a Hostingprovider assigned
     pr = ProviderRequestFactory.create(created_by=user_with_provider)
@@ -575,3 +596,42 @@ def test_approve_creates_evidence_documents(db):
     assert evidence_with_file.type == ev2.type
     assert evidence_with_file.valid_from == today
     assert evidence_with_file.valid_to == a_year_from_now
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_wizard_view_with_just_network_explanation(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_explanation_only,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    client.force_login(user)
+
+    # given: valid form data and authenticated user
+    form_data = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        wizard_form_evidence_data,
+        wizard_form_network_explanation_only,
+        wizard_form_consent,
+        wizard_form_preview,
+    ]
+    # when: a multi step submission has been successfully completed
+    response = _create_provider_request(client, form_data)
+
+    # then: a ProviderRequest object exists in the db
+    pr = response.context_data["providerrequest"]
+    assert models.ProviderRequest.objects.filter(id=pr.id).exists()
+
+    # then we have our explanation saved to the provider
+    explanation = wizard_form_network_explanation_only.get(
+        "extra__4-missing_network_explanation"
+    )
+    assert pr.missing_network_explanation == explanation
