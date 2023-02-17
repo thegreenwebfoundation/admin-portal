@@ -23,13 +23,13 @@ class ProviderRequestStatus(models.TextChoices):
 
     Meaning of each value:
     - PENDING_REVIEW: GWF staff needs to verify the request
-    - ACCEPTED: GWF staff accepted the request
+    - APPROVED: GWF staff approved the request
     - REJECTED: GWF staff rejected the request (completely)
     - OPEN: GWF staff requested some changes from the provider
     """
 
     PENDING_REVIEW = "Pending review"
-    ACCEPTED = "Accepted"
+    APPROVED = "Approved"
     REJECTED = "Rejected"
     OPEN = "Open"
 
@@ -114,12 +114,26 @@ class ProviderRequest(TimeStampedModel):
         See more details here:
         https://docs.djangoproject.com/en/4.1/topics/db/transactions/#controlling-transactions-explicitly
         """
+        failed_msg = f"Failed to approve the request '{self}'"
+
+        # Fail when request is already approved
+        if self.status == ProviderRequestStatus.APPROVED:
+            raise ValueError(f"{failed_msg} because it's already marked as approved")
+
+        # Fail when a related Hostingprovider object already exists
+        existing_hp = Hostingprovider.objects.filter(request=self)
+        if existing_hp.exists():
+            raise ValueError(
+                f"{failed_msg} because a related hosting provider '{existing_hp.get()}'"
+                "already exists in the database"
+            )
+
         # Fail when user is already attached to an existing Hostingprovider
         # TODO: change this once User can be attached to multiple Hostingproviders
         user = self.created_by
         if user.hostingprovider:
             raise ValueError(
-                f"Failed to approve the request `{self}` because the user '{user}' "
+                f"Failed to approve the request '{self}' because the user '{user}' "
                 f"is already assigned to a hosting provider '{user.hostingprovider}'"
             )
 
@@ -185,7 +199,7 @@ class ProviderRequest(TimeStampedModel):
             )
 
         # change status of the request
-        self.status = ProviderRequestStatus.ACCEPTED
+        self.status = ProviderRequestStatus.APPROVED
         self.save()
 
         return hp

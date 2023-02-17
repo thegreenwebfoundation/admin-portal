@@ -402,7 +402,30 @@ def test_approve_fails_when_hostingprovider_for_user_exists(db, user_with_provid
         pr.approve()
 
     # then: user is still assigned to the old provider
-    assert user_with_provider.hostingprovider == existing_provider
+    assert (
+        models.User.objects.get(pk=user_with_provider.pk).hostingprovider
+        == existing_provider
+    )
+
+
+def test_approve_fails_when_hostingprovider_exists(db, hosting_provider):
+    # given: Hostingprovider related to a given ProviderRequest already exists
+    pr = ProviderRequestFactory.create()
+    hosting_provider.request = pr
+    hosting_provider.save()
+
+    # then: approving the request fails
+    with pytest.raises(ValueError):
+        pr.approve()
+
+
+def test_approve_fails_when_request_already_approved(db):
+    # given: ProviderRequest is already approved
+    pr = ProviderRequestFactory.create(status=models.ProviderRequestStatus.APPROVED)
+
+    # then: approving the request fails
+    with pytest.raises(ValueError):
+        pr.approve()
 
 
 def test_approve_first_location_is_persisted(db):
@@ -435,8 +458,7 @@ def test_approve_asn_already_exists(db, green_asn):
     # GOTCHA: we retrieve the User from the database again
     #         because User model state (pr.created_by) is not reset by the rollback
     assert models.User.objects.get(pk=pr.created_by.pk).hostingprovider is None
-    # TODO: filter by reference rather than name (once it's implemented)
-    assert models.Hostingprovider.objects.filter(name=pr.name).exists() is False
+    assert models.Hostingprovider.objects.filter(request=pr).exists() is False
 
 
 def test_approve_changes_status_to_approved(db):
@@ -451,7 +473,7 @@ def test_approve_changes_status_to_approved(db):
     # then: the request status is changed
     assert (
         models.ProviderRequest.objects.get(pk=pr.pk).status
-        == models.ProviderRequestStatus.ACCEPTED
+        == models.ProviderRequestStatus.APPROVED
     )
 
 
@@ -519,16 +541,16 @@ def test_approve_creates_evidence_documents(db):
     pr = ProviderRequestFactory.create()
     ProviderRequestLocationFactory.create(request=pr)
 
-    # given: we are frozen in time
-    today = date(2023, 2, 15)
-    a_year_from_now = date(2024, 2, 15)
-
     ev1 = ProviderRequestEvidenceFactory.create(request=pr)
     ev2 = ProviderRequestEvidenceFactory.create(
         request=pr,
         link=None,
         file=SimpleUploadedFile(name=faker.file_name(), content=faker.text().encode()),
     )
+
+    # given: we are frozen in time
+    today = date(2023, 2, 15)
+    a_year_from_now = date(2024, 2, 15)
 
     # when: the request is approved
     result = pr.approve()

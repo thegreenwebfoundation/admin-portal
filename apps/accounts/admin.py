@@ -69,7 +69,6 @@ from .models import (
     HostingProviderSupportingDocument,
     SupportMessage,
     ProviderRequest,
-    ProviderRequestStatus,
     ProviderRequestASN,
     ProviderRequestIPRange,
     ProviderRequestLocation,
