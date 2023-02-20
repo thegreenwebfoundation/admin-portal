@@ -96,7 +96,7 @@ def wizard_form_empty_network_data():
         "extra-missing_network_explanation": "",
     }
 
-
+@pytest.fixture()
 def fake_evidence():
     """
     Returns a file-like object with fake content
@@ -138,7 +138,7 @@ def wizard_form_network_explanation_only():
         "extra-missing_network_explanation": "Some information",
     }
 
-
+@pytest.fixture()
 def wizard_form_org_location_data():
     """
     Returns valid data for the step ORG_LOCATIONS of the wizard,
