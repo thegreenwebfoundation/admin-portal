@@ -33,7 +33,7 @@ There are two ways you can test the form wizard forms - with integration tests t
 
 You can test an end to end form submission by POSTing the form wizard, with the corresponding payload for each subsequent form in the multi-step wizard.
 
-```
+```python
     # assume each dict in this list is a valid submission with the correct step named
     form_data = [
         wizard_form_org_details_data,
@@ -118,10 +118,9 @@ def wizard_form_network_data(sorted_ips):
     }
 ```
 
-You would can then test a form submission the normal way, without hitting the database.
+You would then test a form submission the normal way, without hitting the database.
 
 ```python
-
 def test_network_form_in_isolation(wizard_form_network_data):
     multiform = NetworkFootprintForm(wizard_form_network_data)
     assert multiform.is_valid()
