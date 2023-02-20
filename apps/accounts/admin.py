@@ -1172,7 +1172,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
     formfield_overrides = {TaggableManager: {"widget": LabelWidget}}
     empty_value_display = "(empty)"
     list_filter = ("status",)
-    readonly_fields = ("authorised_by_org",)
+    readonly_fields = ("authorised_by_org", "created_by")
     actions = [
         "mark_approved",
     ]
