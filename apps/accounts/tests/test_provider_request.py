@@ -411,8 +411,6 @@ def test_wizard_sends_email_on_submission(
     assert provider_request.status in msg_body_txt
     assert provider_request.status in msg_body_html
 
-
-<<<<<<< HEAD
 def test_approve_fails_when_hostingprovider_for_user_exists(db, user_with_provider):
     # given: provider request submitted by a user that already has a Hostingprovider assigned
     pr = ProviderRequestFactory.create(created_by=user_with_provider)
