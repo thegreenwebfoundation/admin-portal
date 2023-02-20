@@ -378,7 +378,7 @@ class TestGreenEvidenceForm:
 
         # our formset should be invalid and we have a helpful error
         assert not formset.is_valid()
-        assert "There needs to be at least one submission" in formset.non_form_errors()
+        assert "Please submit at least 1 form." in formset.non_form_errors()
 
     def test_green_evidence_form_validation(self):
         # given: invalid form data

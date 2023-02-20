@@ -328,25 +328,6 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
         return seen
 
 
-class AtLeastOneSubmissionFormset(MoreConvenientFormset):
-    """
-    "A variant of our MoreConvenientFormset that validates that there is
-    at *least one* entry in a formset. This catches submissions in our
-    wizard form where we need to see at least one location, piece of evidence
-    and so on.
-    """
-
-    def clean(self):
-        """
-        Act like MoreConvenientFormset.clean, but if we haven't seen any
-        form submissions in our formset either, then we raise an validation
-        error
-        """
-        seen = super().clean()
-
-        if not seen:
-            raise ValidationError("There needs to be at least one submission", code="no_submissions_in_formset")
-
 
 # Part of multi-step registration form (screen 3).
 # Uses ConvenientBaseFormSet to display add/delete buttons
@@ -354,7 +335,9 @@ class AtLeastOneSubmissionFormset(MoreConvenientFormset):
 GreenEvidenceForm = forms.formset_factory(
     CredentialForm,
     extra=1,
-    formset=AtLeastOneSubmissionFormset,
+    formset=MoreConvenientFormset,
+    validate_min=True,
+    min_num=1,
 )
 
 
@@ -535,7 +518,9 @@ class LocationForm(forms.ModelForm):
 LocationsForm = forms.formset_factory(
     LocationForm,
     extra=1,
-    formset=AtLeastOneSubmissionFormset,
+    formset=MoreConvenientFormset,
+    validate_min=True,
+    min_num=1
 )
 
 
