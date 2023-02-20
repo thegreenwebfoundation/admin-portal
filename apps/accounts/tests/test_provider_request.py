@@ -626,10 +626,15 @@ def test_wizard_view_with_just_network_explanation(
 
     # then: a ProviderRequest object exists in the db
     pr = response.context_data["providerrequest"]
-    assert models.ProviderRequest.objects.filter(id=pr.id).exists()
+    pr_from_db = models.ProviderRequest.objects.get(id=pr.id)
+
+    # and it's the same one as in our HTTP response
+    pr.id == pr_from_db.id
 
     # then we have our explanation saved to the provider
     explanation = wizard_form_network_explanation_only.get(
         "extra__4-missing_network_explanation"
     )
+
     assert pr.missing_network_explanation == explanation
+    assert pr_from_db.missing_network_explanation == explanation
