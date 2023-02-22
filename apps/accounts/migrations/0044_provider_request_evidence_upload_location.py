@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0043_providerrequest_location_import_required'),
+        ("accounts", "0043_providerrequest_location_import_required"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='providerrequestevidence',
-            name='file',
-            field=models.FileField(blank=True, null=True, upload_to='uploads/'),
+            model_name="providerrequestevidence",
+            name="file",
+            field=models.FileField(blank=True, null=True, upload_to="uploads/"),
         ),
     ]
