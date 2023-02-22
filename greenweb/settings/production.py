@@ -31,7 +31,8 @@ AWS_SECRET_ACCESS_KEY = env("OBJECT_STORAGE_SECRET_ACCESS_KEY")  # noqa
 AWS_STORAGE_BUCKET_NAME = env("OBJECT_STORAGE_BUCKET_NAME")  # noqa
 AWS_S3_REGION_NAME = env("OBJECT_STORAGE_REGION")  # noqa
 AWS_S3_ENDPOINT_URL = env("OBJECT_STORAGE_ENDPOINT")  # noqa
-
+# do not overwrite files (upload files with the same name as separate files)
+AWS_S3_FILE_OVERWRITE = False
 
 # report when things asplode
 sentry_dsn = os.environ.get("SENTRY_DSN", False)  # noqa
