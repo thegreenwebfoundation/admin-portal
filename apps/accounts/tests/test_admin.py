@@ -1,18 +1,34 @@
+import json
+import logging
+import pathlib
 from typing import List
+from unittest.mock import MagicMock
 
 import markdown
 import pytest
-from apps.accounts.models.hosting import Hostingprovider
 from django import urls
 from django.contrib.auth import models as auth_models
-from unittest.mock import MagicMock
 
+from apps.accounts.models.hosting import Hostingprovider
+from apps.greencheck.tests import setup_domains
 from conftest import ProviderRequestFactory
+
+from ...greencheck import domain_check
 from ...greencheck.tests import view_in_browser
 from .. import admin as ac_admin
 from .. import admin_site
 from .. import models as ac_models
 
+checker = domain_check.GreenDomainChecker()
+
+
+logger = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def rdap_content():
+    rdap_output_path = pathlib.Path(__file__).parent / 'sample.rdap.output.json'
+    return json.loads(rdap_output_path.read_text())
 
 class TestHostingProviderAdminInlineRendering:
     """
@@ -476,3 +492,67 @@ def test_provider_request_not_accessible_by_regular_user(db, sample_hoster_user)
     assert pr_admin.has_view_permission(request) is False
     assert pr_admin.has_change_permission(request) is False
     assert pr_admin.has_delete_permission(request) is False
+
+
+def test_checkurl_form():
+    """
+    Check that passing in an url to our form
+    returns a validated url.
+    """
+
+    form = admin_site.CheckUrlForm({"url": "https://google.com"})
+
+    assert form.is_valid()
+    assert form.cleaned_data["url"] == "google.com"
+
+
+def test_extended_lookup_green_domain(
+    db, mocker, green_ip_factory, green_domain_factory, rdap_content
+):
+    domain = "google.com"
+    GOOGLE_COM_IP = "172.217.168.238"
+
+    green_ip = green_ip_factory.create(ip_start=GOOGLE_COM_IP)
+    green_domain = green_domain_factory.create(url=domain)
+    green_provider = Hostingprovider.objects.get(pk=green_domain.hosted_by_id)
+
+    # for readability
+    green_provider.name = "Google"
+    green_domain.hosted_by = "Google"
+    green_domain.hosted_by_website = "google.com"
+    green_ip.hostingprovider = green_provider
+
+    green_ip.save()
+    green_provider.save()
+    green_domain.save()
+
+    mocker.patch(
+        "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+        return_value=GOOGLE_COM_IP,
+    )
+
+    setup_domains(["google.com"], green_provider, green_ip)
+
+    result = checker.extended_domain_info_lookup(domain)
+
+    assert result["domain"] == domain
+
+    # do we have a GreenDomain object?
+    green_domain_lookup = result["green_domain"]
+    # do we have our SiteCheck?
+    site_check_lookup = result["site_check"]
+
+    # do we have an rdap lookup object?
+    rdap_lookup = result["whois_info"]
+
+    # do we have access our site check and green domain objects?
+    assert green_domain_lookup.green == True
+    assert site_check_lookup.green == True
+
+    # does it look like it's querying the same object?
+    assert rdap_content['query'] == GOOGLE_COM_IP
+    # can we see the IP range?
+    assert rdap_content['asn_cidr'] == "172.217.0.0/16"
+    # can we see the AS number and the owner?
+    assert rdap_content['asn_description'] == "GOOGLE, US"
+    assert rdap_content["asn"] == "15169"

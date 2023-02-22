@@ -1,20 +1,16 @@
-import re
 import logging
+import re
+import typing
 
+import ipwhois
+from django import forms
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
-from django.urls import path
-from django.urls import reverse
 from django.shortcuts import render
-
+from django.urls import path, reverse
 from django.views.generic.edit import FormView
-from django import forms
-
 from waffle import flag_is_active
-
-
-import ipwhois
 
 from apps.greencheck.views import GreenUrlsView
 
@@ -25,7 +21,6 @@ checker = domain_check.GreenDomainChecker()
 
 logger = logging.getLogger(__name__)
 
-
 class CheckUrlForm(forms.Form):
     """
     A form for checking a url against the database and surfacing
@@ -33,44 +28,30 @@ class CheckUrlForm(forms.Form):
     """
 
     url = forms.URLField()
-    green_status = False
-    whois_info = None
-    check_result = None
-    sitecheck = None
 
-    def clean_url(self):
+    def clean_url(self) -> typing.Union[gc_models.GreenDomain, gc_models.SiteCheck]:
         """
         Check the submitted url against the TGWF green
         domain database.
         """
-        # TODO: decided if we should split this into a
-        # separate method. clean_field typically doesn't make
-        # other requests
-
         url = self.cleaned_data["url"]
-
         domain_to_check = checker.validate_domain(url)
-        ip_address = checker.convert_domain_to_ip(domain_to_check)
-        whois_lookup = ipwhois.IPWhois(ip_address)
 
-        # returns a green domain object, not our sitecheck, which
-        # contains the kind of match we used
-        # TODO rewrite this. the sitecheck / greendomain thing is
-        # clumsy to use
-        res = checker.perform_full_lookup(domain_to_check)
-        sitecheck = checker.check_domain(domain_to_check)
-        rdap = whois_lookup.lookup_rdap(depth=1)
+        # check if we can resolve to an IP - this catches when
+        # people provide an IP address
+        try:
+            checker.convert_domain_to_ip(domain_to_check)
+        except Exception as err:
+            raise ValidationError((
+                f"Provided url {url} does not appear have a valid domain: {domain_to_check}"
+                "Please check and try again."
+                )
+            )
 
-        # import json
-        # radp_json_dump = open(f"{domain_to_check}.radp.lookup.json", "w")
-        # radp_json_dump.write(json.dumps(rdap))
-        # radp_json_dump.close()
+        return domain_to_check
 
-        self.whois_info = rdap
-        self.domain = domain_to_check
-        self.green_status = res.green
-        self.check_result = res
-        self.sitecheck = sitecheck
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 
 class CheckUrlView(FormView):
@@ -89,36 +70,53 @@ class CheckUrlView(FormView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["form_url"] = reverse("admin:check_url")
+
+        form_class = self.get_form_class()
+        form = form_class(self.request.GET)
+
+        if form.is_valid():
+            domain_name = form.cleaned_data['url']
+            lookup_result = checker.extended_domain_info_lookup(domain_name)
+
+            site_check = lookup_result["site_check"]
+            green_domain = lookup_result["green_domain"]
+            green_status = green_domain.green
+
+
+
+            ctx['form'] = form
+            ctx["domain"] = domain_name
+            ctx["whois_info"] = lookup_result["whois_info"]
+            ctx["ip_lookup"] = lookup_result["whois_info"]["query"]
+
+            if site_check.green and site_check.match_type == "as":
+                # this is an AS match. Point to the ASN match
+                as_match = gc_models.GreencheckASN.objects.filter(
+                    id=site_check.match_ip_range
+                )
+                if as_match:
+                    ctx["matching_green_as"] = as_match[0]
+
+            if site_check.green and site_check.match_type == "ip":
+                ip_match = gc_models.GreencheckIp.objects.filter(
+                    id=site_check.match_ip_range
+                )
+                if ip_match:
+                    ctx["matching_green_ip"] = ip_match[0]
+
+            ctx["green_status"] = "green" if green_status else "gray"
+
+
+
         return ctx
 
-    def form_valid(self, form):
-        green_status = form.green_status
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests: instantiate a blank version of the form."""
+
         ctx = self.get_context_data()
 
-        if form.whois_info:
-            ctx["domain"] = form.domain
-            ctx["ip_lookup"] = form.whois_info["query"]
-            ctx["whois_info"] = form.whois_info
+        return self.render_to_response(ctx)
 
-        #
-        if form.sitecheck.green and form.sitecheck.match_type == "as":
-            # this is an AS match. Point to the ASN match
-            as_match = gc_models.GreencheckASN.objects.filter(
-                id=form.sitecheck.match_ip_range
-            )
-            if as_match:
-                ctx["matching_green_as"] = as_match[0]
-
-        if form.sitecheck.green and form.sitecheck.match_type == "ip":
-            ip_match = gc_models.GreencheckIp.objects.filter(
-                id=form.sitecheck.match_ip_range
-            )
-            if ip_match:
-                ctx["matching_green_ip"] = ip_match[0]
-
-        ctx["green_status"] = "green" if green_status else "gray"
-
-        return render(self.request, self.template_name, ctx)
 
 
 class GreenWebAdmin(AdminSite):

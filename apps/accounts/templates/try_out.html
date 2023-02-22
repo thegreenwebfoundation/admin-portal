@@ -73,8 +73,7 @@
     }
 </style>
 
-<form action="{{ form_url }}" method="post" class="try_out">
-    {% csrf_token %}
+<form action="{{ form_url }}" method="GET" class="try_out">
     {{ form.url.errors }}
     <label for="{{ form.url.id_for_label }}">Url: </label>
     {{ form.url }}

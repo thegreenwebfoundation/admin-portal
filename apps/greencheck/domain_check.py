@@ -28,6 +28,9 @@ from .models import GreenDomain, SiteCheck
 
 logger = logging.getLogger(__name__)
 
+import ipwhois
+
+import typing
 
 class GreenDomainChecker:
     """
@@ -73,6 +76,31 @@ class GreenDomainChecker:
         # by another worker, and logged to both the greencheck
         # table and this 'cache' table
         return GreenDomain.from_sitecheck(res)
+
+    def extended_domain_info_lookup(self, domain_to_check: str) -> typing.Dict:
+        """
+        Accept an domain or IP address, and return extended information
+        about it, like extended whois data, and any relevant sitecheck
+        or green domain objects.
+        """
+
+        ip_address = self.convert_domain_to_ip(domain_to_check)
+
+        # fetch our sitecheck object
+        site_check = self.check_domain(domain_to_check)
+        # fetch our GreendDomain object
+        green_domain = self.perform_full_lookup(domain_to_check)
+
+        # carry out our extended whois lookup
+        whois_lookup = ipwhois.IPWhois(ip_address)
+        rdap = whois_lookup.lookup_rdap(depth=1)
+
+        return {
+            "domain": domain_to_check,
+            "green_domain": green_domain,
+            "site_check": site_check,
+            "whois_info": rdap,
+        }
 
     def asn_from_ip(self, ip_address):
         """
@@ -182,8 +210,9 @@ class GreenDomainChecker:
 
     def check_domain(self, domain: str) -> SiteCheck:
         """
-        Accept a domain name and return the either a GreenDomain Object,
-        or the best matching IP range forip address it resolves to.
+        Accept a domain name and return either a GreenDomain Object,
+        the best matching IP range for the ip address it resolves to,
+        or a 'grey' Sitecheck
         """
 
         if carbon_txt_match := self.check_via_carbon_txt(domain):
@@ -297,4 +326,3 @@ class GreenDomainChecker:
 
         # sort to return the smallest first
         return [obj["ip_range"] for obj in ascending_ip_ranges]
-
