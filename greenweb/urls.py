@@ -17,6 +17,7 @@ Including another URLconf
 from django.conf import settings
 from django.urls import path, include, reverse_lazy
 from django.views.generic.base import RedirectView
+from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
 
@@ -52,6 +53,7 @@ if settings.DEBUG:
     import importlib
     import debug_toolbar
 
+    # enable debug toolbar
     urlpatterns += [
         path("__debug__/", include(debug_toolbar.urls)),
     ]
@@ -61,6 +63,9 @@ if settings.DEBUG:
         urlpatterns += [
             path("__reload__/", include("django_browser_reload.urls")),
         ]
+
+    # serve uploaded files locally
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 urlpatterns += [
