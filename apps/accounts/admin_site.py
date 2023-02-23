@@ -134,7 +134,7 @@ class GreenWebAdmin(AdminSite):
     def get_urls(self):
         urls = super().get_urls()
         patterns = [
-            path("try_out/", CheckUrlView.as_view(), name="check_url"),
+            path("extended-greencheck/", CheckUrlView.as_view(), name="check_url"),
             path("green-urls", GreenUrlsView.as_view(), name="green_urls"),
             path("import-ip-ranges", GreenUrlsView.as_view(), name="import_ip_ranges"),
         ]
@@ -172,7 +172,7 @@ class GreenWebAdmin(AdminSite):
                 "app_url": reverse("admin:check_url"),
                 "models": [
                     {
-                        "name": "Try out a url",
+                        "name": "Perform a extended greencheck",
                         "object_name": "greencheck_url",
                         "admin_url": reverse("admin:check_url"),
                         "view_only": True,
