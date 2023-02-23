@@ -195,10 +195,12 @@ class CarbonTxtParser:
             ).hosting_provider
 
             result_data["org"] = provider
+            logger.info(provider)
         except django.core.exceptions.ObjectDoesNotExist:
             logger.warn(f"No provider found to match {domain}")
             pass
 
+        logger.info(result_data['org'])
         return result_data
 
     def import_from_url(self, url: str):
