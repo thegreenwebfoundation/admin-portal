@@ -2,30 +2,23 @@ import logging
 import typing
 from urllib import parse
 
+import requests
+import toml
 from django import forms
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-
-from django.urls import path, reverse
-from django.views.generic.edit import FormView
-from waffle import flag_is_active
-
 from django.shortcuts import render
 from django.urls import path, reverse
 from django.views.generic.edit import FormView
-
-import ipwhois
-import requests
-import toml
+from waffle import flag_is_active
 from waffle.mixins import WaffleFlagMixin
 
 from apps.greencheck.views import GreenUrlsView
 
 from ..greencheck import carbon_txt, domain_check
 from ..greencheck import models as gc_models
-
 
 checker = domain_check.GreenDomainChecker()
 logger = logging.getLogger(__name__)
@@ -58,15 +51,15 @@ class CarbonTxtForm(forms.Form):
                     submitted_text = response.content
                 else:
                     raise forms.ValidationError(
-                        f"Unable to fetch content from url: %(url)s. HTTP response"
-                        f" code: %(response_code)s",
+                        "Unable to fetch content from url: %(url)s. HTTP response"
+                        " code: %(response_code)s",
                         code="bad_http_lookup",
                         params={"url": url, "response_code": response.status_code},
                     )
             except requests.HTTPError:
                 # flag up an error about the domain
                 raise forms.ValidationError(
-                    f"Unable to fetch content from url: %(url)s",
+                    "Unable to fetch content from url: %(url)s",
                     code="bad_http_lookup",
                     params={"url": url},
                 )
@@ -76,10 +69,10 @@ class CarbonTxtForm(forms.Form):
                 submitted_text = submitted_text.decode("utf-8")
             try:
                 parsed_toml = toml.loads(submitted_text)
-            except toml.decoder.TomlDecodeError as ex:
+            except toml.decoder.TomlDecodeError:
                 logger.warn(f"Unable to read TOML at {url}")
                 raise forms.ValidationError(
-                    f"Unable to parse the provided TOML.", code="toml_parse_error"
+                    "Unable to parse the provided TOML.", code="toml_parse_error"
                 )
 
             parsed_url = parse.urlparse(url)
