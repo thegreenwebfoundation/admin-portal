@@ -1,13 +1,10 @@
 import logging
-import re
 import typing
 
-import ipwhois
 from django import forms
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
-from django.shortcuts import render
 from django.urls import path, reverse
 from django.views.generic.edit import FormView
 from waffle import flag_is_active
@@ -42,16 +39,15 @@ class CheckUrlForm(forms.Form):
         try:
             checker.convert_domain_to_ip(domain_to_check)
         except Exception as err:
+            logger.warning(err)
             raise ValidationError((
-                f"Provided url {url} does not appear have a valid domain: {domain_to_check}"
+                f"Provided url {url} does not appear have a "
+                f"valid domain: {domain_to_check}. "
                 "Please check and try again."
                 )
             )
 
         return domain_to_check
-
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 
 
 class CheckUrlView(FormView):
