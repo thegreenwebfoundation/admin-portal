@@ -85,7 +85,7 @@ class TestCarbonTxtParser:
         provider = ac_models.Hostingprovider.objects.get(id=res.hosted_by_id)
 
         # do we have a green result?
-        assert res.green == True
+        assert res.green is True
         assert res.hosted_by_id == provider.id
 
     def test_check_with_alternative_domain(self, db, carbon_txt_string):
@@ -100,7 +100,7 @@ class TestCarbonTxtParser:
         provider = ac_models.Hostingprovider.objects.get(id=res.hosted_by_id)
 
         # do we have a green result?
-        assert res.green == True
+        assert res.green is True
         assert res.hosted_by_id == provider.id
 
     def test_import_from_remote_carbon_text_file(self, db):
@@ -121,17 +121,17 @@ class TestCarbonTxtParser:
         # now check for the domains
         primary_check = gc_models.GreenDomain.check_for_domain("www.hillbob.de")
         secondary_check = gc_models.GreenDomain.check_for_domain("valleytrek.co.uk")
-        assert primary_check.green == True
-        assert secondary_check.green == True
+        assert primary_check.green is True
+        assert secondary_check.green is True
 
         # and the aliases
         for domain_alias in ["www.sys-ten.com", "www.systen.com"]:
             check = gc_models.GreenDomain.check_for_domain(domain_alias)
-            assert check.green == True
+            assert check.green is True
 
         for domain_alias in ["hill-bob.ch", "www.hilbob.ch", "www.hill-bob.ch"]:
             check = gc_models.GreenDomain.check_for_domain(domain_alias)
-            assert check.green == True
+            assert check.green is True
 
     @pytest.mark.skip(reason="pending")
     def test_creation_of_corporate_grouping(self):
@@ -193,7 +193,8 @@ class TestLogCarbonTxtCheck:
             url="www.hillbob.de",
             ip=None,
             hosting_provider_id=hillbob_de.id,
-            # we use WHOIS here, until we can use the correcrt ENUM for mariadb in a migration
+            # we use WHOIS here, until we can use the correct ENUM
+            # for mariadb in a migration
             match_type=choices.GreenlistChoice.WHOIS,
         )
 
@@ -206,7 +207,7 @@ class TestLogCarbonTxtCheck:
             return_value=dummy_check,
         )
 
-        res = check_logger.log_sitecheck_for_domain("www.hilbob.de")
+        check_logger.log_sitecheck_for_domain("www.hilbob.de")
 
         assert gc_models.Greencheck.objects.count() == 1
         logged_check = gc_models.Greencheck.objects.first()
