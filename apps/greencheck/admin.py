@@ -293,3 +293,23 @@ class GreencheckASNApprove(admin.ModelAdmin):
         return '<a href="{}">Link to {}</a>'.format(url, obj.hostingprovider.name)
 
     link.short_description = "Link to Hostingprovider"
+
+@admin.register(models.GreenDomain, site=greenweb_admin)
+class GreenDomainAdmin(admin.ModelAdmin):
+    list_display = [
+        "url",
+        "modified",
+        "green",
+        "hosted_by_website",
+        "hosting_provider",
+    ]
+    search_fields = ("url", "hosted_by_website")
+    fields = [
+        "url",
+        "hosted_by",
+        "hosted_by_website",
+        "hosted_by_id",
+        "modified",
+        "green",
+
+    ]
