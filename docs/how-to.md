@@ -27,3 +27,47 @@ pipenv run pytest -x
 3. Run pre-build
     Click on the pre-build option in the workspace overview of the workspace you want to prepare.
 4. After this preparation, open the workspace and it's ready to be used
+
+
+### Fetch files from object storage
+
+We try to treat our deployed applications as ephemeral, and store any meaningful state in a database or in object storage.
+
+Instead of using Amazon Web Services, we used Scaleway's AWS S3 compatible object storage service. See our the object_storage.py for a convenience methods when working with object storage in a provider agnostic fashion.
+
+This project also uses libraries to allow the use the handy `aws` cli tool with Scaleway object storage, to make it relatively easy to syn directories with `sync`, upload and download files with `cp` and so on.
+
+
+*Examples*
+
+_(These all assume you have `pipenv shell` to load the necessarty environment variables into your shell)_:
+
+See the buckets you have access to:
+
+```
+aws s3 ls
+```
+
+See all the files in beneath a given path, with the sizes in a human readable fashion, listing the total size as a summary (careful on large buckets!)
+
+```
+aws s3 ls s3://your-bucket/ --human-readable --summarize --recursive
+```
+
+Upload a file to object storage
+
+```
+aws s3 cp local.file.zip s3://destination-bucket/path/to/remote.file.zip
+```
+
+Download a file from object storage
+
+```
+aws s3 cp s3://your-bucket/path/to/remote.file.zip local.file.zip
+```
+
+Move all the files at one path in one a bucket to a path in a different one
+
+```
+aws s3 sync  s3://origin-bucket/path/to/migrate s3://destination-bucket/new/destination/path/
+```
