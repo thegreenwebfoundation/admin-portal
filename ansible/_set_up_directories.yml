@@ -25,3 +25,9 @@
     src: "{{ project_root }}/shared/data"
     dest: "{{ project_root }}/current/data"
     state: link
+
+- name: Add symlink to .aws.credentials in shared directory
+  ansible.builtin.file:
+    src: "{{ project_root }}/shared/.aws.credentials"
+    dest: "{{ project_root }}/current/.aws.credentials"
+    state: link

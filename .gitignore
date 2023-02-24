@@ -125,6 +125,10 @@ dmypy.json
 
 # Project specific
 .env
+
+# do not track cloud credentials
+.aws.credentials
+
 notes.md
 
 .vscode/
