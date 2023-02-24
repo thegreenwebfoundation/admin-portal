@@ -95,28 +95,33 @@ class CarbonTxtParser:
         parsed_txt = toml.loads(carbon_txt)
         upstream_providers = set()
         org_providers = set()
+        providers = []
 
-        providers = parsed_txt["upstream"]["providers"]
+        upstream = parsed_txt["upstream"]
+
+        if upstream.get("providers"):
+            providers = upstream["providers"]
+
         org_creds = parsed_txt["org"]["credentials"]
 
         # given a parsed carbon.txt object,
         # fetch the upstream providers
         for provider in providers:
+            if provider:
+                prov, upstream_providers = self._create_provider(
+                    provider, upstream_providers
+                )
+                domain = provider["domain"]
 
-            prov, upstream_providers = self._create_provider(
-                provider, upstream_providers
-            )
-            domain = provider["domain"]
+                res = gc_models.GreenDomain.objects.filter(url=domain).first()
+                if not res:
+                    self._create_green_domain_for_provider(domain, prov)
 
-            res = gc_models.GreenDomain.objects.filter(url=domain).first()
-            if not res:
-                self._create_green_domain_for_provider(domain, prov)
-
-            aliases = provider.get("aliases")
-            if aliases:
-                for alias in aliases:
-                    logger.info(f"Adding alias domain {alias} for {domain}")
-                    self._create_green_domain_for_provider(alias, prov)
+                aliases = provider.get("aliases")
+                if aliases:
+                    for alias in aliases:
+                        logger.info(f"Adding alias domain {alias} for {domain}")
+                        self._create_green_domain_for_provider(alias, prov)
 
         # given a parsed carbon.txt object,  fetch the listed organisation
         org_domains = set()
@@ -159,8 +164,15 @@ class CarbonTxtParser:
         parsed_txt = toml.loads(carbon_txt)
         result_data = {"upstream": {"providers": set()}, "org": None}
 
+        upstream = parsed_txt["upstream"]
+        providers = []
+
+        if upstream.get("providers"):
+            providers = upstream["providers"]
+
+
         # find our upstream
-        for provider_representation in parsed_txt["upstream"]["providers"]:
+        for provider_representation in providers:
 
             if isinstance(provider_representation, str):
                 # is it a domain string? if so, look for the matching provider
@@ -175,9 +187,11 @@ class CarbonTxtParser:
 
                 # is it a dict-like object? If so,
                 # find the matching provider for the domain property
+
             if isinstance(provider_representation, dict):
                 # TODO one day we will use a better name than 'url'
                 domain = provider_representation["domain"]
+
                 try:
                     provider = gc_models.GreenDomain.objects.get(
                         url=domain
@@ -187,9 +201,14 @@ class CarbonTxtParser:
                     logger.warn(f"No provider found to match {domain}")
                     pass
 
-        # find our org. If information already exists, fetch it, so there's only one canonical carbon.txt needed if there are multiple domains referring to the same
-        # organisation
+        # find our org. If information already exists, fetch it, so there's only one
+        # canonical carbon.txt needed if there are multiple domains referring to the
+        # same organisation
         try:
+            # TODO FIX ME
+            # import ipdb
+
+            # ipdb.set_trace()
             provider = gc_models.GreenDomain.objects.get(
                 url=checked_domain
             ).hosting_provider
@@ -197,7 +216,7 @@ class CarbonTxtParser:
             result_data["org"] = provider
             logger.info(provider)
         except django.core.exceptions.ObjectDoesNotExist:
-            logger.warn(f"No provider found to match {domain}")
+            logger.warn(f"No provider found to match {checked_domain}")
             pass
 
         logger.info(result_data['org'])
