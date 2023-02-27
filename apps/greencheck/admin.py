@@ -333,7 +333,7 @@ class GreenASNAdmin(admin.ModelAdmin):
         "asn",
         "hostingprovider",
     ]
-    search_fields = ["hostingprovider"]
+    search_fields = ["asn", "hostingprovider__name"]
     fields = [
         "active",
         "asn",
@@ -367,7 +367,11 @@ class GreenIPAdmin(admin.ModelAdmin):
         "ip_end",
         "hostingprovider",
     ]
-    search_fields = ["hostingprovider"]
+    search_fields = [
+        "hostingprovider__name",
+        "ip_start",
+        "ip_end",
+    ]
     fields = [
         "active",
         "ip_start",
