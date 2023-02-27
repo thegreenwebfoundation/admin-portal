@@ -40,7 +40,7 @@
 
         <section class="my-10">
           <h3>Locations</h3>
-          {% for location_form in preview_forms.1.initial_forms %}
+          {% for location_form in preview_forms.1.locations.initial_forms %}
             {% include "provider_registration/partials/_preview.html" with form=location_form %}
           {% endfor %}
         </section>
