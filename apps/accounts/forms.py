@@ -525,6 +525,7 @@ class LocationExtraForm(forms.Form):
             "I have more than ten locations to add. Please contact me separately "
             "to arrange a bulk import of this information."
         ),
+        initial=False,
         required=False
     )
 
