@@ -378,6 +378,13 @@ class GreencheckASN(mu_models.TimeStampedModel):
         ac_models.Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
 
+    def __str__(self):
+        active_state = "Inactive"
+        if self.active:
+            active_state = "Active"
+
+        return f"{self.hostingprovider} - {self.asn} - {active_state}"
+
     class Meta:
         db_table = "greencheck_as"
         indexes = [
@@ -522,7 +529,7 @@ class GreenDomain(models.Model):
             logger.warn(
                 (
                     f"Couldn't find a hosting provider for url: {self.url}, "
-                    f"and hosted_by_id: {hosted_by_id}."
+                    f"and hosted_by_id: {self.hosted_by_id}."
                 )
             )
             logger.warn(err)
