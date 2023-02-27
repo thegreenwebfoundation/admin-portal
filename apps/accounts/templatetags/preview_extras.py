@@ -1,5 +1,7 @@
 from django.template.defaultfilters import yesno
 from django import template
+from apps.accounts.models import Tag
+
 
 register = template.Library()
 
@@ -17,3 +19,15 @@ def conditional_yesno(value, arg=None):
     if str(value).lower() in "true,false,none,on,off":
         return yesno(value, arg)
     return value
+
+
+@register.filter
+def render_as_services(value):
+    """
+    Attempts to map slugs in to service names
+    based on a database query.
+    """
+    tags = Tag.objects.filter(slug__in=value)
+    if tags:
+        return ", ".join([tag.name for tag in tags])
+    return None
