@@ -182,8 +182,6 @@ class StatusAsFilter(admin.SimpleListFilter):
         return queryset.filter(status=self.value())
 
 
-
-
 @admin.register(GreencheckIpApprove, site=greenweb_admin)
 class GreencheckIpApproveAdmin(admin.ModelAdmin):
     list_display = [
@@ -327,7 +325,8 @@ class GreenDomainAdmin(admin.ModelAdmin):
 class GreenASNAdmin(admin.ModelAdmin):
     list_filter = [
         "active",
-        "hostingprovider"
+        "hostingprovider__archived",
+        "hostingprovider",
     ]
     list_display = [
         "active",
@@ -358,7 +357,9 @@ class GreenASNAdmin(admin.ModelAdmin):
 class GreenIPAdmin(admin.ModelAdmin):
     list_filter = [
         "active",
-        "hostingprovider"
+        "hostingprovider__archived",
+        "hostingprovider",
+
     ]
     list_display = [
         "active",
