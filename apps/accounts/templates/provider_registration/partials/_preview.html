@@ -1,10 +1,12 @@
 <div class="bg-neutral-50 rounded-xl my-6 p-4">
-
 	{% for field in form %}
 	<div class="mb-4 last-of-type:mb-0">
 		<p class="font-bold m-0">{{ field.label }}</p>
-		<p class="m-0">{{ field.value }}</p>
+		{% if field.value|lower in "true,false,none,on,off" %}
+			<p class="m-0">{{ field.value|yesno:"Yes,No,-" }}</p>
+		{% else %}
+			<p class="m-0">{{ field.value }}</p>
+		{% endif %}
 	</div>
 	{% endfor %}
-
 </div>
