@@ -43,6 +43,7 @@
           {% for location_form in preview_forms.1.locations.initial_forms %}
             {% include "provider_registration/partials/_preview.html" with form=location_form %}
           {% endfor %}
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.1.extra %}
         </section>
 
         <section class="my-10">
