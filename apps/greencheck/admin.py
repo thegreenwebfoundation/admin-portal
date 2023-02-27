@@ -182,6 +182,8 @@ class StatusAsFilter(admin.SimpleListFilter):
         return queryset.filter(status=self.value())
 
 
+
+
 @admin.register(GreencheckIpApprove, site=greenweb_admin)
 class GreencheckIpApproveAdmin(admin.ModelAdmin):
     list_display = [
@@ -281,8 +283,15 @@ class GreencheckASNApprove(admin.ModelAdmin):
     readonly_fields = ["link"]
 
     def get_queryset(self, request):
+
         qs = super().get_queryset(request)
         qs = qs.select_related("hostingprovider")
+
+        # only show a normal user's own requests
+        if not request.user.is_staff:
+            res = qs.filter(hostingprovider=request.user.hostingprovider)
+            return res
+
         return qs
 
     @mark_safe
@@ -313,3 +322,65 @@ class GreenDomainAdmin(admin.ModelAdmin):
         "green",
 
     ]
+
+@admin.register(models.GreencheckASN, site=greenweb_admin)
+class GreenASNAdmin(admin.ModelAdmin):
+    list_filter = [
+        "active",
+        "hostingprovider"
+    ]
+    list_display = [
+        "active",
+        "asn",
+        "hostingprovider",
+    ]
+    search_fields = ["hostingprovider"]
+    fields = [
+        "active",
+        "asn",
+        "hostingprovider",
+    ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related("hostingprovider")
+
+        # only show a normal user's own requests
+        if not request.user.is_staff:
+            res = qs.filter(hostingprovider=request.user.hostingprovider)
+            return res
+
+        return qs
+
+
+
+@admin.register(models.GreencheckIp, site=greenweb_admin)
+class GreenIPAdmin(admin.ModelAdmin):
+    list_filter = [
+        "active",
+        "hostingprovider"
+    ]
+    list_display = [
+        "active",
+        "ip_start",
+        "ip_end",
+        "hostingprovider",
+    ]
+    search_fields = ["hostingprovider"]
+    fields = [
+        "active",
+        "ip_start",
+        "ip_end",
+        "hostingprovider",
+    ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related("hostingprovider")
+
+        # only show a normal user's own requests
+        if not request.user.is_staff:
+            res = qs.filter(hostingprovider=request.user.hostingprovider)
+            return res
+
+        return qs
