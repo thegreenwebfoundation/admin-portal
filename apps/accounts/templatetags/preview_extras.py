@@ -15,8 +15,11 @@ def conditional_yesno(value, arg=None):
     # catch empty string case first
     if value == "":
         value = None
+    # for some reason yesno does not map "off" to False
+    if str(value).lower() == "off":
+        value = False
     # then see if value should be filtered with "yesno"
-    if str(value).lower() in "true,false,none,on,off":
+    if str(value).lower() in "true,false,none,on":
         return yesno(value, arg)
     return value
 
