@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block pretitle %}
+<h1>Assign the following domains to a new provider</h1>
+
+{% endblock %}
+
+
+{% block content %}
+
+<p>Submitting this form will assign the following domains:</p>
+
+<table style="margin-bottom:2rem;">
+<th>Domain</th><th>Currently allocated to</th><th>Last updated</th>
+
+{% for dom in domains %}
+    <tr>
+        <td>{{ dom.url }} </td>
+        <td>{{ dom.hosting_provider }} </td>
+        <td>{{ dom.modified }} </td>
+    </tr>
+
+{% endfor %}
+</table>
+
+<p>To the provider below:</p>
+
+<form action="{% url 'greenweb_admin:greencheck_greendomain_allocate_to_provider' %}" method="post">
+    {% csrf_token %}
+    {{ form.domains.as_hidden }}
+    {{ form.provider.as_widget }}
+    <hr style="margin-top:1rem;" />
+    <p style="margin-top:1rem;">
+    <input type="submit" value="Submit" style="margin-top: 0px; padding: 6px 15px">
+    <a style="margin-left:1rem;margin-right:1rem;" href="{% url 'greenweb_admin:greencheck_greendomain_changelist' %}">Back to green domain listings</a>
+    </p>
+</form>
+
+
+
+{% block footer %}
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+
+{{ form.media }}
+
+{% endblock %}
+
+
+{% endblock content %}

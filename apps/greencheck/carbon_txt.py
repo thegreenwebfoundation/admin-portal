@@ -205,10 +205,6 @@ class CarbonTxtParser:
         # canonical carbon.txt needed if there are multiple domains referring to the
         # same organisation
         try:
-            # TODO FIX ME
-            # import ipdb
-
-            # ipdb.set_trace()
             provider = gc_models.GreenDomain.objects.get(
                 url=checked_domain
             ).hosting_provider

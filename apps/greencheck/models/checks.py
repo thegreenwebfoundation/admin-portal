@@ -551,6 +551,17 @@ class GreenDomain(models.Model):
 
         return GreenDomain.objects.filter(url=domain).first()
 
+    # Mutators
+    def allocate_to_provider(self, provider: ac_models.Hostingprovider):
+        """
+        Accept a provider and update the green domain to show as hosted by
+        it in future checks.
+        """
+        self.hosted_by_id = provider.id
+        self.hosted_by = provider.name
+        self.hosted_by_website = provider.website
+        self.save()
+
     class Meta:
         db_table = "greendomain"
 

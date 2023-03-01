@@ -1,15 +1,20 @@
 from django.contrib import admin, messages
+
 from django.utils import translation
 from django.utils.safestring import mark_safe
+from django.urls import path, reverse
+from django.shortcuts import redirect, render
+
 
 from apps.accounts.admin_site import greenweb_admin
 from apps.accounts.models import Hostingprovider
-from apps.accounts.utils import reverse_admin_name
+from apps.accounts.utils import reverse_admin_name, get_admin_name
+
 
 from . import forms, models
 from .choices import StatusApproval
-from .forms import GreencheckIpApprovalForm, GreencheckIpForm
-from .models import GreencheckIp, GreencheckIpApprove
+from .forms import GreencheckIpApprovalForm, GreencheckIpForm, GreenDomainAllocationForm
+from .models import GreencheckIp, GreencheckIpApprove, GreenDomain
 
 
 class ApprovalFieldMixin:
@@ -206,7 +211,6 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
         # only staff users should be able to to bulk updates
 
         if request.user and request.user.is_staff:
-
             return default_actions
         else:
             del default_actions["approve_selected"]
@@ -246,7 +250,6 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
         return approved_ips
 
     def get_queryset(self, request):
-
         qs = super().get_queryset(request)
         qs = qs.select_related("hostingprovider")
 
@@ -281,7 +284,6 @@ class GreencheckASNApprove(admin.ModelAdmin):
     readonly_fields = ["link"]
 
     def get_queryset(self, request):
-
         qs = super().get_queryset(request)
         qs = qs.select_related("hostingprovider")
 
@@ -301,6 +303,7 @@ class GreencheckASNApprove(admin.ModelAdmin):
 
     link.short_description = "Link to Hostingprovider"
 
+
 @admin.register(models.GreenDomain, site=greenweb_admin)
 class GreenDomainAdmin(admin.ModelAdmin):
     list_display = [
@@ -318,8 +321,114 @@ class GreenDomainAdmin(admin.ModelAdmin):
         "hosted_by_id",
         "modified",
         "green",
-
     ]
+
+    actions = ["start_allocating_to_provider"]
+
+    def get_actions(self, request):
+        """
+        Return a list of the bulk actions the user should be able to do.
+        """
+        default_actions = super().get_actions(request)
+
+        # only staff users should be able to to bulk updates
+        if request.user and request.user.is_staff:
+            return default_actions
+        else:
+            del default_actions["allocate_to_provider"]
+            return default_actions
+
+    @admin.action(description="Allocate selected domains to new provider")
+    def start_allocating_to_provider(self, request, queryset):
+        """
+        Accept a set of Green IP approval requests to
+        process, and approve them.
+        """
+        domains = queryset.values_list("pk", flat=True)
+        # allow for a form submission
+        new_path = reverse("greenweb_admin:greencheck_greendomain_allocate_to_provider")
+
+        from django.http import QueryDict
+
+        qd = QueryDict(mutable=True)
+        qd.setlist("domains", [dom for dom in domains])
+        params = qd.urlencode()
+
+        return redirect(f"{new_path}?{params}")
+
+    def allocate_to_provider(self, request):
+        """
+        Accept a list of ids for green domains, and allocate
+        them to the
+        """
+
+        ctx = {}
+        form = None
+
+        if request.POST:
+            domain_ids = request.POST.getlist("domains")
+            provider_id = request.POST.get("provider")
+
+            form_data = {
+                "domains": domain_ids,
+                "provider": provider_id,
+            }
+            form = GreenDomainAllocationForm(form_data)
+
+            if form.is_valid():
+                form.save()
+                domains = [dom.url for dom in form.cleaned_data["domains"]]
+                provider = form.cleaned_data["provider"]
+
+                self.message_user(
+                    request,
+                    translation.gettext(
+                        (
+                            "OK. The following domains have been allocated to "
+                            f"provider: {provider} - {', '.join(domains)}"
+                        ),
+                    ),
+                    messages.SUCCESS,
+                )
+
+                return redirect("greenweb_admin:greencheck_greendomain_changelist")
+
+        domain_ids = request.GET.getlist("domains")
+        if not domain_ids:
+            self.message_user(
+                request,
+                translation.gettext(
+                    (
+                        "There were no domains given to allocate to a provider. "
+                        "Please select at least one domain to re-allocate."
+                    ),
+                ),
+                messages.WARNING,
+            )
+            return redirect("greenweb_admin:greencheck_greendomain_changelist")
+
+        domains = GreenDomain.objects.filter(pk__in=domain_ids)
+        ctx["domains"] = domains
+        ctx["form"] = GreenDomainAllocationForm({"domains": domain_ids})
+
+        return render(request, "allocate_domains_to_provider.html", ctx)
+
+    def get_urls(self):
+        """
+        Add the needed urls for working wirth Green Domains
+        """
+
+        urls = super().get_urls()
+
+        added = [
+            path(
+                "allocate_to_provider",
+                self.allocate_to_provider,
+                name=get_admin_name(self.model, "allocate_to_provider"),
+            )
+        ]
+        return added + urls
+
 
 @admin.register(models.GreencheckASN, site=greenweb_admin)
 class GreenASNAdmin(admin.ModelAdmin):
@@ -352,14 +461,12 @@ class GreenASNAdmin(admin.ModelAdmin):
         return qs
 
 
-
 @admin.register(models.GreencheckIp, site=greenweb_admin)
 class GreenIPAdmin(admin.ModelAdmin):
     list_filter = [
         "active",
         "hostingprovider__archived",
         "hostingprovider",
-
     ]
     list_display = [
         "active",
