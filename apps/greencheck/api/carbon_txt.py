@@ -3,7 +3,7 @@ import logging
 from rest_framework import permissions, views
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-
+from rest_framework.exceptions import APIException
 from ..serializers import CarbonTxtSerializer
 from ..carbon_txt import CarbonTxtParser
 
@@ -26,8 +26,13 @@ class CarbonTxtAPI(views.APIView):
         a given carbon.txt file
         """
 
-        carbon_txt_url = request.data["url"]
-        carbon_txt_content = request.data["carbon_txt"]
+        carbon_txt_url = request.data.get("url")
+        carbon_txt_content = request.data.get("carbon_txt")
+
+        if not carbon_txt_url:
+            raise APIException(
+                "You need to at least provide a location to look up a carbon.txt file"
+            )
 
         if carbon_txt_content:
             parsed = parser.parse(carbon_txt_url, carbon_txt_content)
@@ -37,3 +42,7 @@ class CarbonTxtAPI(views.APIView):
         parsed = parser.parse_from_url(carbon_txt_url)
         serialized = CarbonTxtSerializer(parsed)
         return Response(serialized.data)
+
+    def post(self, request):
+        """ """
+        return self.put(request)
