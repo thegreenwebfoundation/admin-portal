@@ -1,17 +1,16 @@
 import logging
 
+from django.conf import settings
 from django.contrib.gis.geoip2 import GeoIP2
 from django.contrib.gis.geoip2.base import GeoIP2Exception
+from drf_yasg.utils import swagger_auto_schema
+from geoip2 import errors
+from rest_framework import permissions, views
+from rest_framework.response import Response
 
 from apps.greencheck.models.checks import CO2Intensity
-from geoip2 import errors
 
-from rest_framework import views
-from rest_framework import permissions
-from rest_framework.response import Response
 from ..serializers import CO2IntensitySerializer
-
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,14 +19,14 @@ geolookup = None
 
 try:
     geolookup = GeoIP2(settings.GEOIP_PATH)
-except GeoIP2Exception as e:
+except GeoIP2Exception:
     logger.warning(
         "No valid path found for the GeoIp binary database. "
         "We will not be able to serve ip-to-co2-intensity lookups."
     )
 
 
-from drf_yasg.utils import swagger_auto_schema
+from .carbon_txt import CarbonTxtAPI  # noqa
 
 
 class IPCO2Intensity(views.APIView):

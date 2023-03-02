@@ -7,7 +7,6 @@ from apps.greencheck.models.checks import CO2Intensity
 
 from .models import GreencheckIp, GreenDomain, GreencheckASN
 
-from taggit import models as tag_models
 from taggit_serializer import serializers as tag_serializer
 
 
@@ -63,7 +62,6 @@ class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
 
 
 class GreenIPRangeSerializer(serializers.ModelSerializer):
-
     ip_start = IPDecimalField(max_digits=39, decimal_places=0)
     ip_end = IPDecimalField(max_digits=39, decimal_places=0)
     hostingprovider = UserFilteredPrimaryKeyRelatedField(
@@ -125,7 +123,6 @@ class GreenDomainBatchSerializer(serializers.Serializer):
 
 class HostingDocumentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
-
         return {
             "id": instance.id,
             "title": instance.title,
@@ -218,3 +215,8 @@ class CO2IntensitySerializer(serializers.ModelSerializer):
             "year",
         ]
 
+
+class CarbonTxtSerializer(serializers.Serializer):
+    org = HostingProviderSerializer()
+    upstream = HostingProviderSerializer(many=True)
+    not_registered = serializers.DictField(required=False)

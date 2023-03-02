@@ -2,8 +2,7 @@ import ipaddress
 import logging
 
 import pytest
-
-
+import pathlib
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 from rest_framework import serializers
@@ -14,6 +13,7 @@ from .. import legacy_workers
 from .. import models as gc_models
 from .. import serializers as gc_serializers
 from . import greencheck_sitecheck
+from .. import carbon_txt
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +29,20 @@ SAMPLE_IPS = [
 
 
 @pytest.fixture
-def new_hosting_provider():
+def carbon_txt_string():
+    pth = pathlib.Path(__file__)
 
+    carbon_txt_path = pth.parent / "carbon-txt-samples" / "carbon-txt-test.toml"
+
+    carbon_txt_string = None
+    with open(carbon_txt_path) as carb_file:
+        carbon_txt_string = carb_file.read()
+
+    return carbon_txt_string
+
+
+@pytest.fixture
+def new_hosting_provider():
     return ac_models.Hostingprovider(
         archived=False,
         country="NL",
@@ -54,7 +66,6 @@ class TestGreenIpRangeSerialiser:
     def test_deserialising_green_ip_range(
         self, hosting_provider, ip_addy_start, ip_addy_end, settings
     ):
-
         # uncomment this to check ip ranges we're generating and testing
         # logger.info(f"start_ip:  {ip_addy_start}, end_ip: {ip_addy_end}")
 
@@ -132,7 +143,10 @@ class TestGreenIpRangeSerialiser:
         "ip_addy_start,ip_addy_end",
         [
             # ipv4
-            ("240.0.0.245", "240.0.0.1",),
+            (
+                "240.0.0.245",
+                "240.0.0.1",
+            ),
             # ipv6
             (
                 "3e5c:a68a:9dbe:c49a:6884:943f:7c71:27dd",
@@ -170,7 +184,9 @@ class TestGreenASNSerialiser:
         """
 
         gc_asn = gc_models.GreencheckASN(
-            active=True, asn=12345, hostingprovider=hosting_provider,
+            active=True,
+            asn=12345,
+            hostingprovider=hosting_provider,
         )
         gc_asn_serialized = gc_serializers.GreenASNSerializer(gc_asn)
         data = gc_asn_serialized.data
@@ -280,3 +296,50 @@ class TestGreenDomainSerialiser:
         assert docs[0]["link"] == supporting_doc.url
         assert docs[0]["title"] == supporting_doc.title
 
+
+class TestCarbonTxtSerializer:
+    def test_serialising_carbon_txt(
+        self,
+        db,
+        carbon_txt_string,
+        hosting_provider_factory,
+        supporting_evidence_factory,
+        green_domain_factory,
+    ):
+        """Check our seriliasation works"""
+        provider = hosting_provider_factory.create(
+            name="www.hillbob.de", website="https://www.hillbob.de"
+        )
+        supporting_evidence_factory.create(hostingprovider=provider)
+
+        # create our upstream providers
+        systen_upstream = hosting_provider_factory.create(
+            name="sys-ten.com", website="https://sys-ten.com"
+        )
+        supporting_evidence_factory.create(
+            hostingprovider=systen_upstream,
+            url="https://www.sys-ten.de/en/about-us/our-data-centers/",
+        )
+
+        cdn_upstream = hosting_provider_factory.create(
+            name="cdn.com", website="https://cdn.com"
+        )
+        supporting_evidence_factory.create(
+            hostingprovider=cdn_upstream,
+            url="https://cdn.com/company/corporate-responsibility/sustainability",
+        )
+
+        # create our domains we use to look up each provider
+        green_domain_factory.create(hosted_by=provider, url="www.hillbob.de")
+        green_domain_factory.create(hosted_by=systen_upstream, url="sys-ten.com")
+        green_domain_factory.create(hosted_by=cdn_upstream, url="cdn.com")
+
+        psr = carbon_txt.CarbonTxtParser()
+        result = psr.parse("www.hillbob.de", carbon_txt_string)
+
+        res = gc_serializers.CarbonTxtSerializer(result)
+        for key in ["org", "upstream", "not_registered"]:
+            assert key in res.data.keys()
+
+        assert len(res.data["upstream"]) == 2
+        assert len(res.data["not_registered"]) == 2

@@ -7,7 +7,6 @@ from urllib import parse
 
 from dateutil import relativedelta
 import typing
-import django
 from django.utils import timezone
 from ..accounts import models as ac_models
 from . import models as gc_models
@@ -204,6 +203,18 @@ class CarbonTxtParser:
 
         return results
 
+    def parse_from_url(self, url: str):
+        """
+        Try to fetch a carbon.txt file at a given url, and
+        if successful, returned the parsed view after carrying
+        out lookups
+        """
+        res = requests.get(url)
+        domain = parse.urlparse(url).netloc
+        carbon_txt_string = res.content.decode("utf-8")
+
+        return self.parse(domain, carbon_txt_string)
+
     def parse_and_import(self, domain: str = None, carbon_txt: str = None) -> Dict:
         """
         Accept a domain representing where the carbon.txt file
@@ -273,72 +284,6 @@ class CarbonTxtParser:
             "upstream": {"providers": [*upstream_providers]},
             "org": {"providers": [*org_providers]},
         }
-
-    def parse_and_preview(
-        self, checked_domain: str = None, carbon_txt: str = None
-    ) -> Dict:
-        """
-        Parses a carbon.txt string and returns a datastructure of the objects that
-        the system was able to find, and what the new additions would look like.
-
-        Used to show a preview for an administrator to approve
-        before running an import.
-
-        """
-        parsed_txt = toml.loads(carbon_txt)
-        result_data = {"upstream": {"providers": set()}, "org": None}
-
-        upstream = parsed_txt["upstream"]
-        providers = []
-
-        if upstream.get("providers"):
-            providers = upstream["providers"]
-
-        # find our upstream
-        for provider_representation in providers:
-            if isinstance(provider_representation, str):
-                # is it a domain string? if so, look for the matching provider
-                try:
-                    provider = gc_models.GreenDomain.objects.get(
-                        url=provider_representation
-                    ).hosting_provider
-                    result_data["upstream"]["providers"].add(provider)
-                except django.core.exceptions.ObjectDoesNotExist:
-                    logger.warn(f"No provider found to match {provider_representation}")
-                    pass
-
-                # is it a dict-like object? If so,
-                # find the matching provider for the domain property
-
-            if isinstance(provider_representation, dict):
-                # TODO one day we will use a better name than 'url'
-                domain = provider_representation["domain"]
-
-                try:
-                    provider = gc_models.GreenDomain.objects.get(
-                        url=domain
-                    ).hosting_provider
-                    result_data["upstream"]["providers"].add(provider)
-                except django.core.exceptions.ObjectDoesNotExist:
-                    logger.warn(f"No provider found to match {domain}")
-                    pass
-
-        # find our org. If information already exists, fetch it, so there's only one
-        # canonical carbon.txt needed if there are multiple domains referring to the
-        # same organisation
-        try:
-            provider = gc_models.GreenDomain.objects.get(
-                url=checked_domain
-            ).hosting_provider
-
-            result_data["org"] = provider
-            logger.info(provider)
-        except django.core.exceptions.ObjectDoesNotExist:
-            logger.warn(f"No provider found to match {checked_domain}")
-            pass
-
-        logger.info(result_data["org"])
-        return result_data
 
     def import_from_url(self, url: str):
         """

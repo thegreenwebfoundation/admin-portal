@@ -110,6 +110,11 @@ urlpatterns += [
         api_views.IPCO2Intensity.as_view(),
         name="ip-to-co2intensity",
     ),
+    path(
+        "api/v3/carbontxt",
+        api_views.CarbonTxtAPI.as_view(),
+        name="carbon-txt-parse",
+    ),
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
     path(
         "api-docs/",
