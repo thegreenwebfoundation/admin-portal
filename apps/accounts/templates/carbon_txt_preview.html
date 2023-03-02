@@ -56,7 +56,7 @@
   {% if preview.upstream %}
     <h2>Upstream providers</h2>
 
-    {% if preview.upstream.providers %}
+    {% if preview.upstream %}
       <p>
         We were able to find the following upstream providers in the green web database
       </p>
@@ -67,7 +67,7 @@
     {% endif %}
 
     <ul>
-    {% for provider in preview.upstream.providers %}
+    {% for provider in preview.upstream %}
 
       <li>
         <h3>

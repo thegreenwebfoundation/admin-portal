@@ -6,7 +6,7 @@ import requests
 from urllib import parse
 
 from dateutil import relativedelta
-
+import typing
 import django
 from django.utils import timezone
 from ..accounts import models as ac_models
@@ -79,6 +79,130 @@ class CarbonTxtParser:
         )
         # mark it as green using our label
         provider.staff_labels.add(ac_models.GREEN_VIA_CARBON_TXT)
+
+    def _compare_evidence(
+        self, found_provider: Hostingprovider, provider_dicts: typing.List[typing.Dict]
+    ):
+        """
+        Check if the evidence in the provided provider_dict has already been
+        added to the given provider. If not, return the evidence.
+
+
+        """
+        evidence = found_provider.supporting_documents.all()
+        evidence_links = [item.url for item in evidence]
+        new_evidence = []
+
+        # this is checking the link, but not the type as well, as
+        # not every piece of uploaded evidence has a type allocated
+        for prov in provider_dicts:
+            if prov["url"] not in evidence_links:
+                new_evidence.append(prov)
+
+        return new_evidence
+
+    def _fetch_provider_from_dict(self, provider: dict) -> Dict:
+        try:
+            found_domain = gc_models.GreenDomain.objects.get(url=provider["domain"])
+            return found_domain.hosting_provider
+        except gc_models.GreenDomain.DoesNotExist:
+            return None
+
+    def _fetch_provider_from_domain_name(self, domain: str) -> Dict:
+        try:
+            found_domain = gc_models.GreenDomain.objects.get(url=domain)
+            return found_domain.hosting_provider
+        except gc_models.GreenDomain.DoesNotExist:
+            return None
+
+    def _fetch_provider(
+        self,
+        provider: typing.Union[typing.Dict, str],
+        # domain: typing.Union[str, None] = None,
+    ):
+        """
+        Accept either a string or a dict representing a provider, plus
+        an optional domain, then try to find the corresponding provider
+        in our database.
+        """
+        found_provider = None
+
+        # we have our basic string version like "some-provider.com"
+        if isinstance(provider, str):
+            found_provider = self._fetch_provider_from_domain_name(provider)
+
+        # we have our dict containing some sustainability credentials
+        if isinstance(provider, dict):
+            found_provider = self._fetch_provider_from_dict(provider)
+
+        # Return the provider with all the extra evidence we can find
+        return found_provider
+
+    def parse(self, domain: str, carbon_txt: str) -> Dict:
+        """
+        Accept a domain and carbon_txt file, and return a data structure
+        representing what information we have about the providers, related to
+        their sustainability claims.
+        For providers that we don't recognise, we
+        """
+        parsed_txt = toml.loads(carbon_txt)
+
+        unregistered_evidence = []
+        results = {"org": None, "upstream": [], "not_registered": {}}
+
+        org = parsed_txt.get("org")
+        if org:
+            credentials = org.get("credentials")
+            primary_creds = credentials[0]
+            org_provider = self._fetch_provider(primary_creds)
+
+            # filter for matching domains in case a carbon.txt is being used to
+            # hold credentials for multiple similiar domains
+            matching_domain_credentials = [
+                cred
+                for cred in credentials
+                if cred["domain"] == primary_creds["domain"]
+            ]
+            # check for any new evidence for this domain
+            new_org_evidence = self._compare_evidence(
+                org_provider, matching_domain_credentials
+            )
+
+            # if the evidence
+            if new_org_evidence:
+                unregistered_evidence.extend(new_org_evidence)
+
+            # either list as known provider, or add to the list
+            # of new entities we do not have in our system yet
+            if org_provider:
+                results["org"] = org_provider
+            else:
+                results["not_registered"]["org"] = org
+
+        # now do the same for upstream providers
+        upstream = parsed_txt.get("upstream")
+        if upstream:
+            upstream_providers = upstream.get("providers")
+            unregistered_providers = []
+
+            for provider in upstream_providers:
+                found_provider = self._fetch_provider(provider)
+                if found_provider:
+                    new_evidence = self._compare_evidence(found_provider, [provider])
+
+                    if new_evidence:
+                        unregistered_evidence.extend(new_evidence)
+
+                    results["upstream"].append(found_provider)
+                else:
+                    unregistered_providers.append(provider)
+
+            if unregistered_evidence:
+                results["not_registered"]["evidence"] = unregistered_evidence
+
+            results["not_registered"]["providers"] = unregistered_providers
+
+        return results
 
     def parse_and_import(self, domain: str = None, carbon_txt: str = None) -> Dict:
         """
@@ -170,10 +294,8 @@ class CarbonTxtParser:
         if upstream.get("providers"):
             providers = upstream["providers"]
 
-
         # find our upstream
         for provider_representation in providers:
-
             if isinstance(provider_representation, str):
                 # is it a domain string? if so, look for the matching provider
                 try:
@@ -215,7 +337,7 @@ class CarbonTxtParser:
             logger.warn(f"No provider found to match {checked_domain}")
             pass
 
-        logger.info(result_data['org'])
+        logger.info(result_data["org"])
         return result_data
 
     def import_from_url(self, url: str):

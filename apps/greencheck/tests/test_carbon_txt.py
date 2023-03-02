@@ -15,7 +15,7 @@ from .. import workers
 def carbon_txt_string():
     pth = pathlib.Path(__file__)
 
-    carbon_txt_path = pth.parent / "carbon-txt-test.toml"
+    carbon_txt_path = pth.parent / "carbon-txt-samples" / "carbon-txt-test.toml"
 
     carbon_txt_string = None
     with open(carbon_txt_path) as carb_file:
@@ -38,7 +38,7 @@ def shorter_carbon_txt_string():
         credentials = [
             { doctype = 'sustainability-page', url = 'https://www.hillbob.de/klimaneutral'}
         ]
-    """
+    """  # noqa
     return short_string
 
 
@@ -72,6 +72,176 @@ class TestCarbonTxtParser:
             # is there at least one piece of supporting evidence
             # from the carbon txt file?
             assert prov.supporting_documents.all()
+
+    def test_parse_basic_provider_without_import(
+        self,
+        db,
+        carbon_txt_string,
+        hosting_provider_factory,
+        supporting_evidence_factory,
+        green_domain_factory,
+    ):
+        # create our main org hosting the carbon.txt file
+        provider = hosting_provider_factory.create(
+            name="www.hillbob.de", website="https://www.hillbob.de"
+        )
+        sustainablity_page = supporting_evidence_factory.create(
+            hostingprovider=provider
+        )
+
+        # create our upstream providers
+        systen_upstream = hosting_provider_factory.create(
+            name="sys-ten.com", website="https://sys-ten.com"
+        )
+        systen_sustainability_page = supporting_evidence_factory.create(
+            hostingprovider=systen_upstream,
+            url="https://www.sys-ten.de/en/about-us/our-data-centers/",
+        )
+
+        cdn_upstream = hosting_provider_factory.create(
+            name="cdn.com", website="https://cdn.com"
+        )
+        cdn_sustainability_page = supporting_evidence_factory.create(
+            hostingprovider=cdn_upstream,
+            url="https://cdn.com/company/corporate-responsibility/sustainability",
+        )
+
+        # create our domains we use to look up each provider
+        green_domain_factory.create(hosted_by=provider, url="www.hillbob.de")
+        green_domain_factory.create(hosted_by=systen_upstream, url="sys-ten.com")
+        green_domain_factory.create(hosted_by=cdn_upstream, url="cdn.com")
+
+        psr = carbon_txt.CarbonTxtParser()
+        result = psr.parse("www.hillbob.de", carbon_txt_string)
+
+        org = result.get("org")
+        assert org
+        assert org.website == provider.website
+        assert org.supporting_documents.first().url == sustainablity_page.url
+
+        upstream_providers = result.get("upstream")
+
+        assert upstream_providers
+
+        # is our cdn provider upstream?
+        parsed_cdn = [
+            upstream for upstream in upstream_providers if upstream.name == "cdn.com"
+        ][0]
+        # is our hosting provider upstream?
+        parsed_systen = [
+            upstream
+            for upstream in upstream_providers
+            if upstream.name == "sys-ten.com"
+        ][0]
+
+        assert parsed_cdn.website == cdn_upstream.website
+        assert (
+            parsed_cdn.supporting_documents.first().url == cdn_sustainability_page.url
+        )
+
+        assert systen_upstream.website == parsed_systen.website
+        assert (
+            systen_upstream.supporting_documents.first().url
+            == systen_sustainability_page.url
+        )
+
+    def test_parse_basic_provider_highlights_new_providers(
+        self,
+        db,
+        carbon_txt_string,
+        hosting_provider_factory,
+        supporting_evidence_factory,
+        green_domain_factory,
+    ):
+        """
+        Where a provider isn't in the database we highlight it as a candidate for
+        adding to the system
+        """
+        # create our main org hosting the carbon.txt file
+        provider = hosting_provider_factory.create(
+            name="www.hillbob.de", website="https://www.hillbob.de"
+        )
+
+        # create our upstream providers
+        cdn_upstream = hosting_provider_factory.create(
+            name="cdn.com", website="https://cdn.com"
+        )
+        supporting_evidence_factory.create(hostingprovider=cdn_upstream)
+
+        # create our domains we use to look up each provider
+        green_domain_factory.create(hosted_by=provider, url="www.hillbob.de")
+        green_domain_factory.create(hosted_by=cdn_upstream, url="cdn.com")
+
+        psr = carbon_txt.CarbonTxtParser()
+        result = psr.parse("www.hillbob.de", carbon_txt_string)
+
+        # is our system provider in our 'not registered' list?
+
+        assert "not_registered" in result.keys()
+        assert result["not_registered"]["providers"]
+        unregistered_providers = result["not_registered"]["providers"]
+
+        # is first member of providers in our 'not registered' list the
+        # provider as listed in the carbon.txt file?
+        assert len(unregistered_providers) == 1
+        parsed_sys_ten, *rest = unregistered_providers
+        assert parsed_sys_ten["domain"] == "sys-ten.com"
+        assert (
+            parsed_sys_ten["url"]
+            == "https://www.sys-ten.de/en/about-us/our-data-centers/"
+        )
+        assert parsed_sys_ten["doctype"] == "sustainability-page"
+
+    def test_parse_basic_provider_highlight_new_evidence(
+        self,
+        db,
+        carbon_txt_string,
+        hosting_provider_factory,
+        supporting_evidence_factory,
+        green_domain_factory,
+    ):
+        """
+        Where there is supporting evidence we haven't seen before,
+        we add it to the 'not_registered' part of the parse result
+
+        """
+        # Given: one provider to match our main provider in the carbon.txt file
+        # with matching domain
+        provider = hosting_provider_factory.create(
+            name="www.hillbob.de", website="https://www.hillbob.de"
+        )
+        green_domain_factory.create(hosted_by=provider, url="www.hillbob.de")
+
+        # Given: one upstream provider with a green domain to match
+        # against in the carbon.txt file, but no pre-exisring evidence
+        cdn_upstream = hosting_provider_factory.create(
+            name="cdn.com", website="https://cdn.com"
+        )
+        green_domain_factory.create(hosted_by=cdn_upstream, url="cdn.com")
+
+        # When we parse the carbon.txt file containing the evidence for the
+        # cdn provider
+        psr = carbon_txt.CarbonTxtParser()
+        result = psr.parse("www.hillbob.de", carbon_txt_string)
+
+        # Then: the evidence presented in the carbon.txt file
+        # should show as not registered for the upstream cdn provider
+        not_registered = result.get("not_registered")
+        assert "evidence" in not_registered.keys()
+
+        # and the evidence dictionary should have the properties defined
+        # in the carbon.txt file
+        cdn_evidence = [
+            ev for ev in not_registered["evidence"] if ev["domain"] == "cdn.com"
+        ]
+        cdn_evidence_item, *rest = cdn_evidence
+
+        assert cdn_evidence_item["domain"] == "cdn.com"
+        assert cdn_evidence_item["doctype"] == "sustainability-page"
+        assert (
+            cdn_evidence_item["url"]
+            == "https://cdn.com/company/corporate-responsibility/sustainability"
+        )
 
     def test_check_after_parsing_provider_txt_file(self, db, carbon_txt_string):
         """
