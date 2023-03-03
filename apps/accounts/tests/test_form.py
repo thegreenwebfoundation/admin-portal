@@ -148,6 +148,16 @@ def test_green_evidence_form_validation():
     assert not formset.is_valid()
 
 
+def test_green_evidence_formset_invalid_when_empty():
+    formset_data = {
+        # management form data
+        "form-TOTAL_FORMS": "0",
+        "form-INITIAL_FORMS": "0",
+    }
+    formset = GreenEvidenceForm(data=formset_data)
+    assert not formset.is_valid()
+
+
 @pytest.mark.parametrize(
     "form_data",
     [
