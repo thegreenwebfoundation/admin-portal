@@ -50,7 +50,7 @@ def wizard_form_org_location_data():
     """
     return {
         "provider_registration_view-current_step": "1",
-        "locations__1-TOTAL_FORMS": "0",
+        "locations__1-TOTAL_FORMS": "1",
         "locations__1-INITIAL_FORMS": "0",
         "locations__1-0-country": faker.country_code(),
         "locations__1-0-city": faker.city(),
