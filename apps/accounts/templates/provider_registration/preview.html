@@ -40,14 +40,15 @@
 
         <section class="my-10">
           <h3>Locations</h3>
-          {% for location_form in preview_forms.1.initial_forms %}
+          {% for location_form in preview_forms.1.locations.initial_forms %}
             {% include "provider_registration/partials/_preview.html" with form=location_form %}
           {% endfor %}
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.1.extra %}
         </section>
 
         <section class="my-10">
           <h3>Services provided by your organisation</h3>
-          {% include "provider_registration/partials/_preview.html" with form=preview_forms.2 %}
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.2 render_services=True %}
         </section>
 
         <section class="my-10">
@@ -61,7 +62,12 @@
           <h3>Network footprint</h3>
 
           {% for ip_form in preview_forms.4.ips.initial_forms %}
-            {% include "provider_registration/partials/_preview.html" with form=ip_form %}
+            <div class="bg-neutral-50 rounded-xl my-6 p-4">
+              <div class="mb-4 last-of-type:mb-0">
+                <p class="font-bold m-0">IP range</p>
+                <p class="m-0">{{ ip_form.start.value }} - {{ ip_form.end.value }}</p>
+              </div>
+            </div>
           {% endfor %}
 
           {% for asn_form in preview_forms.4.asns.initial_forms %}
