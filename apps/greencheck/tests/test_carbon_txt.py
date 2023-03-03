@@ -36,7 +36,7 @@ def shorter_carbon_txt_string():
         ]
         [org]
         credentials = [
-            { doctype = 'sustainability-page', url = 'https://www.hillbob.de/klimaneutral'}
+            { domain='www.hillbob.de', doctype = 'sustainability-page', url = 'https://www.hillbob.de/klimaneutral'}
         ]
     """  # noqa
     return short_string
@@ -334,7 +334,7 @@ class TestCarbonTxtParser:
         psr.parse_and_import("www.hillbob.de", carbon_txt_string)
 
         # we want to check that both forms work - the short and long versions
-        parsed_result = psr.parse_and_preview("www.hillbob.de", fixture_val)
+        parsed_result = psr.parse("www.hillbob.de", fixture_val)
 
         sys_ten = gc_models.GreenDomain.objects.get(url="sys-ten.com").hosting_provider
         cdn_com = gc_models.GreenDomain.objects.get(url="cdn.com").hosting_provider
@@ -342,8 +342,8 @@ class TestCarbonTxtParser:
             url="www.hillbob.de"
         ).hosting_provider
 
-        assert sys_ten in parsed_result["upstream"]["providers"]
-        assert cdn_com in parsed_result["upstream"]["providers"]
+        assert sys_ten in parsed_result["upstream"]
+        assert cdn_com in parsed_result["upstream"]
         assert parsed_result["org"] == hillbob
 
 

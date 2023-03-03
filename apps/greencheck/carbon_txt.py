@@ -92,6 +92,12 @@ class CarbonTxtParser:
         evidence_links = [item.url for item in evidence]
         new_evidence = []
 
+        # check if this is provider string, not a dict we can inspect
+        # if so, return early
+        for prov in provider_dicts:
+            if isinstance(prov, str):
+                return []
+
         # this is checking the link, but not the type as well, as
         # not every piece of uploaded evidence has a type allocated
         for prov in provider_dicts:
