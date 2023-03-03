@@ -330,9 +330,7 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
 GreenEvidenceForm = forms.formset_factory(
-    CredentialForm,
-    extra=1,
-    formset=MoreConvenientFormset,
+    CredentialForm, extra=1, formset=MoreConvenientFormset, validate_min=True, min_num=1
 )
 
 
