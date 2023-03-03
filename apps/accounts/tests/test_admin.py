@@ -1,7 +1,6 @@
 import json
 import logging
 import pathlib
-from typing import List
 from unittest.mock import MagicMock
 
 import markdown
@@ -14,7 +13,6 @@ from apps.greencheck.tests import setup_domains
 from conftest import ProviderRequestFactory
 
 from ...greencheck import domain_check
-from ...greencheck.tests import view_in_browser
 from .. import admin as ac_admin
 from .. import admin_site
 from .. import models as ac_models
@@ -27,8 +25,9 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def rdap_content():
-    rdap_output_path = pathlib.Path(__file__).parent / 'sample.rdap.output.json'
+    rdap_output_path = pathlib.Path(__file__).parent / "sample.rdap.output.json"
     return json.loads(rdap_output_path.read_text())
+
 
 class TestHostingProviderAdminInlineRendering:
     """
@@ -341,6 +340,7 @@ class TestHostingProviderAdmin:
         assert len(resp.context["results"]) == archived[1]
         assert resp.status_code == 200
 
+    @pytest.mark.skip(reason="we handle this with a list filter option now")
     @pytest.mark.parametrize(
         "archived",
         (
@@ -544,15 +544,16 @@ def test_extended_lookup_green_domain(
 
     # do we have an rdap lookup object?
     rdap_lookup = result["whois_info"]
+    assert rdap_lookup
 
     # do we have access our site check and green domain objects?
-    assert green_domain_lookup.green == True
-    assert site_check_lookup.green == True
+    assert green_domain_lookup.green is True
+    assert site_check_lookup.green is True
 
     # does it look like it's querying the same object?
-    assert rdap_content['query'] == GOOGLE_COM_IP
+    assert rdap_content["query"] == GOOGLE_COM_IP
     # can we see the IP range?
-    assert rdap_content['asn_cidr'] == "172.217.0.0/16"
+    assert rdap_content["asn_cidr"] == "172.217.0.0/16"
     # can we see the AS number and the owner?
-    assert rdap_content['asn_description'] == "GOOGLE, US"
+    assert rdap_content["asn_description"] == "GOOGLE, US"
     assert rdap_content["asn"] == "15169"
