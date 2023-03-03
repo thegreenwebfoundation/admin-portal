@@ -511,9 +511,7 @@ class LocationForm(forms.ModelForm):
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
 LocationsFormSet = forms.formset_factory(
-    LocationForm,
-    extra=1,
-    formset=MoreConvenientFormset,
+    LocationForm, extra=1, formset=MoreConvenientFormset, validate_min=True, min_num=1
 )
 
 

@@ -4,7 +4,12 @@ from ipaddress import ip_address
 import pytest
 from faker import Faker
 
-from apps.accounts.forms import GreenEvidenceForm, IpRangeForm, NetworkFootprintForm
+from apps.accounts.forms import (
+    GreenEvidenceForm,
+    IpRangeForm,
+    NetworkFootprintForm,
+    LocationsFormSet,
+)
 from apps.accounts.models import EvidenceType
 from apps.greencheck import forms as gc_forms
 from apps.greencheck import models as gc_models
@@ -274,3 +279,19 @@ class TestNetworkFootprintForm:
         form_errors = multiform.errors["__all__"]
         assert len(form_errors) > 0
         assert "no_network_no_explanation" in [error.code for error in form_errors]
+
+
+def test_locations_formset_invalid_with_no_locations():
+    """
+    When we have no locations presented, our empty formset
+    should be invalid.
+    """
+    # given an empty payload:
+    empty_data = {
+        "form-TOTAL_FORMS": "0",
+        "form-INITIAL_FORMS": "0",
+    }
+
+    formset = LocationsFormSet(empty_data)
+    # then our form should be invalid
+    assert not formset.is_valid()
