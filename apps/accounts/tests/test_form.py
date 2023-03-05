@@ -9,6 +9,7 @@ from apps.accounts.forms import (
     IpRangeForm,
     NetworkFootprintForm,
     LocationsFormSet,
+    LocationStepForm,
 )
 from apps.accounts.models import EvidenceType
 from apps.greencheck import forms as gc_forms
@@ -303,5 +304,34 @@ def test_locations_formset_invalid_with_no_locations():
     }
 
     formset = LocationsFormSet(empty_data)
+    valid = formset.is_valid()
+
     # then our form should be invalid
-    assert not formset.is_valid()
+    assert not valid
+
+
+def test_location_step_form_when_invalid_raises_errors():
+    """
+    Check that non field errors are raised from a formset to a multiform.
+
+    By default, multimodelforms do not seem to correctly raise errors on
+    formsets
+    """
+    # given an empty formset
+    empty_data = {
+        "form-TOTAL_FORMS": "0",
+        "form-INITIAL_FORMS": "0",
+    }
+
+    step_form = LocationStepForm(empty_data)
+
+    # when we try to validate it
+    valid = step_form.is_valid()
+
+    # then our form should not show as valid
+    assert not valid
+
+    # and our error list should show tell us that we are missing the necessary
+    # location sub-form submission
+    assert step_form.errors
+    assert "Please submit at least 1 location." in step_form.errors["locations"]

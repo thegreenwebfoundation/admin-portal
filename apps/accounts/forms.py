@@ -1,18 +1,22 @@
 import datetime
 
+from betterforms.multiform import MultiModelForm
+from convenient_formsets import ConvenientBaseFormSet
+from dal_select2_taggit import widgets as dal_widgets
 from django import forms
-from django.core.exceptions import ValidationError
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UsernameField
-
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.forms.formsets import BaseFormSet
+from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
-from taggit_labels.widgets import LabelWidget
 from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
 from betterforms.multiform import MultiModelForm
 from convenient_formsets import ConvenientBaseFormSet
 from file_resubmit.widgets import ResubmitFileWidget
+from taggit_labels.widgets import LabelWidget
 
 from apps.accounts.models.provider_request import ProviderRequest, ProviderRequestStatus
 
@@ -552,6 +556,54 @@ class LocationStepForm(MultiModelForm):
         "locations": LocationsFormSet,
         "extra": LocationExtraForm,
     }
+
+    # Multiforms do not work with formsets by default,
+    # so we need to fetch the non_field_errors ourselves
+    # to show the erorrs raised when no locations are submitted
+
+    @property
+    def errors(self):
+        """
+        Override the original logic for displaying errors to account for
+        the descending levels hierarchy in our
+        "multiform / formset / form" configuration
+        """
+        errors = {}
+        for form_name in self.forms:
+            form = self.forms[form_name]
+
+            # our 'locations' key points to a formset, so we need to handle
+            # looping through every form in our formset, and their respective fields
+            if isinstance(form, BaseFormSet):
+                form_errs = form.non_form_errors()
+
+                for index, formset_name_error in enumerate(form_errs):
+                    ORIGINAL_ERROR_MSG = "Please submit at least 1 form."
+                    REPLACEMENT_ERROR_MSG = "Please submit at least 1 location."
+
+                    # swap out the error message for one that make more
+                    # sense in the multiform
+                    if formset_name_error == ORIGINAL_ERROR_MSG:
+                        form_errs[index] = REPLACEMENT_ERROR_MSG
+
+                for subform in form:
+                    for field_name in subform.errors:
+                        errors[subform.add_prefix(field_name)] = subform.errors[
+                            field_name
+                        ]
+
+                errors[form_name] = form_errs
+
+            # our 'extra' key points to a regular form, so we need to handle
+            # looping through just the field names as usual
+            else:
+                for field_name in form.errors:
+                    errors[form.add_prefix(field_name)] = form.errors[field_name]
+
+        if self.crossform_errors:
+            errors[NON_FIELD_ERRORS] = self.crossform_errors
+
+        return errors
 
 
 class PreviewForm(forms.Form):
