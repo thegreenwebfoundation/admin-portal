@@ -6,8 +6,7 @@ import requests
 from urllib import parse
 
 from dateutil import relativedelta
-
-import django
+import typing
 from django.utils import timezone
 from ..accounts import models as ac_models
 from . import models as gc_models
@@ -80,6 +79,148 @@ class CarbonTxtParser:
         # mark it as green using our label
         provider.staff_labels.add(ac_models.GREEN_VIA_CARBON_TXT)
 
+    def _compare_evidence(
+        self, found_provider: Hostingprovider, provider_dicts: typing.List[typing.Dict]
+    ):
+        """
+        Check if the evidence in the provided provider_dict has already been
+        added to the given provider. If not, return the evidence.
+
+
+        """
+        evidence = found_provider.supporting_documents.all()
+        evidence_links = [item.url for item in evidence]
+        new_evidence = []
+
+        # check if this is provider string, not a dict we can inspect
+        # if so, return early
+        for prov in provider_dicts:
+            if isinstance(prov, str):
+                return []
+
+        # this is checking the link, but not the type as well, as
+        # not every piece of uploaded evidence has a type allocated
+        for prov in provider_dicts:
+            if prov["url"] not in evidence_links:
+                new_evidence.append(prov)
+
+        return new_evidence
+
+    def _fetch_provider_from_dict(self, provider: dict) -> Dict:
+        try:
+            found_domain = gc_models.GreenDomain.objects.get(url=provider["domain"])
+            return found_domain.hosting_provider
+        except gc_models.GreenDomain.DoesNotExist:
+            return None
+
+    def _fetch_provider_from_domain_name(self, domain: str) -> Dict:
+        try:
+            found_domain = gc_models.GreenDomain.objects.get(url=domain)
+            return found_domain.hosting_provider
+        except gc_models.GreenDomain.DoesNotExist:
+            return None
+
+    def _fetch_provider(
+        self,
+        provider: typing.Union[typing.Dict, str],
+        # domain: typing.Union[str, None] = None,
+    ):
+        """
+        Accept either a string or a dict representing a provider, plus
+        an optional domain, then try to find the corresponding provider
+        in our database.
+        """
+        found_provider = None
+
+        # we have our basic string version like "some-provider.com"
+        if isinstance(provider, str):
+            found_provider = self._fetch_provider_from_domain_name(provider)
+
+        # we have our dict containing some sustainability credentials
+        if isinstance(provider, dict):
+            found_provider = self._fetch_provider_from_dict(provider)
+
+        # Return the provider with all the extra evidence we can find
+        return found_provider
+
+    def parse(self, domain: str, carbon_txt: str) -> Dict:
+        """
+        Accept a domain and carbon_txt file, and return a data structure
+        representing what information we have about the providers, related to
+        their sustainability claims.
+        For providers that we don't recognise, we
+        """
+        parsed_txt = toml.loads(carbon_txt)
+
+        unregistered_evidence = []
+        results = {"org": None, "upstream": [], "not_registered": {}}
+
+        org = parsed_txt.get("org")
+        if org:
+            credentials = org.get("credentials")
+            primary_creds = credentials[0]
+            org_provider = self._fetch_provider(primary_creds)
+
+            # filter for matching domains in case a carbon.txt is being used to
+            # hold credentials for multiple similiar domains
+            matching_domain_credentials = [
+                cred
+                for cred in credentials
+                if cred["domain"] == primary_creds["domain"]
+            ]
+            # check for any new evidence for this domain
+            new_org_evidence = self._compare_evidence(
+                org_provider, matching_domain_credentials
+            )
+
+            # if the evidence
+            if new_org_evidence:
+                unregistered_evidence.extend(new_org_evidence)
+
+            # either list as known provider, or add to the list
+            # of new entities we do not have in our system yet
+            if org_provider:
+                results["org"] = org_provider
+            else:
+                results["not_registered"]["org"] = org
+
+        # now do the same for upstream providers
+        upstream = parsed_txt.get("upstream")
+        if upstream:
+            upstream_providers = upstream.get("providers")
+            unregistered_providers = []
+
+            for provider in upstream_providers:
+                found_provider = self._fetch_provider(provider)
+                if found_provider:
+                    new_evidence = self._compare_evidence(found_provider, [provider])
+
+                    if new_evidence:
+                        unregistered_evidence.extend(new_evidence)
+
+                    results["upstream"].append(found_provider)
+                else:
+                    unregistered_providers.append(provider)
+
+            if unregistered_evidence:
+                results["not_registered"]["evidence"] = unregistered_evidence
+
+            results["not_registered"]["providers"] = unregistered_providers
+
+        return results
+
+    def parse_from_url(self, url: str):
+        """
+        Try to fetch a carbon.txt file at a given url, and
+        if successful, returned the parsed view after carrying
+        out lookups
+        """
+        res = requests.get(url)
+        domain = parse.urlparse(url).netloc
+        carbon_txt_string = res.content.decode("utf-8")
+
+        return self.parse(domain, carbon_txt_string)
+
     def parse_and_import(self, domain: str = None, carbon_txt: str = None) -> Dict:
         """
         Accept a domain representing where the carbon.txt file
@@ -95,28 +236,33 @@ class CarbonTxtParser:
         parsed_txt = toml.loads(carbon_txt)
         upstream_providers = set()
         org_providers = set()
+        providers = []
 
-        providers = parsed_txt["upstream"]["providers"]
+        upstream = parsed_txt["upstream"]
+
+        if upstream.get("providers"):
+            providers = upstream["providers"]
+
         org_creds = parsed_txt["org"]["credentials"]
 
         # given a parsed carbon.txt object,
         # fetch the upstream providers
         for provider in providers:
+            if provider:
+                prov, upstream_providers = self._create_provider(
+                    provider, upstream_providers
+                )
+                domain = provider["domain"]
 
-            prov, upstream_providers = self._create_provider(
-                provider, upstream_providers
-            )
-            domain = provider["domain"]
+                res = gc_models.GreenDomain.objects.filter(url=domain).first()
+                if not res:
+                    self._create_green_domain_for_provider(domain, prov)
 
-            res = gc_models.GreenDomain.objects.filter(url=domain).first()
-            if not res:
-                self._create_green_domain_for_provider(domain, prov)
-
-            aliases = provider.get("aliases")
-            if aliases:
-                for alias in aliases:
-                    logger.info(f"Adding alias domain {alias} for {domain}")
-                    self._create_green_domain_for_provider(alias, prov)
+                aliases = provider.get("aliases")
+                if aliases:
+                    for alias in aliases:
+                        logger.info(f"Adding alias domain {alias} for {domain}")
+                        self._create_green_domain_for_provider(alias, prov)
 
         # given a parsed carbon.txt object,  fetch the listed organisation
         org_domains = set()
@@ -144,64 +290,6 @@ class CarbonTxtParser:
             "upstream": {"providers": [*upstream_providers]},
             "org": {"providers": [*org_providers]},
         }
-
-    def parse_and_preview(
-        self, checked_domain: str = None, carbon_txt: str = None
-    ) -> Dict:
-        """
-        Parses a carbon.txt string and returns a datastructure of the objects that
-        the system was able to find, and what the new additions would look like.
-
-        Used to show a preview for an administrator to approve
-        before running an import.
-
-        """
-        parsed_txt = toml.loads(carbon_txt)
-        result_data = {"upstream": {"providers": set()}, "org": None}
-
-        # find our upstream
-        for provider_representation in parsed_txt["upstream"]["providers"]:
-
-            if isinstance(provider_representation, str):
-                # is it a domain string? if so, look for the matching provider
-                try:
-                    provider = gc_models.GreenDomain.objects.get(
-                        url=provider_representation
-                    ).hosting_provider
-                    result_data["upstream"]["providers"].add(provider)
-                except django.core.exceptions.ObjectDoesNotExist:
-                    logger.warn(f"No provider found to match {provider_representation}")
-                    pass
-
-                # is it a dict-like object? If so,
-                # find the matching provider for the domain property
-            if isinstance(provider_representation, dict):
-                # TODO one day we will use a better name than 'url'
-                domain = provider_representation["domain"]
-                try:
-                    provider = gc_models.GreenDomain.objects.get(
-                        url=domain
-                    ).hosting_provider
-                    result_data["upstream"]["providers"].add(provider)
-                except django.core.exceptions.ObjectDoesNotExist:
-                    logger.warn(f"No provider found to match {domain}")
-                    pass
-
-        # find our org. If information already exists, fetch it, so there's only one canonical carbon.txt needed if there are multiple domains referring to the same
-        # organisation
-        try:
-            provider = gc_models.GreenDomain.objects.get(
-                url=checked_domain
-            ).hosting_provider
-
-            result_data["org"] = provider
-            logger.info(provider)
-        except django.core.exceptions.ObjectDoesNotExist:
-            logger.warn(f"No provider found to match {domain}")
-            pass
-
-        logger.info(result_data['org'])
-        return result_data
 
     def import_from_url(self, url: str):
         """

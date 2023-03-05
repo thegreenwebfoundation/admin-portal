@@ -1,8 +1,5 @@
-from django.db.models.fields import CharField
-from django.forms.fields import BooleanField, FileField, IntegerField
-from apps.accounts.models.hosting import ProviderLabel
+from django.forms.fields import BooleanField, FileField
 import logging
-import rich
 import io
 
 from django import forms
@@ -12,7 +9,7 @@ from django.core.exceptions import ValidationError
 
 from .choices import ActionChoice
 from .choices import StatusApproval
-from .models import GreencheckIp
+from .models import GreencheckIp, GreenDomain
 from .models import GreencheckIpApprove
 from .models import GreencheckASN, GreencheckASNapprove
 from .importers import CSVImporter
@@ -122,14 +119,12 @@ class ImporterCSVForm(forms.Form):
     skip_preview = BooleanField(
         required=False,
         help_text=(
-            "Do not show the preview of what would happen. Save to the import to the database"
+            (
+                "Do not show the preview of what would happen. "
+                "Save to the import to the database"
+            )
         ),
     )
-    # replace_with_import = BooleanField(
-    #     required=False,
-    #     label=("Replace networks with this import"),
-    #     help_text=("Replace all the networks assigned to this hoster with the networks in this import"),
-    # )
 
     ip_ranges = []
     processed_ips = []
@@ -253,7 +248,6 @@ class GreencheckAsnApprovalForm(ModelForm):
 
 
 class GreencheckIpApprovalForm(ModelForm):
-
     field_order = ("ip_start", "ip_end")
 
     class Meta:
@@ -277,3 +271,27 @@ class GreencheckIpApprovalForm(ModelForm):
                 )
         self.instance.greencheck_ip = ip_instance
         return super().save(commit=commit)
+
+
+class GreenDomainAllocationForm(forms.Form):
+    """
+    A form for allocating domains to a new given provider.
+    """
+
+    from dal import autocomplete
+
+    domains = forms.ModelMultipleChoiceField(queryset=GreenDomain.objects.all())
+    provider = forms.ModelChoiceField(
+        empty_label="Choose a Provider",
+        queryset=ac_models.Hostingprovider.objects.all().order_by("name"),
+        widget=autocomplete.ModelSelect2(url="provider-autocomplete"),
+    )
+
+    def save(self):
+        """
+        Allocate the domains to the chosen provider
+        """
+
+        provider = self.cleaned_data["provider"]
+        for domain in self.cleaned_data["domains"]:
+            domain.allocate_to_provider(provider)

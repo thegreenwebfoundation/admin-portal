@@ -1,7 +1,7 @@
 import waffle
 from waffle.mixins import WaffleFlagMixin
 from enum import Enum
-
+from dal import autocomplete
 import smtplib
 from django.core.files.storage import DefaultStorage
 from django.contrib import messages
@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.utils.encoding import force_text
 from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 
 from django_registration import signals
 from django_registration.backends.activation.views import (
@@ -37,11 +37,13 @@ from .forms import (
     ConsentForm,
     PreviewForm,
 )
-from .models import User, ProviderRequest
+from .models import User, ProviderRequest, Hostingprovider
 
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class RegistrationForm(RegistrationFormCaseInsensitive):
     class Meta(RegistrationFormCaseInsensitive.Meta):
@@ -49,7 +51,6 @@ class RegistrationForm(RegistrationFormCaseInsensitive):
 
 
 class DashboardView(TemplateView):
-
     template_name = "dashboard.html"
 
     def get(self, request, *args, **kwargs):
@@ -57,6 +58,21 @@ class DashboardView(TemplateView):
             return super().get(request, args, kwargs)
         else:
             return HttpResponseRedirect(reverse("greenweb_admin:index"))
+
+
+class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # if a user is not authenticated don't show anything
+        if not self.request.user.is_admin:
+            return Hostingprovider.objects.none()
+
+        # we only want active hosting providers to allocate to
+        qs = Hostingprovider.objects.exclude(archived=True)
+
+        if self.q:
+            qs = qs.filter(name__istartswith=self.q)
+
+        return qs
 
 
 class AdminRegistrationView(RegistrationView):
@@ -158,7 +174,7 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
     - used by external (non-staff) users to view a summary of a single request they submitted,
     - renders a single provider request on a HTML template,
     - requires the flag `provider_request` enabled for the user (otherwise returns 404).
-    """
+    """  # noqa
 
     template_name = "provider_request/detail.html"
     waffle_flag = "provider_request"
@@ -231,7 +247,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         of a created ProviderRequest instance.
 
         Reference: https://django-formtools.readthedocs.io/en/latest/wizard.html#formtools.wizard.views.WizardView.done
-        """
+        """  # noqa
         steps = ProviderRegistrationView.Steps
 
         # process ORG_DETAILS form: extract ProviderRequest and Location
@@ -239,16 +255,17 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         pr = org_details_form.save(commit=False)
 
         # process LOCATIONS form: extract locations
-        locations_formset = form_dict[steps.LOCATIONS.value].forms['locations']
+        locations_formset = form_dict[steps.LOCATIONS.value].forms["locations"]
         for location_form in locations_formset:
-
             location = location_form.save(commit=False)
             location.request = pr
             location.save()
 
         # process LOCATION: check if a bulk location import is needed
-        extra_location_form = form_dict[steps.LOCATIONS.value].forms['extra']
-        location_import_required = extra_location_form.cleaned_data['location_import_required']
+        extra_location_form = form_dict[steps.LOCATIONS.value].forms["extra"]
+        location_import_required = extra_location_form.cleaned_data[
+            "location_import_required"
+        ]
 
         if location_import_required:
             pr.location_import_required = location_import_required
@@ -283,7 +300,9 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         # process NETWORK_FOOTPRINT form: retrieve network explanation
         # if network data is missing
         extra_network_form = form_dict[steps.NETWORK_FOOTPRINT.value]["extra"]
-        network_explanation = extra_network_form.cleaned_data.get("missing_network_explanation")
+        network_explanation = extra_network_form.cleaned_data.get(
+            "missing_network_explanation"
+        )
         if network_explanation:
             pr.missing_network_explanation = network_explanation
             pr.save()
@@ -314,7 +333,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         Configures a template for each step of the Wizard.
 
         Reference: https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.TemplateResponseMixin.get_template_names
-        """
+        """  # noqa
         return [self.TEMPLATES[self.steps.current]]
 
     def _get_data_for_preview(self):
@@ -355,24 +374,30 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
     def _send_notification_email(self, provider_request: ProviderRequest):
         """
         Send notification to support staff, and the user to acknowledge their submission.
-        """
+        """  # noqa
 
         current_site = get_current_site(self.request)
         connection_scheme = self.request.scheme
         user = self.request.user
         request_path = reverse("provider_request_detail", args=[provider_request.id])
 
-        link_to_verification_request = f"{connection_scheme}://{current_site.domain}{request_path}"
+        link_to_verification_request = (
+            f"{connection_scheme}://{current_site.domain}{request_path}"
+        )
 
         ctx = {
             "org_name": provider_request.name,
             "status": provider_request.status,
-            "link_to_verification_request": link_to_verification_request
+            "link_to_verification_request": link_to_verification_request,
         }
 
         email_subject = "Your verification request for the Green Web Database"
-        email_body = render_to_string("emails/verification-request-notify.txt", context=ctx)
-        email_html = render_to_string("emails/verification-request-notify.html", context=ctx)
+        email_body = render_to_string(
+            "emails/verification-request-notify.txt", context=ctx
+        )
+        email_html = render_to_string(
+            "emails/verification-request-notify.html", context=ctx
+        )
 
         msg = AnymailMessage(
             subject=email_subject,
@@ -382,10 +407,11 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
         )
         msg.attach_alternative(email_html, "text/html")
 
-
         try:
             msg.send()
         except smtplib.SMTPException as err:
-            logger.warn(f"Failed to send because of {err}. See https://docs.python.org/3/library/smtplib.html for more")
-        except Exception as err:
+            logger.warn(
+                f"Failed to send because of {err}. See https://docs.python.org/3/library/smtplib.html for more"  # noqa
+            )
+        except Exception:
             logger.exception("Unexpected fatal error sending email: {err}")

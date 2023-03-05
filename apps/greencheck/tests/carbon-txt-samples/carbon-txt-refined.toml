@@ -9,7 +9,7 @@ credentials = [
   # this is the 'primary' entity, and these are included on any of the other pages
   { domain = 'www.bergfreunde.de', doctype = 'sustainability-page', url = 'https://www.bergfreunde.de/klimaneutral/' },
   { domain = 'www.bergfreunde.de', doctype = 'carbon-compensation', url = 'https://fpm.climatepartner.com/tracking/13467-1912-1001/en' },
-  # these are secondary entities. These are displayed listed first in when checking
+  # these are secondary entities. These are  listed first when checking
   # against the domain, followed by the bergfruende.de credentials above
   #
   { domain = 'alpinetrek.co.uk', doctype = 'sustainability-page', url = 'https://www.alpinetrek.co.uk/climate-neutral/' },

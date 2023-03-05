@@ -9,11 +9,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
 from pytest_factoryboy import register
 from ipaddress import ip_address
-from faker import Faker
 
 from apps.greencheck.models import GreencheckIp, GreencheckASN
-from apps.greencheck.factories import UserFactory, SiteCheckFactory
 from apps.greencheck import factories as gc_factories
+from apps.accounts import factories as ac_factories
 
 
 # https://factoryboy.readthedocs.io/en/stable/recipes.html#using-reproducible-randomness
@@ -31,6 +30,8 @@ register(gc_factories.GreenDomainFactory)
 register(gc_factories.DailyStatFactory)
 register(gc_factories.SiteCheckFactory)
 
+register(ac_factories.SupportingEvidenceFactory)
+
 
 class ProviderRequestFactory(factory.django.DjangoModelFactory):
     """
@@ -47,7 +48,7 @@ class ProviderRequestFactory(factory.django.DjangoModelFactory):
     website = factory.Faker("domain_name")
     description = factory.Faker("sentence")
     status = ac_models.ProviderRequestStatus.OPEN
-    created_by = factory.SubFactory(UserFactory)
+    created_by = factory.SubFactory(gc_factories.UserFactory)
     authorised_by_org = True
 
     class Meta:
@@ -59,7 +60,7 @@ class ProviderRequestFactory(factory.django.DjangoModelFactory):
         This handles many-to-many relationship between ProviderRequest and Tag.
 
         More details: https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
-        """
+        """  # noqa
         # nothing passed as an argument
         if not create or not extracted:
             return
@@ -125,7 +126,7 @@ def provider_groups():
 @pytest.fixture
 def sample_hoster_user(provider_groups):
     """A user created when they register"""
-    user = UserFactory.build(username="joebloggs", email="joe@example.com")
+    user = gc_factories.UserFactory.build(username="joebloggs", email="joe@example.com")
     user.set_password("topSekrit")
     user.save()
 
@@ -143,7 +144,9 @@ def greenweb_staff_user():
     of internal green web staff, who are paid to maintain
     the database
     """
-    user = UserFactory.build(username="greenweb_staff", email="staff@greenweb.org")
+    user = gc_factories.UserFactory.build(
+        username="greenweb_staff", email="staff@greenweb.org"
+    )
     user.set_password("topSekrit")
 
     # give them an id so we can set up many to many relationships with groups
@@ -161,7 +164,7 @@ def greenweb_staff_user():
 
 @pytest.fixture
 def sample_sitecheck():
-    return SiteCheckFactory.build()
+    return gc_factories.SiteCheckFactory.build()
 
 
 @pytest.fixture

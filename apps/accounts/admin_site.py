@@ -79,9 +79,7 @@ class CarbonTxtForm(forms.Form):
             domain = parsed_url.netloc
 
             if parsed_toml:
-                self.cleaned_data["preview"] = self.parser.parse_and_preview(
-                    domain, submitted_text
-                )
+                self.cleaned_data["preview"] = self.parser.parse(domain, submitted_text)
 
 
 class CarbonTxtCheckView(LoginRequiredMixin, WaffleFlagMixin, FormView):
@@ -126,10 +124,11 @@ class CheckUrlForm(forms.Form):
             checker.convert_domain_to_ip(domain_to_check)
         except Exception as err:
             logger.warning(err)
-            raise ValidationError((
-                f"Provided url {url} does not appear have a "
-                f"valid domain: {domain_to_check}. "
-                "Please check and try again."
+            raise ValidationError(
+                (
+                    f"Provided url {url} does not appear have a "
+                    f"valid domain: {domain_to_check}. "
+                    "Please check and try again."
                 )
             )
 
@@ -157,16 +156,14 @@ class CheckUrlView(FormView):
         form = form_class(self.request.GET)
 
         if form.is_valid():
-            domain_name = form.cleaned_data['url']
+            domain_name = form.cleaned_data["url"]
             lookup_result = checker.extended_domain_info_lookup(domain_name)
 
             site_check = lookup_result["site_check"]
             green_domain = lookup_result["green_domain"]
             green_status = green_domain.green
 
-
-
-            ctx['form'] = form
+            ctx["form"] = form
             ctx["domain"] = domain_name
             ctx["whois_info"] = lookup_result["whois_info"]
             ctx["ip_lookup"] = lookup_result["whois_info"]["query"]
@@ -188,8 +185,6 @@ class CheckUrlView(FormView):
 
             ctx["green_status"] = "green" if green_status else "gray"
 
-
-
         return ctx
 
     def get(self, request, *args, **kwargs):
@@ -198,7 +193,6 @@ class CheckUrlView(FormView):
         ctx = self.get_context_data()
 
         return self.render_to_response(ctx)
-
 
 
 class GreenWebAdmin(AdminSite):
@@ -232,11 +226,9 @@ class GreenWebAdmin(AdminSite):
         return patterns + urls
 
     def get_app_list(self, request):
-
         app_list = super().get_app_list(request)
 
         if flag_is_active(request, "provider_request"):
-
             verification_request_item = {
                 "name": "Verification requests",
                 "app_label": "greencheck",
@@ -252,11 +244,7 @@ class GreenWebAdmin(AdminSite):
             }
             app_list.insert(0, verification_request_item)
 
-
-
         app_list += [
-
-
             {
                 "name": "Try out greencheck",
                 "app_label": "greencheck",

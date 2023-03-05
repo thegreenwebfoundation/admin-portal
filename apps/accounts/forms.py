@@ -16,7 +16,6 @@ from convenient_formsets import ConvenientBaseFormSet
 from apps.accounts.models.provider_request import ProviderRequest, ProviderRequestStatus
 
 from . import models as ac_models
-from .utils import tags_choices
 from django.utils.safestring import mark_safe
 
 
@@ -268,7 +267,7 @@ class ServicesForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         label="What hosting services do you offer?",
         help_text=mark_safe(
-            'Choose all the services that your organisation offers. <a href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">More information on our services</a>.'
+            'Choose all the services that your organisation offers. <a href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">More information on our services</a>.'  # noqa
         ),
     )
 
@@ -285,11 +284,11 @@ class CredentialForm(forms.ModelForm):
                 "What kind of evidence are you adding? Choose from the dropdown list."
             ),
             "title": "Give this piece of evidence a title.",
-            "description": "What else should we know about this evidence? If it does not clearly name your organisation, please add a sentence outlining why.",
-            "link": "Provide a link to a supporting document. Include the https:// part.",
+            "description": "What else should we know about this evidence? If it does not clearly name your organisation, please add a sentence outlining why.",  # noqa
+            "link": "Provide a link to a supporting document. Include the https:// part.",  # noqa
             "file": "OR upload a supporting document in PDF or image format.",
             "public": (
-                "By checking this box you agree to place this evidence in the public domain, and it being cited publicly"
+                "By checking this box you agree to place this evidence in the public domain, and it being cited publicly"  # noqa
                 " to support your organisation's sustainability claims<sup>**</sup>."
             ),
         }
@@ -408,7 +407,7 @@ class NetworkFootprintForm(MultiModelForm):
         # fetch our forms
         ip_form = self.forms["ips"]
         asn_form = self.forms["asns"]
-        explanation_form = self.forms['extra']
+        explanation_form = self.forms["extra"]
 
         # is there any description we can read?
         explanation_present = any(explanation_form.cleaned_data.values())
@@ -443,7 +442,7 @@ class ConsentForm(forms.ModelForm):
         ),
         label_suffix="",
         help_text=mark_safe(
-            '<a href="https://www.thegreenwebfoundation.org/privacy-statement/" target="_blank" rel="noopener noreferrer">See our full privacy notice</a>'
+            '<a href="https://www.thegreenwebfoundation.org/privacy-statement/" target="_blank" rel="noopener noreferrer">See our full privacy notice</a>'  # noqa
         ),
     )
     newsletter_opt_in = forms.BooleanField(
@@ -468,7 +467,7 @@ class LocationForm(forms.ModelForm):
         max_length=255,
         label="Location name",
         help_text=(
-            "Use the name your customers would recognise for this location. i.e. main headquarters for an office, or eu-west for a datacentre."
+            "Use the name your customers would recognise for this location. i.e. main headquarters for an office, or eu-west for a datacentre."  # noqa
         ),
         required=False,
         widget=forms.widgets.TextInput(
@@ -513,6 +512,7 @@ LocationsFormSet = forms.formset_factory(
     formset=MoreConvenientFormset,
 )
 
+
 class LocationExtraForm(forms.Form):
     """
     A form for information relating to the location step, not a to a
@@ -526,12 +526,11 @@ class LocationExtraForm(forms.Form):
             "to arrange a bulk import of this information."
         ),
         initial=False,
-        required=False
+        required=False,
     )
 
     class Meta:
         exclude = ["request"]
-
 
 
 class LocationStepForm(MultiModelForm):
@@ -551,7 +550,6 @@ class LocationStepForm(MultiModelForm):
     form_classes = {
         "locations": LocationsFormSet,
         "extra": LocationExtraForm,
-
     }
 
 

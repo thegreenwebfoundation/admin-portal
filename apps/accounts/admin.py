@@ -35,11 +35,8 @@ from dal_select2 import views as dal_select2_views
 from waffle.models import Flag
 from waffle.admin import FlagAdmin
 
-from apps.greencheck.models import GreencheckASN
-from apps.greencheck.models import GreencheckIp
 from apps.greencheck.models import GreencheckIpApprove
 from apps.greencheck.models import GreencheckASNapprove
-from apps.greencheck.choices import StatusApproval
 
 from apps.greencheck.forms import ImporterCSVForm
 
@@ -267,6 +264,7 @@ class LabelAutocompleteView(dal_select2_views.Select2QuerySetView):
 class HostingAdmin(admin.ModelAdmin):
     form = forms.HostingAdminForm
     list_filter = [
+        "archived",
         filters.LabelFilter,
         filters.YearDCFilter,
         filters.YearASNFilter,
@@ -307,15 +305,15 @@ class HostingAdmin(admin.ModelAdmin):
             "html_website",
             "showonwebsite",
             "partner",
-            # "model",
-            # "certificates_amount",
-            "datacenter_amount",
             "ip_addresses",
-            # "services",
             self.service_list,
         ]
 
         if request.user.is_admin:
+            # staff should be able to see providers,
+            # reguardless of whether they were
+            # archived or not
+            NON_STAFF_LIST.insert(3, "archived")
             return [*NON_STAFF_LIST, self.label_list]
 
         return NON_STAFF_LIST
@@ -417,7 +415,6 @@ class HostingAdmin(admin.ModelAdmin):
 
         if request.method == "POST":
             # get our provider
-            data = {"provider": provider.id}
 
             # try to get our document
             form = ImporterCSVForm(request.POST, request.FILES)
@@ -597,7 +594,7 @@ class HostingAdmin(admin.ModelAdmin):
         action = request.GET.get("action")
         obj = GreencheckASNapprove.objects.get(pk=pk)
 
-        approved_asn = obj.process_approval(action)
+        obj.process_approval(action)
 
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.hostingprovider_id)
@@ -607,7 +604,7 @@ class HostingAdmin(admin.ModelAdmin):
         action = request.GET.get("action")
         obj = GreencheckIpApprove.objects.get(pk=pk)
 
-        approved_ip_range = obj.process_approval(action)
+        obj.process_approval(action)
 
         name = "admin:" + get_admin_name(self.model, "change")
         return redirect(name, obj.hostingprovider_id)
@@ -671,8 +668,8 @@ class HostingAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request, *args, **kwargs):
         qs = super().get_queryset(request, *args, **kwargs)
-        if "archived" not in request.GET:
-            qs = qs.filter(archived=False)
+        # if "archived" not in request.GET:
+        #     qs = qs.filter(archived=False)
 
         qs = qs.prefetch_related(
             "hostingprovider_certificates",
@@ -682,6 +679,7 @@ class HostingAdmin(admin.ModelAdmin):
         ).annotate(models.Count("greencheckip"))
         if not request.user.is_staff:
             qs = qs.filter(user=request.user)
+            qs = qs.filter(archived=False)
         return qs
 
     def get_fieldsets(self, request, obj=None):
@@ -901,7 +899,7 @@ class DatacenterAdmin(admin.ModelAdmin):
         Assign the current user to any notes added to a datacenter
         in the current request
         """
-        instances = formset.save(commit=False)
+        formset.save(commit=False)
 
         if formset.new_objects:
             for new_obj in formset.new_objects:
@@ -1127,9 +1125,10 @@ class ProviderRequestConsentInline(AdminOnlyTabularInline):
 
 class ActionInChangeFormMixin(object):
     """
-    Adds custom admin actions (https://docs.djangoproject.com/en/4.1/ref/contrib/admin/actions/)
+    Adds custom admin actions
+    (https://docs.djangoproject.com/en/4.1/ref/contrib/admin/actions/)
     to the change view of the model.
-    """
+    """  # noqa: E501
 
     def response_action(self, request, queryset):
         """

@@ -10,6 +10,7 @@ from apps.accounts.views import (
     ProviderRequestListView,
     ProviderRequestDetailView,
     ProviderRegistrationView,
+    ProviderAutocompleteView,
 )
 
 urlpatterns = [
@@ -65,5 +66,10 @@ urlpatterns = [
         "requests/new/",
         ProviderRegistrationView.as_view(ProviderRegistrationView.FORMS),
         name="provider_registration",
+    ),
+    path(
+        "provider-autocomplete/",
+        ProviderAutocompleteView.as_view(),
+        name="provider-autocomplete",
     ),
 ]
