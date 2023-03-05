@@ -72,8 +72,29 @@
   {% csrf_token %}
   {{ wizard.management_form }}
 
-  <!-- wizard.form is a MultiForm (from django-betterforms) -->
-  <!-- that has 2 separate forms: ips, asns -->
+  {% comment %}
+  wizard.form is a MultiForm (from django-betterforms)
+  that has 3 separate 'child' forms
+   - two 'formset' forms: 'ips', 'asns',
+   - one 'regular' form: 'missing_network_explanation'
+
+  We each form has it's own local errors, but we need to also
+  show errors not tied to any specific child form, hence the
+  'non_field_errors'
+  {% endcomment %}
+
+
+  {% if wizard.form.non_field_errors %}
+    <div class="prose my-10 mx-auto">
+      <div class="convenient-form bg-neutral-50 rounded-xl px-4 ">
+        <div class="form__basetext-fields form--location lg:flex lg:flex-wrap">
+          <div class="w-full">
+            {{ wizard.form.non_field_errors }}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 
   <div class="lg:grid grid-cols-2 gap-16 my-10">
 
