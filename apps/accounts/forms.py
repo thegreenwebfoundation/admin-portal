@@ -581,7 +581,7 @@ class LocationStepForm(MultiModelForm):
                     ORIGINAL_ERROR_MSG = "Please submit at least 1 form."
                     REPLACEMENT_ERROR_MSG = "Please submit at least 1 location."
 
-                    # swap out the error message for one that make more
+                    # swap out the error message for one that makes more
                     # sense in the multiform
                     if formset_name_error == ORIGINAL_ERROR_MSG:
                         form_errs[index] = REPLACEMENT_ERROR_MSG
