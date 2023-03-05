@@ -47,6 +47,19 @@
 		{{ wizard.management_form }}
 		{{ wizard.form.locations.management_form }}
 
+		{% if wizard.form.errors.locations %}
+			<div class="prose my-10 mx-auto">
+				<div class="convenient-form bg-neutral-50 rounded-xl my-6 px-4 py-6">
+					<div class="form__basetext-fields form--location lg:flex lg:flex-wrap">
+						<div class="w-full">
+							{{ wizard.form.errors.locations}}
+						</div>
+					</div>
+				</div>
+			</div>
+		{% endif %}
+
+
 		<div id="convenient-formset">
 
 			{% for form in wizard.form.locations %}
