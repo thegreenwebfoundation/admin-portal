@@ -38,7 +38,8 @@ class ProviderRequest(TimeStampedModel):
     """
     Model representing the input data
     as submitted by the provider to our system,
-    when they want to include their information into our dataset.
+    when they want to include their information into our dataset --
+    also known as verification request.
 
     """
 
@@ -294,10 +295,7 @@ class ProviderRequestEvidence(models.Model):
         if self.link is None and not bool(self.file):
             raise ValidationError(f"{reason}, you haven't submitted either.")
         if self.link and bool(self.file):
-            raise ValidationError(
-                f"{reason}, you've attempted to submit both - we've removed the file"
-                " for now."
-            )
+            raise ValidationError(f"{reason}, you've attempted to submit both.")
 
 
 class ProviderRequestConsent(models.Model):

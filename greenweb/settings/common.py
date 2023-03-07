@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     "django_admin_multiple_choice_list_filter",
     "formtools",
     "convenient_formsets",
+    "file_resubmit",
     # UI
     "tailwind",
     "crispy_forms",
@@ -133,6 +134,18 @@ MIDDLEWARE = [
     # see the section below on BASICAUTH
     "basicauth.middleware.BasicAuthMiddleware",
 ]
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    },
+    "file_resubmit": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/tmp/file_resubmit/",
+        "TIMEOUT": 600,  # 10 minutes
+    },
+}
+
 
 # Basic auth for staging
 # we include it, but leave it disabled,
