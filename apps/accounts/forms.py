@@ -12,6 +12,7 @@ from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
 from betterforms.multiform import MultiModelForm
 from convenient_formsets import ConvenientBaseFormSet
+from file_resubmit.widgets import ResubmitFileWidget
 
 from apps.accounts.models.provider_request import ProviderRequest, ProviderRequestStatus
 
@@ -292,6 +293,9 @@ class CredentialForm(forms.ModelForm):
                 " to support your organisation's sustainability claims<sup>**</sup>."
             ),
         }
+        # we're using this widget to retain the files submitted in the form
+        # in case of ValidationError being raised
+        widgets = {"file": ResubmitFileWidget}
 
 
 class MoreConvenientFormset(ConvenientBaseFormSet):
@@ -531,6 +535,7 @@ class LocationExtraForm(forms.Form):
 
     class Meta:
         exclude = ["request"]
+
 
 
 class LocationStepForm(MultiModelForm):
