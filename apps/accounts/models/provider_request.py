@@ -279,7 +279,7 @@ class ProviderRequestEvidence(models.Model):
     link = models.URLField(null=True, blank=True)
     file = models.FileField(null=True, blank=True, upload_to="uploads/")
     type = models.CharField(choices=EvidenceType.choices, max_length=255)
-    public = models.BooleanField(default=True)
+    public = models.BooleanField(default=False)
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
