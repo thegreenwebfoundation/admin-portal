@@ -13,6 +13,14 @@ Authenticated users that have the flag enabled can access the following pages:
 - `/requests/` to view all submitted requests.
 
 ## How is the form implemented?
+In the implementation of the verification request form we use a complex stack of different libraries and components:
+- native Django [`Form`s](https://docs.djangoproject.com/en/4.1/ref/forms/api/) and [`FormSet`s](https://docs.djangoproject.com/en/4.1/topics/forms/formsets/),
+- []`SessionWizard` from `django-formtools`](https://github.com/jazzband/django-formtools) to implement a multi-step form in a single view,
+- [`MultiForm`s from `django-betterforms`](https://django-betterforms.readthedocs.io/en/latest/multiform.html) to represent multiple forms in a single form-like container (so that it can be used as a single step of the form wizard),
+- [`ConvenientFormset` from `django-convenient-formset`](https://github.com/tiesjan/django-convenient-formsets) to implement a dynamic formset that allows adding and deleting forms,
+- the widget [`ResubmitFileWidget` from `django-file-resubmit`](https://github.com/un1t/django-file-resubmit) to work around an issue with disappearing files ([see more details below](#working-with-file-upload-in-the-form)).
+
+## Working with `WizardView`
 We are using [`WizardView`](https://django-formtools.readthedocs.io/en/latest/wizard.html#creating-a-wizardview-subclass) from the library [`django-formtools`](https://django-formtools.readthedocs.io/) to display a single form per page, over multiple pages. The consecutive forms of the wizard are validated when each step is submitted.
 
 The use of [`SessionWizardView`](https://django-formtools.readthedocs.io/en/latest/wizard.html#formtools.wizard.views.SessionWizardView) makes it convenient for keeping the in-progress forms in a database-backed user sessions. No data loss should occur as long as the user keeps the session cookie in their browser (and as long as their session remains valid).
@@ -20,6 +28,25 @@ The use of [`SessionWizardView`](https://django-formtools.readthedocs.io/en/late
 The final step of the wizard is a preview: all submitted data can be reviewed one last time before submitting the whole verification request.
 
 Upon submitting the final step, the data is persisted as a `ProviderRequest` object (and related objects).
+
+## Quirks of Django forms
+This section documents "gotchas" and weird behaviors, as well as chosen workarounds, related to Django forms and the libraries that are used to implement the verification request form.
+
+### Working with file upload in the form
+Workaround implemented [in this PR](https://github.com/thegreenwebfoundation/admin-portal/pull/422).
+
+On one of the steps of the wizard we request the user to upload files that will serve as evidence of being a green provider. After uploading a file, when user navigates forwards in the wizard and then decides to come back to the upload step, the files appear to be gone. This is because - for security reasons - the file input cannot have a default value. 
+
+Another issue related to this was that upon raising a `ValidationError` on any of the forms in this step, even if the offending form doesn't contain a file, all files would disappear.
+
+The solution to both of these cases was to use a custom file widget from the library [`django-file-resubmit`](https://github.com/un1t/django-file-resubmit), which not only retains the file in cache in case of the `ValidationError`, but also displays the name of the uploaded file next to the file input.
+
+### Working with error messages
+Form and fields validation: [see the documentation here](https://docs.djangoproject.com/en/4.1/ref/forms/validation/).
+
+It's worth noting that [Django Formsets contain additional errors](https://docs.djangoproject.com/en/4.1/topics/forms/formsets/#error-messages) that are returned by `non_form_errors()`, similarly to how Forms contain `non_field_errors()`. The templates that are used to render formsets must either explicitly output these values or the errors needs to be propagated to the `errors` property.
+
+See the corresponding workaround [in this PR](https://github.com/thegreenwebfoundation/admin-portal/pull/419).
 
 ## Preview implementation details
 The preview step is configured to display a `PreviewForm`: a form that does not contain any data or validation logic. When the `WizardView` renders the `PreviewForm` in a template, all cleaned data from the previous steps is injected to the template context. This way we are able to render the already submitted and validated data, without running validation on it again.
