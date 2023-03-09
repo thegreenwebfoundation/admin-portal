@@ -568,7 +568,16 @@ class LocationStepForm(MultiModelForm):
         errors = super().non_field_errors()
         for form in self.forms.values():
             if isinstance(form, BaseFormSet):
-                errors.extend(form.non_form_errors())
+                # replace the original message to contain more precise information
+                # TODO: after upgrading to Django 4.1 use `too_few_forms` from this API instead:
+                # https://docs.djangoproject.com/en/4.1/topics/forms/formsets/#formsets-error-messages
+                original_msg = "Please submit at least 1 form."
+                target_msg = "Please submit at least 1 location."
+                formset_errors = [
+                    error.replace(original_msg, target_msg)
+                    for error in form.non_form_errors()
+                ]
+                errors.extend(formset_errors)
         return errors
 
 
