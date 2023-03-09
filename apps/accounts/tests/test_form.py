@@ -304,10 +304,9 @@ def test_locations_formset_invalid_with_no_locations():
     }
 
     formset = LocationsFormSet(empty_data)
-    valid = formset.is_valid()
 
     # then our form should be invalid
-    assert not valid
+    assert not formset.is_valid()
 
 
 def test_location_step_form_when_invalid_raises_errors():
@@ -325,13 +324,9 @@ def test_location_step_form_when_invalid_raises_errors():
 
     step_form = LocationStepForm(empty_data)
 
-    # when we try to validate it
-    valid = step_form.is_valid()
-
     # then our form should not show as valid
-    assert not valid
+    assert not step_form.is_valid()
 
     # and our error list should show tell us that we are missing the necessary
     # location sub-form submission
-    assert step_form.errors
-    assert "Please submit at least 1 location." in step_form.errors["locations"]
+    assert "Please submit at least 1 location." in step_form.non_field_errors()
