@@ -15,7 +15,7 @@ Authenticated users that have the flag enabled can access the following pages:
 ## How is the form implemented?
 In the implementation of the verification request form we use a complex stack of different libraries and components:
 - native Django [`Form`s](https://docs.djangoproject.com/en/4.1/ref/forms/api/) and [`FormSet`s](https://docs.djangoproject.com/en/4.1/topics/forms/formsets/),
-- []`SessionWizard` from `django-formtools`](https://github.com/jazzband/django-formtools) to implement a multi-step form in a single view,
+- [`SessionWizard` from `django-formtools`](https://github.com/jazzband/django-formtools) to implement a multi-step form in a single view,
 - [`MultiForm`s from `django-betterforms`](https://django-betterforms.readthedocs.io/en/latest/multiform.html) to represent multiple forms in a single form-like container (so that it can be used as a single step of the form wizard),
 - [`ConvenientFormset` from `django-convenient-formset`](https://github.com/tiesjan/django-convenient-formsets) to implement a dynamic formset that allows adding and deleting forms,
 - the widget [`ResubmitFileWidget` from `django-file-resubmit`](https://github.com/un1t/django-file-resubmit) to work around an issue with disappearing files ([see more details below](#working-with-file-upload-in-the-form)).
@@ -48,20 +48,22 @@ It's worth noting that [Django Formsets contain additional errors](https://docs.
 
 See the corresponding workaround [in this PR](https://github.com/thegreenwebfoundation/admin-portal/pull/419).
 
-## Preview implementation details
+### Preview implementation details
 The preview step is configured to display a `PreviewForm`: a form that does not contain any data or validation logic. When the `WizardView` renders the `PreviewForm` in a template, all cleaned data from the previous steps is injected to the template context. This way we are able to render the already submitted and validated data, without running validation on it again.
 
 
-## How do I test the multistep form?
+## Testing the verification request
 
-There are two ways you can test the form wizard forms - with integration tests that use the database, and with more focussed unit tests that just test step in a form wizard by itself.
+There are two ways you can test the logic of the `WizardView`:
+- integration (end-to-end) test for the view that use the database,
+- unit test for the forms.
 
 ### Testing the form wizard end to end
 
-You can test an end to end form submission by POSTing the form wizard, with the corresponding payload for each subsequent form in the multi-step wizard.
+You can test an end to end form submission by POSTing the data expected by the `WizardView`, with the corresponding payload for each subsequent step. This is mimicking the behavior of the browser when the user fills in the form, step by step.
 
 ```python
-    # assume each dict in this list is a valid submission with the correct step named
+    # assume each item in this list is a valid POST request body for consecutive WizardView steps
     form_data = [
         wizard_form_org_details_data,
         wizard_form_org_location_data,
@@ -73,12 +75,13 @@ You can test an end to end form submission by POSTing the form wizard, with the 
     ]
     client.force_login(user)
 
-    # when: a multi step submission has been successfully completed
     for step, data in enumerate(form_data, 1):
         response = client.post(urls.reverse("provider_registration"), data, follow=True)
 ```
 
-In this case here, you need to make sure that the correct step name is in each form payload. So for `wizard_form_org_details_data`, where there is a single form, you need to pass the correct step number, and match the field names.
+In this case here, you need to make sure that the POST request body has correct data. The `WizardView` manipulates the configured form in a way that it expects the keys to contain prefixes for each form as well as the name of the step. The best way to learn about what data is expected is to lookup the requests that are being sent when manually going through the form in the browser.
+
+As an example, for `wizard_form_org_details_data`, which should contain a payload for a single form (`OrgDetailsForm`), you need to pass the correct step number, and match the field names:
 
 ```python
     wizard_form_org_details_data =  {
@@ -90,7 +93,8 @@ In this case here, you need to make sure that the correct step name is in each f
     }
 ```
 
-For complicated formsets, you need to pass in the extra information a formset expects to see, AND key it to the correct step number. Here's an example for step 4 of the `provider_registration_view` form wizard, where we are sending network data. Note that we need to use the correct step number in the form payload
+For other steps that may use complex configurations of formsets and `MultiForm`s, you need to pass in the extra information that the formsets expects to see, i.e. the management form metadata. Additionally, the prefix of the forms will contain additional information, e.g. the index of the form in the formset, and name of the form in case a `MultiForm` was used.
+Here's an example for step 4 of the `provider_registration_view` form wizard, where we are sending network data. Note that we need to use the correct step number in the form payload:
 
 
 ```python
@@ -117,10 +121,9 @@ def wizard_form_network_data(sorted_ips):
 
 ### Testing focussed steps of the form wizard
 
-End to end tests require the database to be set up, which can be time consuming. You can use focussed unit tests to test the same form, without needing to run through the slow and computationally expensive steps by testing just a specific step in a wizard.
+End to end tests require the database to be set up, which can be time consuming. You can use unit tests to test a specific form in isolation, without needing to run through the slow and computationally expensive steps by testing a corresponding step of the view.
 
-When doing this, you no longer need to explicitly name the step in a wizard you are making a submission for, as this form might be used outside the original context of the multi-step form wizard.
-
+When doing this, the data used to initialize the form will no longer contain `WizardView` specific prefixes - only those configured by underlying stack of forms, formsets and multiforms.
 
 
 ```python
