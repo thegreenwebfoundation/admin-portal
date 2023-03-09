@@ -334,7 +334,7 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
 GreenEvidenceForm = forms.formset_factory(
-    CredentialForm, extra=1, formset=MoreConvenientFormset, validate_min=True, min_num=1
+    CredentialForm, extra=0, formset=MoreConvenientFormset, validate_min=True, min_num=1
 )
 
 
@@ -513,7 +513,7 @@ class LocationForm(forms.ModelForm):
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
 LocationsFormSet = forms.formset_factory(
-    LocationForm, extra=1, formset=MoreConvenientFormset, validate_min=True, min_num=1
+    LocationForm, extra=0, formset=MoreConvenientFormset, validate_min=True, min_num=1
 )
 
 
@@ -557,52 +557,18 @@ class LocationStepForm(MultiModelForm):
         "extra": LocationExtraForm,
     }
 
-    # Multiforms do not work with formsets by default,
-    # so we need to fetch the non_field_errors ourselves
-    # to show the erorrs raised when no locations are submitted
-
-    @property
-    def errors(self):
+    def non_field_errors(self):
         """
-        Override the original logic for displaying errors to account for
-        the descending levels hierarchy in our
-        "multiform / formset / form" configuration
-        """
-        errors = {}
-        for form_name in self.forms:
-            form = self.forms[form_name]
+        MultiForms do not work with formsets by default:
+        the non_form_errors in formsets are not propagated correctly.
 
-            # our 'locations' key points to a formset, so we need to handle
-            # looping through every form in our formset, and their respective fields
+        We overwrite this method so that non_form_errors are concatenated
+        with MultiForm's non_field_errors.
+        """
+        errors = super().non_field_errors()
+        for form in self.forms.values():
             if isinstance(form, BaseFormSet):
-                form_errs = form.non_form_errors()
-
-                for index, formset_name_error in enumerate(form_errs):
-                    ORIGINAL_ERROR_MSG = "Please submit at least 1 form."
-                    REPLACEMENT_ERROR_MSG = "Please submit at least 1 location."
-
-                    # swap out the error message for one that makes more
-                    # sense in the multiform
-                    if formset_name_error == ORIGINAL_ERROR_MSG:
-                        form_errs[index] = REPLACEMENT_ERROR_MSG
-
-                for subform in form:
-                    for field_name in subform.errors:
-                        errors[subform.add_prefix(field_name)] = subform.errors[
-                            field_name
-                        ]
-
-                errors[form_name] = form_errs
-
-            # our 'extra' key points to a regular form, so we need to handle
-            # looping through just the field names as usual
-            else:
-                for field_name in form.errors:
-                    errors[form.add_prefix(field_name)] = form.errors[field_name]
-
-        if self.crossform_errors:
-            errors[NON_FIELD_ERRORS] = self.crossform_errors
-
+                errors.extend(form.non_form_errors())
         return errors
 
 

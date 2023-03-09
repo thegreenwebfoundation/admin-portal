@@ -46,19 +46,23 @@
 		{% csrf_token %}
 		{{ wizard.management_form }}
 		{{ wizard.form.locations.management_form }}
+		{% comment %}
 
-		{% if wizard.form.errors.locations %}
+		Formsets don't just have form errors, we need to account for the errors relating
+		to the number of submitted options in a set of forms
+
+		{% endcomment %}
+		{% if wizard.form.non_field_errors %}
 			<div class="prose my-10 mx-auto">
-				<div class="convenient-form bg-neutral-50 rounded-xl my-6 px-4 py-6">
+				<div class="convenient-form bg-neutral-50 rounded-xl px-4 ">
 					<div class="form__basetext-fields form--location lg:flex lg:flex-wrap">
 						<div class="w-full">
-							{{ wizard.form.errors.locations}}
+							{{ wizard.form.non_field_errors}}
 						</div>
 					</div>
 				</div>
 			</div>
 		{% endif %}
-
 
 		<div id="convenient-formset">
 
