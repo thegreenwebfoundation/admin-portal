@@ -441,6 +441,8 @@ class GreenASNAdmin(admin.ModelAdmin):
         "active",
         "asn",
         "hostingprovider",
+        "created",
+        "modified",
     ]
     search_fields = ["asn", "hostingprovider__name"]
     fields = [
@@ -448,6 +450,27 @@ class GreenASNAdmin(admin.ModelAdmin):
         "asn",
         "hostingprovider",
     ]
+
+    def has_view_permission(self, request, obj=None):
+        """
+        Only allow staff to view AS numbers via the main django
+        listing. We restrict this, to avoid end users seeing the list of
+        other providers in the admin.
+        """
+        if request.user.is_admin:
+            return True
+        return False
+
+    def has_add_permission(self, request):
+        """
+        We only allow staff to add AS numbers via the main django
+        listing.
+        Non-staff users need to use the hosting profile change view
+        page instead.
+        """
+        if request.user.is_admin:
+            return True
+        return False
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -473,6 +496,8 @@ class GreenIPAdmin(admin.ModelAdmin):
         "ip_start",
         "ip_end",
         "hostingprovider",
+        "created",
+        "modified",
     ]
     search_fields = [
         "hostingprovider__name",
@@ -484,7 +509,27 @@ class GreenIPAdmin(admin.ModelAdmin):
         "ip_start",
         "ip_end",
         "hostingprovider",
+        "created",
+        "modified",
     ]
+
+    def has_view_permission(self, request, obj=None):
+        """
+        Only allow staff to view AS numbers via the main django
+        listing. We restrict this, to avoid end users seeing the list of
+        other providers in the admin.
+        """
+        if request.user.is_admin:
+            return True
+        return False
+
+    def has_add_permission(self, request):
+        """
+        Like ASNs, only staff should be able to add IP ranges directly
+        """
+        if request.user.is_admin:
+            return True
+        return False
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
