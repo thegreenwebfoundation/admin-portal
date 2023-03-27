@@ -10,9 +10,7 @@ Your request is currently {{ status }}
 
 What happens next?
 
-Assuming your request contains all the information we need to verify your organisation, you can expect to hear from us again, notifying you that you have been verified and how to tell others.
-
-We normally get back to people within 48 hours.
+We will review the information you provided and contact you within 2-3 working days.
 
 If you have further questions, please contact support@thegreenwebfoundation.org, and please include the above link to your request.
 
