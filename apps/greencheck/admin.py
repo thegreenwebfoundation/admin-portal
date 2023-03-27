@@ -445,11 +445,8 @@ class GreenASNAdmin(admin.ModelAdmin):
         "modified",
     ]
     search_fields = ["asn", "hostingprovider__name"]
-    fields = [
-        "active",
-        "asn",
-        "hostingprovider",
-    ]
+    fields = ["active", "asn", "hostingprovider", "created", "modified"]
+    readonly_fields = ["created", "modified"]
 
     def has_view_permission(self, request, obj=None):
         """
@@ -504,14 +501,8 @@ class GreenIPAdmin(admin.ModelAdmin):
         "ip_start",
         "ip_end",
     ]
-    fields = [
-        "active",
-        "ip_start",
-        "ip_end",
-        "hostingprovider",
-        "created",
-        "modified",
-    ]
+    fields = ["active", "ip_start", "ip_end", "hostingprovider", "created", "modified"]
+    readonly_fields = ["created", "modified"]
 
     def has_view_permission(self, request, obj=None):
         """
