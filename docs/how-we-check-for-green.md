@@ -1,4 +1,4 @@
-# Understanding checks for green sites
+4# Understanding checks for green sites
 
 It's worth referring to the general principle we apply when checking if a site or a services from a digital provider is green:
 
@@ -65,6 +65,38 @@ Similarly, a domain `my-green-site.com`, which resolves to the IP address `213.2
 
 The final supported approach, which is currently under development, is to avoid relying on IP addresses entirely, and go straight from a domain name, to one or more providers, based on machine readable information exposed in a `carbon.txt` file.
 
-Here we follow a link from the domain name to a `carbon.txt` file at one of a few well known locations, somewhat like `robots.txt` works, or how some DNS TXT record lookups work. We then parse the `carbon.txt` file to follow the links to the necessary providers.
+
+The flow is as follows:
+
+1. Check the domain name is a valid one.
+2. Check there if there is `carbon-txt` DNS TXT record for the given domain.
+3. Perform an HTTP request at https://domain.com/carbon.txt, OR the overide URL given as the value in the DNS TXT lookup.
+4. If there is valid 200 response and a parseable file, parse the file.
+5. If there is a no valid 200/OK response at domain.com/carbon.txt (i.e. a 404, or 403), check the HTTP for a `Via` header with a new domain, as a new domain to check.
+6. Repeat steps 1 through 5 until we end up with a 200 response with a parsable carbon.txt payload, or bad request (i.e. 40x, 50x).
+
+
+#### Why do it this way?
+
+This flow is designed to allows CDNs and managed service providers to serve information in a default carbon.txt file, whilst allowing "downstream" providers to share their own, more detailed information if need be.
+
+**Why support the carbon.txt DNX TXT record?**
+
+Supporting the DNS lookup allows an organisation that owns or operates multiple domains to refer to a single URL for them to maintain.
+The "override URL" also allows for organisations that prefer to serve their file from a `.well-known` directory to do so, without explicitly requiring it from people who do not know what a `.well-known` directory is, or want to control who is able to write to the directory.
+
+**Why use the `Via` header?**
+
+Consider the case where  managed-service-provider.com is hosting customer-a.com's website.
+
+The managed service provider may be  offering a CDN or managed hosting service, but they may not have control over the customer-a.com domain. They may not have, or want direct control over what a downstream user is sharing at a given url. However because they are offering some service "in front" of customer-a's website, and serving it over a secure connection, they are able to add headers to HTTP requests.
+
+the [HTTP Via header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/via) exists specifically to serve this purpose, and provides a well specified way to pass along information about a domain of the organisation providing a managed service, when the domain is different.
+
+**Why use domain/carbon.txt as the path?**
+
+Defaulting to a root `carbon.txt` makes it possible to implement a carbon.txt file without needing to know about `.well-known` directories, that by convention are normally invisible files. Having a single default place to look avoids needing to support a hierarchy of potential places to look, and precedence rules for where to look - there is either one place to default to when making an HTTP request, OR the single override.
+
+
 
 For more, please follow the link to the [github repo where the syntax and conventions are being worked at out](https://github.com/thegreenwebfoundation/carbon.txt).
