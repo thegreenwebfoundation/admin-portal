@@ -6,58 +6,53 @@
 
   <article>
     <div class="prose mx-auto mt-8">
-      <h1 class="text-center">Provider portal</h1>
-      <p>As a small and independent non-profit organisation, we've been maintaining the world's
-        largest open dataset on green hosting providers, <strong>the Green Web Dataset</strong>,
-        since 2012. Every day, across the globe, around seven million checks against it are
-        made by people using our
-        <a href="https://developers.thegreenwebfoundation.org/api/greencheck/v3/check-single-domain/" target="_blank" rel="noopener noreferrer">Green Web Check API</a>
-        and <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank" rel="noopener noreferrer">Green Web Check</a> tools.
-        <p>
-          <p>This portal helps hosting providers become included in the Green Web Dataset
-            and keep their submitted data up to date.</p>
-        </div>
+      	<h1 class="text-center">Provider portal</h1>
+      	
+		<p>Do you want to become part of the Green Web Dataset as a verified green hosting provider? 
+		Do you want to keep your submitted information up-to-date? Get started here.</p>
 
-        <div class="lg:grid grid-cols-2 gap-16 my-10">
-          <section class="prose border-2 rounded-xl mb-6 lg:mb-0 p-6">
-            <h3 class="text-2xl border-b-2">How can my organisation be included in the dataset?</h3>
-            <p>Hosting providers can submit a <span class="font-bold">verification request</span> to us to <a href="https://www.thegreenwebfoundation.org/what-you-need-to-register/" target="_blank" rel="noopener noreferrer">demonstrate they are green</a>. The verification process is free of charge.</p>
-            <p>Once verified, hosting providers are included in the Green Web dataset for free and checks against their sites or services will show as green.</p>
-            <p>Verified hosting providers can choose to further support our work by paying a modest fee to be featured in our <a href="https://www.thegreenwebfoundation.org/directory/" target="_blank" rel="noopener noreferrer">Green Hosting Directory</a> service.</p>
-            <p>Whether you want to be included in just the dataset or the directory as well, the starting point is the same - submit a verification request.</p>
-          </section>
+		<p class="mt-8"><a href="/requests/new" class="btn">Submit a new verification request</a></p>
 
-          <section class="prose bg-white border-2 rounded-xl p-6">
-            <h3 class="text-2xl border-b-2">Your verification requests</h3>
-            <p>Before starting the verification process, we recommend reading our guide <a href="https://www.thegreenwebfoundation.org/what-you-need-to-register/" target="_blank" rel="noopener noreferrer">What you need to register</a> and preparing your evidence in advance.</p>
-            <p>On completion of the form, your submission will be reviewed by our staff.
-              If we have all the evidence we need, we’ll notify you to let you know that checks against
-              your site or services show as green. If we can't find the evidence we need, we’ll reply letting you know what else is required.</p>
+		<h3 class="text-xl pt-10">Your submitted requests</h3>
 
-            <p class="mt-8"><a href="/requests/new" class="btn">Start a verification request</a></p>
+		{% for request in object_list %}
+		  <p><a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a></p>
 
-            <h3 class="text-xl pt-10">Your submitted requests</h3>
+		{% empty %}
+		  <p>No submitted requests
 
-            {% for request in object_list %}
-              <p><a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a></p>
+		{% endfor %}
 
-            {% empty %}
-              <p>No submitted requests
+		{% comment %}
+			Use the flag below to grant easy access to the old admin site using the waffle flag
+			feature.
+		{% endcomment %}
 
-            {% endfor %}
 
-            {% comment %}
-				Use the flag below to grant easy access to the old admin site using the waffle flag
-				feature.
-			{% endcomment %}
-            {% flag "access_old_admin_from_verification_list" %}
+		{% flag "access_old_admin_from_verification_list" %}
 
-              <h3 class="text-xl pt-10">Your approved providers</h3>
+		<h3 class="text-xl pt-10">Your approved providers</h3>
 
-              <p>Already been verified, or updating an existing provider? <a href="{% url 'greenweb_admin:index' %}"> Log into our old admin interface</a>.</p>
+		<p>Already been verified, or updating an existing provider? <a href="{% url 'greenweb_admin:index' %}">Log into our old admin interface</a>.</p>
 
-            {% endflag %}
+		{% endflag %}
 
+	</div>
+
+	<div class="lg:grid grid-cols-2 gap-16 my-10">
+		<section class="prose border-2 rounded-xl mb-6 lg:mb-0 p-6">
+            <h3 class="text-2xl border-b-2">Why should I get verified? </h3>
+            <p>Green Web Foundation is on a mission to make the internet fossil-free by 2030. We maintain the world's largest open dataset on websites running on green energy, the <i>Green Domains Dataset</i>.</p>
+			<p>Every day, across the globe, more than seven million checks against this dataset are made.</p>
+			<p>If you are a hosting provider getting verified with us allow you to show as green, and therefore become visible as a findable and trusted source.</p>
+		</section>
+
+		<section class="prose bg-white border-2 rounded-xl p-6">
+            <h3 class="text-2xl border-b-2">How can I get verified? </h3>
+            <p>To become verified, you need to submit a verification request that provides proof that you use green energy for your services. You can prove this if you are avoiding, reducing, or offsetting emissions.</p>
+			<p>Submitting the request will approximately take you 15 minutes and is free of charge.</p>
+			<p>Once submitted, we will review your request and get in touch if further evidence is needed. We are a non-profit organisation, so the verification process is independent</p>
+			<p><a href="Find more information on what counts as green energy" target=""_blank" rel="noreferrer noopener">Find more information on what counts as green energy here</a>.</p>
           </section>
         </div>
       </article>
