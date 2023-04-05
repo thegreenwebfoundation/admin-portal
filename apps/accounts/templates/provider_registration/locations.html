@@ -29,11 +29,15 @@
 	<p class="max-w-prose mx-auto">Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
 	<section class="prose my-10 mx-auto">
-		<h1>Which parts of the world is your organisation active in?</h1>
+		<h1>Where is your organisation active?</h1>
 
-		<p>Starting with your main headquarters in your home country, list the locations your organisation is actively selling services in. We collect this information to help people looking for services available in a given country or region.</p>
+		<p>We collect this information to help people find hosting services by country or region.</p>
 
-		<p>If your organisation runs services in a datacentre in given city, list the city and country for each region you offer. If you operate from a single datacentre or region, but have offices selling services in different countries, please list the cities you operate in.</p>
+		<p>Start by telling us the main headquaters of your organisation.</p>
+		<p>Next, if you run services from specific data centres, tell us the country and city (or closest city) for each one.</p>
+		<p>Finally, if you sell services to other countries or regions that you haven't yet listed, please list them. For the city, you 
+			can give an office location if you have one, or the capital city if you don't. 
+			Please use the location name field to help your potential customers understand your relationship to the city.</p>
 
 	</section>
 
@@ -80,9 +84,9 @@
 				{% include "provider_registration/partials/_location_form.html" with form=wizard.form.locations.empty_form %}
 			</div>
 
-			<hr class="mt-4 mb-4" />
+			<hr class="mt-6 mb-8" />
 
-			<div class="mt-3">
+			<div class="mt-8">
 				{{ wizard.form.extra.location_import_required.as_widget }}
 				<label class="text-med" for="{{ wizard.form.extra.location_import_required.id_for_label }}">
 					{{ wizard.form.extra.location_import_required.label }}

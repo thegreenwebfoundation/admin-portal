@@ -270,7 +270,7 @@ class ServicesForm(forms.Form):
     services = forms.MultipleChoiceField(
         choices=ProviderRequest.get_service_choices,
         widget=forms.CheckboxSelectMultiple,
-        label="What hosting services do you offer?",
+        label="Which hosting services do you offer?",
         help_text=mark_safe(
             'Choose all the services that your organisation offers. <a href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">More information on our services</a>.'  # noqa
         ),
@@ -473,7 +473,7 @@ class LocationForm(forms.ModelForm):
         max_length=255,
         label="Location name",
         help_text=(
-            "Use the name your customers would recognise for this location. i.e. main headquarters for an office, or eu-west for a datacentre."  # noqa
+            "Use a name your customers would recognise for this location. For example 'Main headquarters', 'Regional office', 'eu-west datacentre'."  # noqa
         ),
         required=False,
         widget=forms.widgets.TextInput(
