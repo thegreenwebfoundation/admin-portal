@@ -1,6 +1,6 @@
 import pytest
 import pathlib
-
+import requests_mock
 from apps.accounts.models.hosting import Hostingprovider
 
 
@@ -40,6 +40,22 @@ def shorter_carbon_txt_string():
         ]
     """  # noqa
     return short_string
+
+
+@pytest.fixture
+def minimal_carbon_txt_org():
+    """
+    A sample minimal carbon.txt file, assuming no upstream, just self hosting with
+    all required on their sustainability page
+    """
+    return """
+        [upstream]
+        providers = []
+        [org]
+        credentials = [
+            { domain='carbontxt.org', doctype = 'sustainability-page', url = 'https://carbontxt.org/our-climate-record'}
+        ]
+    """  # noqa
 
 
 class TestCarbonTxtParser:
@@ -273,13 +289,85 @@ class TestCarbonTxtParser:
         assert res.green is True
         assert res.hosted_by_id == provider.id
 
-    def test_import_from_remote_carbon_text_file(self, db):
+    def test_delegate_domain_lookup_to_dns_txt_record(
+        self, db, hosting_provider_factory, green_domain_factory, carbon_txt_org
+    ):
+        """
+        Test that a checking a carbon txt file on a domain with a TXT record
+        delegates to read the carbon.txt file at the URI specified in the text record.
+
+        """
+        # given a parse object and a domain containing a carbontxt TXT record
         psr = carbon_txt.CarbonTxtParser()
-        result = psr.import_from_url("https://www.bergfreunde.de/carbon.txt")
-        providers = ac_models.Hostingprovider.objects.all()
-        assert len(providers) == 16
-        assert len(result["upstream"]["providers"]) == 2
-        assert len(result["org"]["providers"]) == 14
+
+        # and: org A, who use the domain `delegating_with_txt_record.carbontxt.org`
+        # as a customer of org B
+        delegating_path = "https://delegating-with-txt_record.carbontxt.org/carbon.txt"
+        txt_record_path = "https://carbontxt.org/carbon.txt"
+
+        # and: org B who operate carbontxt.org
+        carbon_txt_provider = hosting_provider_factory.create(
+            website="https://carbontxt.org"
+        )
+        # simulate assoicating both of these domains with the provider ahead of time
+        green_domain_factory.create(url="carbontxt.org", hosted_by=carbon_txt_provider)
+        green_domain_factory.create(
+            url="delegating_with_txt_record.carbontxt.org",
+            hosted_by=carbon_txt_provider,
+        )
+
+        # when: a lookup is made against the domain at the default location
+        with requests_mock.Mocker() as m:
+            m.get("https://carbontxt.org/carbon.txt", text=carbon_txt_org)
+
+            result = psr.parse_from_url(delegating_path)
+
+            # then: the contents of the carbon.txt file at the domain and path specified
+            # in the TXT record is used instead
+            assert result["org"].name == carbon_txt_provider.name
+
+            # and: the sequence of lookups is recorded for debugging / tracing purposes
+            assert "lookup_sequence" in result.keys()
+
+            assert result["lookup_sequence"][0] == delegating_path
+            assert result["lookup_sequence"][1] == txt_record_path
+
+    def test_delegate_domain_lookup_with_http_via_header(
+        self, db, hosting_provider_factory, green_domain_factory
+    ):
+        """
+        Test that when looking up a domain that is managed by an CDN or upstream
+        managed hosting service, a default carbon.txt file is served by the
+        managed service, so the downstream one does not need to implement a file.
+        """
+
+        # given a provider at one domain serving files on behalf of another on a
+        # separate domain
+        hosted_domain = "https://hosted.carbontxt.org/carbon.txt"
+        via_domain = "https://managed-service.carbontxt.org/carbon.txt"
+
+        # when our parser carries out a lookup against the hosted domain
+        psr = carbon_txt.CarbonTxtParser()
+
+        # and: there is an organisation, Org B who operate managed-service.carbontxt.org
+        carbon_txt_provider = hosting_provider_factory.create(
+            website="https://managed-service.carbontxt.org"
+        )
+        # simulate assoicating both of these domains with the provider ahead of time
+        green_domain_factory.create(
+            url="managed-service.carbontxt.org", hosted_by=carbon_txt_provider
+        )
+
+        # when a lookup is made against the domain at the default location
+        result = psr.parse_from_url(hosted_domain)
+
+        # then the result should show the contents of the carbon.txt file served by
+        # the managed service, on behalf of the original domain
+        result["org"].name == carbon_txt_provider.name
+
+        # and the lookup sequence should show the the order the lookups took place
+        assert result["lookup_sequence"][0] == hosted_domain
+        assert result["lookup_sequence"][1] == via_domain
 
     def test_check_with_domain_aliases(self, db, carbon_txt_string):
         """

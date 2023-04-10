@@ -1,13 +1,16 @@
-from apps.accounts.models.hosting import Hostingprovider
-from typing import Dict, Set, List
-import toml
 import logging
-import requests
+import typing
+from typing import Dict, List, Set, Union
 from urllib import parse
 
+import dns.resolver
+import requests
+import toml
 from dateutil import relativedelta
-import typing
 from django.utils import timezone
+
+from apps.accounts.models.hosting import Hostingprovider
+
 from ..accounts import models as ac_models
 from . import models as gc_models
 
@@ -148,7 +151,7 @@ class CarbonTxtParser:
         Accept a domain and carbon_txt file, and return a data structure
         representing what information we have about the providers, related to
         their sustainability claims.
-        For providers that we don't recognise, we
+
         """
         parsed_txt = toml.loads(carbon_txt)
 
@@ -156,6 +159,7 @@ class CarbonTxtParser:
         results = {"org": None, "upstream": [], "not_registered": {}}
 
         org = parsed_txt.get("org")
+
         if org:
             credentials = org.get("credentials")
             primary_creds = credentials[0]
@@ -209,17 +213,64 @@ class CarbonTxtParser:
 
         return results
 
+    def _check_for_carbon_txt_dns_record(self, domain: str) -> Union[str, None]:
+        try:
+            answers = dns.resolver.resolve(domain, "TXT")
+        except dns.resolver.NoAnswer:
+            return None
+
+        carb_txt_record = []
+
+        for answer in answers:
+            txt_record = answer.to_text().strip('"')
+            if txt_record.startswith("carbon-txt"):
+                # pull our url
+                _, overide_url = txt_record.split("=")
+                carb_txt_record.append(overide_url)
+
+        if carb_txt_record:
+            return carb_txt_record[0]
+
     def parse_from_url(self, url: str):
         """
         Try to fetch a carbon.txt file at a given url, and
         if successful, returned the parsed view after carrying
         out lookups
         """
-        res = requests.get(url)
-        domain = parse.urlparse(url).netloc
+
+        # look in the headers for a "via" header, and if present, use that
+        # Via: 1.1 intermediate.domain.com
+        # if there is a valid domain where we have a match, add it to our upstream list
+
+        parsed = parse.urlparse(url)
+        url_domain = parsed.netloc
+
+        lookup_sequence = []
+        lookup_sequence.append(url)
+
+        # do DNS lookup. to see if we have an override url to use instead
+        override_url = self._check_for_carbon_txt_dns_record(url_domain)
+
+        if override_url:
+            res = requests.get(override_url)
+            lookup_sequence.append(override_url)
+            url_domain = parse.urlparse(override_url).netloc
+        else:
+            res = requests.get(url)
+
+        if "via" in res.headers.keys():
+            protocol, via_url, *domain_hash = res.headers["via"].split(" ")
+            lookup_sequence.append(via_url)
+            res = requests.get(via_url)
+            url_domain = parse.urlparse(via_url).netloc
+
         carbon_txt_string = res.content.decode("utf-8")
 
-        return self.parse(domain, carbon_txt_string)
+        parsed_carbon_txt = self.parse(url_domain, carbon_txt_string)
+
+        parsed_carbon_txt["lookup_sequence"] = lookup_sequence
+
+        return parsed_carbon_txt
 
     def parse_and_import(self, domain: str = None, carbon_txt: str = None) -> Dict:
         """

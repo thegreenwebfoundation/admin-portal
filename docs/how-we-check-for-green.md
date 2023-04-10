@@ -75,19 +75,20 @@ The flow is as follows:
 5. If there is a no valid 200/OK response at domain.com/carbon.txt (i.e. a 404, or 403), check the HTTP for a `Via` header with a new domain, as a new domain to check.
 6. Repeat steps 1 through 5 until we end up with a 200 response with a parsable carbon.txt payload, or bad request (i.e. 40x, 50x).
 
+Once there is a parseable carbon.txt file, the domain the carbon.txt belongs to is used as a lookup key against a known list of domains associated with a provider. If there is a match, the site is assumed to be running at the provider, and shows as green.
 
 #### Why do it this way?
 
 This flow is designed to allows CDNs and managed service providers to serve information in a default carbon.txt file, whilst allowing "downstream" providers to share their own, more detailed information if need be.
 
-**Why support the carbon.txt DNX TXT record?**
+**Why support the carbon.txt DNS TXT record?**
 
 Supporting the DNS lookup allows an organisation that owns or operates multiple domains to refer to a single URL for them to maintain.
 The "override URL" also allows for organisations that prefer to serve their file from a `.well-known` directory to do so, without explicitly requiring it from people who do not know what a `.well-known` directory is, or want to control who is able to write to the directory.
 
 **Why use the `Via` header?**
 
-Consider the case where  managed-service-provider.com is hosting customer-a.com's website.
+Consider the case where a managed-service-provider.com is hosting customer-a.com's website.
 
 The managed service provider may be  offering a CDN or managed hosting service, but they may not have control over the customer-a.com domain. They may not have, or want direct control over what a downstream user is sharing at a given url. However because they are offering some service "in front" of customer-a's website, and serving it over a secure connection, they are able to add headers to HTTP requests.
 
@@ -96,6 +97,29 @@ the [HTTP Via header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/
 **Why use domain/carbon.txt as the path?**
 
 Defaulting to a root `carbon.txt` makes it possible to implement a carbon.txt file without needing to know about `.well-known` directories, that by convention are normally invisible files. Having a single default place to look avoids needing to support a hierarchy of potential places to look, and precedence rules for where to look - there is either one place to default to when making an HTTP request, OR the single override.
+
+
+**How can you trust this? What would stop me lying in my carbon.txt file about my site?**
+
+You could indeed list a green provider in your supply chain, and claim it was hosting your site, so your site showed up as green through association. Your site would not show up as green until you had been able to submit some supporting evidence for manual review that you _really were_ using that provider.
+
+After manual review by our support staff, you would have managed to mark one domain as green.
+
+
+**What would stop me using someone else's carbon.txt file instead?**
+
+There are two mechanisms designed to mitigate against lying.
+
+**1. Manual review for new domains** - just like with your own domain, we have a manual review step for any new domain delegating to one already trusted. New domains don't show as green until they have been added to an allow list for a given provider, or until a domain hash is made available when performing a lookup. More on domain hashes below.
+
+**2. Domain hashes for newly seen domains** -
+
+Domain hashes are SHA256 hashes based on:
+
+1. the domain a lookup is being delegated to
+2. a secret shared that only the green web platform and the provider associated with the domain above has access to
+
+They are an optional part of either a TXT record or HTTP header, when delegating a lookup to carbon.txt file at a different domain. They allow the organisation Cool Green Hosted Services Inc, who own the domain cool-green-hosted-services.com, and who are serving a site at domain customer-of-green-hosted-services.com, to assert that it's really organisation Cool Green Hosted Services Inc operating the infrastructure powering customer-of-green-hosted-services.com, and to use the supporting evidence shared by Cool Green Hosted Services Inc, for any green checks.
 
 
 
