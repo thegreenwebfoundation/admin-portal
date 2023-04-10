@@ -241,16 +241,42 @@ class CarbonTxtParser:
             return None
 
         carb_txt_record = []
+        domain_hash_match = None
 
         for answer in answers:
             txt_record = answer.to_text().strip('"')
             if txt_record.startswith("carbon-txt"):
                 # pull our url
-                _, overide_url = txt_record.split("=")
-                carb_txt_record.append(overide_url)
+                _, txt_record_body = txt_record.split("=")
+
+                domain_hash_check = txt_record_body.split(" ")
+
+                if len(domain_hash_check) == 1:
+                    override_url = domain_hash_check[0]
+                    carb_txt_record.append(override_url)
+
+                if len(domain_hash_check) == 2:
+                    override_url = domain_hash_check[0]
+                    domain_hash = domain_hash_check[1]
+
+                    carb_txt_record.append(override_url)
+                    override_domain = parse.urlparse(override_url).netloc
+                    matched_domain_hash = self._check_domain_hash_against_provider(
+                        domain_hash, override_domain
+                    )
+
+                    if matched_domain_hash:
+                        # create our new domain
+                        provider = gc_models.GreenDomain.objects.get(
+                            url=override_domain
+                        ).hosting_provider
+
+                        gc_models.GreenDomain.create_for_provider(domain, provider)
+
+                carb_txt_record.append(override_url)
 
         if carb_txt_record:
-            return carb_txt_record[0]
+            return carb_txt_record[0], False
 
     def parse_from_url(self, url: str):
         """
@@ -270,7 +296,9 @@ class CarbonTxtParser:
         lookup_sequence.append(url)
 
         # do DNS lookup. to see if we have an override url to use instead
-        override_url = self._check_for_carbon_txt_dns_record(url_domain)
+        override_url, matched_dns_hash = self._check_for_carbon_txt_dns_record(
+            url_domain
+        )
 
         if override_url:
             res = requests.get(override_url)

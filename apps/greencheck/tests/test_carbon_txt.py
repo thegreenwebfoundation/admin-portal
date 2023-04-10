@@ -10,6 +10,8 @@ from .. import models as gc_models
 from .. import choices
 from .. import workers
 
+SAMPLE_SECRET_BODY = "9b77e6f009dee68ae5307f2e54f4f36bc25d6d0dc65c86714784ad33a5480a64"
+
 
 @pytest.fixture
 def carbon_txt_string():
@@ -370,9 +372,44 @@ class TestCarbonTxtParser:
         assert result["lookup_sequence"][1] == via_domain
 
     def test_mark_dns_text_override_green_with_domain_hash(
-        self, db, hosting_provider_factory, green_domain_factory
+        self, db, hosting_provider_factory, green_domain_factory, minimal_carbon_txt_org
     ):
-        pass
+        # given a provider, at one domain serving files on behalf of another on a
+        # separate domain
+        delegating_path = "https://delegating-with-txt-record.carbontxt.org/carbon.txt"
+        txt_record_path = "https://carbontxt.org/carbon.txt"
+
+        # when our parser carries out a lookup against the hosted domain
+        psr = carbon_txt.CarbonTxtParser()
+
+        carbon_txt_provider = hosting_provider_factory.create(
+            website="https://carbontxt.org"
+        )
+        # simulate assoicating one of these domains with the provider ahead of time
+        green_domain_factory.create(url="carbontxt.org", hosted_by=carbon_txt_provider)
+
+        # and: a shared secret
+        ac_models.ProviderSharedSecret.objects.create(
+            provider=carbon_txt_provider, body=SAMPLE_SECRET_BODY
+        )
+
+        with requests_mock.Mocker() as m:
+            m.get("https://carbontxt.org/carbon.txt", text=minimal_carbon_txt_org)
+            result = psr.parse_from_url(delegating_path)
+
+            # then: the our hosted_domain should have been added as a green domain
+            # for future checks
+            assert gc_models.GreenDomain.objects.get(
+                url="delegating-with-txt-record.carbontxt.org"
+            )
+
+            # and: we should see our provider in our results without needing to have
+            # its domain added in any manual process
+            result["org"].name == carbon_txt_provider.name
+
+            # and the lookup sequence should show the the order the lookups took place
+            assert result["lookup_sequence"][0] == delegating_path
+            assert result["lookup_sequence"][1] == txt_record_path
 
     def test_mark_http_via_override_green_with_domain_hash(
         self, db, hosting_provider_factory, green_domain_factory
