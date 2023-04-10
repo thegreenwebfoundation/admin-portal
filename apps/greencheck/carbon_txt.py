@@ -123,10 +123,23 @@ class CarbonTxtParser:
         except gc_models.GreenDomain.DoesNotExist:
             return None
 
+    def _check_domain_hash_against_provider(
+        hash: str, domain: str, provider: ac_models.Hostingprovider
+    ) -> bool:
+        """
+        Accept a SHA256 hash, a domain name, and hosting provider and check that
+        making a hash with the domain and provider's shared secret produces the
+        same value as the provided hash. Returns a true boolean result, if
+        there is a match
+        """
+
+        # TODO: add the shared secret to the model
+        # res = hashlib.sha256(f"{domain} {provider.shared_secret}".encode("utf-8"))
+        # return res.hexdigest() == hash
+
     def _fetch_provider(
         self,
         provider: typing.Union[typing.Dict, str],
-        # domain: typing.Union[str, None] = None,
     ):
         """
         Accept either a string or a dict representing a provider, plus

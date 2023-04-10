@@ -300,9 +300,9 @@ class TestCarbonTxtParser:
         # given a parse object and a domain containing a carbontxt TXT record
         psr = carbon_txt.CarbonTxtParser()
 
-        # and: org A, who use the domain `delegating_with_txt_record.carbontxt.org`
+        # and: org A, who use the domain `delegating-with-txt-record.carbontxt.org`
         # as a customer of org B
-        delegating_path = "https://delegating-with-txt_record.carbontxt.org/carbon.txt"
+        delegating_path = "https://delegating-with-txt-record.carbontxt.org/carbon.txt"
         txt_record_path = "https://carbontxt.org/carbon.txt"
 
         # and: org B who operate carbontxt.org
@@ -312,7 +312,7 @@ class TestCarbonTxtParser:
         # simulate assoicating both of these domains with the provider ahead of time
         green_domain_factory.create(url="carbontxt.org", hosted_by=carbon_txt_provider)
         green_domain_factory.create(
-            url="delegating_with_txt_record.carbontxt.org",
+            url="delegating-with-txt-record.carbontxt.org",
             hosted_by=carbon_txt_provider,
         )
 
