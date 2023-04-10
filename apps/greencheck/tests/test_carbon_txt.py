@@ -369,6 +369,52 @@ class TestCarbonTxtParser:
         assert result["lookup_sequence"][0] == hosted_domain
         assert result["lookup_sequence"][1] == via_domain
 
+    def test_mark_dns_text_override_green_with_domain_hash(
+        self, db, hosting_provider_factory, green_domain_factory
+    ):
+        pass
+
+    def test_mark_http_via_override_green_with_domain_hash(
+        self, db, hosting_provider_factory, green_domain_factory
+    ):
+        # given a provider, at one domain serving files on behalf of another on a
+        # separate domain
+        hosted_domain = "https://hosted.carbontxt.org/carbon.txt"
+        via_domain = "https://managed-service.carbontxt.org/carbon.txt"
+
+        # when our parser carries out a lookup against the hosted domain
+        psr = carbon_txt.CarbonTxtParser()
+
+        # and: there is an organisation, Org B who operate managed-service.carbontxt.org
+        carbon_txt_provider = hosting_provider_factory.create(
+            website="https://managed-service.carbontxt.org"
+        )
+        # with a green domain created for Org B
+        green_domain_factory.create(
+            url="managed-service.carbontxt.org", hosted_by=carbon_txt_provider
+        )
+
+        SAMPLE_SECRET_BODY = (
+            "9b77e6f009dee68ae5307f2e54f4f36bc25d6d0dc65c86714784ad33a5480a64"
+        )
+        ac_models.ProviderSharedSecret.objects.create(
+            provider=carbon_txt_provider, body=SAMPLE_SECRET_BODY
+        )
+
+        result = psr.parse_from_url(hosted_domain)
+
+        # then: the our hosted_domain should have been added as a green domain
+        # for future checks
+        assert gc_models.GreenDomain.objects.get(url="hosted.carbontxt.org")
+
+        # and: we should see our provider in our results without needing to have
+        # its domain added in any manual process
+        result["org"].name == carbon_txt_provider.name
+
+        # and the lookup sequence should show the the order the lookups took place
+        assert result["lookup_sequence"][0] == hosted_domain
+        assert result["lookup_sequence"][1] == via_domain
+
     def test_check_with_domain_aliases(self, db, carbon_txt_string):
         """
         Does

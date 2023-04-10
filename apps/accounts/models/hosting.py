@@ -234,6 +234,10 @@ class Hostingprovider(models.Model):
             "greenweb_admin:accounts_hostingprovider_change", args=[str(self.id)]
         )
 
+    @property
+    def shared_secret(self) -> str:
+        return self.providersharedsecret.body
+
     def label_as_awaiting_review(self, notify_admins=False):
         """
         Mark this hosting provider as in need of review by staff.
@@ -369,6 +373,20 @@ class Hostingprovider(models.Model):
             models.Index(fields=["archived"], name="hp_archived"),
             models.Index(fields=["showonwebsite"], name="hp_showonwebsite"),
         ]
+
+
+class ProviderSharedSecret(TimeStampedModel):
+    """
+    A shared secret linked to a provider. Used when
+    checking if a domain hash has been generated from
+    a provider's shared secret and given domain.
+    """
+
+    body = models.CharField(
+        max_length=512,
+        help_text="The body of the shared secret",
+    )
+    provider = models.OneToOneField(Hostingprovider, on_delete=models.CASCADE)
 
 
 class AbstractNote(TimeStampedModel):

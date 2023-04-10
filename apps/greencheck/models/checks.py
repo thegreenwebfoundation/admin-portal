@@ -468,6 +468,23 @@ class GreenDomain(models.Model):
         return f"{self.url} - {self.modified}"
 
     # Factories
+    @classmethod
+    def create_for_provider(cls, domain: str, provider: ac_models.Hostingprovider):
+        """
+        Create a new green domain for the domain passed in,  and allocate
+        it  to the given provider.
+        """
+        dom = GreenDomain(
+            green=True,
+            url=domain,
+            hosted_by=provider.name,
+            hosted_by_id=provider.id,
+            hosted_by_website=provider.website,
+            partner=ac_models.PartnerChoice.NONE,
+            modified=timezone.now(),
+        )
+        dom.save()
+        return dom
 
     @classmethod
     def grey_result(cls, domain=None):

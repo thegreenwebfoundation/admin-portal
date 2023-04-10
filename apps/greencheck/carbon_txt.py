@@ -2,7 +2,7 @@ import logging
 import typing
 from typing import Dict, List, Set, Union
 from urllib import parse
-
+import hashlib
 import dns.resolver
 import requests
 import toml
@@ -91,6 +91,7 @@ class CarbonTxtParser:
 
 
         """
+
         evidence = found_provider.supporting_documents.all()
         evidence_links = [item.url for item in evidence]
         new_evidence = []
@@ -123,19 +124,25 @@ class CarbonTxtParser:
         except gc_models.GreenDomain.DoesNotExist:
             return None
 
-    def _check_domain_hash_against_provider(
-        hash: str, domain: str, provider: ac_models.Hostingprovider
-    ) -> bool:
+    def _check_domain_hash_against_provider(self, hash: str, domain: str) -> bool:
         """
-        Accept a SHA256 hash, a domain name, and hosting provider and check that
-        making a hash with the domain and provider's shared secret produces the
-        same value as the provided hash. Returns a true boolean result, if
-        there is a match
+        Accept a SHA256 hash, a domain name, and check that
+        making a hash with the domain and shared secret for the provider
+        linked to that domain produces the same value as the provided hash.
+        Returns a true boolean result, if there is a match
         """
 
-        # TODO: add the shared secret to the model
-        # res = hashlib.sha256(f"{domain} {provider.shared_secret}".encode("utf-8"))
-        # return res.hexdigest() == hash
+        try:
+            provider = gc_models.GreenDomain.objects.get(url=domain).hosting_provider
+        except Exception as ex:
+            logger.exception(
+                f"There was an error finding a provider for domain: {domain} - {ex}"
+            )
+            return False
+
+        res = hashlib.sha256(f"{domain} {provider.shared_secret}".encode("utf-8"))
+
+        return res.hexdigest() == hash
 
     def _fetch_provider(
         self,
@@ -186,18 +193,19 @@ class CarbonTxtParser:
                 if cred["domain"] == primary_creds["domain"]
             ]
             # check for any new evidence for this domain
-            new_org_evidence = self._compare_evidence(
-                org_provider, matching_domain_credentials
-            )
+            if org_provider:
+                new_org_evidence = self._compare_evidence(
+                    org_provider, matching_domain_credentials
+                )
 
-            # if the evidence
-            if new_org_evidence:
-                unregistered_evidence.extend(new_org_evidence)
+                # if there is evidence, add it to the list
+                if new_org_evidence:
+                    unregistered_evidence.extend(new_org_evidence)
 
+                results["org"] = org_provider
             # either list as known provider, or add to the list
             # of new entities we do not have in our system yet
-            if org_provider:
-                results["org"] = org_provider
+
             else:
                 results["not_registered"]["org"] = org
 
@@ -268,6 +276,7 @@ class CarbonTxtParser:
             res = requests.get(override_url)
             lookup_sequence.append(override_url)
             url_domain = parse.urlparse(override_url).netloc
+
         else:
             res = requests.get(url)
 
@@ -275,7 +284,28 @@ class CarbonTxtParser:
             protocol, via_url, *domain_hash = res.headers["via"].split(" ")
             lookup_sequence.append(via_url)
             res = requests.get(via_url)
+
             url_domain = parse.urlparse(via_url).netloc
+
+            if domain_hash:
+                try:
+                    matched_domain_hash = self._check_domain_hash_against_provider(
+                        domain_hash[0], url_domain
+                    )
+
+                    if matched_domain_hash:
+                        # create our new domain
+                        provider = gc_models.GreenDomain.objects.get(
+                            url=url_domain
+                        ).hosting_provider
+
+                        gc_models.GreenDomain.create_for_provider(
+                            parsed.netloc, provider
+                        )
+                except Exception as ex:
+                    logger.exception(
+                        f"Unable to create the green domain for: {parsed.netloc} - {ex}"
+                    )
 
         carbon_txt_string = res.content.decode("utf-8")
 
