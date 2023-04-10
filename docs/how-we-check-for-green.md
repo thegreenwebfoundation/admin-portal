@@ -119,8 +119,10 @@ Domain hashes are SHA256 hashes based on:
 1. the domain a lookup is being delegated to
 2. a secret shared that only the green web platform and the provider associated with the domain above has access to
 
-They are an optional part of either a TXT record or HTTP header, when delegating a lookup to carbon.txt file at a different domain. They allow the organisation Cool Green Hosted Services Inc, who own the domain cool-green-hosted-services.com, and who are serving a site at domain customer-of-green-hosted-services.com, to assert that it's really organisation Cool Green Hosted Services Inc operating the infrastructure powering customer-of-green-hosted-services.com, and to use the supporting evidence shared by Cool Green Hosted Services Inc, for any green checks.
+They are an optional part of either a TXT record or HTTP header, when delegating a lookup to carbon.txt file at a different domain.
 
+They allow the organisation *Cool Green Hosted Services Inc*, who own the domain `cool-green-hosted-services.com`, and who are serving a site for a customer *Customer Of Green Hosted Services Ltd* at domain `customer-of-green-hosted-services.com`, to assert that it's really organisation *Cool Green Hosted Services Inc* operating the infrastructure powering `customer-of-green-hosted-services.com`, and to use the supporting evidence shared by
+*Cool Green Hosted Services Inc*, for any green checks by default.
 
 
 For more, please follow the link to the [github repo where the syntax and conventions are being worked at out](https://github.com/thegreenwebfoundation/carbon.txt).

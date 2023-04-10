@@ -290,7 +290,7 @@ class TestCarbonTxtParser:
         assert res.hosted_by_id == provider.id
 
     def test_delegate_domain_lookup_to_dns_txt_record(
-        self, db, hosting_provider_factory, green_domain_factory, carbon_txt_org
+        self, db, hosting_provider_factory, green_domain_factory, minimal_carbon_txt_org
     ):
         """
         Test that a checking a carbon txt file on a domain with a TXT record
@@ -318,7 +318,7 @@ class TestCarbonTxtParser:
 
         # when: a lookup is made against the domain at the default location
         with requests_mock.Mocker() as m:
-            m.get("https://carbontxt.org/carbon.txt", text=carbon_txt_org)
+            m.get("https://carbontxt.org/carbon.txt", text=minimal_carbon_txt_org)
 
             result = psr.parse_from_url(delegating_path)
 
