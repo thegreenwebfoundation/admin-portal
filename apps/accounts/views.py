@@ -5,6 +5,7 @@ from dal import autocomplete
 import smtplib
 from django.core.files.storage import DefaultStorage
 from django.contrib import messages
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
@@ -115,7 +116,7 @@ class UserRegistrationView(RegistrationView):
 
 class UserActivationView(ActivationView):
     def get_success_url(self, user=None):
-        return reverse("admin:index")
+        return reverse("login")
 
     def get(self, *args, **kwargs):
         """
@@ -131,13 +132,17 @@ class UserActivationView(ActivationView):
                 sender=self.__class__, user=activated_user, request=self.request
             )
             message = "Your user is activated, you can now login"
-            messages.add_message(self.request, messages.SUCCESS, message)
+            messages.success(self.request, message)
             return HttpResponseRedirect(
                 force_text(self.get_success_url(activated_user))
             )
 
-        messages.add_message(self.request, messages.ERROR, error_message)
+        messages.error(self.request, error_message)
         return HttpResponseRedirect(force_text(self.get_success_url()))
+
+
+class UserLoginView(LoginView):
+    template_name = "auth/login.html"
 
 
 class UserUpdateView(UpdateView):
