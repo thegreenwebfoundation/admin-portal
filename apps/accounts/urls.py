@@ -7,6 +7,7 @@ from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts.views import (
     UserActivationView,
     UserRegistrationView,
+    UserLoginView,
     DashboardView,
     UserUpdateView,
     ProviderRequestListView,
