@@ -5,6 +5,7 @@ from dal import autocomplete
 import smtplib
 from django.core.files.storage import DefaultStorage
 from django.contrib import messages
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
@@ -136,6 +137,10 @@ class UserActivationView(ActivationView):
 
         messages.error(self.request, error_message)
         return HttpResponseRedirect(force_text(self.get_success_url()))
+
+
+class UserLoginView(LoginView):
+    template_name = "auth/login.html"
 
 
 class UserUpdateView(UpdateView):
