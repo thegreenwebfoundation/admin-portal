@@ -5,6 +5,7 @@ from django.contrib.auth import views as auth_views
 from apps.accounts.views import (
     UserActivationView,
     UserRegistrationView,
+    UserLoginView,
     DashboardView,
     UserUpdateView,
     ProviderRequestListView,
@@ -25,8 +26,9 @@ urlpatterns = [
         name="admin_password_reset",
     ),
     path("accounts/signup/", UserRegistrationView.as_view(), name="registration"),
+    path("accounts/login/", UserLoginView.as_view(), name="login"),
     url(
-        r"activation/(?P<activation_key>[-:\w]+)/",
+        r"accounts/activation/(?P<activation_key>[-:\w]+)/",
         UserActivationView.as_view(),
         name="activation",
     ),
