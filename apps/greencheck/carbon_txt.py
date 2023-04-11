@@ -271,7 +271,7 @@ class CarbonTxtParser:
                             url=override_domain
                         ).hosting_provider
 
-                        gc_models.GreenDomain.create_for_provider(domain, provider)
+                        gc_models.GreenDomain.upsert_for_provider(domain, provider)
 
                 carb_txt_record.append(override_url)
 
@@ -327,7 +327,7 @@ class CarbonTxtParser:
                             url=url_domain
                         ).hosting_provider
 
-                        gc_models.GreenDomain.create_for_provider(
+                        gc_models.GreenDomain.upsert_for_provider(
                             parsed.netloc, provider
                         )
                 except Exception as ex:
