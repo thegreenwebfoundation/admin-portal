@@ -142,6 +142,10 @@ class UserActivationView(ActivationView):
 
 
 class UserLoginView(LoginView):
+    """
+    Redirect URL configured in settings.LOGIN_REDIRECT_URL
+    """
+
     template_name = "auth/login.html"
 
 

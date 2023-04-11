@@ -111,7 +111,8 @@ CRISPY_TEMPLATE_PACK = "tailwind"
 # Auth Mechanism
 AUTH_USER_MODEL = "accounts.User"
 
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/requests"
+LOGIN_URL = "/accounts/login"
 
 # We need this to account for some providers that have numbers of IP
 # ranges that are greater than the default limit in django.

@@ -199,8 +199,9 @@ class GreenWebAdmin(AdminSite):
     index_template = "admin_index.html"
     site_header = "The Green Web Foundation Administration Site"
     index_title = "The Green Web Foundation Administration Site"
-    login_template = "login.html"
-    logout_template = "logout.html"
+    login_template = "auth/login.html"
+    # TODO: create the template
+    logout_template = "auth/logout.html"
 
     def has_permission(self, request):
         """
