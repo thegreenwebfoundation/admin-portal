@@ -45,11 +45,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class RegistrationForm(RegistrationFormCaseInsensitive):
-    class Meta(RegistrationFormCaseInsensitive.Meta):
-        model = User
-
-
 class DashboardView(TemplateView):
     template_name = "dashboard.html"
 
@@ -75,9 +70,14 @@ class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
         return qs
 
 
-class AdminRegistrationView(RegistrationView):
+class RegistrationForm(RegistrationFormCaseInsensitive):
+    class Meta(RegistrationFormCaseInsensitive.Meta):
+        model = User
+
+
+class UserRegistrationView(RegistrationView):
     form_class = RegistrationForm
-    template_name = "registration.html"
+    template_name = "auth/registration.html"
 
     email_body_template = "emails/activation.html"
     email_subject_template = "emails/activation_subject.txt"
@@ -100,18 +100,20 @@ class AdminRegistrationView(RegistrationView):
         """
         Return the URL to redirect to after successful redirection.
         """
-        return reverse("provider_request_list")
+        # stay on the same page
+        return reverse("registration")
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         if form.is_valid():
-            messages.add_message(
-                request, messages.INFO, "Check your email to activate the user"
+            messages.success(
+                request,
+                "Check your email inbox and open the activation link in order to complete the registration process.",
             )
         return super().post(request, *args, **kwargs)
 
 
-class AdminActivationView(ActivationView):
+class UserActivationView(ActivationView):
     def get_success_url(self, user=None):
         return reverse("admin:index")
 
