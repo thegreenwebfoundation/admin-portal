@@ -3,8 +3,8 @@ from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 
 from apps.accounts.views import (
-    AdminActivationView,
-    AdminRegistrationView,
+    UserActivationView,
+    UserRegistrationView,
     DashboardView,
     UserUpdateView,
     ProviderRequestListView,
@@ -24,10 +24,10 @@ urlpatterns = [
         auth_views.PasswordResetView.as_view(),
         name="admin_password_reset",
     ),
-    path("accounts/signup/", AdminRegistrationView.as_view(), name="registration"),
+    path("accounts/signup/", UserRegistrationView.as_view(), name="registration"),
     url(
         r"activation/(?P<activation_key>[-:\w]+)/",
-        AdminActivationView.as_view(),
+        UserActivationView.as_view(),
         name="activation",
     ),
     path(
