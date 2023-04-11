@@ -32,11 +32,7 @@ from apps.greencheck.swagger import TGWFSwaggerView
 
 from apps.greencheck.api import legacy_views
 from apps.greencheck.api import views as api_views
-
-
-from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts.admin import LabelAutocompleteView
-
 from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
 
@@ -69,15 +65,14 @@ if settings.DEBUG:
 
 
 urlpatterns += [
-    # admin views
     path("", include(accounts_urls)),
+    # todo: remove when no longer necessary
     path("accounts/", include("django.contrib.auth.urls")),
     path(
         "green-urls",
         RedirectView.as_view(url=reverse_lazy("greenweb_admin:green_urls")),
         name="green_urls_redirect",
     ),
-    path("admin/", admin.urls),
     path(
         "label-autocomplete",
         LabelAutocompleteView.as_view(),

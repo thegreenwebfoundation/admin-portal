@@ -1,7 +1,9 @@
 from django.urls import path
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
+from django.views.generic import RedirectView
 
+from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts.views import (
     UserActivationView,
     UserRegistrationView,
@@ -20,6 +22,13 @@ urlpatterns = [
         DashboardView.as_view(),
         name="dashboard",
     ),
+    # include admin URLs
+    path("admin/", admin.urls),
+    # override admin auth pages
+    # TODO: check why this doesn't work
+    path("admin/login/", RedirectView.as_view(url="accounts/login/")),
+    path("admin/logout/", RedirectView.as_view(url="accounts/logout/")),
+    path("admin/activation/", RedirectView.as_view(url="accounts/activation/")),
     path(
         "password_reset/",
         auth_views.PasswordResetView.as_view(),
