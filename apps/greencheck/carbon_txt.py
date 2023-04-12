@@ -140,8 +140,13 @@ class CarbonTxtParser:
             )
             return False
 
-        res = hashlib.sha256(f"{domain} {provider.shared_secret}".encode("utf-8"))
+        shared_secret = provider.shared_secret
 
+        # return early if there is no shared secret to check
+        if not shared_secret:
+            return False
+
+        res = hashlib.sha256(f"{domain}{shared_secret.body}".encode("utf-8"))
         return res.hexdigest() == hash
 
     def _fetch_provider(
@@ -234,14 +239,13 @@ class CarbonTxtParser:
 
         return results
 
-    def _check_for_carbon_txt_dns_record(self, domain: str) -> Union[str, None]:
+    def _check_for_carbon_txt_dns_record(self, domain: str) -> Union[List[str], List]:
         try:
             answers = dns.resolver.resolve(domain, "TXT")
         except dns.resolver.NoAnswer:
-            return None
+            return [False, False]
 
         carb_txt_record = []
-        domain_hash_match = None
 
         for answer in answers:
             txt_record = answer.to_text().strip('"')
@@ -276,7 +280,9 @@ class CarbonTxtParser:
                 carb_txt_record.append(override_url)
 
         if carb_txt_record:
-            return carb_txt_record[0], False
+            return [carb_txt_record[0], False]
+
+        return [False, False]
 
     def parse_from_url(self, url: str):
         """
@@ -295,10 +301,13 @@ class CarbonTxtParser:
         lookup_sequence = []
         lookup_sequence.append(url)
 
+        import rich
+
+        rich.inspect(url)
+        rich.inspect(url_domain)
+
         # do DNS lookup. to see if we have an override url to use instead
-        override_url, matched_dns_hash = self._check_for_carbon_txt_dns_record(
-            url_domain
-        )
+        override_url, *rest = self._check_for_carbon_txt_dns_record(url_domain)
 
         if override_url:
             res = requests.get(override_url)
@@ -336,6 +345,8 @@ class CarbonTxtParser:
                     )
 
         carbon_txt_string = res.content.decode("utf-8")
+
+        rich.print(carbon_txt_string)
 
         parsed_carbon_txt = self.parse(url_domain, carbon_txt_string)
 

@@ -10,6 +10,9 @@ from .. import models as gc_models
 from .. import choices
 from .. import workers
 
+
+#
+# hashlib.sha256(f"{domain} {shared_secret.body}".encode("utf-8"))
 SAMPLE_SECRET_BODY = "9b77e6f009dee68ae5307f2e54f4f36bc25d6d0dc65c86714784ad33a5480a64"
 
 
@@ -55,7 +58,7 @@ def minimal_carbon_txt_org():
         providers = []
         [org]
         credentials = [
-            { domain='carbontxt.org', doctype = 'sustainability-page', url = 'https://carbontxt.org/our-climate-record'}
+            { domain='used-in-tests.carbontxt.org', doctype = 'sustainability-page', url = 'https://carbontxt.org/our-climate-record'}
         ]
     """  # noqa
 
@@ -305,34 +308,39 @@ class TestCarbonTxtParser:
         # and: org A, who use the domain `delegating-with-txt-record.carbontxt.org`
         # as a customer of org B
         delegating_path = "https://delegating-with-txt-record.carbontxt.org/carbon.txt"
-        txt_record_path = "https://carbontxt.org/carbon.txt"
+        txt_record_path = "https://used-in-tests.carbontxt.org/carbon.txt"
 
         # and: org B who operate carbontxt.org
         carbon_txt_provider = hosting_provider_factory.create(
-            website="https://carbontxt.org"
+            website="https://used-in-tests.carbontxt.org"
         )
-        # simulate assoicating both of these domains with the provider ahead of time
-        green_domain_factory.create(url="carbontxt.org", hosted_by=carbon_txt_provider)
+        # And: both domains associated with the provider ahead of time
+        green_domain_factory.create(
+            url="used-in-tests.carbontxt.org", hosted_by=carbon_txt_provider
+        )
         green_domain_factory.create(
             url="delegating-with-txt-record.carbontxt.org",
             hosted_by=carbon_txt_provider,
         )
 
         # when: a lookup is made against the domain at the default location
-        with requests_mock.Mocker() as m:
-            m.get("https://carbontxt.org/carbon.txt", text=minimal_carbon_txt_org)
+        # with requests_mock.Mocker() as m:
+        #     m.get(
+        #         "https://used-in-tests.carbontxt.org/carbon.txt",
+        #         text=minimal_carbon_txt_org,
+        #     )
 
-            result = psr.parse_from_url(delegating_path)
+        result = psr.parse_from_url(delegating_path)
 
-            # then: the contents of the carbon.txt file at the domain and path specified
-            # in the TXT record is used instead
-            assert result["org"].name == carbon_txt_provider.name
+        # then: the contents of the carbon.txt file at the domain and path specified
+        # in the TXT record is used instead
+        assert result["org"].name == carbon_txt_provider.name
 
-            # and: the sequence of lookups is recorded for debugging / tracing purposes
-            assert "lookup_sequence" in result.keys()
+        # and: the sequence of lookups is recorded for debugging / tracing purposes
+        assert "lookup_sequence" in result.keys()
 
-            assert result["lookup_sequence"][0] == delegating_path
-            assert result["lookup_sequence"][1] == txt_record_path
+        assert result["lookup_sequence"][0] == delegating_path
+        assert result["lookup_sequence"][1] == txt_record_path
 
     def test_delegate_domain_lookup_with_http_via_header(
         self, db, hosting_provider_factory, green_domain_factory
@@ -343,27 +351,26 @@ class TestCarbonTxtParser:
         managed service, so the downstream one does not need to implement a file.
         """
 
-        # given a provider at one domain serving files on behalf of another on a
+        # Given: a provider at one domain serving files on behalf of another on a
         # separate domain
         hosted_domain = "https://hosted.carbontxt.org/carbon.txt"
         via_domain = "https://managed-service.carbontxt.org/carbon.txt"
 
-        # when our parser carries out a lookup against the hosted domain
+        # When: our parser carries out a lookup against the hosted domain
         psr = carbon_txt.CarbonTxtParser()
 
-        # and: there is an organisation, Org B who operate managed-service.carbontxt.org
+        # And: there is an organisation, Org B who operate managed-service.carbontxt.org
         carbon_txt_provider = hosting_provider_factory.create(
             website="https://managed-service.carbontxt.org"
         )
-        # simulate assoicating both of these domains with the provider ahead of time
         green_domain_factory.create(
             url="managed-service.carbontxt.org", hosted_by=carbon_txt_provider
         )
 
-        # when a lookup is made against the domain at the default location
+        # When: a lookup is made against the domain at the default location
         result = psr.parse_from_url(hosted_domain)
 
-        # then the result should show the contents of the carbon.txt file served by
+        # Then: the result should show the contents of the carbon.txt file served by
         # the managed service, on behalf of the original domain
         result["org"].name == carbon_txt_provider.name
 
@@ -377,39 +384,39 @@ class TestCarbonTxtParser:
         # given a provider, at one domain serving files on behalf of another on a
         # separate domain
         delegating_path = "https://delegating-with-txt-record.carbontxt.org/carbon.txt"
-        txt_record_path = "https://carbontxt.org/carbon.txt"
+        txt_record_path = "https://used-in-tests.carbontxt.org/carbon.txt"
 
         # when our parser carries out a lookup against the hosted domain
         psr = carbon_txt.CarbonTxtParser()
 
         carbon_txt_provider = hosting_provider_factory.create(
-            website="https://carbontxt.org"
+            website="https://used-in-tests.carbontxt.org"
         )
-        # simulate assoicating one of these domains with the provider ahead of time
-        green_domain_factory.create(url="carbontxt.org", hosted_by=carbon_txt_provider)
+        # simulate associating one of these domains with the provider ahead of time
+        green_domain_factory.create(
+            url="used-in-tests.carbontxt.org", hosted_by=carbon_txt_provider
+        )
 
         # and: a shared secret
         ac_models.ProviderSharedSecret.objects.create(
             provider=carbon_txt_provider, body=SAMPLE_SECRET_BODY
         )
 
-        with requests_mock.Mocker() as m:
-            m.get("https://carbontxt.org/carbon.txt", text=minimal_carbon_txt_org)
-            result = psr.parse_from_url(delegating_path)
+        result = psr.parse_from_url(delegating_path)
 
-            # then: the our hosted_domain should have been added as a green domain
-            # for future checks
-            assert gc_models.GreenDomain.objects.get(
-                url="delegating-with-txt-record.carbontxt.org"
-            )
+        # then: the our hosted_domain should have been added as a green domain
+        # for future checks
+        assert gc_models.GreenDomain.objects.get(
+            url="delegating-with-txt-record.carbontxt.org"
+        )
 
-            # and: we should see our provider in our results without needing to have
-            # its domain added in any manual process
-            result["org"].name == carbon_txt_provider.name
+        # and: we should see our provider in our results without needing to have
+        # its domain added in any manual process
+        result["org"].name == carbon_txt_provider.name
 
-            # and the lookup sequence should show the the order the lookups took place
-            assert result["lookup_sequence"][0] == delegating_path
-            assert result["lookup_sequence"][1] == txt_record_path
+        # and the lookup sequence should show the the order the lookups took place
+        assert result["lookup_sequence"][0] == delegating_path
+        assert result["lookup_sequence"][1] == txt_record_path
 
     def test_mark_http_via_override_green_with_domain_hash(
         self, db, hosting_provider_factory, green_domain_factory
@@ -431,9 +438,6 @@ class TestCarbonTxtParser:
             url="managed-service.carbontxt.org", hosted_by=carbon_txt_provider
         )
 
-        SAMPLE_SECRET_BODY = (
-            "9b77e6f009dee68ae5307f2e54f4f36bc25d6d0dc65c86714784ad33a5480a64"
-        )
         ac_models.ProviderSharedSecret.objects.create(
             provider=carbon_txt_provider, body=SAMPLE_SECRET_BODY
         )

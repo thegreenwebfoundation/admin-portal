@@ -237,7 +237,10 @@ class Hostingprovider(models.Model):
 
     @property
     def shared_secret(self) -> str:
-        return self.providersharedsecret
+        try:
+            return self.providersharedsecret
+        except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
+            return None
 
     # Mutators
     def refresh_shared_secret(self) -> str:
