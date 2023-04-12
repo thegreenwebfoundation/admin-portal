@@ -1,6 +1,5 @@
 import pytest
 import pathlib
-import requests_mock
 from apps.accounts.models.hosting import Hostingprovider
 
 
@@ -322,13 +321,6 @@ class TestCarbonTxtParser:
             url="delegating-with-txt-record.carbontxt.org",
             hosted_by=carbon_txt_provider,
         )
-
-        # when: a lookup is made against the domain at the default location
-        # with requests_mock.Mocker() as m:
-        #     m.get(
-        #         "https://used-in-tests.carbontxt.org/carbon.txt",
-        #         text=minimal_carbon_txt_org,
-        #     )
 
         result = psr.parse_from_url(delegating_path)
 
