@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
 from ... import api
-
+import apps.accounts.models as ac_models
 
 pytestmark = pytest.mark.django_db
 
@@ -80,3 +80,113 @@ class TestCarbonTxtAPI:
         response = view_func(request)
 
         assert response.status_code == 200
+
+
+class TestProviderSharedSecretAPI:
+    """
+    Some of our carbon txt parsers rely on shared secrets to establish a link
+    between two domains. This API exposes the ablity to create shared secrets,
+    fetch them, and reset them if needed.
+    """
+
+    def test_fetching_shared_secret_with_none_set(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+    ):
+        """
+        Check that when no secret secret is set, we provide a helpful error message.
+        """
+
+        # Given: a provider and user able to sign in with their credentials
+        url_path = reverse("carbon-txt-shared-secret")
+        provider = hosting_provider_with_sample_user
+        user = provider.user_set.first()
+        view_func = api.views.ProviderSharedSecretView.as_view()
+
+        # When: a user tries to fetch the token
+        request = rf.get(url_path)
+        request.user = user
+        response = view_func(request)
+
+        from ...api.exceptions import NoSharedSecret
+
+        # No token is served because it hasn't been created
+        assert response.status_code == 404
+        assert NoSharedSecret.default_detail in response.render().content.decode(
+            "utf-8"
+        )
+
+    def test_fetching_shared_secret_with_secret_set(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+    ):
+        """
+        Check that fetching our shared_secret is possible for signed in users
+        """
+
+        # Given: a provider and user able to sign in with their credentials
+        url_path = reverse("carbon-txt-shared-secret")
+        view_func = api.views.ProviderSharedSecretView.as_view()
+        provider = hosting_provider_with_sample_user
+        user = provider.user_set.first()
+
+        # And: a generated shared secret
+        provider.refresh_shared_secret()
+
+        # When: they request the shared secret
+        request = rf.get(url_path)
+        request.user = user
+        response = view_func(request)
+
+        # then: they should see the token for them to use
+        assert response.status_code == 200
+        assert provider.shared_secret.body in response.render().content.decode("utf-8")
+
+    def test_resetting_shared_secret(
+        self,
+        db,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+    ):
+        """
+        Check we can reset our shared secret, and fetch it when needed
+        """
+
+        # given: a provider and user able to sign in with their credentials
+        url_path = reverse("carbon-txt-shared-secret")
+        view_func = api.views.ProviderSharedSecretView.as_view()
+        provider = hosting_provider_with_sample_user
+        user = provider.user_set.first()
+
+        # when: the user visits their provider with no shared_secret set
+        request = rf.get(url_path)
+        request.user = user
+        response = view_func(request)
+        # then: no token should be served
+
+        assert response.status_code == 404
+
+        # when our user resets their token
+        reset_token_request = rf.post(url_path)
+        reset_token_request.user = user
+        reset_token_response = view_func(reset_token_request)
+
+        # then: they should see the generated token
+        assert reset_token_response.status_code == 200
+        assert (
+            provider.shared_secret.body
+            in reset_token_response.render().content.decode("utf-8")
+        )
+
+        # and: when they visit later
+        fetch_token_request = rf.get(url_path)
+        fetch_token_request.user = user
+        fetch_token_response = view_func(fetch_token_request)
+
+        # then: they should see the same token
+        assert fetch_token_response.status_code == 200
+        assert (
+            provider.shared_secret.body
+            in fetch_token_response.render().content.decode("utf-8")
+        )

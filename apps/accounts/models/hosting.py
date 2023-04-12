@@ -1,5 +1,6 @@
 import logging
 
+import secrets
 from django.db import models
 from django.conf import settings
 from django_countries.fields import CountryField
@@ -236,7 +237,21 @@ class Hostingprovider(models.Model):
 
     @property
     def shared_secret(self) -> str:
-        return self.providersharedsecret.body
+        return self.providersharedsecret
+
+    # Mutators
+    def refresh_shared_secret(self) -> str:
+        try:
+            existing_secret = self.providersharedsecret
+            existing_secret.delete()
+        except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
+            pass
+
+        rand_string = secrets.token_urlsafe(64)
+        shared_secret = ProviderSharedSecret(
+            body=f"GWF-{rand_string[4:]}", provider=self
+        )
+        shared_secret.save()
 
     def label_as_awaiting_review(self, notify_admins=False):
         """
