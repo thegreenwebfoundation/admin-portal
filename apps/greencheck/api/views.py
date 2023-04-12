@@ -108,13 +108,12 @@ class ProviderSharedSecretView(views.APIView):
         except AttributeError:
             raise exceptions.NotFound
 
-        try:
-            shared_secret = provider.shared_secret
-        except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
+        shared_secret = provider.shared_secret
+
+        if not shared_secret:
             raise exceptions.NoSharedSecret
 
         serialized = ProviderSharedSecretSerializer(shared_secret)
-
         return Response(serialized.data)
 
     @swagger_auto_schema(tags=["Provider Shared Secret"])

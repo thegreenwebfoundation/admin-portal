@@ -301,11 +301,6 @@ class CarbonTxtParser:
         lookup_sequence = []
         lookup_sequence.append(url)
 
-        import rich
-
-        rich.inspect(url)
-        rich.inspect(url_domain)
-
         # do DNS lookup. to see if we have an override url to use instead
         override_url, *rest = self._check_for_carbon_txt_dns_record(url_domain)
 
