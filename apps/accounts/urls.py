@@ -21,12 +21,6 @@ urlpatterns = [
         DashboardView.as_view(),
         name="dashboard",
     ),
-    # override admin auth pages
-    path("admin/login/", RedirectView.as_view(url="/accounts/login/")),
-    path("admin/logout/", RedirectView.as_view(url="/accounts/logout/")),
-    path("admin/activation/", RedirectView.as_view(url="/accounts/activation/")),
-    # include admin URLs
-    path("admin/", admin.urls),
     # auth pages
     path(
         "accounts/signup/",
@@ -75,15 +69,40 @@ urlpatterns = [
         name="password_reset_complete",
     ),
     path(
-        "password_change/",
-        auth_views.PasswordChangeView.as_view(),
+        "accounts/password_change/",
+        auth_views.PasswordChangeView.as_view(
+            template_name="auth/password_change.html"
+        ),
         name="password_change",
     ),
     path(
-        "password_change/done/",
-        auth_views.PasswordChangeDoneView.as_view(),
+        "accounts/password_change/done/",
+        auth_views.PasswordChangeDoneView.as_view(
+            template_name="auth/password_change_done.html"
+        ),
         name="password_change_done",
     ),
+    # override admin auth pages
+    path("admin/login/", RedirectView.as_view(url="/accounts/login/")),
+    path("admin/logout/", RedirectView.as_view(url="/accounts/logout/")),
+    path("admin/activation/", RedirectView.as_view(url="/accounts/activation/")),
+    path(
+        "admin/password_reset/", RedirectView.as_view(url="/accounts/password_reset/")
+    ),
+    path(
+        "admin/password_reset/done/",
+        RedirectView.as_view(url="/accounts/password_reset/done/"),
+    ),
+    path(
+        "admin/password_change/", RedirectView.as_view(url="/accounts/password_change/")
+    ),
+    path(
+        "admin/password_change/done/",
+        RedirectView.as_view(url="/accounts/password_change/done/"),
+    ),
+    # include admin URLs
+    path("admin/", admin.urls),
+    # custom views
     path("user/<pk>/", UserUpdateView.as_view(), name="user_edit"),
     path("requests/", ProviderRequestListView.as_view(), name="provider_request_list"),
     path(
