@@ -498,15 +498,14 @@ class LocationForm(forms.ModelForm):
         ),
     )
 
-    country = CountryField().formfield(
+    country = CountryField( blank_label='(Select a country)', ).formfield(
         label="Country",
-        blank_label="Select country",
         help_text="Choose a country from the list.",
     )
 
     class Meta:
         model = ac_models.ProviderRequestLocation
-        fields = ["name", "country", "city"]
+        fields = ["country", "city", "name"]
 
 
 # Part of multi-step registration form (screen 2).
