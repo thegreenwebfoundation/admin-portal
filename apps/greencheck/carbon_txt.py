@@ -341,10 +341,7 @@ class CarbonTxtParser:
 
         carbon_txt_string = res.content.decode("utf-8")
 
-        rich.print(carbon_txt_string)
-
         parsed_carbon_txt = self.parse(url_domain, carbon_txt_string)
-
         parsed_carbon_txt["lookup_sequence"] = lookup_sequence
 
         return parsed_carbon_txt
