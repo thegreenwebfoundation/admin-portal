@@ -8,6 +8,7 @@ from apps.accounts.views import (
     UserActivationView,
     UserRegistrationView,
     UserLoginView,
+    UserLogoutView,
     DashboardView,
     UserUpdateView,
     ProviderRequestListView,
@@ -22,13 +23,13 @@ urlpatterns = [
         DashboardView.as_view(),
         name="dashboard",
     ),
+    # override admin auth pages
+    path("admin/login/", RedirectView.as_view(url="/accounts/login/")),
+    path("admin/logout/", RedirectView.as_view(url="/accounts/logout/")),
+    path("admin/activation/", RedirectView.as_view(url="/accounts/activation/")),
     # include admin URLs
     path("admin/", admin.urls),
-    # override admin auth pages
-    # TODO: check why this doesn't work
-    path("admin/login/", RedirectView.as_view(url="accounts/login/")),
-    path("admin/logout/", RedirectView.as_view(url="accounts/logout/")),
-    path("admin/activation/", RedirectView.as_view(url="accounts/activation/")),
+    # auth pages
     path(
         "password_reset/",
         auth_views.PasswordResetView.as_view(),
@@ -36,6 +37,7 @@ urlpatterns = [
     ),
     path("accounts/signup/", UserRegistrationView.as_view(), name="registration"),
     path("accounts/login/", UserLoginView.as_view(), name="login"),
+    path("accounts/logout/", UserLogoutView.as_view(), name="logout"),
     url(
         r"accounts/activation/(?P<activation_key>[-:\w]+)/",
         UserActivationView.as_view(),
