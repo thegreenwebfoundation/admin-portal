@@ -66,8 +66,6 @@ if settings.DEBUG:
 
 urlpatterns += [
     path("", include(accounts_urls)),
-    # todo: remove when no longer necessary
-    path("accounts/", include("django.contrib.auth.urls")),
     path(
         "green-urls",
         RedirectView.as_view(url=reverse_lazy("greenweb_admin:green_urls")),
