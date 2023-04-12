@@ -5,7 +5,7 @@ from dal import autocomplete
 import smtplib
 from django.core.files.storage import DefaultStorage
 from django.contrib import messages
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
@@ -145,6 +145,10 @@ class UserLoginView(LoginView):
     """
 
     template_name = "auth/login.html"
+
+
+class UserLogoutView(LogoutView):
+    template_name = "auth/logout.html"
 
 
 class UserUpdateView(UpdateView):
