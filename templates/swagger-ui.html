@@ -37,7 +37,7 @@
 
 {% if request.user.is_authenticated %}
 <div class='btn authorize'>
-    <a id="auth" class="header__btn" href="{% url  'greenweb_admin:logout' %}?next={{ request.path }}"
+    <a id="auth" class="header__btn" href="{% url  'logout' %}?next={{ request.path }}"
         data-sw-translate>
         {% block django_logout_message %}
         Logout
@@ -46,7 +46,7 @@
 </div>
 {% else %}
 <div class='btn authorize'>
-    <a id="auth" class="header__btn" href="{% url  'greenweb_admin:login' %}?next={{ request.path }}" data-sw-translate>
+    <a id="auth" class="header__btn" href="{% url  'login' %}?next={{ request.path }}" data-sw-translate>
         {% block django_login_message %}
         Login
         {% endblock %}
