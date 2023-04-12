@@ -106,7 +106,7 @@ class UserRegistrationView(RegistrationView):
         if form.is_valid():
             messages.success(
                 request,
-                "Check your email inbox and open the activation link in order to complete the registration process.",
+                "We've sent you an email. You need to follow the link in the email to confirm your address to finish signing up.",
             )
         return super().post(request, *args, **kwargs)
 
