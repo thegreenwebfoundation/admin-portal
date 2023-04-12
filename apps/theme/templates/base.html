@@ -47,6 +47,14 @@
 			{% endblock %}
 
 			<div class="container mx-auto pt-6 md:pt-8 px-2 sm:px-4">
+
+			{% if messages %}
+				{% for message in messages %}
+					<div{% if message.tags %} class="alert__{{ message.tags }}"{% endif %}>
+						<p>{{ message }}</p>
+					</div>
+				{% endfor %}
+			{% endif %}
 		
 				{% block content %}
 				<section class="flex items-center justify-center h-screen">
