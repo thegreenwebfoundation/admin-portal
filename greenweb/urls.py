@@ -115,6 +115,11 @@ urlpatterns += [
         api_views.CarbonTxtAPI.as_view(),
         name="carbon-txt-parse",
     ),
+    path(
+        "api/v3/carbontxt_shared_secret",
+        api_views.ProviderSharedSecretView.as_view(),
+        name="carbon-txt-shared-secret",
+    ),
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
     path(
         "api-docs/",

@@ -468,6 +468,37 @@ class GreenDomain(models.Model):
         return f"{self.url} - {self.modified}"
 
     # Factories
+    @classmethod
+    def create_for_provider(cls, domain: str, provider: ac_models.Hostingprovider):
+        """
+        Create a new green domain for the domain passed in,  and allocate
+        it  to the given provider.
+        """
+        dom = GreenDomain(
+            green=True,
+            url=domain,
+            hosted_by=provider.name,
+            hosted_by_id=provider.id,
+            hosted_by_website=provider.website,
+            partner=ac_models.PartnerChoice.NONE,
+            modified=timezone.now(),
+        )
+        dom.save()
+        return dom
+
+    @classmethod
+    def upsert_for_provider(cls, domain: str, provider: ac_models.Hostingprovider):
+        """
+        Try to fetch given domain if it exists, and link it given provider,
+        otherwise create a new green domain, allocated to said provider.
+        """
+        try:
+            green_domain = GreenDomain.objects.get(url=domain)
+            green_domain.allocate_to_provider(provider)
+        except GreenDomain.DoesNotExist:
+            green_domain = GreenDomain.create_for_provider(domain, provider)
+
+        return green_domain
 
     @classmethod
     def grey_result(cls, domain=None):
@@ -560,7 +591,10 @@ class GreenDomain(models.Model):
         self.hosted_by_id = provider.id
         self.hosted_by = provider.name
         self.hosted_by_website = provider.website
+        self.modified = timezone.now()
         self.save()
+
+        # add log entry for making this change
 
     class Meta:
         db_table = "greendomain"

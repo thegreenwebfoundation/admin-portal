@@ -1,17 +1,26 @@
-from apps.accounts.models.hosting import Hostingprovider
-from typing import Dict, Set, List
-import toml
 import logging
-import requests
-from urllib import parse
-
-from dateutil import relativedelta
 import typing
+from typing import Dict, List, Set, Union
+from urllib import parse
+import hashlib
+import dns.resolver
+import requests
+import toml
+from dateutil import relativedelta
 from django.utils import timezone
+
+from apps.accounts.models.hosting import Hostingprovider
+
 from ..accounts import models as ac_models
 from . import models as gc_models
 
 logger = logging.getLogger(__name__)
+
+from . import exceptions
+
+
+class NoCarbonTxtFileException(Exception):
+    pass
 
 
 class CarbonTxtParser:
@@ -88,6 +97,7 @@ class CarbonTxtParser:
 
 
         """
+
         evidence = found_provider.supporting_documents.all()
         evidence_links = [item.url for item in evidence]
         new_evidence = []
@@ -120,10 +130,62 @@ class CarbonTxtParser:
         except gc_models.GreenDomain.DoesNotExist:
             return None
 
+    def _check_domain_hash_against_provider(self, hash: str, domain: str) -> bool:
+        """
+        Accept a SHA256 hash, a domain name, and check that
+        making a hash with the domain and shared secret for the provider
+        linked to that domain produces the same value as the provided hash.
+        Returns a true boolean result, if there is a match
+        """
+
+        try:
+            provider = gc_models.GreenDomain.objects.get(url=domain).hosting_provider
+        except Exception as ex:
+            logger.exception(
+                f"There was an error finding a provider for domain: {domain} - {ex}"
+            )
+            return False
+
+        shared_secret = provider.shared_secret
+
+        # return early if there is no shared secret to check
+        if not shared_secret:
+            return False
+
+        res = hashlib.sha256(f"{domain}{shared_secret.body}".encode("utf-8"))
+        return res.hexdigest() == hash
+
+    def _add_domain_if_hash_matches_provider(
+        self, new_domain, provider_domain, domain_hash
+    ):
+        """
+        Accept a new domain we have not seen before with its corresponding hash, plus
+        a domain for a known provider, to we can check the domain hash and new domain
+        for the known provider.
+
+        Link the new domain to our provider if we have a match, so subsequent lookups
+        show as green.
+        """
+        try:
+            matched_domain_hash = self._check_domain_hash_against_provider(
+                domain_hash, provider_domain
+            )
+
+            if matched_domain_hash:
+                # create our new domain
+                provider = gc_models.GreenDomain.objects.get(
+                    url=provider_domain
+                ).hosting_provider
+
+                gc_models.GreenDomain.upsert_for_provider(new_domain, provider)
+        except Exception as ex:
+            logger.exception(
+                f"Unable to create the green domain for: {new_domain} - {ex}"
+            )
+
     def _fetch_provider(
         self,
         provider: typing.Union[typing.Dict, str],
-        # domain: typing.Union[str, None] = None,
     ):
         """
         Accept either a string or a dict representing a provider, plus
@@ -148,7 +210,7 @@ class CarbonTxtParser:
         Accept a domain and carbon_txt file, and return a data structure
         representing what information we have about the providers, related to
         their sustainability claims.
-        For providers that we don't recognise, we
+
         """
         parsed_txt = toml.loads(carbon_txt)
 
@@ -156,6 +218,7 @@ class CarbonTxtParser:
         results = {"org": None, "upstream": [], "not_registered": {}}
 
         org = parsed_txt.get("org")
+
         if org:
             credentials = org.get("credentials")
             primary_creds = credentials[0]
@@ -169,18 +232,19 @@ class CarbonTxtParser:
                 if cred["domain"] == primary_creds["domain"]
             ]
             # check for any new evidence for this domain
-            new_org_evidence = self._compare_evidence(
-                org_provider, matching_domain_credentials
-            )
+            if org_provider:
+                new_org_evidence = self._compare_evidence(
+                    org_provider, matching_domain_credentials
+                )
 
-            # if the evidence
-            if new_org_evidence:
-                unregistered_evidence.extend(new_org_evidence)
+                # if there is evidence, add it to the list
+                if new_org_evidence:
+                    unregistered_evidence.extend(new_org_evidence)
 
+                results["org"] = org_provider
             # either list as known provider, or add to the list
             # of new entities we do not have in our system yet
-            if org_provider:
-                results["org"] = org_provider
+
             else:
                 results["not_registered"]["org"] = org
 
@@ -209,17 +273,140 @@ class CarbonTxtParser:
 
         return results
 
+    def _check_for_carbon_txt_dns_record(
+        self, domain: str, lookup_sequence: List
+    ) -> Union[List[str], List]:
+        try:
+            answers = dns.resolver.resolve(domain, "TXT")
+        except dns.resolver.NoAnswer:
+            return [None, lookup_sequence]
+
+        if not lookup_sequence:
+            lookup_sequence = []
+
+        override_url = None
+
+        for answer in answers:
+            txt_record = answer.to_text().strip('"')
+            if txt_record.startswith("carbon-txt"):
+                # pull out our url to check
+                _, txt_record_body = txt_record.split("=")
+
+                domain_hash_check = txt_record_body.split(" ")
+
+                if len(domain_hash_check) == 1:
+                    override_url = domain_hash_check[0]
+                    lookup_sequence.append(override_url)
+
+                if len(domain_hash_check) == 2:
+                    override_url = domain_hash_check[0]
+                    domain_hash = domain_hash_check[1]
+
+                    lookup_sequence.append(override_url)
+                    override_domain = parse.urlparse(override_url).netloc
+
+                    self._add_domain_if_hash_matches_provider(
+                        domain, override_domain, domain_hash
+                    )
+
+        return override_url, lookup_sequence
+
+    def _check_for_carbon_txt_via_header(
+        self, res, lookup_sequence: List = None
+    ) -> Union[List[str], List]:
+        """
+        Look for a HTTP header we can use
+        """
+        original_url = lookup_sequence[0]
+        original_domain = parse.urlparse(original_url).netloc
+
+        # return early with original request if we see no new headers
+        if "via" not in res.headers.keys():
+            return [res, lookup_sequence]
+
+        via_header_payload = res.headers["via"].split(" ")
+
+        if len(via_header_payload) == 2:
+            protocol, via_url = via_header_payload
+            lookup_sequence.append(via_url)
+            res = requests.get(via_url)
+
+        if len(via_header_payload) == 3:
+            protocol, via_url, domain_hash = via_header_payload
+            lookup_sequence.append(via_url)
+            res = requests.get(via_url)
+
+        via_domain = parse.urlparse(via_url).netloc
+
+        if domain_hash:
+            self._add_domain_if_hash_matches_provider(
+                original_domain, via_domain, domain_hash
+            )
+
+        return res, lookup_sequence
+
     def parse_from_url(self, url: str):
         """
         Try to fetch a carbon.txt file at a given url, and
         if successful, returned the parsed view after carrying
         out lookups
         """
-        res = requests.get(url)
-        domain = parse.urlparse(url).netloc
-        carbon_txt_string = res.content.decode("utf-8")
 
-        return self.parse(domain, carbon_txt_string)
+        parsed = parse.urlparse(url)
+        url_domain = parsed.netloc
+
+        lookup_sequence = []
+        lookup_sequence.append(url)
+
+        # do a DNS lookups to see if we have a carbon.txt file at a new url we
+        # delegating to instead
+        override_url, lookup_sequence = self._check_for_carbon_txt_dns_record(
+            url_domain, lookup_sequence
+        )
+
+        if override_url:
+            res = requests.get(override_url)
+            url_domain = parse.urlparse(override_url).netloc
+
+        else:
+            res = requests.get(url)
+
+        # Not every server serves missing pages as 404 if there is no carbon.txt to fetch.
+
+        # We can't rely on status codes giving a 404, so we use the existence of a TOML
+        # file as a proxy check, before falling back to looking in our header file below
+        try:
+            carbon_txt_string = res.content.decode("utf-8")
+
+            # if we can parse TOML, we assume this is file we can try parsing for
+            # carbon.txt specific elements
+            parsed_txt = toml.loads(carbon_txt_string)
+            parsed_carbon_txt = self.parse(url_domain, carbon_txt_string)
+            parsed_carbon_txt["lookup_sequence"] = lookup_sequence
+            return parsed_carbon_txt
+        except toml.TomlDecodeError:
+            logger.warning(f"Unable to parse carbon.txt file at {res.url}")
+        except Exception as ex:
+            logger.warning(
+                f"Unable to parse carbon.txt file at {res.url}. "
+                "We found valid TOML, but we could not parse the contents."
+            )
+
+        # check if we are delegating via an HTTP header, as a final fallback
+        res, lookup_sequence = self._check_for_carbon_txt_via_header(
+            res, lookup_sequence
+        )
+
+        try:
+            carbon_txt_string = res.content.decode("utf-8")
+            parsed_carbon_txt = self.parse(url_domain, carbon_txt_string)
+            parsed_carbon_txt["lookup_sequence"] = lookup_sequence
+            return parsed_carbon_txt
+        except Exception as ex:
+            logger.exception(ex)
+
+        # We found no useable file, say so.
+        raise exceptions.CarbonTxtFileNotFound
 
     def parse_and_import(self, domain: str = None, carbon_txt: str = None) -> Dict:
         """
@@ -228,7 +415,6 @@ class CarbonTxtParser:
         contents, and import the organisations listed, returning
         the providers
         """
-        # what we need
 
         # parse a carbon.txt file, plus where it is fetched from
         # (request, DNS lookup) and return a set of providers and

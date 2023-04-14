@@ -2,7 +2,11 @@ import ipaddress
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from apps.accounts.models import Hostingprovider, HostingProviderSupportingDocument
+from apps.accounts.models import (
+    Hostingprovider,
+    HostingProviderSupportingDocument,
+    ProviderSharedSecret,
+)
 from apps.greencheck.models.checks import CO2Intensity
 
 from .models import GreencheckIp, GreenDomain, GreencheckASN
@@ -220,3 +224,11 @@ class CarbonTxtSerializer(serializers.Serializer):
     org = HostingProviderSerializer()
     upstream = HostingProviderSerializer(many=True)
     not_registered = serializers.DictField(required=False)
+
+
+class ProviderSharedSecretSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProviderSharedSecret
+        fields = [
+            "body",
+        ]

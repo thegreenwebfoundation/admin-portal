@@ -1,5 +1,6 @@
 import logging
 
+import secrets
 from django.db import models
 from django.conf import settings
 from django_countries.fields import CountryField
@@ -234,6 +235,27 @@ class Hostingprovider(models.Model):
             "greenweb_admin:accounts_hostingprovider_change", args=[str(self.id)]
         )
 
+    @property
+    def shared_secret(self) -> str:
+        try:
+            return self.providersharedsecret
+        except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
+            return None
+
+    # Mutators
+    def refresh_shared_secret(self) -> str:
+        try:
+            existing_secret = self.providersharedsecret
+            existing_secret.delete()
+        except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
+            pass
+
+        rand_string = secrets.token_urlsafe(64)
+        shared_secret = ProviderSharedSecret(
+            body=f"GWF-{rand_string[4:]}", provider=self
+        )
+        shared_secret.save()
+
     def label_as_awaiting_review(self, notify_admins=False):
         """
         Mark this hosting provider as in need of review by staff.
@@ -369,6 +391,20 @@ class Hostingprovider(models.Model):
             models.Index(fields=["archived"], name="hp_archived"),
             models.Index(fields=["showonwebsite"], name="hp_showonwebsite"),
         ]
+
+
+class ProviderSharedSecret(TimeStampedModel):
+    """
+    A shared secret linked to a provider. Used when
+    checking if a domain hash has been generated from
+    a provider's shared secret and given domain.
+    """
+
+    body = models.CharField(
+        max_length=512,
+        help_text="The body of the shared secret",
+    )
+    provider = models.OneToOneField(Hostingprovider, on_delete=models.CASCADE)
 
 
 class AbstractNote(TimeStampedModel):

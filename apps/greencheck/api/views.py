@@ -6,11 +6,15 @@ from django.contrib.gis.geoip2.base import GeoIP2Exception
 from drf_yasg.utils import swagger_auto_schema
 from geoip2 import errors
 from rest_framework import permissions, views
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.response import Response
 
+from apps.accounts.models import Hostingprovider
 from apps.greencheck.models.checks import CO2Intensity
 
-from ..serializers import CO2IntensitySerializer
+from ..serializers import CO2IntensitySerializer, ProviderSharedSecretSerializer
+from . import exceptions
+from .permissions import BelongsToHostingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -89,4 +93,34 @@ class IPCO2Intensity(views.APIView):
         serialized = CO2IntensitySerializer(
             ip_lookup_res, context={"checked_ip": ip_address}
         )
+        return Response(serialized.data)
+
+
+class ProviderSharedSecretView(views.APIView):
+    serializer_class = ProviderSharedSecretSerializer
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [BelongsToHostingProvider]
+
+    @swagger_auto_schema(tags=["Provider Shared Secret"])
+    def get(self, request, format=None):
+        try:
+            provider = request.user.hostingprovider
+        except AttributeError:
+            raise exceptions.NotFound
+
+        shared_secret = provider.shared_secret
+
+        if not shared_secret:
+            raise exceptions.NoSharedSecret
+
+        serialized = ProviderSharedSecretSerializer(shared_secret)
+        return Response(serialized.data)
+
+    @swagger_auto_schema(tags=["Provider Shared Secret"])
+    def post(self, request, format=None):
+        provider = request.user.hostingprovider
+
+        provider.refresh_shared_secret()
+        serialized = ProviderSharedSecretSerializer(provider.shared_secret)
+
         return Response(serialized.data)
