@@ -2,7 +2,6 @@ from django.db import models, IntegrityError, transaction
 from django.urls import reverse
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.template.defaultfilters import yesno
 
 from django_countries.fields import CountryField
 from taggit.managers import TaggableManager
