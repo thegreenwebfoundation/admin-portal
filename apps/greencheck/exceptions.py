@@ -9,3 +9,7 @@ class NoSharedSecret(NotFound):
 
     default_detail = "No shared secret is set. Create one by sending an empty POST request to this endpoint"
     default_code = "no_shared_secret"
+
+
+class CarbonTxtFileNotFound(Exception):
+    pass

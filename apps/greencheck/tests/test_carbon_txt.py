@@ -413,13 +413,10 @@ class TestCarbonTxtParser:
     def test_mark_http_via_override_green_with_domain_hash(
         self, db, hosting_provider_factory, green_domain_factory
     ):
-        # given a provider, at one domain serving files on behalf of another on a
-        # separate domain
+        # given a provider at one domain serving files on behalf of another org
+        # on a different domain
         hosted_domain = "https://hosted.carbontxt.org/carbon.txt"
         via_domain = "https://managed-service.carbontxt.org/carbon.txt"
-
-        # when our parser carries out a lookup against the hosted domain
-        psr = carbon_txt.CarbonTxtParser()
 
         # and: there is an organisation, Org B who operate managed-service.carbontxt.org
         carbon_txt_provider = hosting_provider_factory.create(
@@ -430,10 +427,14 @@ class TestCarbonTxtParser:
             url="managed-service.carbontxt.org", hosted_by=carbon_txt_provider
         )
 
+        # and: a shaed secret set up for our provider
         ac_models.ProviderSharedSecret.objects.create(
             provider=carbon_txt_provider, body=SAMPLE_SECRET_BODY
         )
 
+        # when our parser carries out a lookup against the hosted domain
+        # with the matching domain
+        psr = carbon_txt.CarbonTxtParser()
         result = psr.parse_from_url(hosted_domain)
 
         # then: the our hosted_domain should have been added as a green domain

@@ -8,6 +8,9 @@ from rest_framework.test import APIRequestFactory
 from ... import api
 import apps.accounts.models as ac_models
 
+from ... import exceptions
+
+
 pytestmark = pytest.mark.django_db
 
 logger = logging.getLogger(__name__)
@@ -109,12 +112,11 @@ class TestProviderSharedSecretAPI:
         request.user = user
         response = view_func(request)
 
-        from ...api.exceptions import NoSharedSecret
-
         # No token is served because it hasn't been created
         assert response.status_code == 404
-        assert NoSharedSecret.default_detail in response.render().content.decode(
-            "utf-8"
+        assert (
+            exceptions.NoSharedSecret.default_detail
+            in response.render().content.decode("utf-8")
         )
 
     def test_fetching_shared_secret_with_secret_set(
