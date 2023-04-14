@@ -1,4 +1,4 @@
-4# Understanding checks for green sites
+# Understanding checks for green sites
 
 It's worth referring to the general principle we apply when checking if a site or a services from a digital provider is green:
 
