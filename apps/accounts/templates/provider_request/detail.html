@@ -96,7 +96,8 @@
 				<td>The following consent was submitted:</td>
 				<td>				
 					{% for consent in object.providerrequestconsent_set.all %}
-					{{ consent }}<br>
+					Data processing opt-in: {{ consent.data_processing_opt_in|yesno:"Yes,No,-"}}
+					<br>Newsletter opt-in: {{ consent.newsletter_opt_in|yesno:"Yes,No,-"}}
 					{% endfor %}
 				</td>
 			</tr>
