@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n static %}
+{% load preview_extras %}
 
 {% block content %}
 
@@ -64,7 +65,15 @@
 				<td class="w-64">Green evidence</td>
 				<td>
 					{% for evidence in object.providerrequestevidence_set.all %}
-					{{ evidence }}<br>
+					<div>
+						Type: {{ evidence.type }}<br>
+						Title: {{ evidence.title }}<br>
+						Link: {{ evidence.link|conditional_yesno:"Yes,No,-" }}<br>
+						File upload: {{ evidence.file|conditional_yesno:"Yes,No,-" }}<br>
+						Description: {{ evidence.description|conditional_yesno:"Yes,No,-" }}<br>
+						Public: {{ evidence.public|conditional_yesno:"Yes,No,-" }}
+					</div>
+					<br>
 					{% endfor %}
 				</td>
 			</tr>
@@ -96,8 +105,10 @@
 				<td>The following consent was submitted:</td>
 				<td>				
 					{% for consent in object.providerrequestconsent_set.all %}
-					Data processing opt-in: {{ consent.data_processing_opt_in|yesno:"Yes,No,-"}}
-					<br>Newsletter opt-in: {{ consent.newsletter_opt_in|yesno:"Yes,No,-"}}
+					<div>
+						Data processing opt-in: {{ consent.data_processing_opt_in|yesno:"Yes,No,-"}}<br>
+						Newsletter opt-in: {{ consent.newsletter_opt_in|yesno:"Yes,No,-"}}
+					</div>
 					{% endfor %}
 				</td>
 			</tr>
