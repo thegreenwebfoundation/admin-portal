@@ -33,7 +33,7 @@ schema_view = get_schema_view(
             "background": "#000000",
         },
     ),
-    url=settings.API_URL
+    url=settings.API_URL,
     public=False,
     permission_classes=(permissions.AllowAny,),
 )
