@@ -64,3 +64,4 @@ jobs:
           MAXMIND_LICENCE_KEY: ${{ secrets.MAXMIND_LICENCE_KEY }}
           AWS_SHARED_CREDENTIALS_FILE: ${{ secrets.AWS_SHARED_CREDENTIALS_FILE }}
           AWS_CONFIG_FILE: ${{ secrets.AWS_CONFIG_FILE }}
+          API_URL: ${{ secrets.API_URL }}
