@@ -3,15 +3,25 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block bg-image %}
-<div class="block fixed -z-50 left-0 w-1/2 -top-24 bg-no-repeat bg-right bg-[length:100%_100%] bg-gradient-to-r from-green-500" style="height: calc(100% + 100px);"></div>
-{% endblock %}
-
 {% block content %}
-<div class="alert__success">
-    <p>Thanks for spending some quality time with the Green Web Foundation today.</p>
-    <br>
-    <p ><a href="{% url 'login' %}">Log in again</a></p>
-</div>
+<article>
+    <div class="prose mx-auto mt-8">
+
+		<div class="alert__success">
+			<p>You've logged out of the Green Web Foundation Provider Portal.</p>
+		</div>
+	
+		<p class="mt-8 text-center"><a href="{% url 'login' %}" class="btn">Log in again</a></p>
+  
+</article>
 
 {% endblock %}
+
+{% block footer-open %}
+	{% include "auth/partials/_auth_footer-open.html" %}
+{% endblock  %}
+
+{% block footer-content %}
+	{% include "auth/partials/_auth_footer-content.html" %}
+{% endblock  %}
+
