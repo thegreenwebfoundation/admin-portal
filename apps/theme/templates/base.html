@@ -10,7 +10,7 @@
 		{% tailwind_css %}
 	</head>
 
-	<body>
+	<body class="min-h-[100vh] flex flex-col">
 
 		<header class="bg-white border-b-2">
 			<div class="container mx-auto px-2 sm:px-4">
@@ -40,7 +40,7 @@
 			</div>
 		</header>
 		
-		<div class="relative">
+		<div class="relative flex-auto">
 			
 			{% block bg-image %}
 				<div class="hidden lg:block fixed -z-50 w-11/12 -top-24" style="background: radial-gradient(circle, rgba(187,247,187,1) 0%, rgba(255,255,255,1) 71%); height: calc(100% + 100px); right: -50vw;"></div>
