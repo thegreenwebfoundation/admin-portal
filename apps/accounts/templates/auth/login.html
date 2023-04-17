@@ -34,7 +34,7 @@
 				{% csrf_token %}
 
 				<div class="">
-					<label for="{{ form.username.id_for_label }}" class="text-base">Username</label>
+					<label for="{{ form.username.id_for_label }}" class="text-base font-bold">Username</label>
 					
 					<div>
 						{{ form.username|add_class:"bg-gray-100 border-gray-100 w-full" }}
@@ -42,7 +42,7 @@
 				</div>
 
 				<div class="my-6">
-					<label for="{{ form.password.id_for_label }}" class="text-base">Password</label>
+					<label for="{{ form.password.id_for_label }}" class="text-base font-bold">Password</label>
 					
 					<div>
 						{{ form.password|add_class:"bg-gray-100 border-gray-100 w-full" }}
@@ -67,3 +67,12 @@
 	</div>
 </section>
 {% endblock %}
+
+
+{% block footer-open %}
+	{% include "auth/partials/_auth_footer-open.html" %}
+{% endblock  %}
+
+{% block footer-content %}
+	{% include "auth/partials/_auth_footer-content.html" %}
+{% endblock  %}
