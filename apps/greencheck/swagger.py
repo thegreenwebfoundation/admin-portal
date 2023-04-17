@@ -6,6 +6,8 @@ This module contains the code needed to adapt swagger to:
 3. Expose the necessary class based views for use in our url conf
 """
 
+from django.conf import settings
+
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view, SPEC_RENDERERS
 from drf_yasg.renderers import SwaggerUIRenderer
@@ -31,6 +33,7 @@ schema_view = get_schema_view(
             "background": "#000000",
         },
     ),
+    url=settings.API_URL
     public=False,
     permission_classes=(permissions.AllowAny,),
 )
@@ -57,7 +60,6 @@ class TGWFSwaggerView(schema_view):
 
     @classmethod
     def with_ui(cls, renderer="swagger", cache_timeout=0, cache_kwargs=None):
-
         renderer_classes = (TGWFSwaggerUIRenderer,) + _spec_renderers
         return cls.as_cached_view(
             cache_timeout, cache_kwargs, renderer_classes=renderer_classes

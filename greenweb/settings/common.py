@@ -36,6 +36,7 @@ env = environ.Env(
     BASICAUTH_DISABLE=(bool, True),
     BASICAUTH_USER=(str, "staging_user"),
     BASICAUTH_PASSWORD=(str, "strong_password"),
+    API_URL=(str, os.getenv("API_URL")),
 )
 
 environ.Env.read_env(".env")  # Read .env
@@ -289,6 +290,10 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
 }
+
+# Set the API URL, to force HTTPS when using the /api-docs API test
+# https://drf-yasg.readthedocs.io/en/stable/openapi.html#custom-spec-base-url
+API_URL = env("API_URL")
 
 
 DRAMATIQ_BROKER = {
