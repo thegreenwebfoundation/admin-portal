@@ -34,13 +34,7 @@ from . import serializers as gc_serializers
 from .domain_check import GreenDomainChecker
 
 
-import redis
-
 logger = logging.getLogger(__name__)
-
-# TODO: switch to using django's native redis library
-# so we do not initialise connectionn in strange place
-redis_cache = redis.Redis(host=settings.REDIS_HOST, port=6379, db=0)
 
 
 checker = GreenDomainChecker()
@@ -159,18 +153,10 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         if instance:
             return self.return_green_response(instance)
 
-    def build_response_from_redis(self, domain):
-        # try our cache first before hitting the database
-        cache_hit = redis_cache.get(f"domain:{domain}")
-        if cache_hit:
-            log_domain_safely(domain)
-            return response.Response(json.loads(cache_hit))
-
     def clear_from_caches(self, domain):
         """
         Clear any trace of a domain from local caches.
         """
-        redis_cache.delete(f"domains:{domain}")
 
         # we don't delete entries that have been updated
         # via a carbon.txt file, but we need to check it exists first
@@ -206,10 +192,6 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             self.clear_from_caches(domain)
             if http_response := self.build_response_from_full_network_lookup(domain):
                 return http_response
-
-        # try from redis cache first:
-        if http_response := self.build_response_from_redis(domain):
-            return http_response
 
         # not in the cache. Try the database instead:
         if http_response := self.build_response_from_database_lookup(domain):
