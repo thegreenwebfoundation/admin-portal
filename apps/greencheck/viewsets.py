@@ -189,9 +189,12 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         if skip_cache:
             # try to fetch domain the long way, clearing it from the
             # any caches if already present
+            provider = None
             try:
                 gd = gc_models.GreenDomain
                 provider = gd.objects.get(url=domain).hosting_provider
+            except gc_models.GreenDomain.DoesNotExist:
+                pass
             except Exception:
                 import ipdb
 
