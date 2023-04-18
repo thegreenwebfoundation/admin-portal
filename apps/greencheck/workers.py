@@ -82,7 +82,6 @@ class SiteCheckLogger:
         try:
             fixed_tld, *_ = (tld.get_tld(sitecheck.url, fix_protocol=True),)
         except tld.exceptions.TldDomainNotFound:
-
             if sitecheck.url == "localhost":
                 return {
                     "status": "We can't look up localhost. Skipping.",
@@ -135,7 +134,6 @@ class SiteCheckLogger:
             )
             logger.debug(f"Greencheck logged: {res}")
         else:
-
             res = Greencheck.objects.create(
                 date=dateparse.parse_datetime(sitecheck.checked_at),
                 green="no",
@@ -152,7 +150,7 @@ class SiteCheckLogger:
         self, sitecheck: SiteCheck, hosting_provider: Hostingprovider
     ):
         """
-        Update the caches - namely the green domains table, and if running Redis
+        Update the caches - namely the green domains table
         """
 
         try:
@@ -168,18 +166,5 @@ class SiteCheckLogger:
         green_domain.green = sitecheck.green
         try:
             green_domain.save()
-            self.update_redis_domain_cache(green_domain)
         except django.db.utils.IntegrityError:
             logger.info(f"skipping update to the cache table for {sitecheck.url}")
-
-    def update_redis_domain_cache(self, green_domain: GreenDomain):
-        """
-        Accept a GreenDomain object, and write it to the corresponding
-        redis cache keys
-        """
-        # TODO: this is primarily used for logger processes
-        # write it to the domains namespace
-
-        # write it to the recent domains collection
-
-        pass
