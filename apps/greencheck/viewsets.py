@@ -189,7 +189,23 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         if skip_cache:
             # try to fetch domain the long way, clearing it from the
             # any caches if already present
-            self.clear_from_caches(domain)
+            try:
+                gd = gc_models.GreenDomain
+                provider = gd.objects.get(url=domain).hosting_provider
+            except Exception:
+                import ipdb
+
+                ipdb.set_trace()
+
+            if provider:
+                if "green:carbontxt" not in provider.staff_labels.names():
+                    provider.staff_labels.slugs()
+                    self.clear_from_caches(domain)
+            else:
+                self.clear_from_caches(domain)
+
+            # self.clear_from_caches(domain)
+
             if http_response := self.build_response_from_full_network_lookup(domain):
                 return http_response
 
