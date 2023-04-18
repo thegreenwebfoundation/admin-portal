@@ -566,6 +566,21 @@ class GreenDomain(models.Model):
             logger.warn(err)
             return None
 
+    @property
+    def added_via_carbontxt(self) -> typing.Union[ac_models.Hostingprovider, None]:
+        """
+        Return True if this domain is linked to a provider via a
+        carbon.txt lookup, otherwise False
+        """
+        provider = self.hosting_provider
+
+        if provider:
+            # when we add a domain using a carbon.txt lookup, we add a
+            # special label tag "green:carbontxt"
+            return "green:carbontxt" in provider.staff_labels.names()
+
+        return False
+
     @classmethod
     def check_for_domain(cls, domain, skip_cache=False):
         """
