@@ -111,7 +111,8 @@ class CarbonTxtParser:
         # this is checking the link, but not the type as well, as
         # not every piece of uploaded evidence has a type allocated
         for prov in provider_dicts:
-            if prov["url"] not in evidence_links:
+            provider_url = prov.get("url")
+            if provider_url not in evidence_links:
                 new_evidence.append(prov)
 
         return new_evidence
@@ -215,7 +216,7 @@ class CarbonTxtParser:
         parsed_txt = toml.loads(carbon_txt)
 
         unregistered_evidence = []
-        results = {"org": None, "upstream": [], "not_registered": {}}
+        results = {"org": None, "upstream": {}, "not_registered": {}}
 
         org = parsed_txt.get("org")
 
@@ -252,7 +253,7 @@ class CarbonTxtParser:
         upstream = parsed_txt.get("upstream")
         if upstream:
             upstream_providers = upstream.get("providers")
-            unregistered_providers = []
+            unregistered_providers = {}
 
             for provider in upstream_providers:
                 found_provider = self._fetch_provider(provider)
@@ -262,9 +263,25 @@ class CarbonTxtParser:
                     if new_evidence:
                         unregistered_evidence.extend(new_evidence)
 
-                    results["upstream"].append(found_provider)
+                    # import ipdb
+
+                    # ipdb.set_trace()
+                    import rich
+
+                    rich.print(provider)
+                    rich.print(found_provider)
+
+                    if isinstance(provider, str):
+                        results["upstream"][provider] = found_provider
+                    if isinstance(provider, dict):
+                        results["upstream"][provider["domain"]] = found_provider
+
                 else:
-                    unregistered_providers.append(provider)
+                    if isinstance(provider, str):
+                        unregistered_providers[provider] = provider
+
+                    if isinstance(provider, dict):
+                        unregistered_providers[provider["domain"]] = provider
 
             if unregistered_evidence:
                 results["not_registered"]["evidence"] = unregistered_evidence

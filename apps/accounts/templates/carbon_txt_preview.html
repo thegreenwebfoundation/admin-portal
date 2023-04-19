@@ -84,6 +84,8 @@
       {% endif %}
 
 
+      {{ preview }}
+
       {% if preview.upstream %}
         <h2>Upstream providers</h2>
 
@@ -98,10 +100,10 @@
         {% endif %}
 
         <ul>
-          {% for provider in preview.upstream %}
+          {% for domain, provider in preview.upstream.items %}
 
             <li>
-              <h3>
+              <h3>{{domain}} :
                 <a href="{{ provider.admin_url }}">
                   {{ provider.name}}
                 </a>
@@ -112,6 +114,26 @@
           {% endfor %}
 
         </ul>
+
+        {% if preview.not_registered.providers %}
+
+          <p>The following upstream providers are not currently registered in the green web database:</p>
+
+          <ul>
+            {% for domain, provider in preview.not_registered.providers.items %}
+
+              <li>
+                <h3>{{ domain }} : {{ provider }}</h3>
+
+                {% comment %} Add the supporting evidence here {% endcomment %}
+              </li>
+            {% endfor %}
+
+          </ul>
+
+        {% endif %}
+
+
       {% endif %}
 
       {% if preview.not_registered.org %}

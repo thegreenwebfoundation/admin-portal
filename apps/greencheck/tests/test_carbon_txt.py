@@ -145,12 +145,14 @@ class TestCarbonTxtParser:
 
         # is our cdn provider upstream?
         parsed_cdn = [
-            upstream for upstream in upstream_providers if upstream.name == "cdn.com"
+            upstream
+            for upstream in upstream_providers.values()
+            if upstream.name == "cdn.com"
         ][0]
         # is our hosting provider upstream?
         parsed_systen = [
             upstream
-            for upstream in upstream_providers
+            for upstream in upstream_providers.values()
             if upstream.name == "sys-ten.com"
         ][0]
 
@@ -204,7 +206,7 @@ class TestCarbonTxtParser:
         # is first member of providers in our 'not registered' list the
         # provider as listed in the carbon.txt file?
         assert len(unregistered_providers) == 1
-        parsed_sys_ten, *rest = unregistered_providers
+        parsed_sys_ten, *rest = unregistered_providers.values()
         assert parsed_sys_ten["domain"] == "sys-ten.com"
         assert (
             parsed_sys_ten["url"]
@@ -510,8 +512,8 @@ class TestCarbonTxtParser:
             url="www.hillbob.de"
         ).hosting_provider
 
-        assert sys_ten in parsed_result["upstream"]
-        assert cdn_com in parsed_result["upstream"]
+        assert sys_ten in parsed_result["upstream"].values()
+        assert cdn_com in parsed_result["upstream"].values()
         assert parsed_result["org"] == hillbob
 
 
