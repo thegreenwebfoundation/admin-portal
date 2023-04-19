@@ -331,8 +331,8 @@ class TestCarbonTxtParser:
         # and: the sequence of lookups is recorded for debugging / tracing purposes
         assert "lookup_sequence" in result.keys()
 
-        assert result["lookup_sequence"][0] == delegating_path
-        assert result["lookup_sequence"][1] == txt_record_path
+        assert result["lookup_sequence"][0]["url"] == delegating_path
+        assert result["lookup_sequence"][1]["url"] == txt_record_path
 
     def test_delegate_domain_lookup_with_http_via_header(
         self, db, hosting_provider_factory, green_domain_factory
@@ -367,8 +367,8 @@ class TestCarbonTxtParser:
         result["org"].name == carbon_txt_provider.name
 
         # and the lookup sequence should show the the order the lookups took place
-        assert result["lookup_sequence"][0] == hosted_domain
-        assert result["lookup_sequence"][1] == via_domain
+        assert result["lookup_sequence"][0]["url"] == hosted_domain
+        assert result["lookup_sequence"][1]["url"] == via_domain
 
     def test_mark_dns_text_override_green_with_domain_hash(
         self, db, hosting_provider_factory, green_domain_factory, minimal_carbon_txt_org
@@ -407,8 +407,8 @@ class TestCarbonTxtParser:
         result["org"].name == carbon_txt_provider.name
 
         # and the lookup sequence should show the the order the lookups took place
-        assert result["lookup_sequence"][0] == delegating_path
-        assert result["lookup_sequence"][1] == txt_record_path
+        assert result["lookup_sequence"][0]["url"] == delegating_path
+        assert result["lookup_sequence"][1]["url"] == txt_record_path
 
     def test_mark_http_via_override_green_with_domain_hash(
         self, db, hosting_provider_factory, green_domain_factory
@@ -446,8 +446,8 @@ class TestCarbonTxtParser:
         result["org"].name == carbon_txt_provider.name
 
         # and the lookup sequence should show the the order the lookups took place
-        assert result["lookup_sequence"][0] == hosted_domain
-        assert result["lookup_sequence"][1] == via_domain
+        assert result["lookup_sequence"][0]["url"] == hosted_domain
+        assert result["lookup_sequence"][1]["url"] == via_domain
 
     def test_check_with_domain_aliases(self, db, carbon_txt_string):
         """

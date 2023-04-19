@@ -25,6 +25,12 @@
       display: inline-block;
       min-width: 10rem;
     }
+    pre {
+      background-color: #eee;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+    }
   </style>
 
   <form action="{{ form_url }}" method="post" class="try_out">
@@ -53,24 +59,27 @@
 
     {% if preview %}
 
-      {{ preview }}
-
       {% if preview.lookup_sequence %}
 
-        <h3> From the initial location of the carbon.txt file, the following urls we tried in order:</h3>
+        <h3> From the initial location of the carbon.txt file, we tried following urls for the following reasons:</h3>
 
-        <ul>
+        <table>
+          <th>
+            Reason
+          </th>
+          <th>URL</th>
 
+          {% for lookup in preview.lookup_sequence %}
 
-          {% for url in preview.lookup_sequence %}
+            <tr>
 
-            <li>
-              <a href="{{ url }}">{{ url}}</a>
-            </li>
+              <td>{{ lookup.reason}} </td>
+              <td><a href="{{ lookup.url }}">{{ lookup.url}}</a></td>
+            </tr>
 
           {% endfor %}
 
-        </ul>
+        </table>
 
       {% endif %}
 
@@ -107,7 +116,7 @@
 
       {% if preview.not_registered.org %}
 
-        <h3>Sorry, we don't have an an organisation registered for the domain
+        <h3>We don't have an an organisation registered for the domain:
 
           {% for cred in preview.not_registered.org.credentials  %}
 
@@ -118,16 +127,16 @@
 
             {% endif %}
           {% endfor %}
-      {% endif %}
-      </h3>
 
-      <p>This is the information we do have in the carbon.txt file:</p>
+        </h3>
 
-      <pre><code>
+        <p>This is the information we do have in the carbon.txt file for that domain:</p>
+
+        <pre><code>
 {{ preview.not_registered.org.credentials }}
       </code></pre>
 
-
+      {% endif %}
 
       {% if preview.org %}
         <h2>Primary Organisation</h2>
@@ -142,7 +151,20 @@
 
       {% endif %}
 
+      {% if preview.original_string %}
 
+        <h3>Parsed carbontxt body content</h3>
+
+        <p>The raw code the carbontxt parser read in the end is below:</p>
+
+        <pre><code>
+{{ preview.original_string }}
+</code></pre>
+
+      {% endif %}
+
+
+      {% comment %} end if preview {% endcomment %}
     {% endif %}
 
 
