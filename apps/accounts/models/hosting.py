@@ -242,6 +242,9 @@ class Hostingprovider(models.Model):
         except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
             return None
 
+    def public_supporting_evidence(self):
+        return self.supporting_documents.filter(public=True)
+
     # Mutators
     def refresh_shared_secret(self) -> str:
         try:
