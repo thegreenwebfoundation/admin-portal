@@ -1,7 +1,15 @@
 from urllib.parse import urlencode
 from django.urls import reverse
 from django.apps import apps
+from django.template.loader import render_to_string
+
 from taggit.models import Tag
+from anymail.message import AnymailMessage
+
+import smtplib
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_admin_name(model, name):
@@ -27,3 +35,25 @@ def reverse_admin_name(model, name, args=None, kwargs=None, params=None):
 
 def tags_choices():
     return [(tag.id, tag.name) for tag in Tag.objects.all()]
+
+
+def send_email(address, subject, context, template_txt, template_html=None):
+    email_body = render_to_string(template_txt, context=context)
+    email_html = render_to_string(template_html, context=context)
+
+    msg = AnymailMessage(
+        subject=subject,
+        body=email_body,
+        to=[address],
+        cc=["support@thegreenwebfoundation.org"],
+    )
+    msg.attach_alternative(email_html, "text/html")
+
+    try:
+        msg.send()
+    except smtplib.SMTPException as err:
+        logger.warn(
+            f"Failed to send because of {err}. See https://docs.python.org/3/library/smtplib.html for more"  # noqa
+        )
+    except Exception:
+        logger.exception("Unexpected fatal error sending email: {err}")

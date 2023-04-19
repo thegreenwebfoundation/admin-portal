@@ -9,6 +9,7 @@ from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 import django.forms as dj_forms
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
+from django.contrib.sites.shortcuts import get_current_site
 from django.utils.translation import gettext_lazy as _
 from django import template as dj_template
 from apps.greencheck.admin import (
@@ -41,7 +42,7 @@ from apps.greencheck.models import GreencheckASNapprove
 from apps.greencheck.forms import ImporterCSVForm
 
 
-from .utils import get_admin_name, reverse_admin_name
+from .utils import get_admin_name, reverse_admin_name, send_email
 from .admin_site import greenweb_admin
 from . import filters
 from . import forms
@@ -1198,6 +1199,22 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
                     """
                 )
                 self.message_user(request, message=message, level=messages.SUCCESS)
+                send_email(
+                    address=provider_request.created_by.email,
+                    subject="Your verification request with the Green Web Foundation has been approved",
+                    context={
+                        "domain": f"{request.scheme}://{get_current_site(request).domain}",
+                        "username": provider_request.created_by.username,
+                        "org_name": provider_request.name,
+                        "countries": ", ".join(
+                            f"{location.city} ({location.country.name})"
+                            for location in provider_request.providerrequestlocation_set.all()
+                        ),
+                        "first_country": provider_request.providerrequestlocation_set.first().country.name,
+                    },
+                    template_txt="emails/verification_request_approved.txt",
+                    template_html="emails/verification_request_approved.html",
+                )
             except Exception as e:
                 message = mark_safe(
                     f"""

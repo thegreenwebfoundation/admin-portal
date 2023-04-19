@@ -11,7 +11,7 @@ If you have publicly shared links to documents or websites to support any sustai
 If there are any changes in your ASN or IP ranges for your green domains in the future, you are required to update your listing accordingly. Our Green Web Checker is only able to recognize the sustainably hosted domains of you and your customers when they resolve to an IP address that has been entered in the Green Web database.
 
 You can review and update your listing yourself!
-Please go to: https://admin.thegreenwebfoundation.org/admin/
+Please go to: {{ domain }}/admin/
 Your username is: {{ username }}
 
 You will find your company in the category "Hosting providers".
