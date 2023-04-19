@@ -383,6 +383,7 @@ class CarbonTxtParser:
             parsed_txt = toml.loads(carbon_txt_string)
             parsed_carbon_txt = self.parse(url_domain, carbon_txt_string)
             parsed_carbon_txt["lookup_sequence"] = lookup_sequence
+            parsed_carbon_txt["original_string"] = carbon_txt_string
             return parsed_carbon_txt
         except toml.TomlDecodeError:
             logger.warning(f"Unable to parse carbon.txt file at {res.url}")
@@ -401,6 +402,7 @@ class CarbonTxtParser:
             carbon_txt_string = res.content.decode("utf-8")
             parsed_carbon_txt = self.parse(url_domain, carbon_txt_string)
             parsed_carbon_txt["lookup_sequence"] = lookup_sequence
+            parsed_carbon_txt["original_string"] = carbon_txt_string
             return parsed_carbon_txt
         except Exception as ex:
             logger.exception(ex)

@@ -46,17 +46,27 @@ class CarbonTxtForm(forms.Form):
 
         if not submitted_text:
             try:
-                response = requests.get(url)
-                if response.ok:
-                    submitted_text = response.content
-                else:
-                    raise forms.ValidationError(
-                        "Unable to fetch content from url: %(url)s. HTTP response"
-                        " code: %(response_code)s",
-                        code="bad_http_lookup",
-                        params={"url": url, "response_code": response.status_code},
-                    )
-            except requests.HTTPError:
+                response = self.parser.parse_from_url(url)
+                # response = requests.get(url)
+                # if response.ok:
+                #     submitted_text = response.content
+                # else:
+                #     import ipdb
+
+                #     ipdb.set_trace()
+
+                #     raise forms.ValidationError(
+                #         "Unable to fetch content from url: %(url)s. HTTP response"
+                #         " code: %(response_code)s",
+                #         code="bad_http_lookup",
+                #         params={"url": url, "response_code": response.status_code},
+                #     )
+                self.cleaned_data["preview"] = response
+                return
+            except Exception as ex:
+                import ipdb
+
+                ipdb.set_trace()
                 # flag up an error about the domain
                 raise forms.ValidationError(
                     "Unable to fetch content from url: %(url)s",
