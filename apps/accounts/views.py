@@ -128,7 +128,7 @@ class UserActivationView(ActivationView):
             signals.user_activated.send(
                 sender=self.__class__, user=activated_user, request=self.request
             )
-            message = "Thanks, we've confirmed your email address. Now you can login with your username and password"
+            message = "Thanks, we've confirmed your email address. Now you can login with your username and password."
             messages.success(self.request, message)
             return HttpResponseRedirect(
                 force_text(self.get_success_url(activated_user))
