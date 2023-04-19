@@ -282,7 +282,7 @@ class CarbonTxtParser:
             return [None, lookup_sequence]
 
         if not lookup_sequence:
-            lookup_sequence = []
+            lookup_sequence = [{"reason": "Initial domain looked up", "url": domain}]
 
         override_url = None
 
@@ -296,13 +296,17 @@ class CarbonTxtParser:
 
                 if len(domain_hash_check) == 1:
                     override_url = domain_hash_check[0]
-                    lookup_sequence.append(override_url)
+                    lookup_sequence.append(
+                        {"reason": "Delegated via DNS TXT record", "url": override_url}
+                    )
 
                 if len(domain_hash_check) == 2:
                     override_url = domain_hash_check[0]
                     domain_hash = domain_hash_check[1]
 
-                    lookup_sequence.append(override_url)
+                    lookup_sequence.append(
+                        {"reason": "Delegated via DNS TXT record", "url": override_url}
+                    )
                     override_domain = parse.urlparse(override_url).netloc
 
                     self._add_domain_if_hash_matches_provider(
@@ -317,7 +321,7 @@ class CarbonTxtParser:
         """
         Look for a HTTP header we can use
         """
-        original_url = lookup_sequence[0]
+        original_url = lookup_sequence[0]["url"]
         original_domain = parse.urlparse(original_url).netloc
 
         # return early with original request if we see no new headers
@@ -328,12 +332,16 @@ class CarbonTxtParser:
 
         if len(via_header_payload) == 2:
             protocol, via_url = via_header_payload
-            lookup_sequence.append(via_url)
+            lookup_sequence.append(
+                {"reason": "Delegated via HTTP 'via:' header", "url": via_url}
+            )
             res = requests.get(via_url)
 
         if len(via_header_payload) == 3:
             protocol, via_url, domain_hash = via_header_payload
-            lookup_sequence.append(via_url)
+            lookup_sequence.append(
+                {"reason": "Delegated via HTTP 'via:' header", "url": via_url}
+            )
             res = requests.get(via_url)
 
         via_domain = parse.urlparse(via_url).netloc
@@ -356,9 +364,9 @@ class CarbonTxtParser:
         url_domain = parsed.netloc
 
         lookup_sequence = []
-        lookup_sequence.append(url)
+        lookup_sequence.append({"reason": "Initial URL provided ", "url": url})
 
-        # do a DNS lookups to see if we have a carbon.txt file at a new url we
+        # do a DNS lookup to see if we have a carbon.txt file at a new url we
         # delegating to instead
         override_url, lookup_sequence = self._check_for_carbon_txt_dns_record(
             url_domain, lookup_sequence
