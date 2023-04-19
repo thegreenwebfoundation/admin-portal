@@ -167,6 +167,8 @@ class CheckUrlView(FormView):
             ctx["domain"] = domain_name
             ctx["whois_info"] = lookup_result["whois_info"]
             ctx["ip_lookup"] = lookup_result["whois_info"]["query"]
+            ctx["carbon_txt"] = green_domain.added_via_carbontxt
+            ctx["provider"] = green_domain.hosting_provider
 
             if site_check.green and site_check.match_type == "as":
                 # this is an AS match. Point to the ASN match

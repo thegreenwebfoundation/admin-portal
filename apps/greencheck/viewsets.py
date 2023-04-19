@@ -181,9 +181,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
         try:
             domain = self.checker.validate_domain(url)
-        except Exception:
+        except Exception as ex:
             # not a valid domain, OR a valid IP. Get rid of it.
-            logger.warning(f"unable to extract domain from {url}")
+            logger.warning(f"unable to extract domain from {url}, exception was: {ex}")
             return self.legacy_grey_response(url, log_check=False)
 
         if skip_cache:
@@ -201,15 +201,15 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             if http_response := self.build_response_from_full_network_lookup(domain):
                 return http_response
 
-        # not in the cache. Try the database instead:
+        # Try the database green domain cache table first:
         if http_response := self.build_response_from_database_lookup(domain):
             return http_response
 
-        # not in database or the cache, try full lookup using network
+        # not in cache table cache, try full lookup using network
         if http_response := self.build_response_from_full_network_lookup(domain):
             return http_response
 
-        # not in database or the cache, nor can we see find it with
+        # not in database or the cache, nor can we find it with
         # any third party lookups. Fall back to saying we couldn't find anything,
         # the way the API used to work.
         return self.legacy_grey_response(url)
