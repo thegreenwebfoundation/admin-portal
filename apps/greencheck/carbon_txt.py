@@ -263,14 +263,6 @@ class CarbonTxtParser:
                     if new_evidence:
                         unregistered_evidence.extend(new_evidence)
 
-                    # import ipdb
-
-                    # ipdb.set_trace()
-                    import rich
-
-                    rich.print(provider)
-                    rich.print(found_provider)
-
                     if isinstance(provider, str):
                         results["upstream"][provider] = found_provider
                     if isinstance(provider, dict):
