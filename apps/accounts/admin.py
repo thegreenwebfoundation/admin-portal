@@ -9,7 +9,6 @@ from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
 import django.forms as dj_forms
 from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
-from django.contrib.sites.shortcuts import get_current_site
 from django.utils.translation import gettext_lazy as _
 from django import template as dj_template
 from apps.greencheck.admin import (

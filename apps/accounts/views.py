@@ -22,7 +22,6 @@ from django_registration.backends.activation.views import (
     ActivationView,
     RegistrationView,
 )
-from anymail.message import AnymailMessage
 from django_registration.exceptions import ActivationError
 from django_registration.forms import RegistrationFormCaseInsensitive
 from formtools.wizard.views import SessionWizardView
@@ -38,7 +37,7 @@ from .forms import (
     PreviewForm,
 )
 from .models import User, ProviderRequest, Hostingprovider
-
+from .utils import send_email
 
 import logging
 
@@ -390,28 +389,10 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             "status": provider_request.status,
             "link_to_verification_request": link_to_verification_request,
         }
-
-        email_subject = "Your verification request for the Green Web Database"
-        email_body = render_to_string(
-            "emails/verification-request-notify.txt", context=ctx
+        send_email(
+            address=user.email,
+            subject="Your verification request for the Green Web Database",
+            context=ctx,
+            template_html="emails/verification-request-notify.html",
+            template_txt="emails/verification-request-notify.txt",
         )
-        email_html = render_to_string(
-            "emails/verification-request-notify.html", context=ctx
-        )
-
-        msg = AnymailMessage(
-            subject=email_subject,
-            body=email_body,
-            to=[user.email],
-            cc=["support@thegreenwebfoundation.org"],
-        )
-        msg.attach_alternative(email_html, "text/html")
-
-        try:
-            msg.send()
-        except smtplib.SMTPException as err:
-            logger.warn(
-                f"Failed to send because of {err}. See https://docs.python.org/3/library/smtplib.html for more"  # noqa
-            )
-        except Exception:
-            logger.exception("Unexpected fatal error sending email: {err}")
