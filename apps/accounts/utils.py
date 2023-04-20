@@ -38,8 +38,13 @@ def tags_choices():
 
 
 def send_email(address, subject, context, template_txt, template_html=None):
+    """
+    Sends an email based on a template and context to render.
+
+    Fire and forget - does not re-raise exceptions from the email client.
+    """
+
     email_body = render_to_string(template_txt, context=context)
-    email_html = render_to_string(template_html, context=context)
 
     msg = AnymailMessage(
         subject=subject,
@@ -47,7 +52,10 @@ def send_email(address, subject, context, template_txt, template_html=None):
         to=[address],
         cc=["support@thegreenwebfoundation.org"],
     )
-    msg.attach_alternative(email_html, "text/html")
+
+    if template_html:
+        email_html = render_to_string(template_html, context=context)
+        msg.attach_alternative(email_html, "text/html")
 
     try:
         msg.send()
