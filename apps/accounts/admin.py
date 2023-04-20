@@ -1184,6 +1184,39 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
     ]
     change_form_template = "admin/provider_request/change_form.html"
 
+    def send_approval_email(self, provider_request, request):
+        """
+        Send an email to the provider whose request was approved by staff.
+        """
+
+        provider_url = provider_request.hostingprovider_set.first().admin_url
+        context = {
+            "username": provider_request.created_by.username,
+            "org_name": provider_request.name,
+            "update_url": request.build_absolute_uri(provider_url),
+        }
+
+        # TODO: change this when multiple locations on Hostingprovider are implemented
+        # inject additional info to providers with multiple locations
+        locations = provider_request.providerrequestlocation_set.all()
+        if len(locations) > 1:
+            location_context = {
+                "locations": ", ".join(
+                    f"{location.city} ({location.country.name})"
+                    for location in locations
+                ),
+                "first_location": f"{locations.first().city}, {locations.first().country.name}",
+            }
+            context.update(location_context)
+
+        send_email(
+            address=provider_request.created_by.email,
+            subject="Approval of your verification request for the Green Web database",
+            context=context,
+            template_txt="emails/verification_request_approved.txt",
+            template_html="emails/verification_request_approved.html",
+        )
+
     @admin.action(description="Approve", permissions=["change"])
     def mark_approved(self, request, queryset):
         for provider_request in queryset:
@@ -1199,22 +1232,8 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
                     """
                 )
                 self.message_user(request, message=message, level=messages.SUCCESS)
-                send_email(
-                    address=provider_request.created_by.email,
-                    subject="Your verification request with the Green Web Foundation has been approved",
-                    context={
-                        "domain": f"{request.scheme}://{get_current_site(request).domain}",
-                        "username": provider_request.created_by.username,
-                        "org_name": provider_request.name,
-                        "countries": ", ".join(
-                            f"{location.city} ({location.country.name})"
-                            for location in provider_request.providerrequestlocation_set.all()
-                        ),
-                        "first_country": provider_request.providerrequestlocation_set.first().country.name,
-                    },
-                    template_txt="emails/verification_request_approved.txt",
-                    template_html="emails/verification_request_approved.html",
-                )
+                self.send_approval_email(provider_request, request)
+
             except Exception as e:
                 message = mark_safe(
                     f"""

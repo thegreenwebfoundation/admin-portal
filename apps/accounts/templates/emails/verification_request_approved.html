@@ -1,4 +1,4 @@
-<p>Dear {{ username }},</p>
+<p>Dear provider,</p>
 
 <p>Thank you for taking the time to submit {{ org_name }} for verification to the Green Web database. It's great to know that you are committed to providing green services to your customers.</p>
 
@@ -12,16 +12,18 @@
 
 <p>
 You can review and update your listing yourself!
-<br>Please go to: <a href="{{ domain }}/admin/">{{ domain }}/admin/</a>
+<br>Please go to: <a href="{{ update_url }}">{{ update_url }}</a>
 <br>Your username is: {{ username }}
 </p>
 
-<p>You will find your company in the category "Hosting providers".</p>
-
+{% if locations %}
 <p>
-Countries: {{ countries }}
-<br>For now, {{ org_name }} is marked as a provider in {{ first_country }} only (where your headquarters are). At the moment, we are developing our database to allow for multiple locations. Once that feature is up and running, we will add the other countries and let you know if we have further questions.
+    <b>Locations:</b> {{ locations }}
+    <br>For now, {{ org_name }} is marked as a provider in {{ first_location }} only (where your headquarters are). At
+    the moment, we are developing our database to allow for multiple locations. Once that feature is up and running, we
+    will add the other countries and let you know if we have further questions.
 </p>
+{% endif %}
 
 <p>If you have any further questions, please let us know. Thanks for your help in keeping the Green Web database up to date!</p>
 
