@@ -242,7 +242,11 @@ class CarbonTxtParser:
                 if new_org_evidence:
                     unregistered_evidence.extend(new_org_evidence)
 
-                results["org"] = org_provider
+                primary_domain = primary_creds.get("domain")
+                if primary_domain:
+                    results["org"] = {primary_domain: org_provider}
+                else:
+                    results["org"] = {domain: org_provider}
             # either list as known provider, or add to the list
             # of new entities we do not have in our system yet
 
