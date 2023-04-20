@@ -1195,8 +1195,10 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             "update_url": request.build_absolute_uri(provider_url),
         }
 
-        # TODO: change this when multiple locations on Hostingprovider are implemented
         # inject additional info to providers with multiple locations
+
+        # TODO: when multiple locations on Hostingprovider are implemented,
+        # change the code below + template logic
         locations = provider_request.providerrequestlocation_set.all()
         if len(locations) > 1:
             location_context = {
