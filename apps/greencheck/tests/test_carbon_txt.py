@@ -134,8 +134,10 @@ class TestCarbonTxtParser:
         psr = carbon_txt.CarbonTxtParser()
         result = psr.parse("www.hillbob.de", carbon_txt_string)
 
-        org = result.get("org")
+        org, *_ = result.get("org").values()
+        org_domain, *_ = result.get("org").keys()
         assert org
+        assert org_domain == "www.hillbob.de"
         assert org.website == provider.website
         assert org.supporting_documents.first().url == sustainablity_page.url
 
@@ -328,7 +330,10 @@ class TestCarbonTxtParser:
 
         # then: the contents of the carbon.txt file at the domain and path specified
         # in the TXT record is used instead
-        assert result["org"].name == carbon_txt_provider.name
+        org, *_ = result["org"].values()
+        org_domain, *_ = result["org"].keys()
+        assert org.name == carbon_txt_provider.name
+        assert org_domain == "used-in-tests.carbontxt.org"
 
         # and: the sequence of lookups is recorded for debugging / tracing purposes
         assert "lookup_sequence" in result.keys()
@@ -366,7 +371,10 @@ class TestCarbonTxtParser:
 
         # Then: the result should show the contents of the carbon.txt file served by
         # the managed service, on behalf of the original domain
-        result["org"].name == carbon_txt_provider.name
+        org, *_ = result["org"].values()
+        org_domain, *_ = result["org"].keys()
+        assert org.name == carbon_txt_provider.name
+        assert org_domain == "managed-service.carbontxt.org"
 
         # and the lookup sequence should show the the order the lookups took place
         assert result["lookup_sequence"][0]["url"] == hosted_domain
@@ -406,7 +414,11 @@ class TestCarbonTxtParser:
 
         # and: we should see our provider in our results without needing to have
         # its domain added in any manual process
-        result["org"].name == carbon_txt_provider.name
+        org, *_ = result["org"].values()
+        org_domain, *_ = result["org"].keys()
+        assert org.name == carbon_txt_provider.name
+        # TODO - should this be the case?
+        assert org_domain == "used-in-tests.carbontxt.org"
 
         # and the lookup sequence should show the the order the lookups took place
         assert result["lookup_sequence"][0]["url"] == delegating_path
@@ -445,7 +457,10 @@ class TestCarbonTxtParser:
 
         # and: we should see our provider in our results without needing to have
         # its domain added in any manual process
-        result["org"].name == carbon_txt_provider.name
+        org, *_ = result["org"].values()
+        org_domain, *_ = result["org"].keys()
+        assert org.name == carbon_txt_provider.name
+        assert org_domain == "managed-service.carbontxt.org"
 
         # and the lookup sequence should show the the order the lookups took place
         assert result["lookup_sequence"][0]["url"] == hosted_domain
@@ -514,7 +529,8 @@ class TestCarbonTxtParser:
 
         assert sys_ten in parsed_result["upstream"].values()
         assert cdn_com in parsed_result["upstream"].values()
-        assert parsed_result["org"] == hillbob
+        org, *_ = parsed_result["org"].values()
+        assert org == hillbob
 
 
 class TestLogCarbonTxtCheck:
