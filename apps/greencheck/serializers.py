@@ -221,7 +221,7 @@ class CO2IntensitySerializer(serializers.ModelSerializer):
 
 
 class CarbonTxtSerializer(serializers.Serializer):
-    org = HostingProviderSerializer()
+    org = serializers.DictField(child=HostingProviderSerializer())
     upstream = serializers.DictField(child=HostingProviderSerializer())
     not_registered = serializers.DictField(required=False)
 
