@@ -20,6 +20,7 @@ from apps.greencheck.views import GreenUrlsView
 from ..greencheck import carbon_txt, domain_check
 from ..greencheck import models as gc_models
 
+
 checker = domain_check.GreenDomainChecker()
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,17 @@ class CarbonTxtForm(forms.Form):
             domain = parsed_url.netloc
 
             if parsed_toml:
-                self.cleaned_data["preview"] = self.parser.parse(domain, submitted_text)
+                try:
+                    self.cleaned_data["preview"] = self.parser.parse(
+                        domain, submitted_text
+                    )
+                except Exception as ex:
+                    logger.warning(f"{ex}")
+
+                    raise forms.ValidationError(
+                        f"The carbon.txt file contained valid TOML, but there was a problem performing lookups with the given info.",
+                        code="carbon_txt_lookup_error",
+                    )
 
 
 class CarbonTxtCheckView(LoginRequiredMixin, WaffleFlagMixin, FormView):

@@ -409,6 +409,7 @@ class CarbonTxtParser:
         except toml.TomlDecodeError:
             logger.warning(f"Unable to parse carbon.txt file at {res.url}")
         except Exception as ex:
+            logger.warning(f"ex")
             logger.warning(
                 f"Unable to parse carbon.txt file at {res.url}. "
                 "We found valid TOML, but we could not parse the contents."

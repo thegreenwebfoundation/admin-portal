@@ -84,7 +84,7 @@
       {% endif %}
 
 
-      {{ preview }}
+      {% comment %} {{ preview }} {% endcomment %}
 
       {% if preview.upstream %}
         <h2>Upstream providers</h2>
@@ -163,13 +163,18 @@
       {% if preview.org %}
         <h2>Primary Organisation</h2>
 
-        <p>This is the organisation hosting the carbon.txt file being viewed and processed</p>
+        <p>The organisation hosting the carbon.txt file being viewed and processed</p>
 
-        <h3>
-          <a href="{{ preview.org.admin_url }}">
-            {{ preview.org }}
-          </a>
-        </h3>
+        <ul>
+          {% for domain, provider in preview.org.items %}
+            <li>
+              <h3>
+                {{ domain }} : <a href="{{ provider.admin_url }}">{{ provider }}</a>
+              </h3>
+            </li>
+          {% endfor %}
+
+        </ul>
 
       {% endif %}
 
