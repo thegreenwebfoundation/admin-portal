@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UsernameField
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.forms.formsets import BaseFormSet
+from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from taggit.models import Tag
@@ -333,9 +334,26 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
 # Part of multi-step registration form (screen 3).
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
-GreenEvidenceForm = forms.formset_factory(
-    CredentialForm, extra=0, formset=MoreConvenientFormset, validate_min=True, min_num=1
-)
+class GreenEvidenceForm(
+    forms.formset_factory(
+        CredentialForm,
+        extra=0,
+        formset=MoreConvenientFormset,
+        validate_min=True,
+        min_num=1,
+    )
+):
+    def non_form_errors(self):
+        """
+        Overwrite the error message when too few forms submitted.
+
+        TODO: after upgrading to Django 4.1 use `too_few_forms` from this API instead:
+        https://docs.djangoproject.com/en/4.1/topics/forms/formsets/#formsets-error-messages
+        """
+        errors = super().non_form_errors()
+        original_msg = "Please submit at least 1 form."
+        target_msg = "Please submit at least one row of evidence. Click the ‘add another evidence’ button below."
+        return ErrorList(error.replace(original_msg, target_msg) for error in errors)
 
 
 class IpRangeForm(forms.ModelForm):
@@ -498,7 +516,9 @@ class LocationForm(forms.ModelForm):
         ),
     )
 
-    country = CountryField( blank_label='(Select a country)', ).formfield(
+    country = CountryField(
+        blank_label="(Select a country)",
+    ).formfield(
         label="Country",
         help_text="Choose a country from the list.",
     )
@@ -534,7 +554,6 @@ class LocationExtraForm(forms.Form):
 
     class Meta:
         exclude = ["request"]
-
 
 
 class LocationStepForm(MultiModelForm):
