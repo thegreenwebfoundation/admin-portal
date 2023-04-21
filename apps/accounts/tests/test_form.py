@@ -330,3 +330,17 @@ def test_location_step_form_when_invalid_raises_errors():
     # and our error list should show tell us that we are missing the necessary
     # location sub-form submission
     assert "Please submit at least 1 location." in step_form.non_field_errors()
+
+
+def test_evidence_formset_empty():
+    empty_data = {
+        "form-TOTAL_FORMS": "0",
+        "form-INITIAL_FORMS": "0",
+    }
+
+    evidence_formset = GreenEvidenceForm(empty_data)
+    assert evidence_formset.is_valid() is False
+    assert any(
+        "Please submit at least one row of evidence" in error_msg
+        for error_msg in evidence_formset.non_form_errors()
+    )
