@@ -23,7 +23,10 @@ from django_registration.backends.activation.views import (
     RegistrationView,
 )
 from django_registration.exceptions import ActivationError
-from django_registration.forms import RegistrationFormCaseInsensitive
+from django_registration.forms import (
+    RegistrationFormCaseInsensitive,
+    RegistrationFormUniqueEmail,
+)
 from formtools.wizard.views import SessionWizardView
 
 from .forms import (
@@ -69,7 +72,7 @@ class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
         return qs
 
 
-class RegistrationForm(RegistrationFormCaseInsensitive):
+class RegistrationForm(RegistrationFormCaseInsensitive, RegistrationFormUniqueEmail):
     class Meta(RegistrationFormCaseInsensitive.Meta):
         model = User
 
