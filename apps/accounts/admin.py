@@ -777,9 +777,12 @@ class HostingAdmin(admin.ModelAdmin):
         # pass in the extra ip_range_count into our extra context so we can
         # conditionally show a notice when we have too many ip ranges to realistically
         # iterate through
-        if object_id and isinstance(object_id, int):
-            extra_context["ip_approval_count"] = self.model.objects.get(id=object_id).ip_approval_count
-            extra_context["ip_range_count"] = self.model.objects.get(id=object_id).ip_range_count
+        try:
+            instance = self.model.objects.get(id=object_id)
+            extra_context["ip_approval_count"] = instance.ip_approval_count
+            extra_context["ip_range_count"] = instance.ip_range_count
+        except self.model.DoesNotExist:
+            logger.warning(f"Could not find provider with the id {object_id}")
 
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
