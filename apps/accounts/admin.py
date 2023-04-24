@@ -35,7 +35,7 @@ from dal_select2 import views as dal_select2_views
 from waffle.models import Flag
 from waffle.admin import FlagAdmin
 
-from apps.greencheck.models import GreencheckIpApprove
+from apps.greencheck.models import GreencheckIpApprove, GreencheckIp
 from apps.greencheck.models import GreencheckASNapprove
 
 from apps.greencheck.forms import ImporterCSVForm
@@ -671,6 +671,8 @@ class HostingAdmin(admin.ModelAdmin):
         # if "archived" not in request.GET:
         #     qs = qs.filter(archived=False)
 
+
+
         qs = qs.prefetch_related(
             "hostingprovider_certificates",
             "datacenter",
@@ -766,9 +768,18 @@ class HostingAdmin(admin.ModelAdmin):
             request.POST = post
 
         extra_context = extra_context or {}
-        extra_context["bulk_edit_link"] = reverse_admin_name(
+        extra_context["bulk_edit_ip_approval_link"] = reverse_admin_name(
             GreencheckIpApprove, "changelist", params={"hostingprovider": object_id}
         )
+        extra_context["bulk_edit_ip_range_link"] = reverse_admin_name(
+            GreencheckIp, "changelist", params={"hostingprovider": object_id}
+        )
+        # pass in the extra ip_range_count into our extra context so we can
+        # conditionally show a notice when we have too many ip ranges to realistically
+        # iterate through
+        extra_context["ip_approval_coun"] = self.model.objects.get(id=object_id).ip_approval_count
+        extra_context["ip_range_count"] = self.model.objects.get(id=object_id).ip_range_count
+
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
     @mark_safe
