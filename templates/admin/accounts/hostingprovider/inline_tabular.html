@@ -12,12 +12,11 @@
    {{ inline_admin_formset.formset.non_form_errors }}
 
     {% if inline_admin_formset.opts.verbose_name_plural == "IP approvals"  %}
-
-    <p>
-    If you need to approve IP Approvals for this provider, follow
-    <a href="{{ bulk_edit_link }}">
-      this link to the bulk editing interface, with this provider pre-selected.</a>
-    </p>
+      <p>
+      If you need to approve IP Approvals for this provider, follow
+      <a href="{{ bulk_edit_ip_approval_link }}">
+        this link to the bulk editing interface, with this provider pre-selected.</a>
+      </p>
    {% endif %}
 
 

@@ -105,6 +105,18 @@ class GreencheckIpInline(admin.TabularInline):
     verbose_name = "IP"
     verbose_name_plural = "IPs"
 
+    def get_queryset(self, request):
+        """
+        Return the normal queryset, except if we have more than is sensible to 
+        try rendering on a single admin page for a given provider
+        """
+        # If we have too many ip ranges, do not try to render them 
+        # in the admin, but return an empty queryset
+        if super().get_queryset(request).count() > 500:
+            return self.model.objects.none()
+
+        return super().get_queryset(request)
+
 
 class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
     extra = 0

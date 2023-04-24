@@ -245,6 +245,24 @@ class Hostingprovider(models.Model):
     def public_supporting_evidence(self):
         return self.supporting_documents.filter(public=True)
 
+    @property
+    def ip_range_count(self) -> int:
+        """
+        Convenience method for counting IP ranges.
+
+        Used to when deciding how many to show on an admin page.
+        """
+        return self.greencheckip_set.all().count()
+
+    @property
+    def ip_approval_count(self) -> int:
+        """
+        Convenience method for counting IP approval requests.
+
+        Used to when deciding how many to show on an admin page.
+        """
+        return self.greencheckipapprove_set.all().count()
+
     # Mutators
     def refresh_shared_secret(self) -> str:
         try:
