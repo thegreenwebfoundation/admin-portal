@@ -6,14 +6,6 @@
 
 <section class="prose mx-auto">
 
-	{% if messages %}
-		{% for message in messages %}
-			<div{% if message.tags %} class="alert__{{ message.tags }}"{% endif %}>
-				<p>{{ message }}</p>
-			</div>
-		{% endfor %}
-	{% endif %}
-
 	<header class="">
 		<p class="mb-6 text-sm text-green"><a href="/requests" class="text-neutral-500">< Back to requests home</a></p>
 
