@@ -497,7 +497,7 @@ def test_approve_changes_status_to_approved(db):
     # then: the request status is changed
     assert result.status == models.ProviderRequestStatus.APPROVED
     # then: the approval date is recorded
-    assert result.approved == datetime(2023, 4, 25, 12, 0, 1)
+    assert result.approved_at == datetime(2023, 4, 25, 12, 0, 1)
 
 
 def test_approve_creates_hosting_provider(db):

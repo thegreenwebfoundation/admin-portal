@@ -671,8 +671,6 @@ class HostingAdmin(admin.ModelAdmin):
         # if "archived" not in request.GET:
         #     qs = qs.filter(archived=False)
 
-
-
         qs = qs.prefetch_related(
             "hostingprovider_certificates",
             "datacenter",
@@ -1190,6 +1188,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "authorised_by_org",
         "created_by",
         "status",
+        "approved_at",
         "location_import_required",
         "missing_network_explanation",
     )

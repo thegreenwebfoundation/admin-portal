@@ -50,7 +50,7 @@ class ProviderRequest(TimeStampedModel):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
     )
-    approved = models.DateTimeField(editable=False, blank=True, null=True)
+    approved_at = models.DateTimeField(editable=False, blank=True, null=True)
     authorised_by_org = models.BooleanField()
     services = TaggableManager(
         verbose_name="Services offered",
@@ -211,7 +211,7 @@ class ProviderRequest(TimeStampedModel):
 
         # change status of the request
         self.status = ProviderRequestStatus.APPROVED
-        self.approved = datetime.now()
+        self.approved_at = datetime.now()
         self.save()
 
         return hp

@@ -6,7 +6,7 @@
 
 <section class="prose mx-auto">
 
-	<header class="">
+`	<header class="">
 		<p class="mb-6 text-sm text-green"><a href="/requests" class="text-neutral-500">< Back to requests home</a></p>
 
 		<h1 class="text-6xl mb-0"><span class="uppercase">Summary of request</h1>
@@ -14,8 +14,8 @@
 		<p>Submitted on: {{ object.created }}</p>
 		<p>Status: <span class="uppercase">{{ object.status }}</span></p>
 
-		{% if object.approved %}
-		<p>Approved on: <span>{{ object.approved }}</span></p>
+		{% if object.approved_at %}
+		<p>Approved on: <span>{{ object.approved_at }}</span></p>
 		{% endif %}
 	</header>
 
