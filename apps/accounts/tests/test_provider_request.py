@@ -12,7 +12,7 @@ from waffle.testutils import override_flag
 from faker import Faker
 from ipaddress import ip_address
 from freezegun import freeze_time
-from datetime import date
+from datetime import date, datetime
 
 from conftest import (
     ProviderRequestFactory,
@@ -481,6 +481,7 @@ def test_approve_asn_already_exists(db, green_asn):
     assert models.Hostingprovider.objects.filter(request=pr).exists() is False
 
 
+@freeze_time("Apr 25th, 2023, 12:00:01")
 def test_approve_changes_status_to_approved(db):
     # given: a provider request is created
     pr = ProviderRequestFactory.create()
@@ -490,11 +491,13 @@ def test_approve_changes_status_to_approved(db):
     # when: the request is approved
     pr.approve()
 
+    # when: we fetch the request from the database again
+    result = models.ProviderRequest.objects.get(pk=pr.pk)
+
     # then: the request status is changed
-    assert (
-        models.ProviderRequest.objects.get(pk=pr.pk).status
-        == models.ProviderRequestStatus.APPROVED
-    )
+    assert result.status == models.ProviderRequestStatus.APPROVED
+    # then: the approval date is recorded
+    assert result.approved == datetime(2023, 4, 25, 12, 0, 1)
 
 
 def test_approve_creates_hosting_provider(db):

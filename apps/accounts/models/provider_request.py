@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django_countries.fields import CountryField
 from taggit.managers import TaggableManager
 from taggit.models import Tag
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 from apps.greencheck.models import IpAddressField, GreencheckASN, GreencheckIp
 from apps.greencheck.validators import validate_ip_range
@@ -50,6 +50,7 @@ class ProviderRequest(TimeStampedModel):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
     )
+    approved = models.DateTimeField(editable=False, blank=True, null=True)
     authorised_by_org = models.BooleanField()
     services = TaggableManager(
         verbose_name="Services offered",
@@ -210,6 +211,7 @@ class ProviderRequest(TimeStampedModel):
 
         # change status of the request
         self.status = ProviderRequestStatus.APPROVED
+        self.approved = datetime.now()
         self.save()
 
         return hp
