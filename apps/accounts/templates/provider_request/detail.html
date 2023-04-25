@@ -21,6 +21,10 @@
 		
 		<p>Submitted on: {{ object.created }}</p>
 		<p>Status: <span class="uppercase">{{ object.status }}</span></p>
+
+		{% if object.approved %}
+		<p>Approved on: <span>{{ object.approved }}</span></p>
+		{% endif %}
 	</header>
 
 	<article class="pb-12">
