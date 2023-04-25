@@ -545,8 +545,9 @@ class LocationExtraForm(forms.Form):
     location_import_required = forms.BooleanField(
         label="Bulk location import required",
         help_text=(
-            "I have more than ten locations to add. Please contact me separately "
-            "to arrange a bulk import of this information."
+            "Select this option if you have more than ten locations to add."
+            "We ask you to add at least one location now."
+            "We will contact you separately to arrange a bulk import of your data."
         ),
         initial=False,
         required=False,
@@ -591,6 +592,8 @@ class LocationStepForm(MultiModelForm):
                 # https://docs.djangoproject.com/en/4.1/topics/forms/formsets/#formsets-error-messages
                 original_msg = "Please submit at least 1 form."
                 target_msg = "Please submit at least 1 location."
+                if self.forms["extra"]["location_import_required"].value():
+                    target_msg = f"You've selected the bulk import option, but we still need to know where your headquarters are. {target_msg}"
                 formset_errors = [
                     error.replace(original_msg, target_msg)
                     for error in form.non_form_errors()

@@ -332,6 +332,24 @@ def test_location_step_form_when_invalid_raises_errors():
     assert "Please submit at least 1 location." in step_form.non_field_errors()
 
 
+def test_location_step_empty_form_bulk_import_selected():
+    # given an empty formset with the bulk import option selected
+    empty_data = {
+        "form-TOTAL_FORMS": "0",
+        "form-INITIAL_FORMS": "0",
+        "extra-location_import_required": "on",
+    }
+
+    step_form = LocationStepForm(empty_data)
+
+    # then form is not valid
+    assert not step_form.is_valid()
+    assert (
+        "You've selected the bulk import option, but we still need to know where your headquarters are. Please submit at least 1 location."
+        in step_form.non_field_errors()
+    )
+
+
 def test_evidence_formset_empty():
     empty_data = {
         "form-TOTAL_FORMS": "0",
