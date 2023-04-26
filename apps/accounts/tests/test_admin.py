@@ -29,39 +29,29 @@ def rdap_content():
     return json.loads(rdap_output_path.read_text())
 
 
-class TestHostingProviderAdminInlineRendering:
-    """
-    Test that we can visit new provider pages. This exercises
-    any logic for deciding which inlines to show.
-    """
-
-    def test_visit_new_provider(self, db, client, sample_hoster_user):
-        """
-        Sign in, and visit new hosting provider page.
-
-        Simulate the journey for a new user creating a hosting
-        provider in the admin.
-        """
-
-        client.force_login(sample_hoster_user)
-
-        new_provider_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
-        resp = client.get(new_provider_url)
-        assert resp.status_code == 200
-
-
 class TestDatacenterAdmin:
-    def test_visit_admin_page(self, db, client, sample_hoster_user):
+    def test_regular_user_cannot_create_new_dc(self, db, client, sample_hoster_user):
         """
-        Sign in, and visit new datacenter page.
-
-        Simulate the journey for a new user creating a datacenter in the admin
+        Regular users (i.e. that do not belong to the admin group)
+        should not have access to adding new data centers via Django admin.
         """
 
         client.force_login(sample_hoster_user)
 
-        new_datacenter_url = urls.reverse("greenweb_admin:accounts_datacenter_add")
-        resp = client.get(new_datacenter_url)
+        admin_url = urls.reverse("greenweb_admin:accounts_datacenter_add")
+        resp = client.get(admin_url)
+        assert resp.status_code == 403
+
+    def test_admin_can_create_new_dc(self, db, client, greenweb_staff_user):
+        """
+        Admin users should be able to create a new data center using the admin panel
+        - for convenience purposes.
+        """
+
+        client.force_login(greenweb_staff_user)
+
+        admin_url = urls.reverse("greenweb_admin:accounts_datacenter_add")
+        resp = client.get(admin_url)
         assert resp.status_code == 200
 
     def test_update_datacenter_admin_page(
@@ -166,14 +156,26 @@ class TestHostingProviderAdmin:
     page use the custom features
     """
 
-    def test_visit_admin_create_page_for_user(self, db, client, sample_hoster_user):
+    def test_regular_user_cannot_create_new_hp(self, db, client, sample_hoster_user):
         """
-        Sign in, and visit new hosting page.
-        Simulate the journey for a new user visiting the page to
-        create a hosting provider
+        Regular users (i.e. that do not belong to the admin group)
+        should not have access to adding new hosting providers via Django admin.
+        They should use the verification request flow instead.
         """
 
         client.force_login(sample_hoster_user)
+
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
+        resp = client.get(admin_url)
+        assert resp.status_code == 403
+
+    def test_admin_can_create_new_hp(self, db, client, greenweb_staff_user):
+        """
+        Admin users should be able to create a new hosting provider using the admin panel
+        - for convenience purposes.
+        """
+
+        client.force_login(greenweb_staff_user)
 
         admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_add")
         resp = client.get(admin_url)

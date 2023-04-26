@@ -9,8 +9,7 @@ from django.contrib.auth.models import Group, Permission
 # ACTIVE_GROUPS = {"admin": {}, "hostingprovider": {}, "datacenter": {}}
 
 HOSTING_PROVIDER_PERMS = [
-    # need to add their own hosting provider and make updates
-    "add_hostingprovider",
+    # needed to make updates
     "change_hostingprovider",
     "view_hostingprovider",
     # hosting provider certificates are
@@ -44,8 +43,7 @@ HOSTING_PROVIDER_PERMS = [
 ]
 
 DATACENTER_PERMS = [
-    # need to register their own datacenter and see it
-    "add_datacenter",
+    # needed to view and modify own datacenters
     "change_datacenter",
     "view_datacenter",
     # need to add and see provided links to legacy certificates
@@ -70,6 +68,9 @@ DATACENTER_PERMS = [
 ]
 
 ADMIN_PERMS = [
+    # needed to be able to add hosting providers and data centers
+    "add_hostingprovider",
+    "add_datacenter",
     # need to be able to add, remove and change users,
     "add_user",
     "change_user",
@@ -232,3 +233,40 @@ def group_permissions_2022_10_28_provider_request_revert(apps, schema_editor):
     pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
 
     admin.permissions.remove(*pr_perms)
+
+
+def group_permissions_2023_04_26_disallow_adding_hp_and_dc(apps, schema_editor):
+    """
+    We no longer allow adding new Hostingprovider and Datacenter objects by non-staff users.
+    These permissions are explicitly moved to the "admin" group
+    """
+    pr_perms_codenames = [
+        "add_hostingprovider",
+        "add_datacenter",
+    ]
+    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
+
+    hp, _ = Group.objects.get_or_create(name="hostingprovider")
+    dc, _ = Group.objects.get_or_create(name="datacenter")
+    admin, _ = Group.objects.get_or_create(name="admin")
+
+    hp.permissions.remove(*pr_perms)
+    dc.permissions.remove(*pr_perms)
+    admin.permissions.add(*pr_perms)
+
+
+def group_permissions_2023_04_26_revert_disallow_adding_hp_and_dc(apps, schema_editor):
+    """
+    Reverts group_permissions_2023_04_26_disallow_adding_hp_and_dc
+    """
+    pr_perms_codenames = [
+        "add_hostingprovider",
+        "add_datacenter",
+    ]
+    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
+
+    hp, _ = Group.objects.get_or_create(name="hostingprovider")
+    dc, _ = Group.objects.get_or_create(name="datacenter")
+
+    hp.permissions.add(*pr_perms)
+    dc.permissions.add(*pr_perms)

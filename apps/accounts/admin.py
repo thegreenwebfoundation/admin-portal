@@ -276,7 +276,6 @@ class HostingAdmin(admin.ModelAdmin):
         filters.CountryFilter,
     ]
     inlines = [
-        # HostingCertificateInline,
         HostingProviderSupportingDocumentInline,
         GreencheckAsnInline,
         GreencheckIpInline,
