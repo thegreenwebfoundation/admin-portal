@@ -3,6 +3,7 @@ from django.contrib import admin, messages
 from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.urls import path, reverse
+from django.urls import resolve
 from django.shortcuts import redirect, render
 
 
@@ -107,13 +108,22 @@ class GreencheckIpInline(admin.TabularInline):
 
     def get_queryset(self, request):
         """
-        Return the normal queryset, except if we have more than is sensible to 
+        Return the normal queryset, except if we have more than is sensible to
         try rendering on a single admin page for a given provider
         """
-        # If we have too many ip ranges, do not try to render them 
+        # If we have too many ip ranges, do not try to render them
         # in the admin, but return an empty queryset
-        if super().get_queryset(request).count() > 500:
-            return self.model.objects.none()
+        resolved_path = resolve(request.path)
+        request_kwargs = resolved_path.kwargs
+
+        if "object_id" in request_kwargs.keys():
+            provider = Hostingprovider.objects.filter(
+                id=request_kwargs["object_id"]
+            ).first()
+
+            if provider:
+                if provider.greencheckip_set.all().count() > 500:
+                    return self.model.objects.none()
 
         return super().get_queryset(request)
 
