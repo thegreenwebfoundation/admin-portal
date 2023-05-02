@@ -545,8 +545,8 @@ class LocationExtraForm(forms.Form):
     location_import_required = forms.BooleanField(
         label="Bulk location import required",
         help_text=(
-            "Select this option if you have more than ten locations to add."
-            "We ask you to add at least one location now."
+            "Select this option if you have more than ten locations to add. "
+            "We ask you to add at least one location now. "
             "We will contact you separately to arrange a bulk import of your data."
         ),
         initial=False,
