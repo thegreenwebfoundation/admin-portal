@@ -352,7 +352,7 @@ class GreenEvidenceForm(
         """
         errors = super().non_form_errors()
         original_msg = "Please submit at least 1 form."
-        target_msg = "Please submit at least one row of evidence. Click the ‘add another evidence’ button below."
+        target_msg = "Please submit at least one row of evidence."
         return ErrorList(error.replace(original_msg, target_msg) for error in errors)
 
 
