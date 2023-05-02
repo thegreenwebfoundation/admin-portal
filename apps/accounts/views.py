@@ -2,7 +2,6 @@ import waffle
 from waffle.mixins import WaffleFlagMixin
 from enum import Enum
 from dal import autocomplete
-import smtplib
 from django.core.files.storage import DefaultStorage
 from django.contrib import messages
 from django.contrib.auth.models import Group
@@ -10,8 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect
-from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
 from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
@@ -27,6 +26,7 @@ from django_registration.forms import (
     RegistrationFormCaseInsensitive,
     RegistrationFormUniqueEmail,
 )
+from django_registration import validators
 from formtools.wizard.views import SessionWizardView
 
 from .forms import (
@@ -73,6 +73,15 @@ class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
 
 
 class RegistrationForm(RegistrationFormCaseInsensitive, RegistrationFormUniqueEmail):
+    def __init__(self, *args, **kwargs):
+        # override error message for unique email validation
+        validators.DUPLICATE_EMAIL = mark_safe(
+            """This email address is already in use.
+            If this is your email address, you can <a href="/accounts/login/">log in</a>
+            or do a <a href="/accounts/password_reset/">password reset</a>"""
+        )
+        super().__init__(*args, **kwargs)
+
     class Meta(RegistrationFormCaseInsensitive.Meta):
         model = User
 
