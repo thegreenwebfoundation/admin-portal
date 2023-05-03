@@ -165,18 +165,23 @@ class UserUpdateView(UpdateView):
 
 class ProviderRequestListView(LoginRequiredMixin, WaffleFlagMixin, ListView):
     """
-    List view for ProviderRequests:
+    Home page of the Provider Portal:
     - used by external (non-staff) users to access a list of requests they submitted,
-    - renders the list of requests on a HTML template,
+    - renders the list of pending verification requests as well as hosting providers on a HTML template,
     - requires the flag `provider_request` enabled for the user (otherwise returns 404).
     """
 
-    template_name = "provider_request/list.html"
+    template_name = "provider_portal/home.html"
     waffle_flag = "provider_request"
     model = ProviderRequest
 
-    def get_queryset(self) -> "QuerySet[ProviderRequest]":
-        return ProviderRequest.objects.filter(created_by=self.request.user)
+    def get_queryset(self) -> "dict[str, QuerySet[ProviderRequest]]":
+        respo = {
+            "requests": ProviderRequest.objects.filter(created_by=self.request.user),
+            # TODO: change this when a user can have multiple providers assigned
+            "providers": Hostingprovider.objects.filter(id__in=[self.request.user.hostingprovider_id])
+        }
+        return respo
 
 
 class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView):
@@ -187,7 +192,7 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
     - requires the flag `provider_request` enabled for the user (otherwise returns 404).
     """  # noqa
 
-    template_name = "provider_request/detail.html"
+    template_name = "provider_portal/request_detail.html"
     waffle_flag = "provider_request"
     model = ProviderRequest
 
