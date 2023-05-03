@@ -57,22 +57,24 @@
 
 		<h3 class="text-2xl">Supporting evidence</h3>
 		<table class="table-fixed">
+			{% for evidence in object.providerrequestevidence_set.all %}
 			<tr>
-				<td class="w-64">Green evidence</td>
 				<td>
-					{% for evidence in object.providerrequestevidence_set.all %}
+					{{ evidence.title }}
+				</td>
+				<td>
 					<div>
 						Type: {{ evidence.type }}<br>
-						Title: {{ evidence.title }}<br>
 						Link: {{ evidence.link|conditional_yesno:"Yes,No,-" }}<br>
 						File upload: {{ evidence.file|conditional_yesno:"Yes,No,-" }}<br>
 						Description: {{ evidence.description|conditional_yesno:"Yes,No,-" }}<br>
 						Public: {{ evidence.public|conditional_yesno:"Yes,No,-" }}
 					</div>
 					<br>
-					{% endfor %}
 				</td>
 			</tr>
+			{% endfor %}
+
 		</table>
 
 		<h3 class="text-2xl">IP and ASN ranges</h3>
