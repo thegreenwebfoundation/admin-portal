@@ -17,6 +17,10 @@
 		{% if object.approved_at %}
 		<p>Approved on: <span>{{ object.approved_at }}</span></p>
 		{% endif %}
+
+		{% if object.status|lower == "pending review" %}
+		If you want to update the information relating to this provider, please get in touch using <a href="https://www.thegreenwebfoundation.org/support-form/">our support form</a>.
+		{% endif %}
 	</header>
 
 	<article class="pb-12">
