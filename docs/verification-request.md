@@ -10,7 +10,7 @@ based on a feature flag called `provider_request` that is [managed in the admin 
 
 Authenticated users that have the flag enabled can access the following pages:
 - `/requests/new/` to start a new verification request,
-- `/requests/` to view all submitted requests.
+- `/provider-portal/` to view all submitted requests.
 
 ## How is the form implemented?
 In the implementation of the verification request form we use a complex stack of different libraries and components:

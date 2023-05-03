@@ -260,7 +260,7 @@ def test_detail_view_forbidden_for_others(client, user):
 
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
-def test_list_view_displays_only_authored_requests(client):
+def test_provider_portal_home_view_displays_only_authored_requests(client):
     # given: 3 provider requests exist, created by different users
     pr1 = ProviderRequestFactory.create()
     pr2 = ProviderRequestFactory.create()
@@ -268,7 +268,7 @@ def test_list_view_displays_only_authored_requests(client):
 
     # when: accessing the list view as the author of pr2
     client.force_login(pr2.created_by)
-    response = client.get(urls.reverse("provider_request_list"))
+    response = client.get(urls.reverse("provider_portal_home"))
 
     # then: link to detail view of pr2 is displayed
     assert response.status_code == 200
@@ -398,8 +398,6 @@ def test_wizard_sends_email_on_submission(
     provider_request = models.ProviderRequest.objects.get(name=provider_name)
     request_path = reverse("provider_request_detail", args=[provider_request.id])
 
-    # should be something like http://testserver/requests/1/ ,
-    # but more like https://app.greenweb/requests/1/ when live
     link_to_verification_request = f"http://testserver{request_path}"
 
     assert link_to_verification_request in msg_body_txt

@@ -9,7 +9,7 @@ from apps.accounts.views import (
     UserRegistrationView,
     DashboardView,
     UserUpdateView,
-    ProviderRequestListView,
+    ProviderPortalHomeView,
     ProviderRequestDetailView,
     ProviderRegistrationView,
     ProviderAutocompleteView,
@@ -104,7 +104,11 @@ urlpatterns = [
     path("admin/", admin.urls),
     # custom views
     path("user/<pk>/", UserUpdateView.as_view(), name="user_edit"),
-    path("requests/", ProviderRequestListView.as_view(), name="provider_request_list"),
+    path(
+        "provider-portal/",
+        ProviderPortalHomeView.as_view(),
+        name="provider_portal_home",
+    ),
     path(
         "requests/<int:pk>/",
         ProviderRequestDetailView.as_view(),
