@@ -80,17 +80,25 @@
 			<tr>
 				<td class="w-64">IP ranges</td>
 				<td>
-					{% for ip_range in object.providerrequestiprange_set.all %}
-					{{ ip_range }}<br>
-					{% endfor %}
+					{% if not object.providerrequestiprange_set.exists %}
+						-
+					{% else %}
+						{% for ip_range in object.providerrequestiprange_set.all %}
+						{{ ip_range }}<br>
+						{% endfor %}
+					{% endif %}
 				</td>
 			</tr>
 			<tr>
 				<td>ASNs</td>
 				<td>
-					{% for asn in object.providerrequestasn_set.all %}
-					{{ asn }}<br>
-					{% endfor %}
+					{% if not object.providerrequestasn_set.exists %}
+						-
+					{% else %}
+						{% for asn in object.providerrequestasn_set.all %}
+						{{ asn }}<br>
+						{% endfor %}
+					{% endif %}
 				</td>
 			</tr>
 		</table>
