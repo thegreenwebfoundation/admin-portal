@@ -6,7 +6,7 @@ The information you provided has been checked and approved.
 
 Any checks against sites hosted by you will now show as green on the basis of the ASN/IP ranges you provided. 
 
-If you have publicly shared links to documents or websites to support any sustainability claims, these will also be available in the Green Web Directory: https://www.thegreenwebfoundation.org/directory/.
+{% comment %} If you have publicly shared links to documents or websites to support any sustainability claims, these will also be available in the Green Web Directory: https://www.thegreenwebfoundation.org/directory/. {% endcomment %}
 
 If there are any changes in your ASN or IP ranges for your green domains in the future, you are required to update your listing accordingly. Our Green Web Checker is only able to recognize the sustainably hosted domains of you and your customers when they resolve to an IP address that has been entered in the Green Web Database.
 
