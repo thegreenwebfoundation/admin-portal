@@ -163,7 +163,7 @@ class UserUpdateView(UpdateView):
         return super().get(request, args, kwargs)
 
 
-class ProviderRequestListView(LoginRequiredMixin, WaffleFlagMixin, ListView):
+class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
     """
     Home page of the Provider Portal:
     - used by external (non-staff) users to access a list of requests they submitted,
@@ -176,12 +176,13 @@ class ProviderRequestListView(LoginRequiredMixin, WaffleFlagMixin, ListView):
     model = ProviderRequest
 
     def get_queryset(self) -> "dict[str, QuerySet[ProviderRequest]]":
-        respo = {
+        return {
             "requests": ProviderRequest.objects.filter(created_by=self.request.user),
             # TODO: change this when a user can have multiple providers assigned
-            "providers": Hostingprovider.objects.filter(id__in=[self.request.user.hostingprovider_id])
+            "providers": Hostingprovider.objects.filter(
+                id__in=[self.request.user.hostingprovider_id]
+            ),
         }
-        return respo
 
 
 class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView):

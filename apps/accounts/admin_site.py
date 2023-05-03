@@ -241,12 +241,12 @@ class GreenWebAdmin(AdminSite):
             verification_request_item = {
                 "name": "Verification requests",
                 "app_label": "greencheck",
-                "app_url": reverse("provider_request_list"),
+                "app_url": reverse("provider_portal_home"),
                 "models": [
                     {
                         "name": "See verification requests",
                         "object_name": "greencheck_url",
-                        "admin_url": reverse("provider_request_list"),
+                        "admin_url": reverse("provider_portal_home"),
                         "view_only": True,
                     }
                 ],
