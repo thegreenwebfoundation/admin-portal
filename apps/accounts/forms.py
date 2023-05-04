@@ -271,7 +271,7 @@ class ServicesForm(forms.Form):
     services = forms.MultipleChoiceField(
         choices=ProviderRequest.get_service_choices,
         widget=forms.CheckboxSelectMultiple,
-        label="Which hosting services do you offer?",
+        label="Which services does your organisation offer?",
         help_text=mark_safe(
             'Choose all the services that your organisation offers. <a href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">More information on our services</a>.'  # noqa
         ),
