@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     "formtools",
     "convenient_formsets",
     "file_resubmit",
+    "django_countries",
     # UI
     "tailwind",
     "crispy_forms",
