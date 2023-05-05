@@ -2,6 +2,7 @@ from ..views import ProviderPortalHomeView
 from ..models import ProviderRequestStatus
 from conftest import ProviderRequestFactory, ProviderRequestLocationFactory
 from django.test import RequestFactory
+from django.urls import reverse
 from waffle.testutils import override_flag
 
 import pytest
@@ -9,7 +10,7 @@ import pytest
 
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
-def test_provider_portal_home_view_returns_unapproved_requests(client):
+def test_provider_portal_home_view_returns_only_unapproved_requests(client):
     # given: 1 pending provider request
     pr1 = ProviderRequestFactory.create(status=ProviderRequestStatus.PENDING_REVIEW)
     user = pr1.created_by
@@ -21,13 +22,13 @@ def test_provider_portal_home_view_returns_unapproved_requests(client):
     hp = pr2.approve()
 
     # when: ProviderPortalHomeView is accessed by the user
-    request = RequestFactory().get("/provider-portal/")
+    request = RequestFactory().get(reverse("provider_portal_home"))
     request.user = user
     view = ProviderPortalHomeView()
     view.request = request
     qs = view.get_queryset()
 
-    # then: 1 unapproved request is rendered
+    # then: only 1 unapproved request is rendered
     assert qs["requests"].get() == pr1
     # then: 1 hosting provider is rendered
     assert qs["providers"].get() == hp
