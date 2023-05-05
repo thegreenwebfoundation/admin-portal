@@ -1,7 +1,7 @@
 import json
 import logging
 
-from apps.accounts.models import Hostingprovider, Datacenter
+from apps.accounts.models import Hostingprovider
 from django.views.decorators.cache import cache_page
 from django_countries import countries
 from rest_framework import response
@@ -12,8 +12,7 @@ from rest_framework_jsonp.renderers import JSONPRenderer
 
 from ..domain_check import GreenDomainChecker
 from ..models import Greencheck, GreenDomain
-from .legacy_image_view import legacy_greencheck_image
-from ..serializers import GreenDomainSerializer, HostingDocumentSerializer
+from ..serializers import GreenDomainSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -149,9 +148,6 @@ def directory_provider(self, id):
 
     provider = Hostingprovider.objects.get(pk=provider_id)
     datacenters = [dc.legacy_representation() for dc in provider.datacenter.all() if dc]
-    supporting_evidence = HostingDocumentSerializer(
-        provider.public_supporting_evidence(), many=True
-    ).data
 
     # basic case, no datacenters or certificates
     provider_dict = {
