@@ -1,7 +1,7 @@
 import json
 import logging
 
-from apps.accounts.models import Hostingprovider
+
 from django.views.decorators.cache import cache_page
 from django_countries import countries
 from rest_framework import response
@@ -10,9 +10,14 @@ from rest_framework.decorators import api_view, permission_classes, renderer_cla
 from rest_framework.permissions import AllowAny
 from rest_framework_jsonp.renderers import JSONPRenderer
 
+from ...accounts.models import Hostingprovider
 from ..domain_check import GreenDomainChecker
 from ..models import Greencheck, GreenDomain
 from ..serializers import GreenDomainSerializer
+
+# we import legacy_greencheck_image, to provide one module to import all
+# legacy API views from
+from .legacy_image_view import legacy_greencheck_image  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +147,8 @@ def directory_provider(self, id):
         raise exceptions.NotAcceptable(
             (
                 "You need to send a valid numeric ID to identify the "
-                f"provider you are requesting information about. Received ID was: '{id}'"
+                "provider you are requesting information about. "
+                f"Received ID was: '{id}'"
             )
         )
 
@@ -163,7 +169,6 @@ def directory_provider(self, id):
         "energyprovider": None,
         "partner": provider.partner,
         "datacenters": datacenters,
-        "supporting_evidence": supporting_evidence,
     }
     return response.Response([provider_dict])
 
