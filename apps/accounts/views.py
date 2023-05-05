@@ -39,7 +39,7 @@ from .forms import (
     ConsentForm,
     PreviewForm,
 )
-from .models import User, ProviderRequest, Hostingprovider
+from .models import User, ProviderRequest, ProviderRequestStatus, Hostingprovider
 from .utils import send_email
 
 import logging
@@ -176,8 +176,15 @@ class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
     model = ProviderRequest
 
     def get_queryset(self) -> "dict[str, QuerySet[ProviderRequest]]":
+        """
+        Returns a dictionary with 2 querysets:
+        - unapproved ProviderRequests created by the user,
+        - all HostingProviders assigned to the user
+        """
         return {
-            "requests": ProviderRequest.objects.filter(created_by=self.request.user),
+            "requests": ProviderRequest.objects.filter(
+                created_by=self.request.user
+            ).exclude(status=ProviderRequestStatus.APPROVED),
             # TODO: change this when a user can have multiple providers assigned
             "providers": Hostingprovider.objects.filter(
                 id__in=[self.request.user.hostingprovider_id]
