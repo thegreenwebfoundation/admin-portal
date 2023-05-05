@@ -14,6 +14,8 @@ You can review and update your listing yourself!
 Please go to: {{ update_url }}
 Your username is: {{ username }}
 
+Your customers can find a Green Web Badge by performing a check for their website using our Green Web Check tool: https://www.thegreenwebfoundation.org/green-web-check/. Their customised badge, which shows your organisation name, will be on the Green Web Check result page and can be downloaded or embedded on a site using a snippet of HTML.
+
 {% if locations %}
 Locations: {{ locations }}
 For now, {{ org_name }} is marked as a provider in {{ first_location }} only (where your headquarters are). At the moment, we are developing our database to allow for multiple locations. Once that feature is up and running, we will add the other countries and let you know if we have further questions.
