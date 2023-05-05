@@ -144,7 +144,7 @@ def directory_provider(self, id):
         provider_id = int(id)
     except ValueError as ex:
         logger.warning(ex)
-        raise exceptions.NotAcceptable(
+        raise exceptions.ParseError(
             (
                 "You need to send a valid numeric ID to identify the "
                 "provider you are requesting information about. "

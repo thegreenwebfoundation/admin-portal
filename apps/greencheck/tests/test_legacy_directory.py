@@ -270,7 +270,7 @@ class TestGreenWebDirectoryDetail:
         resp = client.get(url_path)
 
         # Then: I should receive a helpful API error response
-        assert resp.status_code == 406
+        assert resp.status_code == 400
 
         # And: with hints about how to fix my request
         error_detail = resp.data["detail"]
