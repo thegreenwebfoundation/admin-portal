@@ -5,6 +5,7 @@ from apps.accounts.models import Hostingprovider, Datacenter
 from django.views.decorators.cache import cache_page
 from django_countries import countries
 from rest_framework import response
+from rest_framework import exceptions
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import AllowAny
 from rest_framework_jsonp.renderers import JSONPRenderer
@@ -12,7 +13,7 @@ from rest_framework_jsonp.renderers import JSONPRenderer
 from ..domain_check import GreenDomainChecker
 from ..models import Greencheck, GreenDomain
 from .legacy_image_view import legacy_greencheck_image
-from ..serializers import GreenDomainSerializer
+from ..serializers import GreenDomainSerializer, HostingDocumentSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,6 @@ def directory(request):
     country_list = {}
 
     for country in countries:
-
         country_obj = {
             "iso": country.code,
             "tld": f".{country.code.lower()}",
@@ -136,8 +136,22 @@ def directory_provider(self, id):
     what they do, and evidence supporting their
     sustainability claims
     """
-    provider = Hostingprovider.objects.get(pk=id)
+    try:
+        provider_id = int(id)
+    except ValueError as ex:
+        logger.warning(ex)
+        raise exceptions.NotAcceptable(
+            (
+                "You need to send a valid numeric ID to identify the "
+                f"provider you are requesting information about. Received ID was: '{id}'"
+            )
+        )
+
+    provider = Hostingprovider.objects.get(pk=provider_id)
     datacenters = [dc.legacy_representation() for dc in provider.datacenter.all() if dc]
+    supporting_evidence = HostingDocumentSerializer(
+        provider.public_supporting_evidence(), many=True
+    ).data
 
     # basic case, no datacenters or certificates
     provider_dict = {
@@ -153,6 +167,7 @@ def directory_provider(self, id):
         "energyprovider": None,
         "partner": provider.partner,
         "datacenters": datacenters,
+        "supporting_evidence": supporting_evidence,
     }
     return response.Response([provider_dict])
 

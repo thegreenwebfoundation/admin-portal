@@ -21,7 +21,6 @@ YEAR_FROM_NOW = timezone.now() + relativedelta(years=1)
 
 @pytest.fixture
 def green_dc_certificate(datacenter):
-
     return DatacenterCertificate(
         energyprovider="Some Energy Co.",
         mainenergy_type="mixed",
@@ -138,7 +137,6 @@ class TestGreenWebDirectoryDetail:
     """
 
     def test_directory_provider(self, db, hosting_provider_a, client):
-
         hosting_provider_a.save()
         url_path = reverse("legacy-directory-detail", args=[hosting_provider_a.id])
 
@@ -255,3 +253,29 @@ class TestGreenWebDirectoryDetail:
         ]:
             assert key in cert
 
+    def test_directory_provider_raises_against_undefined_provider(
+        self, db, hosting_provider_a, client
+    ):
+        """
+        Make sure that when client side code tries to request a provider
+        with the id of 'undefined' we serve an appropriate error
+        40x response, rather than raising an helpful 500 server error
+        """
+        # Given: a valid hosting provider, but an invalid id of 'undefined' from
+        # client side code making requests
+        hosting_provider_a.save()
+        url_path = reverse("legacy-directory-detail", args=["undefined"])
+
+        # When: I send an API reqeest
+        resp = client.get(url_path)
+
+        # Then: I should receive a helpful API error response
+        assert resp.status_code == 406
+
+        # And: with hints about how to fix my request
+        error_detail = resp.data["detail"]
+        error_message = str(error_detail)
+
+        assert error_detail.code == "not_acceptable"
+        assert "You need to send a valid numeric ID" in error_message
+        assert "Received ID was: 'undefined'" in error_message
