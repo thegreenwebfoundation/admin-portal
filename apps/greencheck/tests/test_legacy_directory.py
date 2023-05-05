@@ -276,6 +276,6 @@ class TestGreenWebDirectoryDetail:
         error_detail = resp.data["detail"]
         error_message = str(error_detail)
 
-        assert error_detail.code == "not_acceptable"
+        assert error_detail.code == "parse_error"
         assert "You need to send a valid numeric ID" in error_message
         assert "Received ID was: 'undefined'" in error_message
