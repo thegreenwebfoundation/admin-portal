@@ -20,10 +20,10 @@ def test_conditional_yesno(input, output):
 
 
 @pytest.fixture
-def service_tags(db, tag_factory):
-    tag_factory.create(slug="slug1", name="Service 1")
-    tag_factory.create(slug="slug2", name="Service 2")
-    tag_factory.create(slug="slug3", name="Service 3")
+def service_tags(db, service_factory):
+    service_factory.create(slug="slug1", name="Service 1")
+    service_factory.create(slug="slug2", name="Service 2")
+    service_factory.create(slug="slug3", name="Service 3")
 
 
 @pytest.mark.parametrize(
