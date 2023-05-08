@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from ...models import Service, Hostingprovider
 from taggit import models as tag_models
 import typing
+import logging
 
 # Our updated canonical list of services
 SERVICE_NAMES = [
@@ -40,7 +41,9 @@ MIGRATION_DICT = {
 # (18, "digital-product-design-and-development",)
 # (19, "sustainability-strategy-for-digital-services",)
 # )
-SERVICES_TO_DELETE = ([5, 6, 7, 8, 11, 17, 18, 19],)
+SERVICES_TO_DELETE = [5, 6, 7, 8, 11, 17, 18, 19]
+
+logger = logging.getLogger(__name__)
 
 
 class ServiceMigrator:
@@ -82,21 +85,21 @@ class ServiceMigrator:
                 services=service
             )
 
-            self.stdout.write(
+            logger.info(
                 f"Providers with service tag {service_tag}: "
                 f"{providers_with_matching_tag.count()}"
             )
-            self.stdout.write(
+            logger.info(
                 f"Providers with service {service}: "
                 f"{providers_with_matching_service.count()}"
             )
-            self.stdout.write("migrating...")
+            logger.info("migrating...")
             for provider in providers_with_matching_tag:
                 self.swap_tag(provider, service_tag, service)
 
-            self.stdout.write("migrated")
+            logger.info("migrated")
 
-            self.stdout.write(
+            logger.info(
                 f"Providers with service {service}: "
                 f"{Hostingprovider.objects.filter(services=service).count()}"
             )
