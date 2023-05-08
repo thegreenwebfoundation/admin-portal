@@ -204,9 +204,9 @@ class ServiceFilter(MultipleChoiceListFilter):
     parameter_name = "service"
 
     def lookups(self, request, queryset):
-        from taggit import models as tag_models
+        from .models import Service
 
-        return [(label.slug, label.name) for label in tag_models.Tag.objects.all()]
+        return [(label.slug, label.name) for label in Service.objects.all()]
 
     def queryset(self, request, queryset):
         """

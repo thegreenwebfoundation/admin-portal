@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic.base import TemplateView
-from taggit.models import Tag
+
 import django_filters
 from waffle.mixins import WaffleFlagMixin
 
@@ -222,7 +222,7 @@ class ProviderFilter(django_filters.FilterSet):
     services = django_filters.ModelChoiceFilter(
         field_name="services",
         label="Services offered",
-        queryset=Tag.objects.all(),
+        queryset=ac_models.Service.objects.all(),
     )
     # note: this is commented out for Han,
     # name = django_filters.CharFilter(lookup_expr="icontains")

@@ -12,7 +12,6 @@ from django.forms.formsets import BaseFormSet
 from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
-from taggit.models import Tag
 from dal_select2_taggit import widgets as dal_widgets
 from betterforms.multiform import MultiModelForm
 from convenient_formsets import ConvenientBaseFormSet

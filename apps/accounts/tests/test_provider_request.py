@@ -67,7 +67,7 @@ def wizard_form_services_data():
     for _ in range(5):
         TagFactory.create()
 
-    tags_choices = models.Tag.objects.all()
+    tags_choices = models.Service.objects.all()
 
     return {
         "provider_registration_view-current_step": "2",

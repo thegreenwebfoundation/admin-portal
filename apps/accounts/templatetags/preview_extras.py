@@ -1,6 +1,6 @@
 from django.template.defaultfilters import yesno
 from django import template
-from apps.accounts.models import Tag
+from apps.accounts.models import Service
 
 
 register = template.Library()
@@ -25,7 +25,7 @@ def render_as_services(value):
     Attempts to map slugs in to service names
     based on a database query.
     """
-    tags = Tag.objects.filter(slug__in=value)
+    tags = Service.objects.filter(slug__in=value)
     if tags:
         return ", ".join([tag.name for tag in tags])
     return None

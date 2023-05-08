@@ -3,8 +3,8 @@ from django.urls import reverse
 from django.apps import apps
 from django.template.loader import render_to_string
 
-from taggit.models import Tag
 from anymail.message import AnymailMessage
+from .models import Service
 
 import smtplib
 import logging
@@ -34,7 +34,7 @@ def reverse_admin_name(model, name, args=None, kwargs=None, params=None):
 
 
 def tags_choices():
-    return [(tag.id, tag.name) for tag in Tag.objects.all()]
+    return [(tag.id, tag.name) for tag in Service.objects.all()]
 
 
 def send_email(address, subject, context, template_txt, template_html=None):
