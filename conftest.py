@@ -22,8 +22,8 @@ User = get_user_model()
 
 register(gc_factories.UserFactory)
 register(gc_factories.SiteCheckFactory)
-register(gc_factories.TagFactory)
 register(gc_factories.GreencheckFactory)
+register(gc_factories.ServiceFactory)
 register(gc_factories.HostingProviderFactory)
 register(gc_factories.GreenIpFactory)
 register(gc_factories.GreenDomainFactory)
@@ -51,9 +51,6 @@ class ProviderRequestFactory(factory.django.DjangoModelFactory):
     created_by = factory.SubFactory(gc_factories.UserFactory)
     authorised_by_org = True
 
-    class Meta:
-        model = ac_models.ProviderRequest
-
     @factory.post_generation
     def services(self, create, extracted, **kwargs):
         """
@@ -67,6 +64,9 @@ class ProviderRequestFactory(factory.django.DjangoModelFactory):
         # set tags
         for tag in extracted:
             self.services.add(tag)
+
+    class Meta:
+        model = ac_models.ProviderRequest
 
 
 class ProviderRequestLocationFactory(factory.django.DjangoModelFactory):

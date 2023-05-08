@@ -54,7 +54,7 @@ class SiteCheckFactory(factory.Factory):
         model = gc_models.SiteCheck
 
 
-class TagFactory(dj_factory.DjangoModelFactory):
+class ServiceFactory(dj_factory.DjangoModelFactory):
     name = factory.Faker("word")
 
     class Meta:
@@ -117,17 +117,16 @@ class HostingProviderFactory(dj_factory.DjangoModelFactory):
     #     related_name="hostingproviders",
     # )
 
+    @factory.post_generation
+    def services(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            self.services.set(*extracted)
+
     class Meta:
         model = ac_models.Hostingprovider
-        django_get_or_create = ("name",)
-
-
-class ServiceFactory:
-    name = factory.Faker("word")
-    slug = factory.Faker("word")
-
-    class Meta:
-        model = ac_models.Service
         django_get_or_create = ("name",)
 
 
