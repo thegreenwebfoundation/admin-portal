@@ -69,8 +69,14 @@ class ServiceMigrator:
         return created_service_list
 
     def migrate_service_tags_to_service(
-        self, service_slug: str, service_tag_ids: typing.List
+        self, service_slug: str, service_tag_ids: typing.List[int]
     ):
+        """
+        Accept `service_slug`, the slug to identify a given Service to
+        migrate to, and add it to all the providers who already have
+        the service_tags identified by `service_tag_ids` a list of
+        integers to identify the existing 'legacy' tags in use
+        """
         service = Service.objects.get(slug=service_slug)
 
         for service_tag_id in service_tag_ids:
@@ -94,6 +100,7 @@ class ServiceMigrator:
                 f"{providers_with_matching_service.count()}"
             )
             logger.info("migrating...")
+            # do the actual migration
             for provider in providers_with_matching_tag:
                 self.swap_tag(provider, service_tag, service)
 
@@ -104,10 +111,15 @@ class ServiceMigrator:
                 f"{Hostingprovider.objects.filter(services=service).count()}"
             )
 
-    def swap_tag(self, provider, old_service_tag_to_remove, new_service_to_add):
+    def swap_tag(
+        self,
+        provider: Hostingprovider,
+        old_service_tag_to_remove: tag_models.Tag,
+        new_service_to_add: Service,
+    ):
         """
         Remove the older taggit tag identified by `old_service_tag_to_remove`,
-        and replace with the newer service tag
+        and replace with the newer service tag, `new_service_to_add`
         """
         provider.service_tags.remove(old_service_tag_to_remove)
         provider.services.add(new_service_to_add)
