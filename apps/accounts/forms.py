@@ -97,7 +97,7 @@ class HostingAdminForm(forms.ModelForm):
         model = ac_models.Hostingprovider
         fields = "__all__"
         widgets = {
-            "services": LabelWidget(model=Tag),
+            "services": LabelWidget(model=ac_models.Service),
             "staff_labels": dal_widgets.TaggitSelect2("label-autocomplete"),
         }
 
