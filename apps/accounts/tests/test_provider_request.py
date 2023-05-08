@@ -22,7 +22,7 @@ from conftest import (
     ProviderRequestEvidenceFactory,
 )
 from .. import views, models
-from apps.greencheck.factories import TagFactory
+from apps.greencheck.factories import ServiceFactory
 
 faker = Faker()
 
@@ -65,13 +65,14 @@ def wizard_form_services_data():
     as expected by the POST request.
     """
     for _ in range(5):
-        TagFactory.create()
+        ServiceFactory.create()
 
     tags_choices = models.Service.objects.all()
+    services_sample = random.sample([tag.slug for tag in tags_choices], 3)
 
     return {
         "provider_registration_view-current_step": "2",
-        "2-services": random.sample([tag.slug for tag in tags_choices], 3),
+        "2-services": services_sample,
     }
 
 

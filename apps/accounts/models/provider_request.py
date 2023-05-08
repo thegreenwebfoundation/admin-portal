@@ -5,7 +5,9 @@ from django.core.exceptions import ValidationError
 
 from django_countries.fields import CountryField
 from taggit.managers import TaggableManager
+from taggit import models as tag_models
 from datetime import date, timedelta, datetime
+
 
 from apps.greencheck.models import IpAddressField, GreencheckASN, GreencheckIp
 from apps.greencheck.validators import validate_ip_range
@@ -39,6 +41,23 @@ class ProviderRequestStatus(models.TextChoices):
     OPEN = "Open"
 
 
+class ProviderRequestService(tag_models.TaggedItemBase):
+    """
+    The corresponding through model for linking a Provider to
+    a Service as outlined above.
+    """
+
+    content_object = models.ForeignKey(
+        "ProviderRequest",
+        on_delete=models.CASCADE,
+    )
+    tag = models.ForeignKey(
+        Service,
+        related_name="%(app_label)s_%(class)s_items",
+        on_delete=models.CASCADE,
+    )
+
+
 class ProviderRequest(TimeStampedModel):
     """
     Model representing the input data
@@ -64,7 +83,7 @@ class ProviderRequest(TimeStampedModel):
             " the green web directory."
         ),
         blank=True,
-        through=ProviderService,
+        through=ProviderRequestService,
     )
     missing_network_explanation = models.TextField(
         verbose_name="Reason for no IP / AS data",
@@ -170,10 +189,7 @@ class ProviderRequest(TimeStampedModel):
         )
 
         # set services (https://django-taggit.readthedocs.io/en/latest/api.html)
-        import ipdb
-
-        ipdb.set_trace()
-        hp.services.set(list(self.services.all(), through_defaults=Service))
+        hp.services.set(list(self.services.all()))
         hp.save()
 
         # set user
