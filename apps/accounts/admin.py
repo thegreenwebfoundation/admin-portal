@@ -71,6 +71,7 @@ from .models import (
     ProviderRequestLocation,
     ProviderRequestEvidence,
     ProviderRequestConsent,
+    Service,
 )
 
 logger = logging.getLogger(__name__)
@@ -228,9 +229,9 @@ class DataCenterSupportingDocumentInline(admin.StackedInline):
     model = DatacenterSupportingDocument
 
 
-@admin.register(Tag, site=greenweb_admin)
+@admin.register(Service, site=greenweb_admin)
 class ServiceAdmin(admin.ModelAdmin):
-    model = Tag
+    model = Service
 
     class Meta:
         verbose_name = "Services Offered"

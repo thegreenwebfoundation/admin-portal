@@ -167,6 +167,38 @@ class ProviderLabel(tag_models.TaggedItemBase):
     )
 
 
+class Service(tag_models.TagBase):
+    """
+    A model representing the kinds of (hosted) services a provider
+    offers.
+
+    This would include things like "colocation services",
+    "virtual private servers", "shared hosting" and so on.
+    A subclass of Taggit's `TagBase` model.
+    """
+
+    class Meta:
+        verbose_name = _("Service")
+        verbose_name_plural = _("Services")
+
+
+class ProviderService(tag_models.TaggedItemBase):
+    """
+    The corresponding through model for linking a Provider to
+    a Service as outlined above.
+    """
+
+    content_object = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+    )
+    tag = models.ForeignKey(
+        Service,
+        related_name="%(app_label)s_%(class)s_items",
+        on_delete=models.CASCADE,
+    )
+
+
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
@@ -184,6 +216,14 @@ class Hostingprovider(models.Model):
         choices=PartnerChoice.choices,
         blank=True,
     )
+    service_tags = TaggableManager(
+        verbose_name="Services Offered",
+        help_text=(
+            "Click the services that your organisation offers. These will be listed in"
+            " the green web directory."
+        ),
+        blank=True,
+    )
     services = TaggableManager(
         verbose_name="Services Offered",
         help_text=(
@@ -191,6 +231,8 @@ class Hostingprovider(models.Model):
             " the green web directory."
         ),
         blank=True,
+        through=ProviderService,
+        # related_name="services",
     )
     # this should not be exposed publicly to end users.
     # It's for internal use
