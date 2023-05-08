@@ -5,14 +5,19 @@ from django.core.exceptions import ValidationError
 
 from django_countries.fields import CountryField
 from taggit.managers import TaggableManager
-from taggit.models import Tag
 from datetime import date, timedelta, datetime
 
 from apps.greencheck.models import IpAddressField, GreencheckASN, GreencheckIp
 from apps.greencheck.validators import validate_ip_range
 from model_utils.models import TimeStampedModel
 from typing import Iterable, Tuple, List
-from .hosting import Hostingprovider, HostingProviderSupportingDocument, EvidenceType
+from .hosting import (
+    Hostingprovider,
+    HostingProviderSupportingDocument,
+    EvidenceType,
+    Service,
+    ProviderService,
+)
 
 
 class ProviderRequestStatus(models.TextChoices):
@@ -59,6 +64,7 @@ class ProviderRequest(TimeStampedModel):
             " the green web directory."
         ),
         blank=True,
+        through=ProviderService,
     )
     missing_network_explanation = models.TextField(
         verbose_name="Reason for no IP / AS data",
@@ -99,7 +105,7 @@ class ProviderRequest(TimeStampedModel):
         Given list of service slugs (corresponding to Tag slugs)
         apply matching services to the ProviderRequest object
         """
-        services = Tag.objects.filter(slug__in=service_slugs)
+        services = Service.objects.filter(slug__in=service_slugs)
         self.services.set(services)
 
     @classmethod
@@ -108,7 +114,7 @@ class ProviderRequest(TimeStampedModel):
         Returns a list of available services (implemented in the Tag model)
         in a format expected by ChoiceField
         """
-        return [(tag.slug, tag.name) for tag in Tag.objects.all()]
+        return [(tag.slug, tag.name) for tag in Service.objects.all()]
 
     @transaction.atomic
     def approve(self) -> Hostingprovider:
@@ -164,7 +170,10 @@ class ProviderRequest(TimeStampedModel):
         )
 
         # set services (https://django-taggit.readthedocs.io/en/latest/api.html)
-        hp.services.set(list(self.services.all()))
+        import ipdb
+
+        ipdb.set_trace()
+        hp.services.set(list(self.services.all(), through_defaults=Service))
         hp.save()
 
         # set user

@@ -23,7 +23,7 @@ from logentry_admin.admin import (
     ActionListFilter,
 )
 
-from taggit.models import Tag
+
 from taggit.managers import TaggableManager
 from taggit_labels.widgets import LabelWidget
 

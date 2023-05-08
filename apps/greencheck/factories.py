@@ -7,7 +7,6 @@ import factory.django as dj_factory
 import factory.fuzzy as facfuzzy
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from taggit.models import Tag
 
 from apps.accounts import models as ac_models
 from apps.accounts.models import choices as ac_choices
@@ -59,7 +58,7 @@ class TagFactory(dj_factory.DjangoModelFactory):
     name = factory.Faker("word")
 
     class Meta:
-        model = Tag
+        model = ac_models.Service
         # avoid creating duplicate entries
         django_get_or_create = ("name",)
 
@@ -120,6 +119,15 @@ class HostingProviderFactory(dj_factory.DjangoModelFactory):
 
     class Meta:
         model = ac_models.Hostingprovider
+        django_get_or_create = ("name",)
+
+
+class ServiceFactory:
+    name = factory.Faker("word")
+    slug = factory.Faker("word")
+
+    class Meta:
+        model = ac_models.Service
         django_get_or_create = ("name",)
 
 
