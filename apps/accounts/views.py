@@ -54,7 +54,7 @@ class DashboardView(TemplateView):
         if waffle.flag_is_active(request, "dashboard"):
             return super().get(request, args, kwargs)
         else:
-            return HttpResponseRedirect(reverse("greenweb_admin:index"))
+            return HttpResponseRedirect(reverse("provider_portal_home"))
 
 
 class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
