@@ -24,6 +24,7 @@ from .choices import (
     ClassificationChoice,
     PartnerChoice,
 )
+from ..permissions import manage_provider, manage_datacenter
 from apps.greencheck.choices import StatusApproval, GreenlistChoice
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,7 @@ class Datacenter(models.Model):
         indexes = [
             models.Index(fields=["name"], name="dc_name"),
         ]
-        # managed = False
+        permissions = [manage_datacenter.astuple()]
 
 
 class DatacenterClassification(models.Model):
@@ -473,6 +474,7 @@ class Hostingprovider(models.Model):
             models.Index(fields=["archived"], name="hp_archived"),
             models.Index(fields=["showonwebsite"], name="hp_showonwebsite"),
         ]
+        permissions = [manage_provider.astuple()]
 
 
 class ProviderSharedSecret(TimeStampedModel):
