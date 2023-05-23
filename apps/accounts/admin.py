@@ -11,6 +11,7 @@ from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 from django import template as dj_template
+from guardian.admin import GuardedModelAdmin
 from apps.greencheck.admin import (
     GreencheckIpApproveInline,
     GreencheckIpInline,
@@ -270,7 +271,7 @@ class LabelAutocompleteView(dal_select2_views.Select2QuerySetView):
 
 
 @admin.register(Hostingprovider, site=greenweb_admin)
-class HostingAdmin(admin.ModelAdmin):
+class HostingAdmin(GuardedModelAdmin):
     form = forms.HostingAdminForm
     list_filter = [
         "archived",
@@ -884,7 +885,7 @@ class DatacenterCoolingInline(admin.TabularInline):
 
 
 @admin.register(Datacenter, site=greenweb_admin)
-class DatacenterAdmin(admin.ModelAdmin):
+class DatacenterAdmin(GuardedModelAdmin):
     form = forms.DatacenterAdminForm
     inlines = [
         # DatacenterCertificateInline,

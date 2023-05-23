@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     "convenient_formsets",
     "file_resubmit",
     "django_countries",
+    "guardian",
     # UI
     "tailwind",
     "crispy_forms",
@@ -141,6 +142,16 @@ MIDDLEWARE = [
     # see the section below on BASICAUTH
     "basicauth.middleware.BasicAuthMiddleware",
 ]
+
+# set up django-guardian as authentcation backend
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",  # this is a default value
+    "guardian.backends.ObjectPermissionBackend",
+]
+
+# prevent django-guardian from patching the User model
+# (recommended for custom User models)
+GUARDIAN_MONKEY_PATCH = False
 
 CACHES = {
     "default": {
