@@ -9,11 +9,12 @@ from django.contrib.auth.models import (
 from django.db import models
 from django.core.mail import send_mail
 from django.urls import reverse
+from guardian.mixins import GuardianUserMixin
 
 from .hosting import Hostingprovider
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
     algorithm = models.CharField(max_length=255)
     confirmation_token = models.CharField(max_length=255)
     credentials_expire_at = models.DateTimeField(null=True)
