@@ -1181,7 +1181,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         ProviderRequestASNInline,
         ProviderRequestConsentInline,
     ]
-    formfield_overrides = {TaggableManager: {"widget": LabelWidget}}
+    formfield_overrides = {TaggableManager: {"widget": LabelWidget(model=Service)}}
     empty_value_display = "(empty)"
     list_filter = ("status",)
     readonly_fields = (
