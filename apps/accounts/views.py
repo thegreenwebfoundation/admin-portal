@@ -16,6 +16,8 @@ from django.views.generic import UpdateView, DetailView, ListView
 from django.views.generic.base import TemplateView
 from django.shortcuts import redirect
 
+from django.conf import settings
+
 from django_registration import signals
 from django_registration.backends.activation.views import (
     ActivationView,
@@ -420,4 +422,5 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             context=ctx,
             template_html="emails/verification-request-notify.html",
             template_txt="emails/verification-request-notify.txt",
+            bcc=settings.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS,
         )

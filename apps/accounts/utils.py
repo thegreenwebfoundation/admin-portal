@@ -37,7 +37,7 @@ def tags_choices():
     return [(tag.id, tag.name) for tag in Service.objects.all()]
 
 
-def send_email(address, subject, context, template_txt, template_html=None):
+def send_email(address, subject, context, template_txt, template_html=None, bcc=None):
     """
     Sends an email based on a template and context to render.
 
@@ -52,6 +52,9 @@ def send_email(address, subject, context, template_txt, template_html=None):
         to=[address],
         cc=["support@thegreenwebfoundation.org"],
     )
+
+    if bcc:
+        msg.bcc.append(bcc)
 
     if template_html:
         email_html = render_to_string(template_html, context=context)

@@ -22,3 +22,4 @@ DRAMATIQ_BROKER = {
         # "dramatiq.middleware.Retries",
     ],
 }
+TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS = "mail-to-board@trello.com"
