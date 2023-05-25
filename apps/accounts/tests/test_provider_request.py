@@ -24,6 +24,8 @@ from conftest import (
 from .. import views, models
 from apps.greencheck.factories import ServiceFactory
 
+from django.conf import settings
+
 faker = Faker()
 
 
@@ -394,7 +396,12 @@ def test_wizard_sends_email_on_submission(
         in msg_body_html
     )
 
-    # then: and finally our email links back to the submission, contains the status, and the correct organisation
+    # then: and our email includes a BCC address so we can track status in
+    # trello via sending a message to the email-to-board address
+    assert settings.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS in eml.bcc
+
+    # then: and finally our email links back to the submission, contains the status,
+    # and the correct organisation
     provider_name = wizard_form_org_details_data["0-name"]
     provider_request = models.ProviderRequest.objects.get(name=provider_name)
     request_path = reverse("provider_request_detail", args=[provider_request.id])

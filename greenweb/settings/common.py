@@ -37,6 +37,10 @@ env = environ.Env(
     BASICAUTH_USER=(str, "staging_user"),
     BASICAUTH_PASSWORD=(str, "strong_password"),
     API_URL=(str, os.getenv("API_URL")),
+    TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS=(
+        str,
+        os.getenv("TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS"),
+    ),
 )
 
 environ.Env.read_env(".env")  # Read .env
@@ -353,6 +357,10 @@ GOOGLE_PROVIDER_ID = 2345
 GOOGLE_DATASET_ENDPOINT = "https://www.gstatic.com/ipranges/cloud.json"
 
 TAGGIT_CASE_INSENSITIVE = True
+
+TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS = env(
+    "TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS"
+)
 
 INTERNAL_IPS = [
     "127.0.0.1",
