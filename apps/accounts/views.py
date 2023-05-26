@@ -349,7 +349,8 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             Thank you!
 
             Your verification request was submitted successfully.
-            We are now reviewing your request - we'll be in touch.
+            We have sent you an email with confirmation and a link that summarises your submitted info.
+            We are now reviewing your request - we'll be in touch soon.
             """,
         )
         return redirect(pr)
