@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% load i18n static humanize widget_tweaks tailwind_filters waffle_tags %}
+
+{% block content %}
+
+  <article>
+    <div class="prose mx-auto mt-8">
+      	<h1 class="text-center">Before you start</h1>
+
+		<p>Completing the form will take you between <span class="font-bold">5 and 10 minutes</span> of time.</p>
+
+		<p>Regretfully, you are not able to save a partially completed form and come back it later - yet!</p>
+		
+		<p>Therefore, we recommend you gather the information required before beginning to fill in the form, 
+			and enter it in one uninterrupted session.</p>
+
+		<h3 class="font-bold text-xl uppercase">What information you need</h3>
+		<p class="mt-6">Here's a summary of the key data we ask you to supply via the form.<p>
+      	
+		<ul>
+			<li><span class="font-bold">Basic data</span> about your organisation such as name, main website URL and a paragraph description of what you do.
+			<li><span class="font-bold">Locations</span> for your office headquarters and if applicable the datacenters you own. For each we ask for the country and nearest city. We offer a .csv bulk import option<span class="font-bold">*</span> if you have several to add.</li>
+			<li>The <span class="font-bold">IP or ASN ranges</span> your organisation is responsible for. We offer a few options to automate this for large numbers or evolving records such as one-off .csv bulk import<span class="font-bold">*</span> or automated updating via api.</li>
+			<li><span class="font-bold">Evidence</span>, so we can verify your claims that your services run on green energy or your upstream supplier does. You can provide URLs or upload documents.</li> 
+		</ul>
+
+		<section class="prose border-2 border-neutral-500 rounded-xl my-6 md:mt-10 md:mb-0 p-6 bg-white">
+            <h3 class="text-med text-neutral-600 border-b-2 border-neutral-500">* A note about bulk importing</h3>
+            <p class="text-neutral-600">If you want to use the bulk import option for your locations or IP/ASN ranges, then you do not supply the .csv file as part of this verification form. We will arrange this with you after your verification form is submitted.</p>
+			<p class="text-neutral-600">The same applies to submitting IP/ASN ranges via api.</p> 
+		</section>
+
+		<h3 class="font-bold text-xl uppercase mt-12">Ready?</h3>
+		<a href="{% url 'provider_registration' %}" class="btn font-bold">Begin form</a>
+
+
+	</div>
+
+{% endblock %}
