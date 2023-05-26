@@ -416,9 +416,13 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             "status": provider_request.status,
             "link_to_verification_request": link_to_verification_request,
         }
+
         send_email(
             address=user.email,
-            subject="Your verification request for the Green Web Database",
+            subject=(
+                f"Your verification request for the Green Web Database: "
+                f"{provider_request.name}"
+            ),
             context=ctx,
             template_html="emails/verification-request-notify.html",
             template_txt="emails/verification-request-notify.txt",
