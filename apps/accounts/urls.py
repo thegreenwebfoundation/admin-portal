@@ -2,6 +2,7 @@ from django.urls import path
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from django.views.generic import RedirectView
+from django.views.generic.base import TemplateView
 
 from apps.accounts.admin_site import greenweb_admin as admin
 from apps.accounts.views import (
@@ -123,5 +124,10 @@ urlpatterns = [
         "provider-autocomplete/",
         ProviderAutocompleteView.as_view(),
         name="provider-autocomplete",
+    ),
+	path(
+        "before-starting/",
+        TemplateView.as_view(template_name="provider_portal/before_starting.html"),
+        name="before-starting",
     ),
 ]
