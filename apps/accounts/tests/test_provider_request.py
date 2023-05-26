@@ -386,7 +386,8 @@ def test_wizard_sends_email_on_submission(
     assert "support@thegreenwebfoundation.org" in eml.cc
 
     # then: and our email has the subject and copy we were expecting
-    assert eml.subject == "Your verification request for the Green Web Database"
+    assert "Your verification request for the Green Web Database" in eml.subject
+
     assert (
         "Thank you for taking the time to complete a verification request"
         in msg_body_txt
@@ -408,6 +409,7 @@ def test_wizard_sends_email_on_submission(
 
     link_to_verification_request = f"http://testserver{request_path}"
 
+    assert provider_name in eml.subject
     assert link_to_verification_request in msg_body_txt
     assert link_to_verification_request in msg_body_html
 
