@@ -16,20 +16,25 @@
 			<div class="container mx-auto px-2 sm:px-4">
 			
 				{% block nav %}
-				<nav class="flex justify-between items-center bg-white py-6 md:justify-start md:space-x-10 ">
-					<div class="flex-grow">
-						<a href="{% url 'provider_portal_home' %}">
-							<img width="200px" height="48px" src="{% static 'img/TGWF-logo.svg' %}" alt="The Green Web Foundation logo"/>
-						</a>
+				<nav class="flex flex-wrap sm:flex-nowrap justify-between items-center bg-white mt-6 sm:mb-6 md:justify-start md:space-x-10 ">
+					<div class="w-full sm:w-auto sm:flex-grow flex flex-row">
+
+						<div class="logo">
+							<a href="{% url 'provider_portal_home' %}">
+								<img width="200px" height="48px" src="{% static 'img/TGWF-logo.svg' %}" alt="The Green Web Foundation logo"/>
+							</a>
+						</div>
+
+						<div class="subbrand border-l text-medium ml-8 pl-8 h-12 flex items-center">
+							<p class="font-bold">Provider<br/>Portal</p>
+						</div>
 					</div>
 
-					<div class="pl-10 display-block">
+					<div class="w-full sm:w-auto mt-4 sm:mt-0 pb-4 sm:pb-0 sm:pl-10 text-right">
 						{% if request.user.is_authenticated %}
-						<p>
-							Hello {{ request.user.username }}
-							|
-							<a href="{% url 'logout' %}">Log out</a>
-						</p>
+							<span>Hello {{ request.user.username }}</span>
+							<span role="img" aria-label="waving hand">👋</span>
+							<span class="pl-3"><a href="{% url 'logout' %}">Log out</a></span>
 						{% else %}
 							<a href="{% url 'login' %}">Log in</a>
 						{% endif %}
