@@ -421,7 +421,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             address=user.email,
             subject=(
                 f"Your verification request for the Green Web Database: "
-                f"{provider_request.name}"
+                f"{mark_safe(provider_request.name)}"
             ),
             context=ctx,
             template_html="emails/verification-request-notify.html",
