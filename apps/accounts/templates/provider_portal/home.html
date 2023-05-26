@@ -21,6 +21,8 @@
 		{% endfor %}
 
 		{% endif %}
+
+		<p class="text-neutral-500 mt-8">Looking for the <a href="{% url 'greenweb_admin:index' %}" class="text-neutral-500">old style admin screens</a>?</p>
 		
 		<h3 class="text-xl pt-10">Your submitted verification requests</h3>
 
@@ -31,10 +33,6 @@
 		  <p>You haven't submitted any verification requests yet. <a href="{% url 'provider_registration' %}">Get started.</a>
 
 		{% endfor %}
-
-		<h3 class="text-xl pt-6">Previous admin interface</h3>
-
-		<p>Looking for the previous admin screens? <a href="{% url 'greenweb_admin:index' %}">Log into our old admin</a>.</p>
 
 
 	</div>
