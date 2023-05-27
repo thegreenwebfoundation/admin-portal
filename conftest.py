@@ -3,17 +3,17 @@ import pytest
 import dramatiq
 import factory
 
-import apps.accounts.models as ac_models
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
 from pytest_factoryboy import register
 from ipaddress import ip_address
+from guardian.shortcuts import assign_perm
 
 from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.greencheck import factories as gc_factories
 from apps.accounts import factories as ac_factories
-
+from apps.accounts import models as ac_models
+from apps.accounts.permissions import manage_provider
 
 # https://factoryboy.readthedocs.io/en/stable/recipes.html#using-reproducible-randomness
 factory.random.reseed_random("venture not into the land of flaky tests")
@@ -204,6 +204,7 @@ def hosting_provider_with_sample_user(hosting_provider, sample_hoster_user):
     hosting_provider.save()
     sample_hoster_user.hostingprovider = hosting_provider
     sample_hoster_user.save()
+    assign_perm(manage_provider.codename, sample_hoster_user, hosting_provider)
     return hosting_provider
 
 

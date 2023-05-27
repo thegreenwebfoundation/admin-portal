@@ -7,8 +7,10 @@ import markdown
 import pytest
 from django import urls
 from django.contrib.auth import models as auth_models
+from guardian.shortcuts import assign_perm
 
 from apps.accounts.models.hosting import Hostingprovider
+from apps.accounts.permissions import manage_datacenter
 from apps.greencheck.tests import setup_domains
 from conftest import ProviderRequestFactory
 
@@ -58,12 +60,13 @@ class TestDatacenterAdmin:
         self, db, client, sample_hoster_user, datacenter
     ):
         """
-        Sign in, and visit new datacenter page.
+        Sign in, and visit the change view of the datacenter.
 
-        Simulate the journey for a new user creating a datacenter in the admin
+        Simulate the journey for a new user accessing a datacenter they have permissions to in the admin
         """
         datacenter.user = sample_hoster_user
         datacenter.save()
+        assign_perm(manage_datacenter.codename, sample_hoster_user, datacenter)
 
         # now log in
         client.force_login(sample_hoster_user)
