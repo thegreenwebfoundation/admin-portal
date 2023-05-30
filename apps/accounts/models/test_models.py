@@ -46,10 +46,10 @@ class TestHostingProvider:
             "compensatie",
         ),
     )
+    @pytest.mark.django_db
     def test_accepted_ways_to_model(
-        self, datacenter, db, sample_hoster_user, accounting_model, hosting_provider
+        self, datacenter, sample_hoster_user, accounting_model, hosting_provider
     ):
-
         hosting_provider.save()
         sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.save()
@@ -60,7 +60,6 @@ class TestHostingProvider:
 
         # if we don't have an allowed value this should throw an error
         datacenter.model = accounting_model
-        datacenter.user_id = sample_hoster_user.id
         datacenter.save()
 
         assert datacenter.model == accounting_model

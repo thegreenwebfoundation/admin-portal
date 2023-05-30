@@ -13,7 +13,7 @@ from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.greencheck import factories as gc_factories
 from apps.accounts import factories as ac_factories
 from apps.accounts import models as ac_models
-from apps.accounts.permissions import manage_provider
+from apps.accounts.permissions import manage_provider, manage_datacenter
 
 # https://factoryboy.readthedocs.io/en/stable/recipes.html#using-reproducible-randomness
 factory.random.reseed_random("venture not into the land of flaky tests")
@@ -210,8 +210,8 @@ def hosting_provider_with_sample_user(hosting_provider, sample_hoster_user):
 
 
 @pytest.fixture
-def datacenter():
-    return ac_models.Datacenter(
+def datacenter(sample_hoster_user):
+    dc = ac_models.Datacenter(
         country="NL",
         dc12v=False,
         greengrid=True,
@@ -223,10 +223,13 @@ def datacenter():
         showonwebsite=True,
         temperature=22,
         temperature_type="C",
-        user_id=None,
+        created_by=sample_hoster_user,
         virtual=False,
         website="http://www.xs4all.nl/zakelijk/colocation/datacenters/dc2.php",
     )
+    dc.save()
+    assign_perm(manage_datacenter.codename, sample_hoster_user, dc)
+    return dc
 
 
 @pytest.fixture

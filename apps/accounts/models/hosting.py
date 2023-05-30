@@ -38,7 +38,6 @@ AWAITING_REVIEW_SLUG = "awaiting-review"
 
 class Datacenter(models.Model):
     country = CountryField(db_column="countrydomain")
-
     dc12v = models.BooleanField()
     greengrid = models.BooleanField()
     mja3 = models.BooleanField(null=True, verbose_name="meerjaren plan energie 3")
@@ -51,7 +50,9 @@ class Datacenter(models.Model):
     temperature_type = models.CharField(
         max_length=255, choices=TempType.choices, db_column="temperaturetype"
     )
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
+    )
     virtual = models.BooleanField()
     website = models.CharField(max_length=255)
 
@@ -216,6 +217,12 @@ class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
     city = models.CharField(max_length=255, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="hostingproviders_created",
+    )
     customer = models.BooleanField(default=False)
     icon = models.CharField(max_length=50, blank=True)
     iconurl = models.CharField(max_length=255, blank=True)
