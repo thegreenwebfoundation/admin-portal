@@ -12,7 +12,7 @@ from django.urls import reverse
 from guardian.mixins import GuardianUserMixin
 from guardian.shortcuts import get_objects_for_user
 
-from ..permissions import manage_provider
+from ..permissions import manage_provider, manage_datacenter
 from .hosting import Hostingprovider
 
 
@@ -95,6 +95,13 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
         Returns a QuerySet of all Hostingproviders that the User has permissions to
         """
         return get_objects_for_user(self, str(manage_provider))
+
+    @property
+    def data_centers(self) -> models.QuerySet[Hostingprovider]:
+        """
+        Returns a QuerySet of all Datacenters that the User has permissions to
+        """
+        return get_objects_for_user(self, str(manage_datacenter))
 
     def get_absolute_url(self):
         return reverse("user_edit", args=[str(self.id)])

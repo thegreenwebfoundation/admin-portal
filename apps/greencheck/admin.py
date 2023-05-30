@@ -277,7 +277,7 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
 
         # only show a normal user's own requests
         if not request.user.is_staff:
-            res = qs.filter(hostingprovider=request.user.hostingprovider)
+            res = qs.filter(hostingprovider__in=request.user.hosting_providers)
             return res
 
         return qs
@@ -311,7 +311,7 @@ class GreencheckASNApprove(admin.ModelAdmin):
 
         # only show a normal user's own requests
         if not request.user.is_staff:
-            res = qs.filter(hostingprovider=request.user.hostingprovider)
+            res = qs.filter(hostingprovider__in=request.user.hosting_providers)
             return res
 
         return qs
@@ -497,7 +497,7 @@ class GreenASNAdmin(admin.ModelAdmin):
 
         # only show a normal user's own requests
         if not request.user.is_staff:
-            res = qs.filter(hostingprovider=request.user.hostingprovider)
+            res = qs.filter(hostingprovider__in=request.user.hosting_providers)
             return res
 
         return qs
@@ -550,7 +550,7 @@ class GreenIPAdmin(admin.ModelAdmin):
 
         # only show a normal user's own requests
         if not request.user.is_staff:
-            res = qs.filter(hostingprovider=request.user.hostingprovider)
+            res = qs.filter(hostingprovider__in=request.user.hosting_providers)
             return res
 
         return qs
