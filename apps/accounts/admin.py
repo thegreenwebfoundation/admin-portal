@@ -148,6 +148,7 @@ class CustomUserAdmin(UserAdmin):
 
         # options for setting and clearing the hostingprovider
         # associated with this user
+        # TODO: remove or modify this
         hosting_provider = (
             "Linked Hosting Provider",
             {"fields": ("hostingprovider", "clear_provider_button")},
@@ -350,7 +351,7 @@ class HostingAdmin(GuardedModelAdmin):
         message_body_template = dj_template.Template(support_message.body)
         message_subject_template = dj_template.Template(support_message.subject)
 
-        user = obj.user_set.all().first()
+        user = obj.created_by
         email = None
 
         if user:
@@ -914,11 +915,9 @@ class DatacenterAdmin(GuardedModelAdmin):
         "hostingproviders_amount",
     ]
     ordering = ("name",)
-    raw_id_fields = ("user",)
+    raw_id_fields = ("created_by",)
 
     def save_model(self, request, obj, form, change):
-        if not change:
-            obj.user = request.user
         super().save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):
@@ -947,7 +946,7 @@ class DatacenterAdmin(GuardedModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_staff:
-            return ["showonwebsite", "user"]
+            return ["showonwebsite", "created_by"]
         return self.readonly_fields
 
     def get_fieldsets(self, request, obj=None):
@@ -960,7 +959,7 @@ class DatacenterAdmin(GuardedModelAdmin):
                             "name",
                             "website",
                         ),
-                        ("country", "user"),
+                        ("country", "created_by"),
                         ("pue", "residualheat"),
                         (
                             "temperature",
