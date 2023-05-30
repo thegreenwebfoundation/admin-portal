@@ -14,7 +14,7 @@ from apps.greencheck.models.checks import CO2Intensity
 
 from ..serializers import CO2IntensitySerializer, ProviderSharedSecretSerializer
 from . import exceptions
-from .permissions import BelongsToHostingProvider
+from .permissions import UserManagesHostingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +97,10 @@ class IPCO2Intensity(views.APIView):
 
 
 class ProviderSharedSecretView(views.APIView):
+    # TODO: change this API to be explicit about a provider
     serializer_class = ProviderSharedSecretSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [BelongsToHostingProvider]
+    permission_classes = [UserManagesHostingProvider]
 
     @swagger_auto_schema(tags=["Provider Shared Secret"])
     def get(self, request, format=None):

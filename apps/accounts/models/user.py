@@ -10,7 +10,9 @@ from django.db import models
 from django.core.mail import send_mail
 from django.urls import reverse
 from guardian.mixins import GuardianUserMixin
+from guardian.shortcuts import get_objects_for_user
 
+from ..permissions import manage_provider
 from .hosting import Hostingprovider
 
 
@@ -86,6 +88,13 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
     @property
     def is_admin(self):
         return self.groups.filter(name="admin").exists()
+
+    @property
+    def hosting_providers(self) -> models.QuerySet[Hostingprovider]:
+        """
+        Returns a QuerySet of all Hostingproviders that the User has permissions to
+        """
+        return get_objects_for_user(self, str(manage_provider))
 
     def get_absolute_url(self):
         return reverse("user_edit", args=[str(self.id)])

@@ -184,7 +184,6 @@ class CustomUserAdmin(UserAdmin):
                             "is_staff",
                             "is_superuser",
                             "groups",
-                            "user_permissions",
                         ),
                     },
                 ),

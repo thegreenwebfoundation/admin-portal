@@ -159,7 +159,7 @@ class TestProviderSharedSecretAPI:
         url_path = reverse("carbon-txt-shared-secret")
         view_func = api.views.ProviderSharedSecretView.as_view()
         provider = hosting_provider_with_sample_user
-        user = provider.user_set.first()
+        user = provider.users.first()
 
         # when: the user visits their provider with no shared_secret set
         request = rf.get(url_path)

@@ -23,7 +23,9 @@ rf = APIRequestFactory()
 
 class TestIpRangeViewSetList:
     def test_get_ip_ranges_empty(
-        self, hosting_provider: ac_models.Hostingprovider, sample_hoster_user: User,
+        self,
+        hosting_provider: ac_models.Hostingprovider,
+        sample_hoster_user: User,
     ):
         """
         Exercise the simplest happy path.
@@ -53,7 +55,6 @@ class TestIpRangeViewSetList:
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
-
         hosting_provider.save()
         sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.save()
@@ -101,7 +102,9 @@ class TestIpRangeViewSetList:
         assert len(response.data) == 0
 
     def test_get_ip_ranges_without_auth(
-        self, hosting_provider: ac_models.Hostingprovider, sample_hoster_user: User,
+        self,
+        hosting_provider: ac_models.Hostingprovider,
+        sample_hoster_user: User,
     ):
         """
         We don't want to list all the IP ranges we have, so we just show an empty
@@ -125,7 +128,9 @@ class TestIpRangeViewSetList:
         assert len(response.data) == 0
 
     def test_get_ip_range_for_user_with_no_hosting_provider(
-        self, sample_hoster_user: User, rf: RequestFactory,
+        self,
+        sample_hoster_user: User,
+        rf: RequestFactory,
     ):
         sample_hoster_user.save()
 
@@ -154,7 +159,6 @@ class TestIpRangeViewSetRetrieve:
         sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
-
         hosting_provider.save()
         sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.save()
@@ -179,27 +183,20 @@ class TestIpRangeViewSetRetrieve:
 class TestIpRangeViewSetCreate:
     def test_create_new_ip_range(
         self,
-        hosting_provider: ac_models.Hostingprovider,
-        sample_hoster_user: User,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
     ):
-
-        hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
-        GreencheckIp.objects.count() == 1
-
         rf = APIRequestFactory()
         url_path = reverse("ip-range-list")
 
         sample_json = {
-            "hostingprovider": hosting_provider.id,
+            "hostingprovider": hosting_provider_with_sample_user.id,
             "ip_start": "192.168.178.121",
             "ip_end": "192.168.178.129",
         }
 
         request = rf.post(url_path, sample_json)
-        request.user = sample_hoster_user
+        request.user = hosting_provider_with_sample_user.users.first()
 
         view = IPRangeViewSet.as_view({"post": "create"})
 
@@ -210,7 +207,7 @@ class TestIpRangeViewSetCreate:
 
         assert response.data["ip_start"] == "192.168.178.121"
         assert response.data["ip_end"] == "192.168.178.129"
-        assert response.data["hostingprovider"] == hosting_provider.id
+        assert response.data["hostingprovider"] == hosting_provider_with_sample_user.id
 
     @pytest.mark.skip(reason="Pending. ")
     def test_skip_duplicate_ip_range(
@@ -230,8 +227,7 @@ class TestIpRangeViewSetCreate:
 class TestIpRangeViewSetDelete:
     def test_delete_existing_ip_range(
         self,
-        hosting_provider: ac_models.Hostingprovider,
-        sample_hoster_user: User,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
     ):
         """
@@ -240,11 +236,6 @@ class TestIpRangeViewSetDelete:
         are now pointing to a non-existent range.
         We do not delete with the API - we hide them.
         """
-
-        # arrange
-        hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
 
         # check that we have what we expect first
         assert GreencheckIp.objects.filter(active=True).count() == 1
@@ -255,7 +246,7 @@ class TestIpRangeViewSetDelete:
 
         # act
         request = rf.delete(url_path, pk=green_ip.id)
-        request.user = sample_hoster_user
+        request.user = hosting_provider_with_sample_user.users.first()
         view = IPRangeViewSet.as_view({"delete": "destroy"})
         response = view(request, pk=green_ip.id)
 

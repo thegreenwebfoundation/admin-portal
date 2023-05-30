@@ -12,7 +12,7 @@ from ..serializers import (
     GreenIPRangeSerializer,
 )
 
-from .permissions import BelongsToHostingProvider
+from .permissions import UserManagesHostingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class IPRangeViewSet(
     queryset = GreencheckIp.objects.all()
 
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [BelongsToHostingProvider]
+    permission_classes = [UserManagesHostingProvider]
 
     def filter_queryset(self, queryset):
         """

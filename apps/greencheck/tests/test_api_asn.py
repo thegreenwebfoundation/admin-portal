@@ -104,7 +104,8 @@ class TestASNViewSetList:
         response.data["hostingprovider"] == green_asn.hostingprovider.id
 
     def test_get_asn_create(
-        self, hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        self,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
     ):
         """
         Can we create an new ASN over the API, for our hosting provider?
@@ -145,7 +146,7 @@ class TestASNViewSetList:
 
         rf = APIRequestFactory()
         url_path = reverse("asn-detail", kwargs={"pk": green_asn.id})
-        user = hosting_provider_with_sample_user.user_set.first()
+        user = hosting_provider_with_sample_user.users.first()
         request = rf.delete(url_path)
         request.user = user
 
@@ -214,4 +215,3 @@ class TestASNViewSetList:
         assert (
             gc_models.GreencheckASN.objects.filter(asn=12345, active=True).count() == 1
         )
-
