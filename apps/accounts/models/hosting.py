@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 from taggit.managers import TaggableManager
 from taggit import models as tag_models
 from django.utils.translation import ugettext_lazy as _
+from guardian.shortcuts import get_users_with_perms
 
 from model_utils.models import TimeStampedModel
 
@@ -265,6 +266,15 @@ class Hostingprovider(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def users(self) -> models.QuerySet["User"]:
+        """
+        Returns a QuerySet of Users who have permissions for a given Hostingprovider
+        """
+        return get_users_with_perms(
+            self, only_with_perms_in=(manage_provider.codename,)
+        )
 
     @property
     def is_awaiting_review(self):

@@ -9,7 +9,7 @@ from drf_yasg.utils import swagger_auto_schema  # noqa
 
 from ..models import GreencheckASN
 from ..serializers import GreenASNSerializer
-from .permissions import BelongsToHostingProvider
+from .permissions import UserManagesHostingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class ASNViewSet(
     queryset = GreencheckASN.objects.all()
 
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [BelongsToHostingProvider]
+    permission_classes = [UserManagesHostingProvider]
 
     def filter_queryset(self, queryset):
         """

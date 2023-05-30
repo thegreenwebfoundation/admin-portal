@@ -192,6 +192,7 @@ def user_with_provider(sample_hoster_user):
     hp = gc_factories.HostingProviderFactory.create()
     sample_hoster_user.hostingprovider = hp
     sample_hoster_user.save()
+    assign_perm(manage_provider.codename, sample_hoster_user, hp)
     return sample_hoster_user
 
 

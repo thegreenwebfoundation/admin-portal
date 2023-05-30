@@ -5,20 +5,29 @@ from rest_framework import permissions
 logger = logging.getLogger(__name__)
 
 
-class BelongsToHostingProvider(permissions.BasePermission):
+class UserManagesHostingProvider(permissions.BasePermission):
     """
-    If a user belongs to the hosting provider they are allowed
-    to update the object
+    Check object-level permissions to decide if User can manage Hostingprovider
     """
+
+    def _has_permission(self, request, hp_id):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if request.user:
+            return request.user.hosting_providers.filter(id=hp_id).exists()
+        return False
 
     def has_object_permission(self, request, view, obj):
         """
-        Users should only be able to update the object if the hosting
-        provider associated with it is the same as their one they are
-        part of
+        Check permissions when updating the object
         """
-        return bool(
-            request.method in permissions.SAFE_METHODS
-            or request.user
-            and obj.hostingprovider == request.user.hostingprovider
-        )
+        return self._has_permission(request, obj.hostingprovider.id)
+
+    def has_permission(self, request, view):
+        """
+        Check permissions when creating a new object (POST request),
+        otherwise return True to rely on a consecutive call to has_object_permission.
+        """
+        if request.method == "POST":
+            return self._has_permission(request, request.data.get("hostingprovider"))
+        return True
