@@ -7,10 +7,12 @@ from django_countries.fields import CountryField
 from taggit.managers import TaggableManager
 from taggit import models as tag_models
 from datetime import date, timedelta, datetime
+from guardian.shortcuts import assign_perm
 
 
 from apps.greencheck.models import IpAddressField, GreencheckASN, GreencheckIp
 from apps.greencheck.validators import validate_ip_range
+from apps.accounts.permissions import manage_provider
 from model_utils.models import TimeStampedModel
 from typing import Iterable, Tuple, List
 from .hosting import (
@@ -18,7 +20,6 @@ from .hosting import (
     HostingProviderSupportingDocument,
     EvidenceType,
     Service,
-    ProviderService,
 )
 
 
@@ -141,7 +142,7 @@ class ProviderRequest(TimeStampedModel):
     @transaction.atomic
     def approve(self) -> Hostingprovider:
         """
-        Create a new Hostingprovider and underlying objects.
+        Create a new Hostingprovider and underlying objects and set appropriate permissions.
 
         This method is defined as an atomic transaction:
         in case any exception occurs, all changes will be rolled back,
@@ -167,18 +168,11 @@ class ProviderRequest(TimeStampedModel):
                 "already exists in the database"
             )
 
-        # Fail when user is already attached to an existing Hostingprovider
-        # TODO: change this once User can be attached to multiple Hostingproviders
-        user = self.created_by
-        if user.hostingprovider:
-            raise ValueError(
-                f"Failed to approve the request '{self}' because the user '{user}' "
-                f"is already assigned to a hosting provider '{user.hostingprovider}'"
-            )
-
         # Temporarily use only the first location
         # TODO: change this once Hostingprovider model has multiple locations attached
         first_location = self.providerrequestlocation_set.first()
+        if not first_location:
+            raise ValueError(f"{failed_msg} because there are no locations provided")
 
         # create a Hostingprovider and assign it to the user who created ProviderRequest
         hp = Hostingprovider.objects.create(
@@ -206,8 +200,12 @@ class ProviderRequest(TimeStampedModel):
         hp.save()
 
         # set user
+        user = self.created_by
         user.hostingprovider = hp
         user.save()
+
+        # set permissions
+        assign_perm(manage_provider.codename, user, hp)
 
         # create related objects: ASNs
         for asn in self.providerrequestasn_set.all():

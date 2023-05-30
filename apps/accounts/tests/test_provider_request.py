@@ -420,20 +420,18 @@ def test_wizard_sends_email_on_submission(
     assert provider_request.status in msg_body_html
 
 
-def test_approve_fails_when_hostingprovider_for_user_exists(db, user_with_provider):
+def test_approve_when_hostingprovider_for_user_exists(db, user_with_provider):
     # given: provider request submitted by a user that already has a Hostingprovider assigned
     pr = ProviderRequestFactory.create(created_by=user_with_provider)
     existing_provider = user_with_provider.hostingprovider
+    loc1 = ProviderRequestLocationFactory.create(request=pr)
 
-    # then: approving the request fails
-    with pytest.raises(ValueError):
-        pr.approve()
+    # then: approving the request succeeds
+    new_provider = pr.approve()
 
-    # then: user is still assigned to the old provider
-    assert (
-        models.User.objects.get(pk=user_with_provider.pk).hostingprovider
-        == existing_provider
-    )
+    # then: user has access to 2 providers
+    assert existing_provider in user_with_provider.hosting_providers
+    assert new_provider in user_with_provider.hosting_providers
 
 
 def test_approve_fails_when_hostingprovider_exists(db, hosting_provider):
@@ -524,6 +522,7 @@ def test_approve_creates_hosting_provider(db):
     assert list(hp.services.all()) == list(pr.services.all())
     assert hp.website == pr.website
     assert hp.request == pr
+    assert hp in pr.created_by.hosting_providers
 
     # provider is visible by default
     # appropriate tag is added

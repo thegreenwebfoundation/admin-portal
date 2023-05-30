@@ -192,10 +192,7 @@ class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
                     ProviderRequestStatus.REMOVED,
                 ]
             ),
-            # TODO: change this when a user can have multiple providers assigned
-            "providers": Hostingprovider.objects.filter(
-                id__in=[self.request.user.hostingprovider_id]
-            ),
+            "providers": self.request.user.hosting_providers,
         }
 
 
