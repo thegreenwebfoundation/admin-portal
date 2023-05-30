@@ -12,7 +12,6 @@ from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 from django import template as dj_template
 from guardian.admin import GuardedModelAdmin
-from guardian.shortcuts import get_objects_for_user
 
 from apps.greencheck.admin import (
     GreencheckIpApproveInline,
@@ -47,7 +46,6 @@ from apps.greencheck.forms import ImporterCSVForm
 
 from .utils import get_admin_name, reverse_admin_name, send_email
 from .admin_site import greenweb_admin
-from .permissions import manage_provider, manage_datacenter
 from . import filters
 from . import forms
 from .forms import (
@@ -691,13 +689,9 @@ class HostingAdmin(GuardedModelAdmin):
         ).annotate(models.Count("greencheckip"))
 
         if not request.user.is_staff:
-            # check object permissions attached to the user
-            managed_providers = get_objects_for_user(
-                request.user, manage_provider.codename, Hostingprovider
-            )
             # filter for non-archived providers & those the current user has permissions to
             qs = qs.filter(archived=False).filter(
-                id__in=[p.id for p in managed_providers.iterator()]
+                id__in=[p.id for p in request.user.hosting_providers]
             )
         return qs
 
@@ -947,12 +941,8 @@ class DatacenterAdmin(GuardedModelAdmin):
         qs = qs.prefetch_related(
             "classifications", "datacenter_certificates", "hostingproviders"
         )
-        # check object permissions attached to the user
-        managed_datacenters = get_objects_for_user(
-            request.user, manage_datacenter.codename, Datacenter
-        )
         # filter for datacenters that the current user has permissions to
-        qs = qs.filter(id__in=[p.id for p in managed_datacenters.iterator()])
+        qs = qs.filter(id__in=[p.id for p in request.user.data_centers])
         return qs
 
     def get_readonly_fields(self, request, obj=None):

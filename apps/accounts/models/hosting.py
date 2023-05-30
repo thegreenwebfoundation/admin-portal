@@ -56,6 +56,15 @@ class Datacenter(models.Model):
     website = models.CharField(max_length=255)
 
     @property
+    def users(self) -> models.QuerySet["User"]:
+        """
+        Returns a QuerySet of Users who have permissions for a given Datacenter
+        """
+        return get_users_with_perms(
+            self, only_with_perms_in=(manage_datacenter.codename,)
+        )
+
+    @property
     def city(self):
         """
         Return the city this datacentre is
