@@ -200,13 +200,8 @@ class ProviderRequest(TimeStampedModel):
 
         hp.save()
 
-        # set user
-        user = self.created_by
-        user.hostingprovider = hp
-        user.save()
-
         # set permissions
-        assign_perm(manage_provider.codename, user, hp)
+        assign_perm(manage_provider.codename, self.created_by, hp)
 
         # create related objects: ASNs
         for asn in self.providerrequestasn_set.all():

@@ -88,10 +88,7 @@ class TestDatacenterAdmin:
     ):
         """Check that a staff member can see the notes section for a datacenter"""
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
-        hosting_provider.save()
-        datacenter.user = sample_hoster_user
+        datacenter.created_by = sample_hoster_user
         datacenter.save()
 
         gcip_admin = ac_admin.DatacenterAdmin(
@@ -124,8 +121,6 @@ class TestDatacenterAdmin:
     ):
         # Given: a end user running a datacentre or hosting provider
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
 
         gcip_admin = ac_admin.DatacenterAdmin(
             ac_models.Datacenter, admin_site.greenweb_admin
@@ -191,7 +186,7 @@ class TestHostingProviderAdmin:
         Simulate the user visiting a page to update their own provider
         """
 
-        user = hosting_provider_with_sample_user.user_set.first()
+        user = hosting_provider_with_sample_user.users.first()
         client.force_login(user)
 
         admin_url = urls.reverse(
@@ -217,7 +212,7 @@ class TestHostingProviderAdmin:
             """,
         )
 
-        user = hosting_provider_with_sample_user.user_set.first()
+        user = hosting_provider_with_sample_user.users.first()
         client.force_login(user)
         admin_url = urls.reverse(
             "greenweb_admin:accounts_hostingprovider_preview_email",
@@ -245,7 +240,7 @@ class TestHostingProviderAdmin:
                 Some content here, including the {{ user }}
             """,
         )
-        user = hosting_provider_with_sample_user.user_set.first()
+        user = hosting_provider_with_sample_user.users.first()
         client.force_login(user)
         admin_url = urls.reverse(
             "greenweb_admin:accounts_hostingprovider_send_email",
@@ -297,7 +292,7 @@ class TestHostingProviderAdmin:
                 Some content here, including the {{ user }}
             """,
         )
-        user = hosting_provider_with_sample_user.user_set.first()
+        user = hosting_provider_with_sample_user.users.first()
 
         client.force_login(user)
         admin_url = urls.reverse(
@@ -337,7 +332,7 @@ class TestHostingProviderAdmin:
 
         hosting_provider_with_sample_user.archived = archived[0]
         hosting_provider_with_sample_user.save()
-        client.force_login(hosting_provider_with_sample_user.user_set.first())
+        client.force_login(hosting_provider_with_sample_user.users.first())
 
         admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
         resp = client.get(admin_url, follow=True)
@@ -363,57 +358,13 @@ class TestHostingProviderAdmin:
 
         hosting_provider_with_sample_user.archived = archived[0]
         hosting_provider_with_sample_user.save()
-        client.force_login(hosting_provider_with_sample_user.user_set.first())
+        client.force_login(hosting_provider_with_sample_user.users.first())
 
         admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
         resp = client.get(admin_url, {"archived": True}, follow=True)
 
         assert len(resp.context["results"]) == archived[1]
         assert resp.status_code == 200
-
-    def test_staff_can_remove_provider_from_user(
-        self, db, client, hosting_provider_with_sample_user, greenweb_staff_user
-    ):
-        """
-        Can a staff member update a user to remove them
-        from a given hosting provider?
-        """
-
-        user = hosting_provider_with_sample_user.user_set.first()
-        provider = hosting_provider_with_sample_user
-        # log the staff member in
-        client.force_login(greenweb_staff_user)
-
-        user_admin_url = urls.reverse(
-            "greenweb_admin:accounts_user_change",
-            args=[user.id],
-        )
-
-        user_payload_without_provider_allocated = {
-            "username": user.username,
-            "email": user.email,
-            "is_active": "on",
-            "is_staff": "on",
-            # simulate sending the empty result for a cleared
-            # hosting provider
-            "hostingprovider": "",
-            "groups": [group.id for group in user.groups.all()],
-        }
-
-        # make an update via a POST to clear the hosting provider
-        resp = client.post(
-            user_admin_url, user_payload_without_provider_allocated, follow=True
-        )
-
-        assert resp.status_code == 200
-
-        # is the user no longer allocated to the provider?
-        provider.refresh_from_db()
-        assert provider.user_set.count() == 0
-
-        # is the provider also no longer associated with the user?
-        user.refresh_from_db()
-        assert user.hostingprovider is None
 
 
 class TestUserCreationAdmin:

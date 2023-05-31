@@ -20,15 +20,15 @@ rf = APIRequestFactory()
 
 class TestUsingAuthToken:
     def test_fetching_auth_token(
-        self, hosting_provider: ac_models.Hostingprovider, sample_hoster_user: User,
+        self,
+        hosting_provider: ac_models.Hostingprovider,
+        sample_hoster_user: User,
     ):
         """
         Anyone who is able to update an organisation is able to
         generate an API token.
         """
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
 
         # set up our views, request factories and paths
         rf = APIRequestFactory()

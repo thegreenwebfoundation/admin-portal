@@ -123,10 +123,6 @@ class CustomUserAdmin(UserAdmin):
 
     clear_provider_button.short_description = ""
 
-    # make the hosting provider dropdown an autocomplete
-    # select2 widget instead
-    autocomplete_fields = ("hostingprovider",)
-
     def get_queryset(self, request, *args, **kwargs):
         """
         This filter the view to only show the current user,
@@ -146,14 +142,6 @@ class CustomUserAdmin(UserAdmin):
         # followed by the stuff a user might change themselves
         contact_deets = ("Personal info", {"fields": ("email",)})
 
-        # options for setting and clearing the hostingprovider
-        # associated with this user
-        # TODO: remove or modify this
-        hosting_provider = (
-            "Linked Hosting Provider",
-            {"fields": ("hostingprovider", "clear_provider_button")},
-        )
-
         # what we show for internal staff
         staff_fieldsets = (
             "Permissions",
@@ -167,13 +155,12 @@ class CustomUserAdmin(UserAdmin):
 
         # serve the extra staff fieldsets for creating users
         if request.user.is_admin:
-            return (*default_fieldset, hosting_provider, staff_fieldsets)
+            return (*default_fieldset, staff_fieldsets)
 
         # allow an override for super users
         if request.user.is_superuser:
             return (
                 *default_fieldset,
-                hosting_provider,
                 staff_fieldsets,
                 (
                     "Permissions",
@@ -189,14 +176,6 @@ class CustomUserAdmin(UserAdmin):
             )
 
         return default_fieldset
-
-    class Media:
-        """
-        An extended media class, to add an extra snippet
-        of js to allow us to clear the select2 dropdown
-        """
-
-        js = ("accounts/js/user-change.js",)
 
 
 class HostingCertificateInline(admin.StackedInline):
@@ -525,29 +504,6 @@ class HostingAdmin(GuardedModelAdmin):
         return redirect(name, obj.pk)
 
     # Mutators
-
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-
-        if form.has_changed():
-            if not obj.is_awaiting_review and not request.user.is_admin:
-                form.instance.label_as_awaiting_review(notify_admins=True)
-
-        # if there is not 'change' set, a user is creating a hosting
-        # provider for the first time.
-        # Allocate the new provider to them, so they can see their
-        # newly created provider on the next page load
-        if not change:
-            # we don't allocate newly created providers to admin staff
-            # they might be creating a provider for someone else
-            if not request.user.is_admin:
-                user = request.user
-                user.hostingprovider = obj
-                user.save()
-
-            # and then notify the admins to review the new submission
-            if not obj.is_awaiting_review and not request.user.is_admin:
-                form.instance.label_as_awaiting_review(notify_admins=True)
 
     def save_formset(self, request, form, formset, change):
         """

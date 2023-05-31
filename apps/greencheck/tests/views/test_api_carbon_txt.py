@@ -104,7 +104,7 @@ class TestProviderSharedSecretAPI:
         # Given: a provider and user able to sign in with their credentials
         url_path = reverse("carbon-txt-shared-secret")
         provider = hosting_provider_with_sample_user
-        user = provider.user_set.first()
+        user = provider.users.first()
         view_func = api.views.ProviderSharedSecretView.as_view()
 
         # When: a user tries to fetch the token
@@ -132,7 +132,7 @@ class TestProviderSharedSecretAPI:
         url_path = reverse("carbon-txt-shared-secret")
         view_func = api.views.ProviderSharedSecretView.as_view()
         provider = hosting_provider_with_sample_user
-        user = provider.user_set.first()
+        user = provider.users.first()
 
         # And: a generated shared secret
         provider.refresh_shared_secret()

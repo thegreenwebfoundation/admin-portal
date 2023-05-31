@@ -2,6 +2,7 @@
 
 from django.db import migrations
 from django.contrib.auth import get_user_model
+from django.core.exceptions import FieldError
 from guardian.shortcuts import assign_perm, remove_perm
 from .. import permissions
 
@@ -19,11 +20,19 @@ def assign_object_permissions(apps, schema_editor):
         assign_perm(permissions.manage_datacenter.codename, dc.user, dc)
 
     # assign manage_provider
+    # GOTCHA: catch a FieldError so that this migration does not fail when execued by a test runner
     User = get_user_model()
-    for user in (
-        User.objects.using(db_alias).filter(hostingprovider__isnull=False).iterator()
-    ):
-        assign_perm(permissions.manage_provider.codename, user, user.hostingprovider)
+    try:
+        for user in (
+            User.objects.using(db_alias)
+            .filter(hostingprovider__isnull=False)
+            .iterator()
+        ):
+            assign_perm(
+                permissions.manage_provider.codename, user, user.hostingprovider
+            )
+    except FieldError:
+        pass
 
 
 def remove_object_permissions(apps, schema_editor):
@@ -38,11 +47,19 @@ def remove_object_permissions(apps, schema_editor):
         remove_perm(permissions.manage_datacenter.codename, dc.user, dc)
 
     # remove manage_provider
+    # GOTCHA: catch a FieldError so that this migration does not fail when execued by a test runner
     User = get_user_model()
-    for user in (
-        User.objects.using(db_alias).filter(hostingprovider__isnull=False).iterator()
-    ):
-        remove_perm(permissions.manage_provider.codename, user, user.hostingprovider)
+    try:
+        for user in (
+            User.objects.using(db_alias)
+            .filter(hostingprovider__isnull=False)
+            .iterator()
+        ):
+            remove_perm(
+                permissions.manage_provider.codename, user, user.hostingprovider
+            )
+    except FieldError:
+        pass
 
 
 class Migration(migrations.Migration):

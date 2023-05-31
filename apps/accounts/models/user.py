@@ -26,16 +26,6 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
     enabled = models.BooleanField(default=True)
     expired = models.BooleanField(default=False)
     expires_at = models.DateTimeField(null=True)
-
-    # id_ge Green energy providers. Leave this for now.
-    # old table, the idea might be resurrected.
-    hostingprovider = models.ForeignKey(
-        Hostingprovider,
-        on_delete=models.SET_NULL,
-        db_column="id_hp",
-        null=True,
-        blank=True,
-    )
     last_login = models.DateTimeField(null=True)
     locked = models.BooleanField(default=False)
     password = models.CharField("password", max_length=128, db_column="django_password")
