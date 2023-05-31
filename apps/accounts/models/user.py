@@ -92,14 +92,14 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
     @property
     def hosting_providers(self) -> models.QuerySet[Hostingprovider]:
         """
-        Returns a QuerySet of all Hostingproviders that the User has permissions to
+        Returns a QuerySet of all Hostingproviders that the User has permissions to manage
         """
         return get_objects_for_user(self, str(manage_provider))
 
     @property
     def data_centers(self) -> models.QuerySet[Hostingprovider]:
         """
-        Returns a QuerySet of all Datacenters that the User has permissions to
+        Returns a QuerySet of all Datacenters that the User has permissions to manage
         """
         return get_objects_for_user(self, str(manage_datacenter))
 
