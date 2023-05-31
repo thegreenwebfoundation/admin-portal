@@ -423,8 +423,8 @@ def test_wizard_sends_email_on_submission(
 def test_approve_when_hostingprovider_for_user_exists(db, user_with_provider):
     # given: provider request submitted by a user that already has a Hostingprovider assigned
     pr = ProviderRequestFactory.create(created_by=user_with_provider)
-    existing_provider = user_with_provider.hostingprovider
     loc1 = ProviderRequestLocationFactory.create(request=pr)
+    existing_provider = user_with_provider.hosting_providers.first()
 
     # then: approving the request succeeds
     new_provider = pr.approve()
@@ -483,7 +483,9 @@ def test_approve_asn_already_exists(db, green_asn):
     # then: changes to Hostingprovider and User models are rolled back
     # GOTCHA: we retrieve the User from the database again
     #         because User model state (pr.created_by) is not reset by the rollback
-    assert models.User.objects.get(pk=pr.created_by.pk).hostingprovider is None
+    assert (
+        models.User.objects.get(pk=pr.created_by.pk).hosting_providers.exists() is False
+    )
     assert models.Hostingprovider.objects.filter(request=pr).exists() is False
 
 

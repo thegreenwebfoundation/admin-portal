@@ -62,7 +62,7 @@ class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
         queryset = super(UserFilteredPrimaryKeyRelatedField, self).get_queryset()
         if not request:
             return queryset
-        return queryset.filter(user=request.user)
+        return queryset.filter(id__in=[hp.id for hp in request.user.hosting_providers])
 
 
 class GreenIPRangeSerializer(serializers.ModelSerializer):

@@ -190,8 +190,6 @@ def user_with_provider(sample_hoster_user):
     and has a hosting provider associated with it
     """
     hp = gc_factories.HostingProviderFactory.create(created_by=sample_hoster_user)
-    sample_hoster_user.hostingprovider = hp
-    sample_hoster_user.save()
     assign_perm(manage_provider.codename, sample_hoster_user, hp)
     return sample_hoster_user
 
@@ -204,8 +202,6 @@ def hosting_provider_with_sample_user(hosting_provider, sample_hoster_user):
     """
     hosting_provider.created_by = sample_hoster_user
     hosting_provider.save()
-    sample_hoster_user.hostingprovider = hosting_provider
-    sample_hoster_user.save()
     assign_perm(manage_provider.codename, sample_hoster_user, hosting_provider)
     return hosting_provider
 

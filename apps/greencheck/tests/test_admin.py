@@ -7,10 +7,9 @@ from django import urls
 
 class TestGreencheckIpApproveAdmin:
     def test_get_actions_staff_user(self, db, rf, sample_hoster_user, hosting_provider):
-        """Check that a user with the correct privileges can """
+        """Check that a user with the correct privileges can"""
 
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.is_staff = True
         sample_hoster_user.save()
 
@@ -34,8 +33,6 @@ class TestGreencheckIpApproveAdmin:
         """Check that a sample"""
 
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
 
         gcip_admin = gc_admin.GreencheckIpApproveAdmin(
             models.GreencheckIp, admin_site.greenweb_admin
@@ -55,7 +52,6 @@ class TestGreencheckIpApproveAdmin:
         self, db, rf, sample_hoster_user, hosting_provider, green_ip
     ):
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
         sample_hoster_user.is_staff = True
         sample_hoster_user.save()
 
@@ -81,9 +77,12 @@ class TestGreencheckIpApproveAdmin:
         assert gip in qs
 
     def test_get_queryset_non_staff(
-        self, db, rf, hosting_provider_with_sample_user, green_ip,
+        self,
+        db,
+        rf,
+        hosting_provider_with_sample_user,
+        green_ip,
     ):
-
         provider = gc_factories.HostingProviderFactory()
         gip = gc_factories.GreenIpFactory(hostingprovider=provider)
 
@@ -97,7 +96,7 @@ class TestGreencheckIpApproveAdmin:
             "greenweb_admin:greencheck_greencheckipapprove_changelist"
         )
         request = rf.get(ip_range_listing_path)
-        request.user = hosting_provider_with_sample_user.user_set.first()
+        request.user = hosting_provider_with_sample_user.users.first()
 
         assert not request.user.is_staff
 

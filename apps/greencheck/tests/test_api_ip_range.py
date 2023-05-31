@@ -32,8 +32,6 @@ class TestIpRangeViewSetList:
         """
 
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
 
         rf = APIRequestFactory()
         url_path = reverse("ip-range-list")
@@ -51,18 +49,16 @@ class TestIpRangeViewSetList:
 
     def test_get_ip_ranges_for_hostingprovider_with_active_range(
         self,
-        hosting_provider: ac_models.Hostingprovider,
-        sample_hoster_user: User,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
     ):
-        hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
+        green_ip.hostingprovider = hosting_provider_with_sample_user
+        green_ip.save()
 
         rf = APIRequestFactory()
         url_path = reverse("ip-range-list")
         request = rf.get(url_path)
-        request.user = sample_hoster_user
+        request.user = hosting_provider_with_sample_user.users.first()
 
         # GET end point for IP Ranges
         view = IPRangeViewSet.as_view({"get": "list"})
@@ -84,8 +80,6 @@ class TestIpRangeViewSetList:
         green_ip: GreencheckIp,
     ):
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
 
         green_ip.active = False
         green_ip.save()
@@ -111,8 +105,6 @@ class TestIpRangeViewSetList:
         list for anon users.
         """
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
 
         rf = APIRequestFactory()
         url_path = reverse("ip-range-list")
@@ -155,24 +147,21 @@ class TestIpRangeViewSetRetrieve:
 
     def test_get_ip_range_for_hostingprovider_by_id(
         self,
-        hosting_provider: ac_models.Hostingprovider,
-        sample_hoster_user: User,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
         green_ip: GreencheckIp,
     ):
-        hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
+        green_ip.hostingprovider = hosting_provider_with_sample_user
+        green_ip.save()
 
         rf = APIRequestFactory()
         url_path = reverse("ip-range-detail", kwargs={"pk": green_ip.id})
         request = rf.get(url_path)
-        request.user = sample_hoster_user
+        request.user = hosting_provider_with_sample_user.users.first()
 
         # GET end point for IP Ranges
         view = IPRangeViewSet.as_view({"get": "retrieve"})
 
         response = view(request, pk=green_ip.id)
-
         assert response.status_code == 200
 
         assert response.data["ip_start"] == green_ip.ip_start

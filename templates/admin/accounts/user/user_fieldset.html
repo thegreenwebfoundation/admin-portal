@@ -23,46 +23,6 @@
                         <div class="help">{{ field.field.help_text|safe }}</div>
                     {% endif %}
                 </div>
-
-              {% with original.hostingprovider as hosting_provider %}
-                {% if hosting_provider %}
-                  {# these styles added largely copy and pasted from django admin for visual consistency #}
-                  <style>
-
-                    div.hosting_provider_addition {
-                      clear:both;
-                    }
-
-                    div.hosting_provider_addition label {
-                      display: block;
-                      padding: 4px 10px 0 0;
-                      float: left;
-                      width: 160px;
-                      word-wrap: break-word;
-                      line-height: 1;
-                      font-weight:bold;
-                      color:#333;
-                    }
-                    .hosting_provider_label:after {
-                      content: '';
-                      display: inline-block;
-                      vertical-align: middle;
-                      height: 26px;
-                    }
-                    </style>
-
-                  <div class="hosting_provider_addition">
-                      <label>
-                        Hosting Provider:
-                      </label>
-                      <div class="readonly">
-                        <a href="{% url 'greenweb_admin:accounts_hostingprovider_change' hosting_provider.id %}">
-                      {{ hosting_provider }}
-                      </a>
-                      </div>
-                  </div>
-                {% endif %}
-              {% endwith %}
             {% endfor %}
           {% endfor %}
         </div>

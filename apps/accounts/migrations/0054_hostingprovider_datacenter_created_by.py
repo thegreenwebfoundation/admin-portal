@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import migrations, models
+from django.core.exceptions import FieldError
 
 import django.db.models.deletion
 
@@ -14,11 +15,18 @@ def populate_hostingprovider_created_by(apps, schema_editor):
     db_alias = schema_editor.connection.alias
 
     User = get_user_model()
-    for user in (
-        User.objects.using(db_alias).filter(hostingprovider__isnull=False).iterator()
-    ):
-        user.hostingprovider.created_by = user
-        user.hostingprovider.save()
+
+    # GOTCHA: catch a FieldError so that this migration does not fail when execued by a test runner
+    try:
+        for user in (
+            User.objects.using(db_alias)
+            .filter(hostingprovider__isnull=False)
+            .iterator()
+        ):
+            user.hostingprovider.created_by = user
+            user.hostingprovider.save()
+    except FieldError:
+        pass
 
 
 class Migration(migrations.Migration):

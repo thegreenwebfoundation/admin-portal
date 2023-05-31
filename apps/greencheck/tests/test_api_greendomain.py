@@ -60,8 +60,6 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
         sitecheck_logger = LegacySiteCheckLogger()
 
         domain = "google.com"
@@ -86,7 +84,6 @@ class TestGreenDomainViewset:
     def test_check_single_url_with_supporting_evidence(
         self,
         hosting_provider: ac_models.Hostingprovider,
-        sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
         """
@@ -95,8 +92,6 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
         sitecheck_logger = LegacySiteCheckLogger()
 
         domain = "google.com"
@@ -143,15 +138,12 @@ class TestGreenDomainViewset:
     def test_check_single_url_with_supporting_private_evidence(
         self,
         hosting_provider: ac_models.Hostingprovider,
-        sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
         """
         When we show responses, do we only the ones that are public?
         """
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
         sitecheck_logger = LegacySiteCheckLogger()
 
         domain = "google.com"
@@ -195,7 +187,6 @@ class TestGreenDomainViewset:
     def test_check_multple_urls_get(
         self,
         hosting_provider: ac_models.Hostingprovider,
-        sample_hoster_user: User,
         green_ip: GreencheckIp,
     ):
         """
@@ -203,8 +194,6 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
         sitecheck_logger = LegacySiteCheckLogger()
 
         domains = ["google.com", "anothergreendomain.com"]
@@ -241,8 +230,6 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
         sitecheck_logger = LegacySiteCheckLogger()
 
         domains = ["google.com", "anothergreendomain.com"]

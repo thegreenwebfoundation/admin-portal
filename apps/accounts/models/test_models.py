@@ -51,8 +51,6 @@ class TestHostingProvider:
         self, datacenter, sample_hoster_user, accounting_model, hosting_provider
     ):
         hosting_provider.save()
-        sample_hoster_user.hostingprovider = hosting_provider
-        sample_hoster_user.save()
 
         val, *_ = [
             choice for choice in ModelType.choices if choice[0] == accounting_model
@@ -117,7 +115,6 @@ class TestUser:
             username="keen_user",
             password="topSekrit",
             email="email@example.com",
-            hostingprovider=hosting_provider,
         )
 
         new_user.save()

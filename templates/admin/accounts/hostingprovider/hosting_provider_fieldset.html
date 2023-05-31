@@ -53,7 +53,7 @@
     {% endfor %}
 
     <h2>Authorised hosting provider users</h2>
-    {% with original.user_set.all as users %}
+    {% with original.users.all as users %}
 
     {% if users %}
       <div class="form-row">

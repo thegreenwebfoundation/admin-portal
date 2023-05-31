@@ -20,7 +20,7 @@ rf = APIRequestFactory()
 
 @pytest.fixture
 def another_host_user():
-    u = User(username="another_user", email="another@example.com")
+    u = User.objects.create(username="another_user", email="another@example.com")
     u.set_password("topSekrit")
     return u
 
@@ -37,7 +37,7 @@ class TestASNViewSetList:
         rf = APIRequestFactory()
         url_path = reverse("asn-list")
         request = rf.get(url_path)
-        request.user = hosting_provider_with_sample_user.user_set.first()
+        request.user = hosting_provider_with_sample_user.users.first()
 
         # GET end point for IP Ranges
         view = gc_viewsets.ASNViewSet.as_view({"get": "list"})
@@ -61,7 +61,7 @@ class TestASNViewSetList:
         rf = APIRequestFactory()
         url_path = reverse("asn-list")
         request = rf.get(url_path)
-        request.user = hosting_provider_with_sample_user.user_set.first()
+        request.user = hosting_provider_with_sample_user.users.first()
 
         # GET end point for IP Ranges
         view = gc_viewsets.ASNViewSet.as_view({"get": "list"})
@@ -89,7 +89,7 @@ class TestASNViewSetList:
         rf = APIRequestFactory()
         url_path = reverse("asn-detail", kwargs={"pk": green_asn.id})
         request = rf.get(url_path)
-        request.user = hosting_provider_with_sample_user.user_set.first()
+        request.user = hosting_provider_with_sample_user.users.first()
 
         # GET end point for IP Ranges
         view = gc_viewsets.ASNViewSet.as_view({"get": "retrieve"})
@@ -112,7 +112,7 @@ class TestASNViewSetList:
         """
         rf = APIRequestFactory()
         url_path = reverse("asn-list")
-        user = hosting_provider_with_sample_user.user_set.first()
+        user = hosting_provider_with_sample_user.users.first()
         data = {
             "asn": 12345,
             "hostingprovider": hosting_provider_with_sample_user.id,
@@ -196,12 +196,13 @@ class TestASNViewSetList:
         An user must be associated with a hosting provider to be able
          to create or destroy ASNs or IP Ranges for the provider
         """
+        green_asn.hostingprovider = hosting_provider_with_sample_user
         green_asn.save()
         assert gc_models.GreencheckASN.objects.filter(asn=12345).count() == 1
 
         rf = APIRequestFactory()
         url_path = reverse("asn-detail", kwargs={"pk": green_asn.id})
-        hosting_provider_with_sample_user.user_set.first()
+        # hosting_provider_with_sample_user.users.first()
         request = rf.delete(url_path)
         request.user = another_host_user
 
