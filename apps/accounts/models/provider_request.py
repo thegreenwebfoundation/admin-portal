@@ -183,6 +183,7 @@ class ProviderRequest(TimeStampedModel):
             city=first_location.city,
             website=self.website,
             request=self,
+            created_by=self.created_by,
         )
 
         # set services (https://django-taggit.readthedocs.io/en/latest/api.html)

@@ -189,7 +189,7 @@ def user_with_provider(sample_hoster_user):
     Return a user that's been persisted to the database,
     and has a hosting provider associated with it
     """
-    hp = gc_factories.HostingProviderFactory.create()
+    hp = gc_factories.HostingProviderFactory.create(created_by=sample_hoster_user)
     sample_hoster_user.hostingprovider = hp
     sample_hoster_user.save()
     assign_perm(manage_provider.codename, sample_hoster_user, hp)
@@ -202,6 +202,7 @@ def hosting_provider_with_sample_user(hosting_provider, sample_hoster_user):
     Return a hosting provider that's been persisted to the database,
     and has a user associated with it
     """
+    hosting_provider.created_by = sample_hoster_user
     hosting_provider.save()
     sample_hoster_user.hostingprovider = hosting_provider
     sample_hoster_user.save()
