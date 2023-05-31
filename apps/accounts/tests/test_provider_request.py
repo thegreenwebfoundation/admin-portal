@@ -522,6 +522,8 @@ def test_approve_creates_hosting_provider(db):
     assert list(hp.services.all()) == list(pr.services.all())
     assert hp.website == pr.website
     assert hp.request == pr
+    assert hp.created_by == pr.created_by
+    # then: user who created the request has permissions to manage the new hosting provider
     assert hp in pr.created_by.hosting_providers
 
     # provider is visible by default
