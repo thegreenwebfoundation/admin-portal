@@ -97,16 +97,15 @@ class IPCO2Intensity(views.APIView):
 
 
 class ProviderSharedSecretView(views.APIView):
-    # TODO: change this API to be explicit about a provider
+    # TODO: come up with a better solution to identify a provider in this API
     serializer_class = ProviderSharedSecretSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [UserManagesHostingProvider]
 
     @swagger_auto_schema(tags=["Provider Shared Secret"])
     def get(self, request, format=None):
-        try:
-            provider = request.user.hostingprovider
-        except AttributeError:
+        # implicitly choose a first provider that the user has permissions to manage
+        provider = request.user.hosting_providers.first()
+        if not provider:
             raise exceptions.NotFound
 
         shared_secret = provider.shared_secret
@@ -119,7 +118,10 @@ class ProviderSharedSecretView(views.APIView):
 
     @swagger_auto_schema(tags=["Provider Shared Secret"])
     def post(self, request, format=None):
-        provider = request.user.hostingprovider
+        # implicitly choose a first provider that the user has permissions to manage
+        provider = request.user.hosting_providers.first()
+        if not provider:
+            raise exceptions.NotFound
 
         provider.refresh_shared_secret()
         serialized = ProviderSharedSecretSerializer(provider.shared_secret)
