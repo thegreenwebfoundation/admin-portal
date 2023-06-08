@@ -101,27 +101,7 @@ class CustomUserAdmin(UserAdmin):
     model = User
     search_fields = ("username", "email")
     list_display = ["username", "email", "last_login", "is_staff"]
-
-    # these are not really fields, but a hack to create buttons.
-    # see the corresponding methods with the same name
-    readonly_fields = ["clear_provider_button"]
-
-    # provide a button to let us clear provider selections easily,
-    # as the default select2 widget does not offer this
-    @mark_safe
-    def clear_provider_button(self, obj):
-        return """
-            <button
-                class='button'
-                type='button'
-                id='clear-hosting-provider'
-                style='padding:0.5rem'
-            >
-                Clear hosting provider selection
-            </button>
-        """
-
-    clear_provider_button.short_description = ""
+    readonly_fields = ("managed_providers",)
 
     def get_queryset(self, request, *args, **kwargs):
         """
@@ -133,7 +113,21 @@ class CustomUserAdmin(UserAdmin):
             qs = qs.filter(pk=request.user.pk)
         return qs
 
-    def get_fieldsets(self, request, *args, **kwargs):
+    @mark_safe
+    def managed_providers(self, obj):
+        """
+        Returns markup for a list of all hosting providers that the user has permissions to manage
+        """
+        if obj.is_admin:
+            # do not fetch providers for admin group - we'd have to fetch all of them
+            return "This user is an admin - they have access to manage all the providers in the database"
+        if not obj.hosting_providers:
+            return "None"
+        return "<br>".join(
+            [f"<a href={hp.admin_url}>{hp.name}</a>" for hp in obj.hosting_providers]
+        )
+
+    def get_fieldsets(self, request, obj=None, *args, **kwargs):
         """Return different fieldsets depending on the user signed in"""
         # this is the normal username and password combo for
         # creating a user.
@@ -152,6 +146,11 @@ class CustomUserAdmin(UserAdmin):
 
         # our usual set of forms to show for users
         default_fieldset = [top_row, contact_deets]
+
+        # show managed_by on the change view only
+        providers_fieldset = ("Hosting providers", {"fields": ("managed_providers",)})
+        if obj is not None:
+            default_fieldset.append(providers_fieldset)
 
         # serve the extra staff fieldsets for creating users
         if request.user.is_admin:
@@ -307,9 +306,7 @@ class HostingAdmin(GuardedModelAdmin):
 
         return NON_STAFF_LIST
 
-    # these are not really fields, but buttons
-    # see the corresponding methods
-    readonly_fields = ["preview_email_button", "start_csv_import_button"]
+    readonly_fields = ["managed_by", "preview_email_button", "start_csv_import_button"]
     ordering = ("name",)
 
     # Factories
@@ -664,8 +661,15 @@ class HostingAdmin(GuardedModelAdmin):
                         "services",
                     )
                 },
-            )
+            ),
         ]
+
+        users_fieldset = (
+            "Users who can manage this provider",
+            {"fields": ("managed_by",)},
+        )
+        if obj is not None:
+            fieldset.append(users_fieldset)
 
         admin_editable = (
             "Admin only",
@@ -689,6 +693,21 @@ class HostingAdmin(GuardedModelAdmin):
         return fieldset
 
     # Properties
+
+    @mark_safe
+    def managed_by(self, obj):
+        """
+        Returns markup for a list of all users with permissions to manage the Hostingprovider,
+        excluding those in the admin group.
+        """
+        if not obj.users:
+            return "None"
+        return "<br>".join(
+            [
+                f"<a href={u.admin_url}>{u.username}</a>"
+                for u in obj.users.exclude(groups__name="admin")
+            ]
+        )
 
     def services(self, obj):
         return ", ".join(o.name for o in obj.services.all())
@@ -858,7 +877,7 @@ class DatacenterAdmin(GuardedModelAdmin):
         DataCenterLocationInline,
     ]
     search_fields = ("name",)
-
+    readonly_fields = ["managed_by"]
     list_display = [
         "name",
         "html_website",
@@ -902,7 +921,7 @@ class DatacenterAdmin(GuardedModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_staff:
-            return ["showonwebsite", "created_by"]
+            return self.readonly_fields + ["showonwebsite", "created_by"]
         return self.readonly_fields
 
     def get_fieldsets(self, request, obj=None):
@@ -927,6 +946,14 @@ class DatacenterAdmin(GuardedModelAdmin):
                 },
             ),
         ]
+        # include "managed_by" only for the change view
+        users_fieldset = (
+            "Users who can manage this datacenter",
+            {"fields": ("managed_by",)},
+        )
+        if obj is not None:
+            fieldsets.append(users_fieldset)
+
         # we only allow green web staff to add hosting providers in the admin
         # to make these changes
         if request.user.is_admin:
@@ -934,6 +961,21 @@ class DatacenterAdmin(GuardedModelAdmin):
                 ("Associated hosting providers", {"fields": ("hostingproviders",)}),
             )
         return fieldsets
+
+    @mark_safe
+    def managed_by(self, obj):
+        """
+        Returns markup for a list of all users with permissions to manage the Datacenter,
+        excluding those in the admin group.
+        """
+        if not obj.users:
+            return "None"
+        return "<br>".join(
+            [
+                f"<a href={u.admin_url}>{u.username}</a>"
+                for u in obj.users.exclude(groups__name="admin")
+            ]
+        )
 
     def get_inlines(self, request, obj):
         """
