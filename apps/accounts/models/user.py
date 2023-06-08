@@ -111,3 +111,10 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    @property
+    def admin_url(self):
+        return reverse(
+            f"greenweb_admin:{self._meta.app_label}_{self._meta.model_name}_change",
+            args=(self.pk,),
+        )
