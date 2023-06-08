@@ -118,14 +118,22 @@ class CustomUserAdmin(UserAdmin):
         """
         Returns markup for a list of all hosting providers that the user has permissions to manage
         """
-        if obj.is_admin:
-            # do not fetch providers for admin group - we'd have to fetch all of them
-            return "This user is an admin - they have access to manage all the providers in the database"
-        if not obj.hosting_providers:
-            return "None"
-        return "<br>".join(
-            [f"<a href={hp.admin_url}>{hp.name}</a>" for hp in obj.hosting_providers]
+        provider_list = "<br>".join(
+            [
+                f"<a href={hp.admin_url}>{hp.name}</a>"
+                for hp in obj.hosting_providers_explicit_perms
+            ]
         )
+        if not obj.is_admin:
+            return provider_list
+        admin_explanation = """
+            <p>
+            This user is an admin - they have access to manage all the providers in the database.<br>
+            Below is a list of those providers for which a permission has been granted explicitly for the user, 
+            rather than based on the admin role.
+            </p><br>
+            """
+        return admin_explanation + provider_list
 
     def get_fieldsets(self, request, obj=None, *args, **kwargs):
         """Return different fieldsets depending on the user signed in"""

@@ -15,6 +15,11 @@
 		
 		{% if object_list.providers %}
 		<h3 class="text-xl pt-10">Your verified providers</h3>
+		{% if request.user.is_admin %}
+		<p>You belong to the admin group, which gives you permission to manage all providers in the database.
+			Below is a list of those providers for which a permission has been granted explicitly for you, rather than based on the group membership.
+		</p>
+		{% endif %}
 
 		{% for provider in object_list.providers %}
 			<p><a href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">{{ provider }}</a></p>
