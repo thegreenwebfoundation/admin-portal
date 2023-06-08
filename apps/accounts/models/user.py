@@ -82,14 +82,38 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
     @property
     def hosting_providers(self) -> models.QuerySet[Hostingprovider]:
         """
-        Returns a QuerySet of all Hostingproviders that the User has permissions to manage
+        Returns a QuerySet of all Hostingproviders that the User has permissions to manage.
+
+        This method is useful to verify whether a user has permission to manage the hosting provider
         """
         return get_objects_for_user(self, str(manage_provider))
 
     @property
+    def hosting_providers_explicit_perms(self) -> models.QuerySet[Hostingprovider]:
+        """
+        Returns a QuerySet of all Hostingproviders that the User has *explicit* permissions to manage,
+        not taking into consideration:
+            - global permissions
+            - group membership
+            - superuser status
+
+        This method is useful to fetch hosting providers for users that belong to the admin group.
+        """
+        return get_objects_for_user(
+            self,
+            str(manage_provider),
+            accept_global_perms=False,
+            with_superuser=False,
+            use_groups=False,
+        )
+
+    @property
     def data_centers(self) -> models.QuerySet[Hostingprovider]:
         """
-        Returns a QuerySet of all Datacenters that the User has permissions to manage
+        Returns a QuerySet of all Datacenters that the User has permissions to manage.
+
+        This method is useful to verify whether a user has permission to manage the datacenter.
+
         """
         return get_objects_for_user(self, str(manage_datacenter))
 

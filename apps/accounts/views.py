@@ -181,7 +181,9 @@ class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
         """
         Returns a dictionary with 2 querysets:
         - unapproved ProviderRequests created by the user,
-        - all HostingProviders assigned to the user
+        - all HostingProviders that the user has *explicit* object-level permissions to.
+            This means: we don't show all possible providers for users who belong to the admin group or have staff status,
+            only those where object-level permission between the user and the provider was explicitly granted.
         """
         return {
             "requests": ProviderRequest.objects.filter(
@@ -192,7 +194,7 @@ class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
                     ProviderRequestStatus.REMOVED,
                 ]
             ),
-            "providers": self.request.user.hosting_providers,
+            "providers": self.request.user.hosting_providers_explicit_perms,
         }
 
 
