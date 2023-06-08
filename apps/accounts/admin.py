@@ -659,6 +659,7 @@ class HostingAdmin(GuardedModelAdmin):
                         "country",
                         "city",
                         "services",
+                        "created_by",
                     )
                 },
             ),
@@ -715,7 +716,9 @@ class HostingAdmin(GuardedModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         read_only = super().get_readonly_fields(request, obj)
         if not request.user.is_staff:
-            return read_only + ["partner"]
+            read_only.append("partner")
+        if obj is not None:
+            read_only.append("created_by")
         return read_only
 
     def get_inlines(self, request, obj):
@@ -920,9 +923,12 @@ class DatacenterAdmin(GuardedModelAdmin):
         return qs
 
     def get_readonly_fields(self, request, obj=None):
+        read_only = super().get_readonly_fields(request, obj)
         if not request.user.is_staff:
-            return self.readonly_fields + ["showonwebsite", "created_by"]
-        return self.readonly_fields
+            read_only.append("showonwebsite")
+        if obj is not None:
+            read_only.append("created_by")
+        return read_only
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
