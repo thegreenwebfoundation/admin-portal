@@ -293,6 +293,21 @@ class Hostingprovider(models.Model):
         )
 
     @property
+    def users_explicit_perms(self) -> models.QuerySet["User"]:
+        """
+        Returns a QuerySet of all Users that have *explicit* permissions to manage this Hostingprovider,
+        not taking into consideration:
+            - group membership
+            - superuser status
+        """
+        return get_users_with_perms(
+            self,
+            only_with_perms_in=(manage_provider.codename,),
+            with_superusers=False,
+            with_group_users=False,
+        )
+
+    @property
     def is_awaiting_review(self):
         """
         Convenience check to see if this provider is labelled as
