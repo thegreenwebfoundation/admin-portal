@@ -707,8 +707,7 @@ class HostingAdmin(GuardedModelAdmin):
     @mark_safe
     def managed_by(self, obj):
         """
-        Returns markup for a list of all users with permissions to manage the Hostingprovider,
-        excluding those in the admin group.
+        Returns markup for a list of all users with *explicit* permissions to manage the Hostingprovider
         """
         if not obj.users:
             return "None"
