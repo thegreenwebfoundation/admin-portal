@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 from django import template as dj_template
-from guardian.admin import GuardedModelAdmin, AdminUserObjectPermissionsForm
+from guardian.admin import AdminUserObjectPermissionsForm, GuardedModelAdminMixin
 
 from apps.greencheck.admin import (
     GreencheckIpApproveInline,
@@ -258,8 +258,57 @@ class LabelAutocompleteView(dal_select2_views.Select2QuerySetView):
         return qs
 
 
+class ObjectPermissionsAdminMixin(GuardedModelAdminMixin):
+    managed_permissions = (manage_provider, manage_datacenter)
+
+    def get_obj_perms_base_context(self, request, obj):
+        """
+        Overwrites a method from GuardedModelAdminMixin to only display
+        the `manage_provider` permission in the permission management form.
+
+        Django creates a default set of permissions for each object, for Hostinprovider:
+        - add_hostingprovider,
+        - change_hostingprovider,
+        - delete_hostingprovider,
+        - view_hostingprovider.
+
+        We only want to display the `manage_provider` permission.
+        """
+        context = super().get_obj_perms_base_context(request, obj)
+        model_perms = context.get("model_perms")
+        managed_perms = model_perms.filter(
+            codename__in=[p.codename for p in self.managed_permissions]
+        )
+        context.update({"model_perms": managed_perms})
+        return context
+
+    def get_obj_perms_manage_user_form(self, request):
+        """
+        Overwrites a method from GuardedModelAdminMixin to return a custom form.
+        This form is used for the second step of managing object-level permissions:
+        editing a given user.
+        """
+
+        class ObjectLevelPermsUserForm(AdminUserObjectPermissionsForm):
+            def get_obj_perms_field_choices(self):
+                """
+                Overwrites a method from the parent class to filter out the default Django permissions
+                for the Hostingprovider model and only return the `manage_provider` permission.
+                """
+                perms = super().get_obj_perms_field_choices()
+                managed_perms = [
+                    p.astuple() for p in ObjectPermissionsAdminMixin.managed_permissions
+                ]
+                return [p for p in perms if p in managed_perms]
+
+        return ObjectLevelPermsUserForm
+
+
 @admin.register(Hostingprovider, site=greenweb_admin)
-class HostingAdmin(GuardedModelAdmin):
+class HostingAdmin(
+    ObjectPermissionsAdminMixin,
+    admin.ModelAdmin,
+):
     form = forms.HostingAdminForm
     list_filter = [
         "archived",
@@ -718,43 +767,6 @@ class HostingAdmin(GuardedModelAdmin):
             ]
         )
 
-    def get_obj_perms_base_context(self, request, obj):
-        """
-        Overwrites a method from GuardedModelAdminMixin to only display
-        the `manage_provider` permission in the permission management form.
-
-        Django creates a default set of permissions for each object, for Hostinprovider:
-        - add_hostingprovider,
-        - change_hostingprovider,
-        - delete_hostingprovider,
-        - view_hostingprovider.
-
-        We only want to display the `manage_provider` permission.
-        """
-        context = super().get_obj_perms_base_context(request, obj)
-        model_perms = context.get("model_perms")
-        managed_perms = model_perms.filter(codename=manage_provider.codename)
-        context.update({"model_perms": managed_perms})
-        return context
-
-    def get_obj_perms_manage_user_form(self, request):
-        """
-        Overwrites a method from GuardedModelAdminMixin to return a custom form.
-        This form is used for the second step of managing object-level permissions:
-        editing a given user.
-        """
-
-        class ObjectLevelPermsUserForm(AdminUserObjectPermissionsForm):
-            def get_obj_perms_field_choices(self):
-                """
-                Overwrites a method from the parent class to filter out the default Django permissions
-                for the Hostingprovider model and only return the `manage_provider` permission.
-                """
-                perms = super().get_obj_perms_field_choices()
-                return [perm for perm in perms if perm == manage_provider.astuple()]
-
-        return ObjectLevelPermsUserForm
-
     def services(self, obj):
         return ", ".join(o.name for o in obj.services.all())
 
@@ -914,7 +926,7 @@ class DatacenterCoolingInline(admin.TabularInline):
 
 
 @admin.register(Datacenter, site=greenweb_admin)
-class DatacenterAdmin(GuardedModelAdmin):
+class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
     form = forms.DatacenterAdminForm
     inlines = [
         # DatacenterCertificateInline,
