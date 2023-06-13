@@ -103,7 +103,7 @@ class CustomUserAdmin(UserAdmin):
     model = User
     search_fields = ("username", "email")
     list_display = ["username", "email", "last_login", "is_staff"]
-    readonly_fields = ("managed_providers",)
+    readonly_fields = ("managed_providers", "managed_datacenters")
 
     def get_queryset(self, request, *args, **kwargs):
         """
@@ -116,26 +116,45 @@ class CustomUserAdmin(UserAdmin):
         return qs
 
     @mark_safe
+    def _managed_objects_markup(self, user, object_list, objects_name):
+        """
+        A helper method that returns markup for a list of all objects
+        that the user has permissions to manage,
+        providing a custom explanation for the admin users.
+        """
+        object_list_markup = "<br>".join(
+            [f"<a href={obj.admin_url}>{obj.name}</a>" for obj in object_list]
+        )
+
+        if not user.is_admin:
+            return object_list_markup
+
+        admin_explanation = f"""
+            <p>
+            This user is an admin - they have access to manage all the {objects_name} in the database.<br>
+            Below is a list of those {objects_name} for which a permission has been granted explicitly for the user, 
+            rather than based on the admin role.
+            </p><br>
+            """
+        return admin_explanation + object_list_markup
+
+    @mark_safe
     def managed_providers(self, obj):
         """
         Returns markup for a list of all hosting providers that the user has permissions to manage
         """
-        provider_list = "<br>".join(
-            [
-                f"<a href={hp.admin_url}>{hp.name}</a>"
-                for hp in obj.hosting_providers_explicit_perms
-            ]
+        return self._managed_objects_markup(
+            obj, obj.hosting_providers_explicit_perms, "providers"
         )
-        if not obj.is_admin:
-            return provider_list
-        admin_explanation = """
-            <p>
-            This user is an admin - they have access to manage all the providers in the database.<br>
-            Below is a list of those providers for which a permission has been granted explicitly for the user, 
-            rather than based on the admin role.
-            </p><br>
-            """
-        return admin_explanation + provider_list
+
+    @mark_safe
+    def managed_datacenters(self, obj):
+        """
+        Returns markup for a list of all data centers that the user has permissions to manage
+        """
+        return self._managed_objects_markup(
+            obj, obj.data_centers_explicit_perms, "data centers"
+        )
 
     def get_fieldsets(self, request, obj=None, *args, **kwargs):
         """Return different fieldsets depending on the user signed in"""
@@ -148,7 +167,7 @@ class CustomUserAdmin(UserAdmin):
 
         # what we show for internal staff
         staff_fieldsets = (
-            "Permissions",
+            "User status and group membership",
             {
                 "fields": ("is_active", "is_staff", "groups"),
             },
@@ -157,10 +176,12 @@ class CustomUserAdmin(UserAdmin):
         # our usual set of forms to show for users
         default_fieldset = [top_row, contact_deets]
 
-        # show managed_by on the change view only
+        # show managed providers and datacenters on the change view only
         providers_fieldset = ("Hosting providers", {"fields": ("managed_providers",)})
+        datacenters_fieldset = ("Data centers", {"fields": ("managed_datacenters",)})
         if obj is not None:
             default_fieldset.append(providers_fieldset)
+            default_fieldset.append(datacenters_fieldset)
 
         # serve the extra staff fieldsets for creating users
         if request.user.is_admin:
@@ -172,7 +193,7 @@ class CustomUserAdmin(UserAdmin):
                 *default_fieldset,
                 staff_fieldsets,
                 (
-                    "Permissions",
+                    "User status and group membership",
                     {
                         "fields": (
                             "is_active",

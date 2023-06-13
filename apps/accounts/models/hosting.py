@@ -66,6 +66,10 @@ class Datacenter(models.Model):
         )
 
     @property
+    def admin_url(self) -> str:
+        return reverse("greenweb_admin:accounts_datacenter_change", args=[str(self.id)])
+
+    @property
     def city(self):
         """
         Return the city this datacentre is

@@ -13,7 +13,7 @@ from guardian.mixins import GuardianUserMixin
 from guardian.shortcuts import get_objects_for_user
 
 from ..permissions import manage_provider, manage_datacenter
-from .hosting import Hostingprovider
+from .hosting import Hostingprovider, Datacenter
 
 
 class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
@@ -108,7 +108,7 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
         )
 
     @property
-    def data_centers(self) -> models.QuerySet[Hostingprovider]:
+    def data_centers(self) -> models.QuerySet[Datacenter]:
         """
         Returns a QuerySet of all Datacenters that the User has permissions to manage.
 
@@ -116,6 +116,25 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
 
         """
         return get_objects_for_user(self, str(manage_datacenter))
+
+    @property
+    def data_centers_explicit_perms(self) -> models.QuerySet[Datacenter]:
+        """
+        Returns a QuerySet of all Datacenters that the User has *explicit* permissions to manage,
+        not taking into consideration:
+            - global permissions
+            - group membership
+            - superuser status
+
+        This method is useful to fetch data centers for users that belong to the admin group.
+        """
+        return get_objects_for_user(
+            self,
+            str(manage_datacenter),
+            accept_global_perms=False,
+            with_superuser=False,
+            use_groups=False,
+        )
 
     def get_absolute_url(self):
         return reverse("user_edit", args=[str(self.id)])
