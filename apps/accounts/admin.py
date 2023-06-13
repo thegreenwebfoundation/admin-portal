@@ -1103,7 +1103,7 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
         return "<br>".join(
             [
                 f"<a href={u.admin_url}>{u.username}</a>"
-                for u in obj.users.exclude(groups__name="admin")
+                for u in obj.users_explicit_perms
             ]
         )
 
