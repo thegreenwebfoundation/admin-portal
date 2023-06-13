@@ -66,6 +66,21 @@ class Datacenter(models.Model):
         )
 
     @property
+    def users_explicit_perms(self) -> models.QuerySet["User"]:
+        """
+        Returns a QuerySet of all Users that have *explicit* permissions to manage this Datacenter,
+        not taking into consideration:
+            - group membership
+            - superuser status
+        """
+        return get_users_with_perms(
+            self,
+            only_with_perms_in=(manage_datacenter.codename,),
+            with_superusers=False,
+            with_group_users=False,
+        )
+
+    @property
     def admin_url(self) -> str:
         return reverse("greenweb_admin:accounts_datacenter_change", args=[str(self.id)])
 
