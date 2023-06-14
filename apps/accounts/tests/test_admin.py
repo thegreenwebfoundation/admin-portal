@@ -10,7 +10,7 @@ from django.contrib.auth import models as auth_models
 from guardian.shortcuts import assign_perm
 
 from apps.accounts.models.hosting import Hostingprovider
-from apps.accounts.permissions import manage_datacenter
+from apps.accounts.permissions import manage_datacenter, manage_provider
 from apps.greencheck.tests import setup_domains
 from conftest import ProviderRequestFactory
 
@@ -64,7 +64,6 @@ class TestDatacenterAdmin:
 
         Simulate the journey for a new user accessing a datacenter they have permissions to in the admin
         """
-        datacenter.user = sample_hoster_user
         datacenter.save()
         assign_perm(manage_datacenter.codename, sample_hoster_user, datacenter)
 
@@ -125,7 +124,6 @@ class TestDatacenterAdmin:
         gcip_admin = ac_admin.DatacenterAdmin(
             ac_models.Datacenter, admin_site.greenweb_admin
         )
-
         dc_update_path = urls.reverse(
             "greenweb_admin:accounts_datacenter_change", args=[datacenter.id]
         )
@@ -146,6 +144,22 @@ class TestDatacenterAdmin:
         # to the datacentre, or view internal administration notes
         assert ac_admin.DatacenterNoteInline not in inlines
         assert "Associated hosting providers" not in fieldset_names
+
+    def test_list_of_users_who_can_manage_dc_is_displayed(
+        self, db, sample_hoster_user, greenweb_staff_user, datacenter
+    ):
+        # given: 2 distinct users have explicit permissions to manage the datacenter
+        assign_perm(str(manage_datacenter), sample_hoster_user, datacenter)
+        assign_perm(str(manage_datacenter), greenweb_staff_user, datacenter)
+
+        # when the datacenter admin page is accessed by one of the users
+        dc_admin = ac_admin.DatacenterAdmin(
+            ac_models.Datacenter, admin_site.greenweb_admin
+        )
+
+        # Then: they should see a list of 2 users listed on that page
+        assert sample_hoster_user.username in dc_admin.managed_by(datacenter)
+        assert greenweb_staff_user.username in dc_admin.managed_by(datacenter)
 
 
 class TestHostingProviderAdmin:
@@ -366,8 +380,29 @@ class TestHostingProviderAdmin:
         assert len(resp.context["results"]) == archived[1]
         assert resp.status_code == 200
 
+    def test_list_of_users_who_can_manage_provider_is_displayed(
+        self, db, sample_hoster_user, greenweb_staff_user, hosting_provider
+    ):
+        hosting_provider.save()
+        # given: 2 distinct users have explicit permissions to manage the datacenter
+        assign_perm(str(manage_provider), sample_hoster_user, hosting_provider)
+        assign_perm(str(manage_provider), greenweb_staff_user, hosting_provider)
 
-class TestUserCreationAdmin:
+        # when the datacenter admin page is accessed by one of the users
+        provider_admin = ac_admin.HostingAdmin(
+            ac_models.Hostingprovider, admin_site.greenweb_admin
+        )
+
+        # Then: they should see a list of 2 users listed on that page
+        assert sample_hoster_user.username in provider_admin.managed_by(
+            hosting_provider
+        )
+        assert greenweb_staff_user.username in provider_admin.managed_by(
+            hosting_provider
+        )
+
+
+class TestUserAdmin:
     """
     Do the user creation forms work as expected,
     and account for any legacy fields we have from earlier
@@ -412,6 +447,22 @@ class TestUserCreationAdmin:
         created_user = ac_models.User.objects.get(email=new_user_data["email"])
         for group in created_user.groups.all():
             assert group in provider_groups
+
+    def test_user_admin_displays_managed_providers_and_dcs(
+        self, db, sample_hoster_user, hosting_provider, datacenter
+    ):
+        # given: a user can manage 1 provider and 1 datacenter
+        hosting_provider.save()
+        datacenter.save()
+        assign_perm(str(manage_provider), sample_hoster_user, hosting_provider)
+        assign_perm(str(manage_datacenter), sample_hoster_user, datacenter)
+
+        # when the User admin page is accessed
+        user_admin = ac_admin.CustomUserAdmin(ac_models.User, admin_site.greenweb_admin)
+
+        # Then: they should see a list of managed providers and datacenters
+        assert hosting_provider.name in user_admin.managed_providers(sample_hoster_user)
+        assert datacenter.name in user_admin.managed_datacenters(sample_hoster_user)
 
 
 def test_provider_request_accessible_by_admin(
