@@ -33,12 +33,14 @@ class ProviderRequestStatus(models.TextChoices):
     - APPROVED: GWF staff approved the request
     - REJECTED: GWF staff rejected the request (completely)
     - OPEN: GWF staff requested some changes from the provider
+    - REMOVED: This request was not rejected, should no longer be shown to the user.
     """
 
     PENDING_REVIEW = "Pending review"
     APPROVED = "Approved"
     REJECTED = "Rejected"
     OPEN = "Open"
+    REMOVED = "Removed"
 
 
 class ProviderRequestService(tag_models.TaggedItemBase):

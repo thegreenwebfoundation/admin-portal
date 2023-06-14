@@ -38,6 +38,7 @@ from waffle.admin import FlagAdmin
 from apps.greencheck.models import GreencheckIpApprove, GreencheckIp
 from apps.greencheck.models import GreencheckASNapprove
 
+
 from apps.greencheck.forms import ImporterCSVForm
 
 
@@ -72,6 +73,7 @@ from .models import (
     ProviderRequestLocation,
     ProviderRequestEvidence,
     ProviderRequestConsent,
+    ProviderRequestStatus,
     Service,
 )
 
@@ -552,7 +554,6 @@ class HostingAdmin(admin.ModelAdmin):
 
         Called multiple times - once for each formset on a model.
         """
-
         # We need to let the form know if this an addition or a change
         # so that approval record is saved correctly in case of a
         # non-staff user.
@@ -1199,9 +1200,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "location_import_required",
         "missing_network_explanation",
     )
-    actions = [
-        "mark_approved",
-    ]
+    actions = ["mark_approved", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"
 
     def send_approval_email(self, provider_request, request):
@@ -1264,3 +1263,43 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
                     """
                 )
                 self.message_user(request, message=message, level=messages.ERROR)
+
+    @admin.action(description="Reject", permissions=["change"])
+    def mark_rejected(self, request, queryset):
+        for provider_request in queryset:
+            provider_request.status = ProviderRequestStatus.REJECTED.value
+            provider_request.save()
+
+            message = mark_safe(
+                f"""
+                    Request id <em>{provider_request.id}</em> for provider: \
+                    <em>{provider_request.name}</em> has been rejected.
+                    They creator of this request has <em>not</em> been contacted yet -
+                    you will need to contact them if appropriate.
+                    """
+            )
+            self.message_user(request, message=message, level=messages.SUCCESS)
+
+    @admin.action(description="Remove", permissions=["change"])
+    def mark_removed(self, request, queryset):
+        """
+        Mark the selected verification a 'removed', and remove it from the
+        dashboard for a given user. Used when we do not want to delete data,
+        but it doesn't make sense to have the request lingering in a user's
+        dashboard either.
+        """
+        for provider_request in queryset:
+            provider_request.status = ProviderRequestStatus.REMOVED.value
+            provider_request.save()
+
+            message = mark_safe(
+                f"""
+                    Request id <em>{provider_request.id}</em> for provider: \
+                    <em>{provider_request.name}</em> has been removed.
+                    The request has not been deleted, but will not show up in a user's
+                    provider portal view.
+                    The creator of this request has <em>not</em> been contacted yet - you
+                    will need to contact them if appropriate.
+                    """
+            )
+            self.message_user(request, message=message, level=messages.SUCCESS)

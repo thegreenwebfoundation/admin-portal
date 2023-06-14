@@ -186,7 +186,12 @@ class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
         return {
             "requests": ProviderRequest.objects.filter(
                 created_by=self.request.user
-            ).exclude(status=ProviderRequestStatus.APPROVED),
+            ).exclude(
+                status__in=[
+                    ProviderRequestStatus.APPROVED,
+                    ProviderRequestStatus.REMOVED,
+                ]
+            ),
             # TODO: change this when a user can have multiple providers assigned
             "providers": Hostingprovider.objects.filter(
                 id__in=[self.request.user.hostingprovider_id]
