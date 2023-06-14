@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import markdown
 import pytest
 from django import urls
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth import models as auth_models
 from guardian.shortcuts import assign_perm
 
@@ -388,7 +389,7 @@ class TestHostingProviderAdmin:
         assign_perm(str(manage_provider), sample_hoster_user, hosting_provider)
         assign_perm(str(manage_provider), greenweb_staff_user, hosting_provider)
 
-        # when the datacenter admin page is accessed by one of the users
+        # when the provider admin page is accessed by one of the users
         provider_admin = ac_admin.HostingAdmin(
             ac_models.Hostingprovider, admin_site.greenweb_admin
         )
@@ -400,6 +401,67 @@ class TestHostingProviderAdmin:
         assert greenweb_staff_user.username in provider_admin.managed_by(
             hosting_provider
         )
+
+    def test_admins_can_access_permissions_management(
+        self, db, greenweb_staff_user, hosting_provider, sample_hoster_user
+    ):
+        hosting_provider.save()
+        # when the provider admin page is accessed by admin user
+        provider_admin = ac_admin.HostingAdmin(
+            ac_models.Hostingprovider, admin_site.greenweb_admin
+        )
+        request = MagicMock()
+        request.user = greenweb_staff_user
+
+        perm_mgmt_view = provider_admin.obj_perms_manage_view(
+            request, str(hosting_provider.id)
+        )
+        user_perm_mgmt_view = provider_admin.obj_perms_manage_user_view(
+            request, str(hosting_provider.id), str(sample_hoster_user.id)
+        )
+        group_perm_mgmt_view = provider_admin.obj_perms_manage_group_view(
+            request, str(hosting_provider.id), str(sample_hoster_user.groups.first().id)
+        )
+
+        # then: permissions-related views respond with 200 OK and don't include default perms
+        for view in [perm_mgmt_view, user_perm_mgmt_view, group_perm_mgmt_view]:
+            assert view.status_code == 200
+            assert manage_provider.description in str(view.content)
+            assert not any(
+                default_perm in str(view.content)
+                for default_perm in [
+                    "Add provider",
+                    "Change provider",
+                    "Delete provider",
+                ]
+            )
+
+    def test_regular_users_cannot_access_permissions_management(
+        self, db, hosting_provider, sample_hoster_user
+    ):
+        hosting_provider.save()
+        # when the provider admin page is accessed by admin user
+        provider_admin = ac_admin.HostingAdmin(
+            ac_models.Hostingprovider, admin_site.greenweb_admin
+        )
+        request = MagicMock()
+        request.user = sample_hoster_user
+
+        # then: permissions-related views raise 403
+        with pytest.raises(PermissionDenied):
+            provider_admin.obj_perms_manage_view(request, str(hosting_provider.id))
+
+        with pytest.raises(PermissionDenied):
+            provider_admin.obj_perms_manage_user_view(
+                request, str(hosting_provider.id), str(sample_hoster_user.id)
+            )
+
+        with pytest.raises(PermissionDenied):
+            provider_admin.obj_perms_manage_group_view(
+                request,
+                str(hosting_provider.id),
+                str(sample_hoster_user.groups.first().id),
+            )
 
 
 class TestUserAdmin:
