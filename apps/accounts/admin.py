@@ -282,7 +282,15 @@ class LabelAutocompleteView(dal_select2_views.Select2QuerySetView):
 
 class ObjectPermissionsAdminMixin(GuardedModelAdminMixin):
     """
-    Define a custom mixin for object-level permissions to tweak the default GuardedModelAdminMixin.
+    Define a custom mixin for object-level permissions to tweak GuardedModelAdminMixin
+    provided by django-guardian.
+
+    Scope of modifications:
+    - only admin users can access the permission management views
+    - the button to access permission management is only displayed to admins
+    - list of available permissions is filtered out to only contain `allowed_permissions`
+
+    Docs: https://django-guardian.readthedocs.io/en/stable/api/guardian.admin.html#guardedmodeladminmixin
     """
 
     # maintain a list of permissions that are managed via guardian admin
@@ -330,7 +338,7 @@ class ObjectPermissionsAdminMixin(GuardedModelAdminMixin):
         - delete_hostingprovider,
         - view_hostingprovider.
 
-        We only want to filter out the list of permissions
+        We filter out the list of permissions
         to only display those defined in `allowed_permissions`
         """
         context = super().get_obj_perms_base_context(request, obj)
@@ -825,8 +833,6 @@ class HostingAdmin(
         """
         Returns markup for a list of all users with *explicit* permissions to manage the Hostingprovider
         """
-        if not obj.users:
-            return "None"
         return "<br>".join(
             [
                 f"<a href={u.admin_url}>{u.username}</a>"
@@ -1098,8 +1104,6 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
         Returns markup for a list of all users with permissions to manage the Datacenter,
         excluding those in the admin group.
         """
-        if not obj.users:
-            return "None"
         return "<br>".join(
             [
                 f"<a href={u.admin_url}>{u.username}</a>"
