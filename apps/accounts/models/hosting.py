@@ -1,6 +1,8 @@
 import logging
 
 import secrets
+import typing
+import datetime
 from django.db import models
 from django.conf import settings
 from django_countries.fields import CountryField
@@ -284,8 +286,25 @@ class Hostingprovider(models.Model):
         except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
             return None
 
+    @property
     def public_supporting_evidence(self):
+        """
+        Return the supporting evidence that has explictly been marked as public
+        by the users uploading it to the database
+        """
         return self.supporting_documents.filter(public=True)
+
+    @property
+    def evidence_expiry_date(self) -> typing.List[datetime.date]:
+        """
+        Return the date of the most recent piece of supporting evidence
+        for this provider. This would act as the effective expiry date
+        for the listing.
+        """
+        most_recent_evidence = self.supporting_documents.all().order_by("-valid_to")
+
+        if most_recent_evidence:
+            return most_recent_evidence.first().valid_to
 
     @property
     def ip_range_count(self) -> int:
