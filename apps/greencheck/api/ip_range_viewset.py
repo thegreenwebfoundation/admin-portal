@@ -95,15 +95,11 @@ class IPRangeViewSet(
         """
 
         user = self.request.user
-
-        if user.is_authenticated:
-            # TODO: come up with a better solution for choosing a hosting provider in this API request
-            provider = self.request.user.hosting_providers.first()
-
-            if provider is not None:
-                return provider.greencheckip_set.filter(active=True)
-
-        return []
+        if user is None or user.is_anonymous:
+            return []
+        return queryset.filter(active=True).filter(
+            hostingprovider__in=user.hosting_providers
+        )
 
     def perform_destroy(self, instance):
         """
