@@ -134,7 +134,7 @@ class Datacenter(models.Model):
         indexes = [
             models.Index(fields=["name"], name="dc_name"),
         ]
-        permissions = [manage_datacenter.astuple()]
+        permissions = (manage_datacenter.astuple(),)
 
 
 class DatacenterClassification(models.Model):
@@ -534,7 +534,7 @@ class Hostingprovider(models.Model):
             models.Index(fields=["archived"], name="hp_archived"),
             models.Index(fields=["showonwebsite"], name="hp_showonwebsite"),
         ]
-        permissions = [manage_provider.astuple()]
+        permissions = (manage_provider.astuple(),)
 
 
 class ProviderSharedSecret(TimeStampedModel):
