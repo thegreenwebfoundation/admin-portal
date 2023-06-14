@@ -90,7 +90,6 @@ class ASNViewSet(
 
         http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html#list
         """
-
         user = self.request.user
         if user is None or user.is_anonymous:
             return []

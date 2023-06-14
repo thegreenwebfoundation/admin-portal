@@ -4,10 +4,14 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APIRequestFactory
+from guardian.shortcuts import assign_perm
 
 from .. import models as gc_models
 from .. import viewsets as gc_viewsets
+
+from ..factories import HostingProviderFactory
 from ...accounts import models as ac_models
+from apps.accounts.permissions import manage_provider
 
 User = get_user_model()
 
@@ -102,6 +106,38 @@ class TestASNViewSetList:
         response.data["asn"] == green_asn.asn
         response.data["id"] == green_asn.id
         response.data["hostingprovider"] == green_asn.hostingprovider.id
+
+    def test_get_asn_as_user_with_multiple_hostingproviders(
+        self,
+        sample_hoster_user: User,
+    ):
+        # given: single user manages 2 hosting providers with different ASN assigned
+        hp1 = HostingProviderFactory.create(created_by=sample_hoster_user)
+        hp2 = HostingProviderFactory.create(created_by=sample_hoster_user)
+        asn1 = gc_models.GreencheckASN.objects.create(
+            active=True, asn=123, hostingprovider=hp1
+        )
+        asn2 = gc_models.GreencheckASN.objects.create(
+            active=True, asn=456, hostingprovider=hp2
+        )
+        assign_perm(str(manage_provider), sample_hoster_user, hp1)
+        assign_perm(str(manage_provider), sample_hoster_user, hp2)
+
+        # when: retrieving a list of ASNs
+        request = APIRequestFactory().get(reverse("asn-list"))
+        request.user = sample_hoster_user
+        view = gc_viewsets.ASNViewSet.as_view({"get": "list"})
+        response = view(request)
+
+        # then: results from across different providers are returned
+        assert response.status_code == 200
+        assert len(response.data) == 2
+
+        assert response.data[0]["id"] == asn1.id
+        assert response.data[0]["hostingprovider"] == hp1.id
+
+        assert response.data[1]["id"] == asn2.id
+        assert response.data[1]["hostingprovider"] == hp2.id
 
     def test_get_asn_create(
         self,
