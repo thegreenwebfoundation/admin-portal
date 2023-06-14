@@ -5,12 +5,15 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from django.urls import reverse
 from rest_framework.test import APIRequestFactory
+from guardian.shortcuts import assign_perm
 
 from apps.greencheck.models import GreencheckIp
+from apps.greencheck.factories import HostingProviderFactory
 
 from apps.greencheck.viewsets import IPRangeViewSet
 
 from ...accounts import models as ac_models
+from apps.accounts.permissions import manage_provider
 
 User = get_user_model()
 
@@ -72,6 +75,37 @@ class TestIpRangeViewSetList:
         assert ip_range["ip_start"] == green_ip.ip_start
         assert ip_range["ip_end"] == green_ip.ip_end
         assert ip_range["hostingprovider"] == green_ip.hostingprovider.id
+
+    def test_get_ip_ranges_as_user_with_multiple_hostingproviders(
+        self, sample_hoster_user: User
+    ):
+        # given: single user manages 2 hosting providers with different ASN assigned
+        hp1 = HostingProviderFactory.create(created_by=sample_hoster_user)
+        hp2 = HostingProviderFactory.create(created_by=sample_hoster_user)
+        ip1 = GreencheckIp.objects.create(
+            active=True, hostingprovider=hp1, ip_start="127.0.0.1", ip_end="127.0.0.2"
+        )
+        ip2 = GreencheckIp.objects.create(
+            active=True, hostingprovider=hp2, ip_start="127.0.0.3", ip_end="127.0.0.4"
+        )
+        assign_perm(str(manage_provider), sample_hoster_user, hp1)
+        assign_perm(str(manage_provider), sample_hoster_user, hp2)
+
+        # when: retrieving a list of ASNs
+        request = APIRequestFactory().get(reverse("ip-range-list"))
+        request.user = sample_hoster_user
+        view = IPRangeViewSet.as_view({"get": "list"})
+        response = view(request)
+
+        # then: results from across different providers are returned
+        assert response.status_code == 200
+        assert len(response.data) == 2
+
+        assert response.data[0]["id"] == ip1.id
+        assert response.data[0]["hostingprovider"] == hp1.id
+
+        assert response.data[1]["id"] == ip2.id
+        assert response.data[1]["hostingprovider"] == hp2.id
 
     def test_get_ip_ranges_for_hostingprovider_with_no_active_ones(
         self,
