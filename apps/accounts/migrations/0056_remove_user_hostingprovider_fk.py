@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("accounts", "0055_global_admin_permissions"),
+        ("accounts", "0055_populate_existing_permissions"),
     ]
 
     operations = [
