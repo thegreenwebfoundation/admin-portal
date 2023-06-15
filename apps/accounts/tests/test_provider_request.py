@@ -525,6 +525,38 @@ def test_approve_creates_hosting_provider(db):
     assert hp.website == pr.website
     assert hp.request == pr
 
+    # provider is visible by default
+    # appropriate tag is added
+    assert hp.showonwebsite is True
+    assert "up-to-date" in hp.staff_labels.slugs()
+    # "other-none" is the label condition check for
+    # when someone is just trying to get a site marked
+    # as green when they don't offer hosted services
+    assert "other-none" not in hp.services.slugs()
+
+
+def test_approve_supports_orgs_not_offering_hosted_services(db):
+    # given: a verification request for an organisation that does
+    # not offer any services, but we still want ot recognise as green
+    other_none_service = ServiceFactory(
+        slug="other-none",
+        name="Other: we do not offer any of these services",
+    )
+    pr = ProviderRequestFactory.create(services=[other_none_service])
+
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+
+    # when: the request is approved
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+
+    # provider is visible by default
+    # appropriate labels and services are listed
+    assert hp.showonwebsite is False
+    assert "up-to-date" in hp.staff_labels.slugs()
+    assert "other-none" in hp.services.slugs()
+
 
 def test_approve_creates_ip_ranges(db):
     # given: a provider request with multiple IP ranges
