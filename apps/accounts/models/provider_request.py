@@ -190,6 +190,16 @@ class ProviderRequest(TimeStampedModel):
 
         # set services (https://django-taggit.readthedocs.io/en/latest/api.html)
         hp.services.set(list(self.services.all()))
+        hp.staff_labels.add("up-to-date")
+
+        # we use the tag with the slug "other-none" for
+        # organisations that we would need to recognise as
+        # using green energy, but who do not offer hosted services
+        if "other-none" in hp.services.slugs():
+            hp.showonwebsite = False
+        else:
+            hp.showonwebsite = True
+
         hp.save()
 
         # set user
