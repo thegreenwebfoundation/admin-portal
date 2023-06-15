@@ -56,6 +56,7 @@ from .models import (
     DatacenterClassification,
     DatacenterCooling,
     DatacenterNote,
+    DataCenterLocation,
     HostingCommunication,
     HostingproviderCertificate,
     Hostingprovider,
@@ -227,6 +228,11 @@ class DatacenterNoteInline(admin.StackedInline):
 class DataCenterSupportingDocumentInline(admin.StackedInline):
     extra = 0
     model = DatacenterSupportingDocument
+
+
+class DataCenterLocationInline(admin.StackedInline):
+    extra = 0
+    model = DataCenterLocation
 
 
 @admin.register(Service, site=greenweb_admin)
@@ -885,6 +891,7 @@ class DatacenterAdmin(admin.ModelAdmin):
         # DatacenterCoolingInline,
         DataCenterSupportingDocumentInline,
         DatacenterNoteInline,
+        DataCenterLocationInline,
     ]
     search_fields = ("name",)
 
