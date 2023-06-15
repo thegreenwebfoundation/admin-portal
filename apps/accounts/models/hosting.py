@@ -295,7 +295,7 @@ class Hostingprovider(models.Model):
         return self.supporting_documents.filter(public=True)
 
     @property
-    def evidence_expiry_date(self) -> typing.List[datetime.date]:
+    def evidence_expiry_date(self) -> typing.Optional[datetime.date]:
         """
         Return the date of the most recent piece of supporting evidence
         for this provider. This would act as the effective expiry date
