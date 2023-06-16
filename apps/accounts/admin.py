@@ -282,11 +282,11 @@ class HostingAdmin(admin.ModelAdmin):
         filters.CountryFilter,
     ]
     inlines = [
-        HostingProviderSupportingDocumentInline,
-        GreencheckAsnInline,
-        GreencheckIpInline,
-        GreencheckAsnApproveInline,
         GreencheckIpApproveInline,
+        GreencheckIpInline,
+        GreencheckAsnInline,
+        GreencheckAsnApproveInline,
+        HostingProviderSupportingDocumentInline,
         HostingProviderNoteInline,
     ]
     search_fields = ("name",)
@@ -761,6 +761,20 @@ class HostingAdmin(admin.ModelAdmin):
                 if inline not in admin_inlines:
                     filtered_inlines.append(inline)
             return filtered_inlines
+
+        if obj.ip_range_count > 1000:
+            # remove the inline with
+            # apps.greencheck.admin.GreencheckIpInline
+            inlines = [
+                inline for inline in inlines if inline.__name__ != "GreencheckIpInline"
+            ]
+
+        if obj.ip_approval_count > 1000:
+            inlines = [
+                inline
+                for inline in inlines
+                if inline.__name__ != "GreencheckIpApproveInline"
+            ]
 
         return inlines
 
