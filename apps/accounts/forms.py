@@ -389,9 +389,19 @@ class ExtraNetworkInfoForm(forms.ModelForm):
         widget=forms.widgets.Textarea,
     )
 
+    network_import_required = forms.BooleanField(
+        label="Network location import required",
+        help_text=(
+            "Select this option if you have a CSV file of network addresses to import. "
+            "We will contact you separately to arrange a bulk import of your data."
+        ),
+        initial=False,
+        required=False,
+    )
+
     class Meta:
         model = ac_models.ProviderRequest
-        fields = ["missing_network_explanation"]
+        fields = ["missing_network_explanation", "network_import_required"]
 
 
 class NetworkFootprintForm(MultiModelForm):
