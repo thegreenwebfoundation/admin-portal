@@ -228,6 +228,21 @@ def wizard_form_network_explanation_only():
 
 
 @pytest.fixture()
+def wizard_form_network_import_required_only():
+    """
+    Returns valid data for step NETWORK_FOOTPRINT of the wizard
+    as expected by the POST request.
+    """
+    return {
+        "ips-TOTAL_FORMS": "0",
+        "ips-INITIAL_FORMS": "0",
+        "asns-TOTAL_FORMS": "0",
+        "asns-INITIAL_FORMS": "0",
+        "extra-network_import_required": "on",
+    }
+
+
+@pytest.fixture()
 def wizard_form_empty_network_data():
     """
     Returns a form payload to simulate someone adding neither network info
@@ -265,6 +280,19 @@ class TestNetworkFootprintForm:
 
         # given a valid submission
         multiform = NetworkFootprintForm(wizard_form_network_explanation_only)
+
+        # then our form should be valid
+        assert multiform.is_valid()
+
+    def test_form_valid_with_just_network_import_required(
+        self, wizard_form_network_import_required_only
+    ):
+        """
+        When we have no network data, but the user has marked that they have structured
+        data to import
+        """
+        # given a valid submission
+        multiform = NetworkFootprintForm(wizard_form_network_import_required_only)
 
         # then our form should be valid
         assert multiform.is_valid()
