@@ -1198,6 +1198,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "status",
         "approved_at",
         "location_import_required",
+        "network_import_required",
         "missing_network_explanation",
     )
     actions = ["mark_approved", "mark_rejected", "mark_removed"]

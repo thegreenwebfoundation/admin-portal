@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0041_alter_providerrequest_status'),
+        ("accounts", "0041_alter_providerrequest_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='providerrequest',
-            name='missing_network_explanation',
-            field=models.TextField(blank=True, help_text='If an organisation is not listing the IP Ranges and AS numbers we need to be able to explain why to list them as green.', verbose_name='Reason for no IP / AS data'),
+            model_name="providerrequest",
+            name="missing_network_explanation",
+            field=models.TextField(
+                blank=True,
+                help_text="If an organisation is not listing IP Ranges and AS numbers, we need a way to identify them in network lookups.",
+                verbose_name="Reason for no IP / AS data",
+            ),
         ),
     ]
