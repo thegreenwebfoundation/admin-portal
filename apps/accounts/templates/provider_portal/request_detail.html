@@ -4,129 +4,143 @@
 
 {% block content %}
 
-<section class="prose mx-auto">
+  <section class="prose mx-auto">
 
-	<header class="">
-		<p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">< Back to requests home</a></p>
+    <header class="">
+      <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">< Back to requests home</a></p>
 
-		<h1 class="text-6xl mb-0"><span class="uppercase">Summary of request</h1>
-		
-		<p>Submitted on: {{ object.created }}</p>
-		<p>Status: <span class="uppercase">{{ object.status }}</span></p>
+      <h1 class="text-6xl mb-0"><span class="uppercase">Summary of request</h1>
 
-		{% if object.approved_at %}
-		<p>Approved on: <span>{{ object.approved_at }}</span></p>
-		{% endif %}
+        <p>Submitted on: {{ object.created }}</p>
+        <p>Status: <span class="uppercase">{{ object.status }}</span></p>
 
-		{% if object.status|lower == "pending review" %}
-		If you want to update the information relating to this provider, please get in touch using <a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/support-form/">our support form</a>.
-		{% endif %}
-	</header>
+        {% if object.approved_at %}
+          <p>Approved on: <span>{{ object.approved_at }}</span></p>
+        {% endif %}
 
-	<article class="pb-12">
+        {% if object.status|lower == "pending review" %}
+          If you want to update the information relating to this provider, please get in touch using <a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/support-form/">our support form</a>.
+        {% endif %}
+      </header>
 
-		<h2>Details submitted</h2>
+      <article class="pb-12">
 
-		<h3 class="text-2xl">About this provider</h3>
-		<table class="table-fixed">
-			<tr>
-				<td class="w-64">Organisation name</td>
-				<td>{{ object.name }}</td>
-			</tr>
-			<tr>
-				<td>Website</td>
-				<td>{{ object.website }}</td>
-			</tr>
-			<tr>
-				<td>Description</td>
-				<td>{{ object.description }}</td>
-			</tr>
-			<tr>
-				<td>Locations</td>
-				<td>				
-					{% for loc in object.providerrequestlocation_set.all %}
-					{{ loc.name }}, {{ loc.city }}, {{  loc.country }} <br>
-					{% endfor %}
-				</td>
-			</tr>
-			<tr>
-				<td>Services</td>
-				<td>
-					{% for service in object.services.all %}
-					{{ service.name }}<br>
-					{% endfor %}
-				</td>
-			</tr>
-		</table>
+        <h2>Details submitted</h2>
 
-		<h3 class="text-2xl">Supporting evidence</h3>
-		<table class="table-fixed">
-			{% for evidence in object.providerrequestevidence_set.all %}
-			<tr>
-				<td>
-					{{ evidence.title }}
-				</td>
-				<td>
-					<div>
-						Type: {{ evidence.type }}<br>
-						Link: {{ evidence.link|conditional_yesno:"Yes,No,-" }}<br>
-						File upload: {{ evidence.file|conditional_yesno:"Yes,No,-" }}<br>
-						Description: {{ evidence.description|conditional_yesno:"Yes,No,-" }}<br>
-						Public: {{ evidence.public|conditional_yesno:"Yes,No,-" }}
-					</div>
-					<br>
-				</td>
-			</tr>
-			{% endfor %}
+        <h3 class="text-2xl">About this provider</h3>
+        <table class="table-fixed">
+          <tr>
+            <td class="w-64">Organisation name</td>
+            <td>{{ object.name }}</td>
+          </tr>
+          <tr>
+            <td>Website</td>
+            <td>{{ object.website }}</td>
+          </tr>
+          <tr>
+            <td>Description</td>
+            <td>{{ object.description }}</td>
+          </tr>
+          <tr>
+            <td>Locations</td>
+            <td>
+              {% for loc in object.providerrequestlocation_set.all %}
+                {{ loc.name }}, {{ loc.city }}, {{  loc.country }} <br>
+              {% endfor %}
+            </td>
+          </tr>
+          <tr>
+            <td>Services</td>
+            <td>
+              {% for service in object.services.all %}
+                {{ service.name }}<br>
+              {% endfor %}
+            </td>
+          </tr>
+        </table>
 
-		</table>
+        <h3 class="text-2xl">Supporting evidence</h3>
+        <table class="table-fixed">
+          {% for evidence in object.providerrequestevidence_set.all %}
+            <tr>
+              <td>
+                {{ evidence.title }}
+              </td>
+              <td>
+                <div>
+                  Type: {{ evidence.type }}<br>
+                  Link: {{ evidence.link|conditional_yesno:"Yes,No,-" }}<br>
+                  File upload: {{ evidence.file|conditional_yesno:"Yes,No,-" }}<br>
+                  Description: {{ evidence.description|conditional_yesno:"Yes,No,-" }}<br>
+                  Public: {{ evidence.public|conditional_yesno:"Yes,No,-" }}
+                </div>
+                <br>
+              </td>
+            </tr>
+          {% endfor %}
 
-		<h3 class="text-2xl">IP and ASN ranges</h3>
-		<table class="table-fixed">			
-			<tr>
-				<td class="w-64">IP ranges</td>
-				<td>
-					{% if not object.providerrequestiprange_set.exists %}
-						-
-					{% else %}
-						{% for ip_range in object.providerrequestiprange_set.all %}
-						{{ ip_range }}<br>
-						{% endfor %}
-					{% endif %}
-				</td>
-			</tr>
-			<tr>
-				<td>ASNs</td>
-				<td>
-					{% if not object.providerrequestasn_set.exists %}
-						-
-					{% else %}
-						{% for asn in object.providerrequestasn_set.all %}
-						{{ asn }}<br>
-						{% endfor %}
-					{% endif %}
-				</td>
-			</tr>
-		</table>
+        </table>
 
-		<h3 class="text-2xl">Consent</h3>
-		<table class="table-fixed">			
-			<tr>
-				<td>The following consent was submitted:</td>
-				<td>				
-					{% for consent in object.providerrequestconsent_set.all %}
-					<div>
-						Data processing opt-in: {{ consent.data_processing_opt_in|yesno:"Yes,No,-"}}<br>
-						Newsletter opt-in: {{ consent.newsletter_opt_in|yesno:"Yes,No,-"}}
-					</div>
-					{% endfor %}
-				</td>
-			</tr>
-		</table>
+        <h3 class="text-2xl">Network footprint - IP and ASN ranges</h3>
+        <table class="table-fixed">
+          <tr>
+            <td class="w-64">IP ranges</td>
+            <td>
+              {% if not object.providerrequestiprange_set.exists %}
+                -
+              {% else %}
+                {% for ip_range in object.providerrequestiprange_set.all %}
+                  {{ ip_range }}<br>
+                {% endfor %}
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>ASNs</td>
+            <td>
+              {% if not object.providerrequestasn_set.exists %}
+                -
+              {% else %}
+                {% for asn in object.providerrequestasn_set.all %}
+                  {{ asn }}<br>
+                {% endfor %}
+              {% endif %}
+            </td>
+          </tr>
 
-	</article>
 
-	<a class="btn mb-0" href="{% url 'provider_portal_home' %}">Back to requests home</a>
+          <tr>
+            <td>Bulk network import required:</td>
+            <td>{{ object.network_import_request|yesno:"Yes,No,-" }}</td>
+          </tr>
 
-</section>
+          {% if object.missing_network_explanation %}
+            <tr>
+              <td>Missing Network explanation:</td>
+              <td>{{ object.missing_network_explanation|linebreaks }}</td>
+            </tr>
+          {% endif %}
+
+        </table>
+
+        <h3 class="text-2xl">Consent</h3>
+        <table class="table-fixed">
+          <tr>
+            <td>The following consent was submitted:</td>
+            <td>
+              {% for consent in object.providerrequestconsent_set.all %}
+                <div>
+                  Data processing opt-in: {{ consent.data_processing_opt_in|yesno:"Yes,No,-"}}<br>
+                  Newsletter opt-in: {{ consent.newsletter_opt_in|yesno:"Yes,No,-"}}
+                </div>
+              {% endfor %}
+            </td>
+          </tr>
+        </table>
+
+      </article>
+
+      <a class="btn mb-0" href="{% url 'provider_portal_home' %}">Back to requests home</a>
+
+    </section>
 {% endblock %}

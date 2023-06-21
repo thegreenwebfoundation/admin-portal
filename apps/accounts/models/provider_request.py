@@ -90,8 +90,8 @@ class ProviderRequest(TimeStampedModel):
     missing_network_explanation = models.TextField(
         verbose_name="Reason for no IP / AS data",
         help_text=(
-            "If an organisation is not listing the IP Ranges and AS numbers "
-            "we need to be able to explain why to list them as green."
+            "If an organisation is not listing IP Ranges and AS numbers, "
+            "we need a way to identify them in network lookups."
         ),
         blank=True,
     )
