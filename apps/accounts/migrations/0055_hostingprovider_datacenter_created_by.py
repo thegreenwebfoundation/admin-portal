@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
     """
 
     dependencies = [
-        ("accounts", "0053_provider_permissions"),
+        ("accounts", "0054_provider_permissions"),
     ]
 
     operations = [

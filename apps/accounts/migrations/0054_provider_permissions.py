@@ -6,7 +6,7 @@ from .. import permissions
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("accounts", "0052_merge_20230510_1057"),
+        ("accounts", "0053_alter_providerrequest_status"),
         ("guardian", "__latest__"),
     ]
 

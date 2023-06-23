@@ -114,7 +114,7 @@ def remove_object_permissions(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("accounts", "0054_hostingprovider_datacenter_created_by"),
+        ("accounts", "0055_hostingprovider_datacenter_created_by"),
     ]
 
     operations = [
