@@ -67,7 +67,10 @@ def _manage_permission(apps, schema_editor, manage_func):
     Datacenter_historical_model = apps.get_model("accounts", "Datacenter")
     Hostingprovider_historical_model = apps.get_model("accounts", "Hostingprovider")
 
-    # retrieve data based on queryset using historical model to access "created_by" field
+    # retrieve (object, user) ID pairs eligible for assigning permissions
+    # based on queryset of historical model - so that we can access "created_by" field
+    # that is present at the time of this migration.
+    # See more details: https://docs.djangoproject.com/en/4.2/topics/migrations/#historical-models
     eligible_pairs_dc = [
         (dc.id, dc.created_by.id)
         for dc in Datacenter_historical_model.objects.using(db_alias).filter(
@@ -80,13 +83,21 @@ def _manage_permission(apps, schema_editor, manage_func):
             created_by__isnull=False
         )
     ]
-    # Get current models to retrieve the objects for assigning permissions.
+
+    # GOTHA: django-guardian shortcut methods for assigning/removing perms
+    # *do not* support historical models! See details: https://github.com/django-guardian/django-guardian/issues/281#issuecomment-156264129
+    #
+    # As a workaround, we get *current* models to retrieve the objects for assigning permissions
+    # based on the ID pairs we retrieved in the previous step.
+    # Notice that `django_apps.get_model` is used instead of `apps.get_model`.
+    #
     # This is dangerous! Future versions of django-guardian might change the schema
     # and this migration might fail when ran from scratch. If this happens:
     # - pin down the version of django-guardian to the latest working version
     #   so that migrations work for tests
     # - for production / staging it's a non-issue since we always keep snapshots around
     #   and don't run older migrations
+
     Datacenter = django_apps.get_model("accounts", "Datacenter")
     Hostingprovider = django_apps.get_model("accounts", "Hostingprovider")
     User = get_user_model()
