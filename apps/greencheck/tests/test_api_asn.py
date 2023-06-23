@@ -238,7 +238,7 @@ class TestASNViewSetList:
 
         rf = APIRequestFactory()
         url_path = reverse("asn-detail", kwargs={"pk": green_asn.id})
-        # hosting_provider_with_sample_user.users.first()
+
         request = rf.delete(url_path)
         request.user = another_host_user
 

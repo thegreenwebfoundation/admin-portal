@@ -98,6 +98,10 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
             - superuser status
 
         This method is useful to fetch hosting providers for users that belong to the admin group.
+        Because the admin group has global permissions to manage all objects, the admin page
+        or provider portal page (where we show all objects that the users can manage)
+        for the admin group members would have to fetch all available objects. To avoid this,
+        we settled on displaying objects with explicit user-object permissions only.
         """
         return get_objects_for_user(
             self,
@@ -127,6 +131,10 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
             - superuser status
 
         This method is useful to fetch data centers for users that belong to the admin group.
+        Because the admin group has global permissions to manage all objects, the admin page
+        or provider portal page (where we show all objects that the users can manage)
+        for the admin group members would have to fetch all available objects. To avoid this,
+        we settled on displaying objects with explicit user-object permissions only.
         """
         return get_objects_for_user(
             self,
