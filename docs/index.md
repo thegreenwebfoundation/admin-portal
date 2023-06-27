@@ -26,6 +26,7 @@ installation.md
 how-to.md
 deployment.md
 key-concepts.md
+users-permissions.md
 verification-request.md
 how-we-check-for-green.md
 other-greenweb-software.md
