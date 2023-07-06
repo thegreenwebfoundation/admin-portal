@@ -10,6 +10,9 @@ We require that each new account is activated by accessing a link sent to the em
 ### Creating a user account
 Users can create new accounts using the registration form: https://admin.thegreenwebfoundation.org/accounts/signup/
 
+### Quirks 
+Django User model [defines a flag called `is_staff`](https://docs.djangoproject.com/en/4.2/topics/auth/customizing/#django.contrib.auth.is_staff) to indicate users who are allowed to access the Admin panel. In the Green Web implementation we overwrite that logic and allow all authenticated users to access the Admin panel, thus making the `is_staff` flag irrelevant. You might still see this property existing in the User model, but it has no relevance and can be safely ignored.
+
 ## User permissions
 Newly registered users are authorized to submit a new verification request and view the status of the submitted requests. In order to provide a granular control over who can perform which actions in the system, we have 2 levels of permission system available:
 - user groups that define high-level authorization classes,
