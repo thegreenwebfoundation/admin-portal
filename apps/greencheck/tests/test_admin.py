@@ -6,12 +6,13 @@ from django import urls
 
 
 class TestGreencheckIpApproveAdmin:
-    def test_get_actions_staff_user(self, db, rf, sample_hoster_user, hosting_provider):
+    def test_get_actions_staff_user(
+        self, db, rf, greenweb_staff_user, hosting_provider
+    ):
         """Check that a user with the correct privileges can"""
 
         hosting_provider.save()
-        sample_hoster_user.is_staff = True
-        sample_hoster_user.save()
+        greenweb_staff_user.save()
 
         gcip_admin = gc_admin.GreencheckIpApproveAdmin(
             models.GreencheckIp, admin_site.greenweb_admin
@@ -21,7 +22,7 @@ class TestGreencheckIpApproveAdmin:
             "greenweb_admin:greencheck_greencheckipapprove_changelist"
         )
         request = rf.get(ip_range_listing_path)
-        request.user = sample_hoster_user
+        request.user = greenweb_staff_user
 
         actions = gcip_admin.get_actions(request)
 
@@ -48,12 +49,11 @@ class TestGreencheckIpApproveAdmin:
 
         assert "approve_selected" not in actions
 
-    def test_get_queryset_staff(
-        self, db, rf, sample_hoster_user, hosting_provider, green_ip
+    def test_get_queryset_admin(
+        self, db, rf, greenweb_staff_user, hosting_provider, green_ip
     ):
         hosting_provider.save()
-        sample_hoster_user.is_staff = True
-        sample_hoster_user.save()
+        greenweb_staff_user.save()
 
         provider = gc_factories.HostingProviderFactory()
         gip = gc_factories.GreenIpFactory(hostingprovider=provider)
@@ -67,7 +67,7 @@ class TestGreencheckIpApproveAdmin:
             "greenweb_admin:greencheck_greencheckipapprove_changelist"
         )
         request = rf.get(ip_range_listing_path)
-        request.user = sample_hoster_user
+        request.user = greenweb_staff_user
 
         qs = gcip_admin.get_queryset(request)
 
@@ -98,7 +98,7 @@ class TestGreencheckIpApproveAdmin:
         request = rf.get(ip_range_listing_path)
         request.user = hosting_provider_with_sample_user.users.first()
 
-        assert not request.user.is_staff
+        assert not request.user.is_admin
 
         qs = gcip_admin.get_queryset(request)
 

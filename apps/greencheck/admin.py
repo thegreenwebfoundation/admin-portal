@@ -81,7 +81,7 @@ class GreencheckAsnApproveInline(admin.TabularInline, ApprovalFieldMixin):
             "status",
         )
 
-        if request.user.is_staff:
+        if request.user.is_admin:
             fields = fields + ("approval",)
 
         fieldsets = ((None, {"fields": fields}),)
@@ -90,7 +90,7 @@ class GreencheckAsnApproveInline(admin.TabularInline, ApprovalFieldMixin):
     def get_readonly_fields(self, request, obj):
         """Non staff user should only be able to read the fields"""
         read_only = super().get_readonly_fields(request, obj)
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             read_only = ("asn",) + read_only
         return read_only
 
@@ -150,7 +150,7 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
             "status",
         )
 
-        if request.user.is_staff:
+        if request.user.is_admin:
             fields = fields + ("approval",)
 
         fieldsets = ((None, {"fields": fields}),)
@@ -159,7 +159,7 @@ class GreencheckIpApproveInline(admin.TabularInline, ApprovalFieldMixin):
     def get_readonly_fields(self, request, obj):
         """Non staff user should only be able to read the fields"""
         read_only = super().get_readonly_fields(request, obj)
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             read_only = ("ip_start", "ip_end") + read_only
         return read_only
 
@@ -232,7 +232,7 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
 
         # only staff users should be able to to bulk updates
 
-        if request.user and request.user.is_staff:
+        if request.user and request.user.is_admin:
             return default_actions
         else:
             del default_actions["approve_selected"]
@@ -276,7 +276,7 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
         qs = qs.select_related("hostingprovider")
 
         # only show a normal user's own requests
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             res = qs.filter(hostingprovider__in=request.user.hosting_providers)
             return res
 
@@ -310,7 +310,7 @@ class GreencheckASNApprove(admin.ModelAdmin):
         qs = qs.select_related("hostingprovider")
 
         # only show a normal user's own requests
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             res = qs.filter(hostingprovider__in=request.user.hosting_providers)
             return res
 
@@ -354,7 +354,7 @@ class GreenDomainAdmin(admin.ModelAdmin):
         default_actions = super().get_actions(request)
 
         # only staff users should be able to to bulk updates
-        if request.user and request.user.is_staff:
+        if request.user and request.user.is_admin:
             return default_actions
         else:
             del default_actions["allocate_to_provider"]
@@ -496,7 +496,7 @@ class GreenASNAdmin(admin.ModelAdmin):
         qs = qs.select_related("hostingprovider")
 
         # only show a normal user's own requests
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             res = qs.filter(hostingprovider__in=request.user.hosting_providers)
             return res
 
@@ -549,7 +549,7 @@ class GreenIPAdmin(admin.ModelAdmin):
         qs = qs.select_related("hostingprovider")
 
         # only show a normal user's own requests
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             res = qs.filter(hostingprovider__in=request.user.hosting_providers)
             return res
 

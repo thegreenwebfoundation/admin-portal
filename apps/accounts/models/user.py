@@ -46,7 +46,7 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
     is_staff = models.BooleanField(
         "staff status",
         default=False,
-        help_text="Designates whether the user can log into this admin site.",
+        help_text="Django way of designating if the user can log into the admin. This flag is ignored in GWF Admin",
     )
     is_active = models.BooleanField(
         "active",
