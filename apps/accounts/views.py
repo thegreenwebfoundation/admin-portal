@@ -186,15 +186,17 @@ class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
             only those where object-level permission between the user and the provider was explicitly granted.
         """
         return {
-            "requests": ProviderRequest.objects.filter(
-                created_by=self.request.user
-            ).exclude(
+            "requests": ProviderRequest.objects.filter(created_by=self.request.user)
+            .exclude(
                 status__in=[
                     ProviderRequestStatus.APPROVED,
                     ProviderRequestStatus.REMOVED,
                 ]
+            )
+            .order_by("name"),
+            "providers": self.request.user.hosting_providers_explicit_perms.order_by(
+                "name"
             ),
-            "providers": self.request.user.hosting_providers_explicit_perms,
         }
 
 
