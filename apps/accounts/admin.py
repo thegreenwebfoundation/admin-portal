@@ -102,7 +102,8 @@ class CustomUserAdmin(UserAdmin):
 
     model = User
     search_fields = ("username", "email")
-    list_display = ["username", "email", "last_login", "is_staff"]
+    list_display = ["username", "email", "last_login"]
+    list_filter = ("is_superuser", "is_active", "groups")
     readonly_fields = ("managed_providers", "managed_datacenters")
 
     def get_queryset(self, request, *args, **kwargs):
@@ -169,7 +170,7 @@ class CustomUserAdmin(UserAdmin):
         staff_fieldsets = (
             "User status and group membership",
             {
-                "fields": ("is_active", "is_staff", "groups"),
+                "fields": ("is_active", "groups"),
             },
         )
 
@@ -197,7 +198,6 @@ class CustomUserAdmin(UserAdmin):
                     {
                         "fields": (
                             "is_active",
-                            "is_staff",
                             "is_superuser",
                             "groups",
                         ),
@@ -775,7 +775,7 @@ class HostingAdmin(
             "services",
         ).annotate(models.Count("greencheckip"))
 
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             # filter for non-archived providers & those the current user has permissions to
             qs = qs.filter(archived=False).filter(
                 id__in=[p.id for p in request.user.hosting_providers]
@@ -845,7 +845,7 @@ class HostingAdmin(
 
     def get_readonly_fields(self, request, obj=None):
         read_only = super().get_readonly_fields(request, obj)
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             read_only.append("partner")
         if obj is not None:
             read_only.append("created_by")
@@ -882,9 +882,11 @@ class HostingAdmin(
 
     def _changeform_view(self, request, object_id, form_url, extra_context):
         """Include whether current user is staff, so it can be picked up by a form"""
+        # TODO: clarify why the "is_staff" flag is passed to the form
+        # and until then, use the value from is_admin
         if request.method == "POST":
             post = request.POST.copy()
-            post["is_staff"] = request.user.is_staff
+            post["is_staff"] = request.user.is_admin
             request.POST = post
 
         extra_context = extra_context or {}
@@ -1054,7 +1056,7 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         read_only = super().get_readonly_fields(request, obj)
-        if not request.user.is_staff:
+        if not request.user.is_admin:
             read_only.append("showonwebsite")
         if obj is not None:
             read_only.append("created_by")
