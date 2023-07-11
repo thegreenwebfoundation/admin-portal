@@ -5,6 +5,7 @@ name = "pypi"
 
 [dev-packages]
 django-debug-toolbar = "*"
+django-browser-reload = "*"
 pylint = "*"
 pylint-django = "*"
 coverage = "*"
