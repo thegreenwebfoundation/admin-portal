@@ -82,7 +82,9 @@ django-logentry-admin = "*"
 pandas = "*"
 rich = "*"
 duckdb = "*"
-numpy = "*"
+# 1.24.3 is the last release to support python 3.8
+# https://numpy.org/doc/stable/release/1.24.3-notes.html
+numpy = "1.24.3"
 dateutils = "*"
 freezegun = "*"
 django-filter = "*"
