@@ -1,9 +1,11 @@
+from typing import Optional
 from django.db import models
 from django.core.mail import send_mail
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.contrib import messages
 from django.contrib import admin
+from django.http.request import HttpRequest
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
@@ -105,6 +107,22 @@ class CustomUserAdmin(UserAdmin):
     list_display = ["username", "email", "last_login"]
     list_filter = ("is_superuser", "is_active", "groups")
     readonly_fields = ("managed_providers", "managed_datacenters")
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        """
+        For non-admin users who are trying to access a change page for another user
+        redirect them to the main admin page and display an error message.
+
+        Default mechanism of this method in ModelAdmin has the redirect too,
+        but it triggers get_queryset, which results in the message saying that the object was deleted.
+        This might be confusing to the users.
+        """
+        if not request.user.is_admin and str(request.user.id) != object_id:
+            msg = "You do not have permissions to visit that page"
+            self.message_user(request, msg, messages.WARNING)
+            url = reverse("admin:index", current_app=self.admin_site.name)
+            return HttpResponseRedirect(url)
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def get_queryset(self, request, *args, **kwargs):
         """
