@@ -1,11 +1,9 @@
-from typing import Optional
 from django.db import models
 from django.core.mail import send_mail
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.contrib import messages
 from django.contrib import admin
-from django.http.request import HttpRequest
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
