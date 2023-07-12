@@ -526,6 +526,16 @@ class TestUserAdmin:
         assert hosting_provider.name in user_admin.managed_providers(sample_hoster_user)
         assert datacenter.name in user_admin.managed_datacenters(sample_hoster_user)
 
+    def test_user_cannot_access_another_user_change_view(
+        self, db, sample_hoster_user, greenweb_staff_user
+    ):
+        user_admin = ac_admin.CustomUserAdmin(ac_models.User, admin_site.greenweb_admin)
+        request = MagicMock()
+        request.user = sample_hoster_user
+        response = user_admin.change_view(request, str(greenweb_staff_user.id))
+        assert response.status_code == 302
+        assert response.url == "/admin/"
+
 
 def test_provider_request_accessible_by_admin(
     db,
