@@ -51,7 +51,7 @@ The mechanism provided by `django-guardian` can be extended to groups, too. Curr
 - there are 5000 hosting provider objects in the database,
 - there exists only 1 explicit permission `manage_provider` for `alice`: that is to `Green Provider`.
 
-Even though `alice` as a member of the `admin` group can manage all 5000 providers, when she visits the Provider Portal she will only see `Green Provider` listed. 
+Even though `alice` is a member of the `admin` group can manage all 5000 providers, when she visits the Provider Portal she will only see `Green Provider` listed. 
 
 The object-level permissions can be managed in the Django Admin by users who belong to the `admin` group. In order to add/edit permissions:
 - log in to the Django Admin,
