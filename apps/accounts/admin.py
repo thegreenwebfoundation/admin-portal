@@ -455,7 +455,12 @@ class HostingAdmin(
 
         return NON_STAFF_LIST
 
-    readonly_fields = ["managed_by", "preview_email_button", "start_csv_import_button"]
+    readonly_fields = [
+        "authorised_users",
+        "data_centers",
+        "preview_email_button",
+        "start_csv_import_button",
+    ]
     ordering = ("name",)
 
     # Factories
@@ -815,11 +820,15 @@ class HostingAdmin(
         ]
 
         users_fieldset = (
-            "Users who can manage this provider",
-            {"fields": ("managed_by",)},
+            "Authorised hosting provider users",
+            {"fields": ("authorised_users",)},
+        )
+        dc_fieldset = (
+            "Associated datacenters",
+            {"fields": ("data_centers",)},
         )
         if obj is not None:
-            fieldset.append(users_fieldset)
+            fieldset.extend([users_fieldset, dc_fieldset])
 
         admin_editable = (
             "Admin only",
@@ -845,16 +854,28 @@ class HostingAdmin(
     # Properties
 
     @mark_safe
-    def managed_by(self, obj):
+    def authorised_users(self, obj):
         """
         Returns markup for a list of all users with *explicit* permissions to manage the Hostingprovider
         """
+        if not obj.users_explicit_perms:
+            return "No external users found! Only administrators are authorised"
         return "<br>".join(
             [
                 f"<a href={u.admin_url}>{u.username}</a>"
                 for u in obj.users_explicit_perms
             ]
         )
+
+    @mark_safe
+    def data_centers(self, obj):
+        """
+        Returns a markup for a list of associated data centers
+        """
+        dcs = obj.datacenter.all()
+        if not dcs:
+            return "There are no data centres associated with this hosting provider."
+        return "<br>".join([f"<a href={dc.admin_url}>{dc.name}</a>" for dc in dcs])
 
     def services(self, obj):
         return ", ".join(o.name for o in obj.services.all())
@@ -1028,7 +1049,7 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
         DataCenterLocationInline,
     ]
     search_fields = ("name",)
-    readonly_fields = ["managed_by"]
+    readonly_fields = ["authorised_users"]
     list_display = [
         "name",
         "html_website",
@@ -1100,10 +1121,10 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
                 },
             ),
         ]
-        # include "managed_by" only for the change view
+        # include "authorised_users" only for the change view
         users_fieldset = (
-            "Users who can manage this datacenter",
-            {"fields": ("managed_by",)},
+            "Authorised data center users",
+            {"fields": ("authorised_users",)},
         )
         if obj is not None:
             fieldsets.append(users_fieldset)
@@ -1117,7 +1138,7 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
         return fieldsets
 
     @mark_safe
-    def managed_by(self, obj):
+    def authorised_users(self, obj):
         """
         Returns markup for a list of all users with permissions to manage the Datacenter,
         excluding those in the admin group.
