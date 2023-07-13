@@ -159,8 +159,8 @@ class TestDatacenterAdmin:
         )
 
         # Then: they should see a list of 2 users listed on that page
-        assert sample_hoster_user.username in dc_admin.managed_by(datacenter)
-        assert greenweb_staff_user.username in dc_admin.managed_by(datacenter)
+        assert sample_hoster_user.username in dc_admin.authorised_users(datacenter)
+        assert greenweb_staff_user.username in dc_admin.authorised_users(datacenter)
 
 
 class TestHostingProviderAdmin:
@@ -395,10 +395,10 @@ class TestHostingProviderAdmin:
         )
 
         # Then: they should see a list of 2 users listed on that page
-        assert sample_hoster_user.username in provider_admin.managed_by(
+        assert sample_hoster_user.username in provider_admin.authorised_users(
             hosting_provider
         )
-        assert greenweb_staff_user.username in provider_admin.managed_by(
+        assert greenweb_staff_user.username in provider_admin.authorised_users(
             hosting_provider
         )
 
