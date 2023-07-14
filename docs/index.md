@@ -29,7 +29,7 @@ key-concepts.md
 users-permissions.md
 verification-request.md
 how-we-check-for-green.md
-understanding-the-flow-of-a-greencheck.md
+understanding-the flow-of-a-greencheck.md
 other-greenweb-software.md
 working-with-greenweb-datasets.md
 ```

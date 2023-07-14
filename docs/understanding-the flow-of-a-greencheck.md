@@ -8,7 +8,7 @@ It exists to inform system design discussions, and help developers new to the sy
 
 When a user carries out a greencheck for a specific site, or a third party uses our greencheck API, you can trace the flow of a request through the system like so:
 
-```mermaid
+```{mermaid}
 sequenceDiagram
 
     Browser client->>+Nginx: Look up domain
@@ -33,7 +33,7 @@ Once we have the domain queued, another worker takes the domain off the queue, a
 
 It also lets us control the load we place on the database by controlling when we are logging all the checks, as well as updating our cache table.
 
-```mermaid
+```{mermaid}
 sequenceDiagram
 
     Django Dramatiq->>+RabbitMQ: Check for any domains to log
@@ -50,7 +50,7 @@ We also have a slower check that does all of this in one synchronous request - h
 
 The sequence flow diagram looks like so:
 
-```mermaid
+```{mermaid}
 sequenceDiagram
 
     Browser client->>+Nginx: Send a request to check a website domain
