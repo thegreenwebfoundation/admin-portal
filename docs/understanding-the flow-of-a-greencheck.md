@@ -1,6 +1,8 @@
 # Understanding the life cycle of a Green Check Request
 
-This page outlines the life cycle for the majority of the traffic the Green Web Platform serves - API requests on it's greencheck endpoints.
+This page outlines the life cycle for the majority of the traffic the Green Web Platform serves - API requests on its greencheck endpoints, most commonly at the following url:
+
+https://api.thegreenwebfoundation.org/greencheck/<DOMAIN>
 
 It exists to inform system design discussions, and help developers new to the system trace a path through the code for common operations.
 
@@ -21,8 +23,9 @@ sequenceDiagram
     Django Web->>+RabbitMQ: Queue domain for logging
 ```
 
-In most cases we try to find a result we can return quickly, and check in a local cache table, described by the GreenDomain model. Assumign we find a result in the database, we put the checked domain on a Rabbit MQ queue, so that a separate worker process can update to the cache to record the time of the check, and so it can write the check result to a logging table.
+In most cases we try to find a result we can return quickly, and check in a local cache table called `greendomain`, described by the GreenDomain model. Assuming we find a result in the database, we put the checked domain on a Rabbit MQ queue, so that a separate worker process can update to the cache to record the time of the check, and so it can write the check result to a logging table, currently named `greencheck_2021`, and represented by the Greencheck model.
 
+_Note: See the model definitions Greencheck and GreenDomain for the definitive listing of the names the tables we write to - they have changed over time._
 
 ### Updating our green domains table
 
@@ -42,7 +45,7 @@ sequenceDiagram
     Django Dramatiq->>+Database: Update greendomain tables
 ```
 
-We can scale the two of these independently, depending on the traffic we are receiving, and RabbitMQ here acts like a buffer.
+We can scale the number of Django Gunicorn processes and Django Dramatiq worker processes independently, depending on the traffic we are receiving, and RabbitMQ here acts like a buffer. We have further control within each of these types of processes to decide how they handle concurrency. See the deployment page for more.
 
 ### Carrying out a slow full network look up
 
@@ -64,3 +67,8 @@ sequenceDiagram
     Django Web->>+RabbitMQ: Queue domain for logging
 
 ```
+This slower check is currently used in the following places:
+
+- **greencheck service on our Wordpress website** -  because this is often the url used by people new to the service who care more about a correct result than a fast result
+- **our own "detail" view for troubleshooting with support** - this is visible at https://admin.thegreenwebfoundation.org/admin/extended-greencheck, and used to show more detail about how we arrive at a given result
+- **our greencheck image service** - we currently used the slower view for rendering images, because historically, it has been the thing user contact us about frequently, and serving the slower review reduced the number of support requests caused by earlier caching setups.
