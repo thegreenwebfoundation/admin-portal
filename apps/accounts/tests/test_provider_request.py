@@ -249,6 +249,21 @@ def test_detail_view_accessible_by_creator(client):
 
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
+def test_detail_view_accessible_by_admin(client, greenweb_staff_user):
+    # given: provider request exists
+    pr = ProviderRequestFactory.create()
+
+    # when: accessing its detail view by greenweb_staff_user
+    client.force_login(greenweb_staff_user)
+    response = client.get(urls.reverse("provider_request_detail", args=[str(pr.id)]))
+
+    # then: page for the correct provider request is rendered
+    assert response.status_code == 200
+    assert response.context_data["providerrequest"] == pr
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
 def test_detail_view_forbidden_for_others(client, user):
     # given: provider request exists
     pr = ProviderRequestFactory.create()
