@@ -213,6 +213,12 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
     model = ProviderRequest
 
     def get_queryset(self) -> "QuerySet[ProviderRequest]":
+        """
+        Admins can retrieve any ProviderRequest object,
+        regular users can only retrieve objects that they created.
+        """
+        if self.request.user.is_admin:
+            return ProviderRequest.objects.all()
         return ProviderRequest.objects.filter(created_by=self.request.user)
 
 
