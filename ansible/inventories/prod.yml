@@ -2,11 +2,11 @@
 all:
   hosts:
     app1.thegreenwebfoundation.org:
-      internal_ip: "10.0.0.4"
+      internal_ip: "10.0.0.5"
       dramatiq_threads: 2
       dramatiq_processes: 3
     app2.thegreenwebfoundation.org:
-      internal_ip: "10.0.0.5"
+      internal_ip: "10.0.0.4"
       dramatiq_threads: 2
       dramatiq_processes: 3
     hel1.thegreenwebfoundation.org:
