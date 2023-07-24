@@ -353,7 +353,7 @@ class Hostingprovider(models.Model):
         Return the supporting evidence that has explictly been marked as public
         by the users uploading it to the database
         """
-        return self.supporting_documents.filter(public=True)
+        return self.supporting_documents.filter(public=True).order_by("-valid_to")
 
     @property
     def evidence_expiry_date(self) -> typing.Optional[datetime.date]:

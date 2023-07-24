@@ -262,5 +262,6 @@ class DirectoryView(WaffleFlagMixin, TemplateView):
         )
 
         ctx["filter"] = filter_results
+        ctx["ordered_results"] = filter_results.qs.order_by("country", "name")
 
         return ctx
