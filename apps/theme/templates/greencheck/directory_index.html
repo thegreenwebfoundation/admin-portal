@@ -28,11 +28,17 @@
                 {% if obj.description %}
                   {{ obj.description }}
                 {% else %}
-                  If we had a description it would go here. So we need some graceful fallback copy to replace this.
+                  <small>If we had a description it would go here. So we need some graceful fallback copy to replace this.</small>
                 {% endif %}
                 <ul class="mb-4">
                   {% if obj.services.names %}
                     {% for service in obj.services.all %}<li class="service-label inline-block">{{ service.name }}</li>{% endfor %}
+                    {% comment %}
+										Every host in our directory used to at least offer shared hosting.
+										Below is a placeholder to see how it would look with live data.
+									{% else %}
+                                        <li class="service-label inline-block">Computed: Shared Hosting for Websites</li>
+                                        {% endcomment %}
                   {% endif %}
                 </ul>
               </p>
@@ -45,7 +51,9 @@
                     {% for evidence in obj.public_supporting_evidence %}
                       <li class="m-3">
                         <a class="py-2"href="{{ evidence.link }}">{{ evidence.title }}</a>
-                        <div class="description py-2">{{ evidence.description|linebreaks }}</div>
+                        <div class="description py-2">
+                          <small>{{ evidence.description|linebreaks }}</small>
+                        </div>
                       </li>
                     {% endfor %}
                   </ul>
