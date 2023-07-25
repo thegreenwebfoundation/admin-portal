@@ -273,6 +273,11 @@ class DirectoryView(WaffleFlagMixin, TemplateView):
             else:
                 return "Unknown"
 
+        # we include the filter in our context to allow the template to render
+        # the filter form, even if we display the results using `ordered_results`
+        # variable
+        ctx["filter"] = filter_results
+
         # filter by country, and then within each country, filter by alphabetical order
         ordered_results_qs = filter_results.qs.order_by("country", "name")
         # now filter the top level country results by written country name
