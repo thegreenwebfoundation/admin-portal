@@ -261,7 +261,22 @@ class DirectoryView(WaffleFlagMixin, TemplateView):
             request=self.request,
         )
 
-        ctx["filter"] = filter_results
-        ctx["ordered_results"] = filter_results.qs.order_by("country", "name")
+        def provider_country_name(provider) -> str:
+            """
+            Return the country name for a provider. Used for sorting
+            providers by their localised name, because by default, countries
+            are sorted by their country code, i.e DE (Germany)
+            before DK (Denmark)
+            """
+            if provider.country:
+                return provider.country.name
+            else:
+                return "Unknown"
+
+        # filter by country, and then within each country, filter by alphabetical order
+        ordered_results_qs = filter_results.qs.order_by("country", "name")
+        # now filter the top level country results by written country name
+        # so we have Denmark listed before Germany for example, and so on.
+        ctx["ordered_results"] = sorted(ordered_results_qs, key=provider_country_name)
 
         return ctx
