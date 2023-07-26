@@ -13,7 +13,7 @@ class UserManagesHostingProvider(permissions.BasePermission):
     def _has_permission(self, request, hp_id):
         if request.method in permissions.SAFE_METHODS:
             return True
-        if request.user:
+        if request.user and request.user.is_authenticated:
             return request.user.hosting_providers.filter(id=hp_id).exists()
         return False
 
