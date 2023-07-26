@@ -1,4 +1,3 @@
-from django.test import RequestFactory
 from django.urls import reverse
 from waffle.testutils import override_flag
 
@@ -8,6 +7,9 @@ import pytest
 @pytest.mark.django_db
 @override_flag("directory_listing", active=True)
 def test_directory(client):
+    """
+    Confirm that the directory view is accessible when our flag is active
+    """
     # when: the directory is accessed with an active flag
     res = client.get(reverse("directory-index"))
 
