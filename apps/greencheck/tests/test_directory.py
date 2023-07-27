@@ -15,10 +15,6 @@ def test_directory(client):
 
     # then: we see a successful response
     assert res.status_code == 200
-    # and: we should see the "has directory results" template in our list of
-    # templates in use
-    templates = [tpl.name for tpl in res.templates]
-    assert "greencheck/partials/_directory_results.html" in templates
 
 
 @pytest.mark.django_db
@@ -44,6 +40,28 @@ def test_ordering_of_providers_in_directory(client, hosting_provider_factory):
 
 @pytest.mark.django_db
 @override_flag("directory_listing", active=True)
+def test_templates_in_filter_view(client, hosting_provider_factory):
+    """
+    Check that we include the no_directoru results in our template
+    """
+
+    # given: a hosting provider in Germany
+    hosting_provider_factory.create(country="DE", showonwebsite=True)
+
+    # when: we visit our directory
+    res = client.get(reverse("directory-index"))
+
+    # then: we should get a successful response
+    assert res.status_code == 200
+
+    # and: we should see the "has results" template in our list of templates
+    # in use
+    templates = [tpl.name for tpl in res.templates]
+    assert "greencheck/partials/_directory_results.html" in templates
+
+
+@pytest.mark.django_db
+@override_flag("directory_listing", active=True)
 def test_fallback_when_no_filter_view_has_no_results(client, hosting_provider_factory):
     """
     Check that we include the no_directoru results in our template
@@ -61,4 +79,4 @@ def test_fallback_when_no_filter_view_has_no_results(client, hosting_provider_fa
     # and: we should see the "no results" template in our list of templates
     # in use
     templates = [tpl.name for tpl in res.templates]
-    assert "greencheck/partials/no_directory_results.html" in templates
+    assert "greencheck/partials/_no_directory_results.html" in templates
