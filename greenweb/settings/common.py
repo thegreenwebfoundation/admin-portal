@@ -103,6 +103,8 @@ INSTALLED_APPS = [
     "widget_tweaks",
     # analysis
     "explorer",
+    # tracking inbound API usage
+    'drf_api_logger',
     # project specific
     "apps.theme",
     "apps.accounts",
@@ -139,9 +141,16 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware',
     # see the section below on BASICAUTH
     "basicauth.middleware.BasicAuthMiddleware",
 ]
+
+DRF_API_LOGGER_DATABASE = True  # Default to False
+legacy_api_views = ["legacy-greencheck-image", "legacy-greencheck-multi", "legacy-directory-detail"]
+high_volume_views = ["green-domain-detail"]
+debugger_api_views = ["djdt:history_sidebar"]
+DRF_API_LOGGER_SKIP_URL_NAME = [ *legacy_api_views, *debugger_api_views, *high_volume_views]
 
 # set up django-guardian as authentcation backend
 AUTHENTICATION_BACKENDS = [
