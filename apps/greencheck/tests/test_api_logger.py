@@ -7,11 +7,12 @@ from drf_api_logger.models import APILogsModel
 
 
 @pytest.mark.django_db
-def test_api_requests_are_logged(live_server):
+@pytest.mark.uses_separate_logging_thread
+def test_api_requests_are_logged(live_server, transactional_db):
     """
     Check that API requests are logged. We need a live server, because the 
-    api request logger runs in a separata thread that is spun up only when 
-    the live server is running.
+    api request logger runs in a separate thread that is spun up only when 
+    the live server itself is running.
     """
 
     # when: a request has been made to  our high traffic endpoint use for most greenchecks
@@ -29,6 +30,7 @@ def test_api_requests_are_logged(live_server):
 
 
 @pytest.mark.django_db
+@pytest.mark.uses_separate_logging_thread
 def test_high_traffic_api_requests_are_not_logged(live_server):
     """
     Check we do not try to log requests on endpoints where it does not make sense to do so.
