@@ -24,8 +24,11 @@ factory_boy = "*"
 rich = "*"
 sphinx = "*"
 sphinx-autobuild = "*"
-sphinxcontrib-mermaid = "*""
-myst-parser = "*"
+sphinxcontrib-mermaid = "*"
+# furo, myst-parser need to be pinned because
+# an underlying dependency, docutils needs a specific version of sphinx
+furo = "==2022.4.7"
+myst-parser = "==0.18.0"
 ansible-lint = "*"
 
 [packages]
