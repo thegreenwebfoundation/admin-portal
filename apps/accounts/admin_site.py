@@ -285,3 +285,7 @@ class GreenWebAdmin(AdminSite):
 
 
 greenweb_admin = GreenWebAdmin(name="greenweb_admin")
+from drf_api_logger.models import APILogsModel
+from drf_api_logger.admin import APILogsAdmin
+
+greenweb_admin.register(APILogsModel, APILogsAdmin)
