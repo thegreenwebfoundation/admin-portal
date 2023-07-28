@@ -73,24 +73,26 @@
 	.service-label {
 		@apply bg-green-100;
 		@apply rounded-3xl;
-		@apply mb-4;
+		@apply mb-2;
 		@apply mr-6;
 		@apply last:mr-0;
 		@apply px-4;
-		@apply py-2;
+		@apply py-1.5;
 		@apply text-sm;
+		@apply leading-normal;
 	}
 	.service-label:before {
 		@apply inline-block;
+		@apply relative;
+		@apply top-[2px];
 		@apply rounded-xl;
 		content: '';
 		@apply bg-green;
 		@apply w-4;
 		@apply h-4;
-		@apply mt-1;
 		@apply mr-2;
 	}
-	.info-circle {
+	.utility-icon {
 		@apply relative;
 		@apply -top-0.5; 
 		@apply inline-block;
@@ -98,10 +100,19 @@
 		@apply text-center;
 		@apply h-5;
 		@apply w-5;
+	}
+	.info-circle {
 		@apply border-2;
 		@apply border-solid;
 		@apply border-neutral-300;
 		@apply text-neutral-300;
 		@apply rounded-3xl;
+	}
+	.external-link-icon {
+		@apply m-0;
+		@apply inline-block;
+	}
+	.evidence-description p {
+		@apply my-1.5;
 	}
 }
