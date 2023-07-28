@@ -90,4 +90,18 @@
 		@apply mt-1;
 		@apply mr-2;
 	}
+	.info-circle {
+		@apply relative;
+		@apply -top-0.5; 
+		@apply inline-block;
+		@apply leading-none;
+		@apply text-center;
+		@apply h-5;
+		@apply w-5;
+		@apply border-2;
+		@apply border-solid;
+		@apply border-neutral-300;
+		@apply text-neutral-300;
+		@apply rounded-3xl;
+	}
 }
