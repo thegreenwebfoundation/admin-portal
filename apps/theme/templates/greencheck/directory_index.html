@@ -16,53 +16,10 @@
         </section>
     </div>
     <section class="main-content container mx-auto">
-        {% regroup ordered_results by country.name as country_list %}
-        {% for country in country_list %}
-            <article class="md:grid md:grid-cols-5 lg:grid-cols-7 md:grid-rows-1 pt-4 pb-8 md:pt-8 md:pb-14">
-                <h2 class="text-2xl mb-2 mt-0">{{ country.grouper }}</h2>
-                <div class="col-span-3 lg:col-span-5">
-                    {% for obj in country.list %}
-                        <div class="border-b-2 border-neutral-200 mb-4">
-                            <h4 class="mb-4 font-bold text-xl" id="{{ obj.id }}">{{ obj.name }}</h4>
-                            <p class="text-neutral-700 mb-8 max-w-prose">
-                                {% if obj.description %}
-                                    {{ obj.description }}
-                                {% else %}
-                                    <small>If we had a description it would go here. So we need some graceful fallback copy to replace this.</small>
-                                {% endif %}
-                                <ul class="mb-4">
-                                    {% if obj.services.names %}
-                                        {% for service in obj.services.all %}<li class="service-label inline-block">{{ service.name }}</li>{% endfor %}
-                                        {% comment %}
-										Every host in our directory used to at least offer shared hosting.
-										Below is a placeholder to see how it would look with live data.
-									{% else %}
-										<li class="service-label inline-block">Compute: Shared Hosting for Websites</li>
-                                        {% endcomment %}
-                                    {% endif %}
-                                </ul>
-                            </p>
-                            {% if obj.public_supporting_evidence %}
-                                <details class="mb-4">
-                                    <summary>
-                                        <span class="">Published supporting evidence</span>
-                                    </summary>
-                                    <ul>
-                                        {% for evidence in obj.public_supporting_evidence %}
-                                            <li class="m-3">
-                                                <a class="py-2"href="{{ evidence.link }}">{{ evidence.title }}</a>
-                                                <div class="description py-2">
-                                                    <small>{{ evidence.description|linebreaks }}</small>
-                                                </div>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </details>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </article>
-        {% endfor %}
+        {% if not ordered_results %}
+            {% include "greencheck/partials/_no_directory_results.html" %}
+        {% else %}
+            {% include "greencheck/partials/_directory_results.html" %}
+        {% endif %}
     </section>
 {% endblock %}
