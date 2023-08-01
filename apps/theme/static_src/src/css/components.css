@@ -12,6 +12,7 @@
 		@apply no-underline;
 		@apply border-2;
 		@apply uppercase;
+		@apply text-center;
 	}
 	.btn:hover {
 		@apply bg-green-200;
@@ -114,5 +115,30 @@
 	}
 	.evidence-description p {
 		@apply my-1.5;
+	}
+	h3[class^="heading-icon"] {
+		@apply relative;
+		@apply pl-20;
+		@apply py-4;
+	}
+	h3[class^="heading-icon"]::before {
+		content: '';
+		@apply absolute;
+		@apply left-0;
+		@apply top-1/2;
+		transform: translate(0, -50%);
+		@apply w-16;
+		@apply h-16;
+		@apply bg-no-repeat;
+		@apply bg-contain;
+	}
+	.heading-icon__sunburst--yellow::before {
+		@apply bg-sunburst-yellow;
+	}
+	.heading-icon__plant--orange::before {
+		@apply bg-plant-orange;
+	}
+	.heading-icon__lightning--purple::before {
+		@apply bg-lightning-purple;
 	}
 }

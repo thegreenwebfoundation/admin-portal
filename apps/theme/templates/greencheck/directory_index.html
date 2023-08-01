@@ -3,6 +3,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tailwind_filters %}
+
 {% block content %}
     <div class="full-width bg-neutral-900 relative -top-6 md:-top-8">
         <section class="container mx-auto text-white pt-12 pb-8 px-2 sm:px-4 lg:pb-12">
@@ -34,88 +35,18 @@
         </section>
     </div>
 
-    <section class="main-content container mx-auto">
+    <section class="main-content container mx-auto md:mb-8 mt-4 lg:mt-6">
         {% if not ordered_results %}
-            {% include "greencheck/partials/_no_directory_results.html" %}
+            {% include "greencheck/partials/no_directory_results.html" %}
         {% else %}
-            {% include "greencheck/partials/_directory_results.html" %}
+            {% include "greencheck/partials/directory_results.html" %}
         {% endif %}
 	</section> 
-	
-    <section class="main-content container mx-auto mb-8 mt-4 lg:mt-6">
 
-        {% regroup ordered_results by country.name as country_list %}
-
-			<p class="mb-8 md:mb-10 lg:mb-12">Showing {{ ordered_results|length }} verified green hosting providers in {{ country_list|length }} countries.</p>
-
-			{% for country in country_list %}
-
-				<section class="country-list my-2 lg:my-4">
-
-					<h2 class="text-2xl my-4 border-b-2 border-black">{{ country.grouper }} ({{ country.list|length }})</h2>
-					
-					{% for obj in country.list %}
-						<article class="provider-listing lg:w-3/4 my-6 lg:mr-0 lg:ml-auto py-6 border-b-2 border-neutral-200 last:border-0">
-							<div class="prose mx-auto lg:ml-0 lg:mr-auto">
-
-								<h4 class="inline-block mb-0 font-bold text-xl" id="{{ obj.id }}">{{ obj.name }}</h4>
-
-								{% if obj.website %}						
-									<a target="_blank" rel="noopener noreferrer" href="https://{{ obj.website|urlencode }}">	
-										<img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt="Visit {{ obj.name }}'s website"/>
-									</a>
-								{% endif %}
-								
-								<p class="text-neutral-700 mt-2 mb-3">
-									{% if obj.description %}
-										{{ obj.description }}
-									{% else %}
-										<small class"text-sm">If we had a description it would go here. So we need some graceful fallback copy to replace this.</small>
-									{% endif %}
-								</p>
-
-								<ul class="mb-4 pl-0">
-									{% if obj.services.names %}
-										{% for service in obj.services.all %}<li class="service-label inline-block">{{ service.name }}</li>{% endfor %}
-										{% comment %}
-										Every host in our directory used to at least offer shared hosting.
-										Below is a placeholder to see how it would look with live data.
-									{% else %}
-										<li class="service-label inline-block">Compute: Shared Hosting for Websites</li>
-										{% endcomment %}
-									{% endif %}
-								</ul>
-
-								{% if obj.public_supporting_evidence %}
-									<details class="mb-4">
-										<summary>
-											<span class="">Published supporting evidence</span>
-										</summary>
-
-										<ul class="mt-3">
-											{% for evidence in obj.public_supporting_evidence %}
-												<li class="m-3">
-													<a class="my-2" target="_blank" rel="noopener noreferrer" href="{{ evidence.link }}">{{ evidence.title }}</a>
-
-													{% if evidence.description %}
-														<div class="evidence-description text-sm">
-															{{ evidence.description|linebreaks }}
-														</div>
-													{% endif %}
-												</li>
-											{% endfor %}
-										</ul>
-									</details>
-								{% endif %}
-							</div>
-						</article>
-					{% endfor %}
-				</section>
-
-			{% endfor %}
-    </section>
-
-<p>Are you missing a green hosting provider in this list? Get verified yourself or ask your provider to get verified with us.</p>
+	{% include "greencheck/partials/directory_ctas.html" %}
 
 {% endblock %}
 
+{% block footer-content %}
+	{% include "greencheck/partials/directory_footer.html" %}
+{% endblock  %}
