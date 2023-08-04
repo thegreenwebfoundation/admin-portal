@@ -119,16 +119,22 @@
 	h3[class^="heading-icon"] {
 		@apply relative;
 		@apply pl-20;
-		@apply py-4;
+		@apply md:pl-16;
+		@apply lg:pl-20;
+		@apply leading-snug;
 	}
 	h3[class^="heading-icon"]::before {
 		content: '';
 		@apply absolute;
 		@apply left-0;
-		@apply top-1/2;
+		top: calc( 50% - 3px );
 		transform: translate(0, -50%);
 		@apply w-16;
 		@apply h-16;
+		@apply md:w-14;
+		@apply md:h-14;
+		@apply lg:w-16;
+		@apply lg:h-16;
 		@apply bg-no-repeat;
 		@apply bg-contain;
 	}
