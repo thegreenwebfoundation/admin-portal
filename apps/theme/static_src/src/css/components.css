@@ -138,6 +138,9 @@
 		@apply bg-no-repeat;
 		@apply bg-contain;
 	}
+	.heading-icon__sunburst--green::before {
+		@apply bg-sunburst-green;
+	}
 	.heading-icon__sunburst--yellow::before {
 		@apply bg-sunburst-yellow;
 	}

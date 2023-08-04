@@ -130,6 +130,7 @@ module.exports = {
 			backgroundImage: {
 				'gradient-135': 'linear-gradient(135deg, var(--tw-gradient-stops))',
 				'external-link': "url('../../img/icon-external-link.svg')",
+				'sunburst-green': "url('../../img/GWF-icon-sunburst--green.svg')",
 				'sunburst-yellow': "url('../../img/GWF-icon-sunburst--yellow.svg')",
 				'plant-orange': "url('../../img/GWF-icon-plant--orange.svg')",
 				'lightning-purple': "url('../../img/GWF-icon-lightning--purple.svg')",
