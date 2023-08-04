@@ -57,7 +57,7 @@ def test_templates_in_filter_view(client, hosting_provider_factory):
     # and: we should see the "has results" template in our list of templates
     # in use
     templates = [tpl.name for tpl in res.templates]
-    assert "greencheck/partials/_directory_results.html" in templates
+    assert "greencheck/partials/directory_results.html" in templates
 
 
 @pytest.mark.django_db
@@ -79,4 +79,4 @@ def test_fallback_when_no_filter_view_has_no_results(client, hosting_provider_fa
     # and: we should see the "no results" template in our list of templates
     # in use
     templates = [tpl.name for tpl in res.templates]
-    assert "greencheck/partials/_no_directory_results.html" in templates
+    assert "greencheck/partials/directory_no_results.html" in templates
