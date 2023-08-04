@@ -8,7 +8,7 @@
     <div class="full-width bg-neutral-900 relative -top-6 md:-top-8">
         <section class="container mx-auto text-white pt-12 pb-8 px-2 sm:px-4 lg:pb-12">
             
-            <h1 class="text-5xl md:text-disp-sm md:mt-6 pb-4">I'm looking for</h1>
+            <h2 class="text-5xl md:text-disp-sm md:mt-6 pb-4">I'm looking for</h2>
             <form method="get"
                 class="form__directory mt-4 grid grid-cols-1 lg:grid-cols-4 grid-rows-3 lg:grid-rows-1 gap-6">
                 {{ filter.form.as_p }}
@@ -16,22 +16,36 @@
             </form>
 
 			<details class="prose mt-6 md:mt-8 lg:mt-0">
-				<summary class="uppercase text-green">What is this directory for? 
+				<summary class="uppercase text-green">More about this directory 
 					<span class="utility-icon info-circle">&#x2139;</span>
 				</summary>
 				<p class="text-white mt-2">
 					The Green Web Directory is a searchable list which enables people to 
 					quickly find verified green hosting companies. These are organisations that offer 
-					<a class="text-white" href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">
+					
 						hosting services</a>
 					and can demonstrate they are taking steps to avoid, reduce or offset 
 					the greenhouse gas emissions caused by using electricity to provide their 
-					services. They share evidence with us, Green Web Foundation, 
+					services. To become verified they share evidence with us, Green Web Foundation, 
 					to show they're doing this on a yearly basis, or better. Verification is free. 
-					<a class="text-white" href="https://www.thegreenwebfoundation.org/green-web-datasets/get-verified/" target="_blank" rel="noopener noreferrer">
-						How to get verified</a>.
+				</p>
+
+				<ul class="pl-0">
+					<li class="inline-block m-0 pl-0">
+						<a class="text-white m-0" href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">
+						Services list</a>
+					</li>
+					<li class="inline-block border-l-2 border-neutral-500 m-0 ml-1 pl-1.5">
+						<a class="text-white m-0" href="https://www.thegreenwebfoundation.org/green-web-dataset/get-verified/" target="_blank" rel="noopener noreferrer">
+						How to get verified</a>
+					</li>
+					<li class="inline-block border-l-2 border-neutral-500 m-0 ml-1 pl-1.5">
+						<a class="text-white m-0" href="https://www.thegreenwebfoundation.org/support-form/" target="_blank" rel="noopener noreferrer">
+						Get help</a>
+					</li>
 				</p>
 			</details>
+
         </section>
     </div>
 

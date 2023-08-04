@@ -8,6 +8,7 @@ from django.db.models import Sum
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic.base import TemplateView
@@ -221,7 +222,7 @@ class ProviderFilter(django_filters.FilterSet):
 
     services = django_filters.ModelChoiceFilter(
         field_name="services",
-        label="Services offered",
+        label="Web hosting service",
         queryset=ac_models.Service.objects.all(),
     )
     # note: this is commented out for Han,
