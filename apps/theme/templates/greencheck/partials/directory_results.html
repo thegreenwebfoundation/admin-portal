@@ -1,7 +1,22 @@
 {% load static %}
 
 {% regroup ordered_results by country.name as country_list %}
-	<p class="mb-8 md:mb-10 lg:mb-12">Showing {{ ordered_results|length }} verified green hosting providers in {{ country_list|length }} countries.</p>
+	
+	  
+	<p class="mb-8 md:mb-10 lg:mb-12">
+		Showing {{ ordered_results|length }} verified green hosting
+		{% if ordered_results|length == 1 %}
+			provider
+		{% else %}
+			providers
+		{% endif %}
+		in {{ country_list|length }} 
+		{% if country_list|length == 1 %}
+			country.
+		{% else %}
+			countries.
+		{% endif %}
+	</p>
 
 	{% for country in country_list %}
 
