@@ -2,7 +2,6 @@
 
 {% regroup ordered_results by country.name as country_list %}
 	
-	  
 	<p class="mb-8 md:mb-10 lg:mb-12">
 		Showing {{ ordered_results|length }} verified green hosting
 		{% if ordered_results|length == 1 %}
@@ -10,7 +9,9 @@
 		{% else %}
 			providers
 		{% endif %}
+
 		in {{ country_list|length }} 
+		
 		{% if country_list|length == 1 %}
 			country.
 		{% else %}
@@ -28,34 +29,40 @@
 				<article class="provider-listing lg:w-3/4 my-6 lg:mr-0 lg:ml-auto py-6 last-of-type:pb-2 border-b-2 border-neutral-200 last:border-0">
 					<div class="prose mx-auto lg:ml-0 lg:mr-auto">
 
-						<h4 class="inline-block mb-0 font-bold text-xl" id="{{ obj.id }}">{{ obj.name }}</h4>
+						<h4 class="inline-block mb-0 font-bold text-xl" id="{{ obj.id }}">
+							{% if obj.website %}						
+								<a class="no-underline" target="_blank" rel="noopener noreferrer" href="https://{{ obj.website|urlencode }}">	
+							{% endif %}
 
-						{% if obj.website %}						
-							<a target="_blank" rel="noopener noreferrer" href="https://{{ obj.website|urlencode }}">	
+							{{ obj.name }}
+
+							{% if obj.website %}
 								<img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt="Visit {{ obj.name }}'s website"/>
-							</a>
+								</a>
+							{% endif %}
+						</h4>
+
+						{% if obj.description %}
+							<p class="text-neutral-700 mt-2 mb-3">
+								{{ obj.description }}
+							</p>
+						{% endif %}
+
+						{% if obj.services.names %}
+							<ul class="my-4 pl-0">
+								{% for service in obj.services.all %}
+									<li class="service-label inline-block">{{ service.name }}</li>
+								{% endfor %}
+
+								{% comment %}
+									Every host in our directory used to at least offer shared hosting.
+									Below is a placeholder to see how it would look with live data.
+									{% else %}
+									<li class="service-label inline-block">Compute: Shared Hosting for Websites</li>
+								{% endcomment %}
+							</ul>
 						{% endif %}
 						
-						<p class="text-neutral-700 mt-2 mb-3">
-							{% if obj.description %}
-								{{ obj.description }}
-							{% else %}
-								<small class"text-sm">If we had a description it would go here. So we need some graceful fallback copy to replace this.</small>
-							{% endif %}
-						</p>
-
-						<ul class="mb-4 pl-0">
-							{% if obj.services.names %}
-								{% for service in obj.services.all %}<li class="service-label inline-block">{{ service.name }}</li>{% endfor %}
-								{% comment %}
-								Every host in our directory used to at least offer shared hosting.
-								Below is a placeholder to see how it would look with live data.
-							{% else %}
-								<li class="service-label inline-block">Compute: Shared Hosting for Websites</li>
-								{% endcomment %}
-							{% endif %}
-						</ul>
-
 						{% if obj.public_supporting_evidence %}
 							<details class="mb-4">
 								<summary>
@@ -77,8 +84,24 @@
 								</ul>
 							</details>
 						{% endif %}
+
 					</div>
+
+					{% if not obj.public_supporting_evidence and not obj.description %}
+						<details class="">
+							<summary class="text-right text-sm text-neutral-400">Help improve this listing</summary>
+
+							<p class="max-w-xs md:max-w-md text-sm text-justify ml-auto mr-0 mt-2 text-neutral-400">
+							Once a hosting provider gets verified with us, we ask them to keep
+							their listing up to date and refresh their evidence at least annually. We find
+							it helps most providers do this more quickly if they also receive a friendly prompt 
+							from their customers telling them they value the open data they provide here.
+							</p>
+
+					{% endif %}
+
 				</article>
+
 			{% endfor %}
 		</section>
 {% endfor %}
