@@ -1,7 +1,8 @@
 ---
 - name: Provision the TGWF django web-app server
   hosts:
-    - app_servers
+    # - app_servers
+    - app4.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
 
@@ -22,7 +23,6 @@
     setup_nginx: false
 
   tasks:
-
     - name: Set up most recent timestamps directories
       ansible.builtin.include_tasks: "_create_deployment_directories.yml"
       when: create_deployment_dirs is true
