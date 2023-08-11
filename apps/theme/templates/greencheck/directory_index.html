@@ -49,16 +49,16 @@
 
     <section class="main-content container mx-auto md:mb-8 mt-4 lg:mt-6">
         {% if not ordered_results %}
-            {% include "greencheck/partials/directory_no_results.html" %}
+            {% include "greencheck/partials/_directory_no_results.html" %}
         {% else %}
-            {% include "greencheck/partials/directory_results.html" %}
+            {% include "greencheck/partials/_directory_results.html" %}
         {% endif %}
 	</section> 
 
-	{% include "greencheck/partials/directory_ctas.html" %}
+	{% include "greencheck/partials/_directory_ctas.html" %}
 
 {% endblock %}
 
 {% block footer-content %}
-	{% include "greencheck/partials/directory_footer.html" %}
+	{% include "greencheck/partials/_directory_footer.html" %}
 {% endblock  %}
