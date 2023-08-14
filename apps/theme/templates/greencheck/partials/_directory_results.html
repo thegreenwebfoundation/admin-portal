@@ -1,48 +1,116 @@
+{% load static %}
+
 {% regroup ordered_results by country.name as country_list %}
-{% for country in country_list %}
-    <article class="md:grid md:grid-cols-5 lg:grid-cols-7 md:grid-rows-1 pt-4 pb-8 md:pt-8 md:pb-14">
-        <h2 class="text-2xl mb-2 mt-0">{{ country.grouper }}</h2>
-        <div class="col-span-3 lg:col-span-5">
-            {% for obj in country.list %}
-                <div class="border-b-2 border-neutral-200 mb-4">
-                    <h4 class="mb-4 font-bold text-xl" id="{{ obj.id }}">{{ obj.name }}</h4>
-                    <p class="text-neutral-700 mb-8 max-w-prose">
-                        {% if obj.description %}
-                            {{ obj.description }}
-                        {% else %}
-                            <small>If we had a description it would go here. So we need some graceful fallback copy to replace this.</small>
-                        {% endif %}
-                        <ul class="mb-4">
-                            {% if obj.services.names %}
-                                {% for service in obj.services.all %}<li class="service-label inline-block">{{ service.name }}</li>{% endfor %}
-                                {% comment %}
-										Every host in our directory used to at least offer shared hosting.
-										Below is a placeholder to see how it would look with live data.
+	
+	<p class="mb-8 md:mb-10 lg:mb-12">
+		Showing {{ ordered_results|length }} verified green hosting
+		{% if ordered_results|length == 1 %}
+			provider
+		{% else %}
+			providers
+		{% endif %}
+
+		in {{ country_list|length }} 
+		
+		{% if country_list|length == 1 %}
+			country.
+		{% else %}
+			countries.
+		{% endif %}
+	</p>
+
+	{% for country in country_list %}
+
+		<section class="country-list my-2 lg:my-4">
+
+			<h2 class="text-2xl my-4 border-b-2 border-black">{{ country.grouper }} ({{ country.list|length }})</h2>
+			
+			{% for obj in country.list %}
+				<article class="provider-listing lg:w-3/4 my-6 lg:mr-0 lg:ml-auto py-6 last-of-type:pb-2 border-b-2 border-neutral-200 last:border-0">
+					<div class="prose mx-auto lg:ml-0 lg:mr-auto">
+
+						<h4 class="inline-block mb-0 font-bold text-xl" id="{{ obj.id }}">
+							{% if obj.website %}						
+								<a class="no-underline" target="_blank" rel="noopener noreferrer" href="https://{{ obj.website|urlencode }}">	
+							{% endif %}
+
+							{{ obj.name }}
+
+							{% if obj.website %}
+								<img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt="Visit {{ obj.name }}'s website"/>
+								</a>
+							{% endif %}
+						</h4>
+
+						{% if obj.description %}
+							<p class="text-neutral-700 mt-2 mb-3">
+								{{ obj.description }}
+							</p>
+						{% endif %}
+
+						{% if obj.services.names %}
+							<ul class="my-4 pl-0">
+								{% for service in obj.services.all %}
+									<li class="service-label inline-block">{{ service.name }}</li>
+								{% endfor %}
+
+								{% comment %}
+									Every host in our directory used to at least offer shared hosting.
+									Below is a placeholder to see how it would look with live data.
 									{% else %}
-										<li class="service-label inline-block">Compute: Shared Hosting for Websites</li>
-                                {% endcomment %}
-                            {% endif %}
-                        </ul>
-                    </p>
-                    {% if obj.public_supporting_evidence %}
-                        <details class="mb-4">
-                            <summary>
-                                <span class="">Published supporting evidence</span>
-                            </summary>
-                            <ul>
-                                {% for evidence in obj.public_supporting_evidence %}
-                                    <li class="m-3">
-                                        <a class="py-2"href="{{ evidence.link }}">{{ evidence.title }}</a>
-                                        <div class="description py-2">
-                                            <small>{{ evidence.description|linebreaks }}</small>
-                                        </div>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </details>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-    </article>
+									<li class="service-label inline-block">Compute: Shared Hosting for Websites</li>
+								{% endcomment %}
+							</ul>
+						{% endif %}
+						
+						{% if obj.public_supporting_evidence %}
+							<details class="mb-4">
+								<summary>
+									<span class="">Published supporting evidence</span>
+								</summary>
+
+								<ul class="mt-3">
+									{% for evidence in obj.public_supporting_evidence %}
+										<li class="m-3">
+											<a class="my-2" target="_blank" rel="noopener noreferrer" href="{{ evidence.link }}">{{ evidence.title }}</a>
+
+											{% if evidence.description %}
+												<div class="evidence-description text-sm">
+													{{ evidence.description|linebreaks }}
+												</div>
+											{% endif %}
+										</li>
+									{% endfor %}
+								</ul>
+							</details>
+						{% endif %}
+
+					</div>
+
+					{% if not obj.public_supporting_evidence and not obj.description %}
+						<details class="">
+							<summary class="text-right text-sm text-neutral-400">Help improve this listing</summary>
+
+							<p class="max-w-xs md:max-w-md text-sm text-justify ml-auto mr-0 mt-2 text-neutral-400">
+							Once a hosting provider gets verified with us, we ask them to keep
+							their listing up to date and refresh their evidence at least annually.</p>
+
+							<p class="max-w-xs md:max-w-md text-sm text-justify ml-auto mr-0 mt-2 text-neutral-400">
+							<span class="text-neutral-500">Are you a customer of this provider?</span> We find
+							it helps most providers act more quickly if they receive a friendly prompt 
+							from you reminding them of the importance of this open data. Use our 
+							<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/sample-emails/">
+							sample emails</a> to start a conversation.</p>
+
+							<p class="max-w-xs md:max-w-md text-sm text-justify ml-auto mr-0 mt-2 text-neutral-400">
+							<span class="text-neutral-500">Do you work for this provider?</span>
+							<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/support-form/?wpf2192_9=Update a listing in the Green Web Directory">
+							Submit a correction</a> now.</p>
+
+					{% endif %}
+
+				</article>
+
+			{% endfor %}
+		</section>
 {% endfor %}

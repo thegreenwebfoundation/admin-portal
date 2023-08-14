@@ -3,23 +3,62 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tailwind_filters %}
+
 {% block content %}
     <div class="full-width bg-neutral-900 relative -top-6 md:-top-8">
-        <section class="container mx-auto text-white px-2 sm:px-4 p-12">
-            <p class="uppercase text-green">Green Web Directory</p>
-            <h1 class="text-disp-sm mt-12 pb-4">I am looking for</h1>
+        <section class="container mx-auto text-white pt-12 pb-8 px-2 sm:px-4 lg:pb-12">
+            
+            <h2 class="text-5xl md:text-disp-sm md:mt-6 pb-4">I'm looking for</h2>
             <form method="get"
-                class="form__directory mt-4 grid grid-cols-1 md:grid-cols-3 grid-rows-3 md:grid-rows-1 gap-8">
+                class="form__directory mt-4 grid grid-cols-1 lg:grid-cols-4 grid-rows-3 lg:grid-rows-1 gap-6">
                 {{ filter.form.as_p }}
-                <input type="submit" class="btn p-4 mt-4 mb-4" value="Find" />
+                <input type="submit" class="btn p-4 mt-4 mb-4 lg:col-span-4 lg:justify-self-end lg:w-1/4" value="Find" />
             </form>
+
+			<details class="prose mt-6 md:mt-8 lg:mt-0">
+				<summary class="uppercase text-green">More about this directory 
+					<span class="utility-icon info-circle">&#x2139;</span>
+				</summary>
+				<p class="text-white mt-2">
+					The Green Web Directory is a searchable list which enables people to 
+					quickly find verified green hosting companies. These are organisations that offer 
+					hosting services and can demonstrate they are taking steps to avoid, reduce or offset 
+					the greenhouse gas emissions caused by using electricity to provide their 
+					services. To become verified they share evidence with us, Green Web Foundation, 
+					to show they're doing this on a yearly basis, or better. Verification is free. 
+				</p>
+
+				<ul class="pl-0">
+					<li class="inline-block border-r-2 border-neutral-500 mr-1 pl-0 pr-1.5">
+						<a class="text-white m-0" href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">
+						Services you can search by</a>
+					</li>
+					<li class="inline-block border-r-2 border-neutral-500 m-0 mr-1 pl-0 pr-1.5">
+						<a class="text-white m-0" href="https://www.thegreenwebfoundation.org/green-web-dataset/get-verified/" target="_blank" rel="noopener noreferrer">
+						How to get verified</a>
+					</li>
+					<li class="inline-block m-0 pl-0">
+						<a class="text-white m-0" href="https://www.thegreenwebfoundation.org/support-form/" target="_blank" rel="noopener noreferrer">
+						Get help</a>
+					</li>
+				</p>
+			</details>
+
         </section>
     </div>
-    <section class="main-content container mx-auto">
+
+    <section class="main-content container mx-auto md:mb-8 mt-4 lg:mt-6">
         {% if not ordered_results %}
-            {% include "greencheck/partials/_no_directory_results.html" %}
+            {% include "greencheck/partials/_directory_no_results.html" %}
         {% else %}
             {% include "greencheck/partials/_directory_results.html" %}
         {% endif %}
-    </section>
+	</section> 
+
+	{% include "greencheck/partials/_directory_ctas.html" %}
+
 {% endblock %}
+
+{% block footer-content %}
+	{% include "greencheck/partials/_directory_footer.html" %}
+{% endblock  %}

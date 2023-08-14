@@ -78,6 +78,19 @@ module.exports = {
 					900: '#671D7F',
 					DEFAULT: '#CB2CFF',
 				},
+				'blue': {
+					50: '#EEF5FF',
+					100: '#E0ECFF',
+					200: '#C7DDFE',
+					300: '#A5C8FC',
+					400: '#0066FF',
+					500: '#0066FF',
+					600: '#4686E5',
+					700: '#3872CA',
+					800: '#305EA3',
+					900: '#2E4F81',
+					DEFAULT: '#0066FF',
+				},
             },			
 			fontFamily: {
 				sans: ['TWKEverett', 'sans-serif'],
@@ -114,6 +127,15 @@ module.exports = {
 					},
 				},
 			}),
+			backgroundImage: {
+				'gradient-135': 'linear-gradient(135deg, var(--tw-gradient-stops))',
+				'external-link': "url('../../img/icon-external-link.svg')",
+				'sunburst-green': "url('../../img/GWF-icon-sunburst--green.svg')",
+				'sunburst-yellow': "url('../../img/GWF-icon-sunburst--yellow.svg')",
+				'plant-orange': "url('../../img/GWF-icon-plant--orange.svg')",
+				'lightning-purple': "url('../../img/GWF-icon-lightning--purple.svg')",
+				
+			},
         },
     },
     plugins: [

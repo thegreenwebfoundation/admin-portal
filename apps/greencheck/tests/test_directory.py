@@ -79,4 +79,4 @@ def test_fallback_when_no_filter_view_has_no_results(client, hosting_provider_fa
     # and: we should see the "no results" template in our list of templates
     # in use
     templates = [tpl.name for tpl in res.templates]
-    assert "greencheck/partials/_no_directory_results.html" in templates
+    assert "greencheck/partials/_directory_no_results.html" in templates
