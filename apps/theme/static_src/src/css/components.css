@@ -144,10 +144,19 @@
 	.heading-icon__sunburst--yellow::before {
 		@apply bg-sunburst-yellow;
 	}
+	.heading-icon__sunburst--black::before {
+		@apply bg-sunburst-black;
+	}
 	.heading-icon__plant--orange::before {
 		@apply bg-plant-orange;
 	}
+	.heading-icon__plant--black::before {
+		@apply bg-plant-black;
+	}
 	.heading-icon__lightning--purple::before {
 		@apply bg-lightning-purple;
+	}
+	.heading-icon__lightning--black::before {
+		@apply bg-lightning-black;
 	}
 }

@@ -132,9 +132,11 @@ module.exports = {
 				'external-link': "url('../../img/icon-external-link.svg')",
 				'sunburst-green': "url('../../img/GWF-icon-sunburst--green.svg')",
 				'sunburst-yellow': "url('../../img/GWF-icon-sunburst--yellow.svg')",
+				'sunburst-black': "url('../../img/GWF-icon-sunburst--black.svg')",
 				'plant-orange': "url('../../img/GWF-icon-plant--orange.svg')",
+				'plant-black': "url('../../img/GWF-icon-plant--black.svg')",
 				'lightning-purple': "url('../../img/GWF-icon-lightning--purple.svg')",
-				
+				'lightning-black': "url('../../img/GWF-icon-lightning--black.svg')",
 			},
         },
     },
