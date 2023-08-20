@@ -36,7 +36,7 @@ def wizard_form_org_details_data():
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "0",
+        "provider_request_wizard_view-current_step": "0",
         "0-name": " ".join(faker.words(5)),
         "0-website": faker.url(),
         "0-description": faker.sentence(10),
@@ -51,7 +51,7 @@ def wizard_form_org_location_data():
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "1",
+        "provider_request_wizard_view-current_step": "1",
         "locations__1-TOTAL_FORMS": "1",
         "locations__1-INITIAL_FORMS": "0",
         "locations__1-0-country": faker.country_code(),
@@ -73,7 +73,7 @@ def wizard_form_services_data():
     services_sample = random.sample([tag.slug for tag in tags_choices], 3)
 
     return {
-        "provider_registration_view-current_step": "2",
+        "provider_request_wizard_view-current_step": "2",
         "2-services": services_sample,
     }
 
@@ -85,7 +85,7 @@ def wizard_form_evidence_data(fake_evidence):
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "3",
+        "provider_request_wizard_view-current_step": "3",
         "3-TOTAL_FORMS": 2,
         "3-INITIAL_FORMS": 0,
         "3-0-title": " ".join(faker.words(3)),
@@ -116,7 +116,7 @@ def wizard_form_network_data(sorted_ips):
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "4",
+        "provider_request_wizard_view-current_step": "4",
         "ips__4-TOTAL_FORMS": "2",
         "ips__4-INITIAL_FORMS": "0",
         "ips__4-0-start": sorted_ips[0],
@@ -136,7 +136,7 @@ def wizard_form_network_explanation_only():
     form wizard, without any IP or AS information.
     """
     return {
-        "provider_registration_view-current_step": "4",
+        "provider_request_wizard_view-current_step": "4",
         "ips__4-TOTAL_FORMS": "0",
         "ips__4-INITIAL_FORMS": "0",
         "asns__4-TOTAL_FORMS": "0",
@@ -152,7 +152,7 @@ def wizard_form_consent():
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "5",
+        "provider_request_wizard_view-current_step": "5",
         "5-data_processing_opt_in": "on",
         "5-newsletter_opt_in": "off",
     }
@@ -165,7 +165,7 @@ def wizard_form_preview():
     as expected by the POST request.
     """
     return {
-        "provider_registration_view-current_step": "6",
+        "provider_request_wizard_view-current_step": "6",
     }
 
 
@@ -323,6 +323,7 @@ def test_wizard_view_happy_path(
     client.force_login(user)
 
     # when: submitting form data for consecutive wizard steps
+
     for step, data in enumerate(form_data, 1):
         response = client.post(urls.reverse("provider_registration"), data, follow=True)
         # then: for all steps except the last one,
