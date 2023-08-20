@@ -222,7 +222,7 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
         return ProviderRequest.objects.filter(created_by=self.request.user)
 
 
-class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizardView):
+class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWizardView):
     """
     Multi-step registration for providers.
     - uses `django-formtools` SessionWizardView to display
@@ -286,7 +286,7 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
 
         Reference: https://django-formtools.readthedocs.io/en/latest/wizard.html#formtools.wizard.views.WizardView.done
         """  # noqa
-        steps = ProviderRegistrationView.Steps
+        steps = ProviderRequestWizardView.Steps
 
         # process ORG_DETAILS form: extract ProviderRequest and Location
         org_details_form = form_dict[steps.ORG_DETAILS.value]
@@ -409,6 +409,55 @@ class ProviderRegistrationView(LoginRequiredMixin, WaffleFlagMixin, SessionWizar
             # inject data from all previous steps for rendering
             context["preview_forms"] = self._get_data_for_preview()
         return context
+
+    def get_form_kwargs(self, step=None):
+        """
+        Workaround for injecting "instance" argument to MultiModelForm
+        """
+        if step == self.Steps.LOCATIONS.value:
+            return {"instance": self.get_form_instance(step)}
+        return {}
+
+    def get_instance_dict(self, request_id):
+        """
+        Based on request_id, return existing instances of ProviderRequest
+        and related objects in a map that matches the structure of the forms.
+        """
+        try:
+            pr_instance = ProviderRequest.objects.get(id=request_id)
+        except ProviderRequest.DoesNotExist:
+            return {}
+
+        location_qs = pr_instance.providerrequestlocation_set.all()
+        evidence_qs = pr_instance.providerrequestevidence_set.all()
+        asn_qs = pr_instance.providerrequestasn_set.all()
+        ip_qs = pr_instance.providerrequestiprange_set.all()
+        consent = pr_instance.providerrequestconsent_set.get()
+
+        # TODO: check behaviour: None vs {} vs no value
+        # TODO: check FormSet argument: iterable or queryset?
+        instance_dict = {
+            self.Steps.ORG_DETAILS.value: pr_instance,
+            self.Steps.LOCATIONS.value: {
+                "locations": location_qs,
+            },
+            # self.Steps.SERVICES.value: None,
+            self.Steps.GREEN_EVIDENCE.value: evidence_qs,
+            self.Steps.NETWORK_FOOTPRINT.value: {
+                "ips": ip_qs,
+                "asns": asn_qs,
+                "extra": pr_instance,
+            },
+            self.Steps.CONSENT.value: consent,
+            # self.Steps.PREVIEW.value: None,
+        }
+        return instance_dict
+
+    def get_form_instance(self, step):
+        request_id = self.kwargs.get("request_id")
+        if not request_id:
+            return None
+        return self.get_instance_dict(request_id)[step]
 
     def _send_notification_email(self, provider_request: ProviderRequest):
         """
