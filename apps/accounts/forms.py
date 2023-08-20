@@ -1,20 +1,19 @@
 import datetime
 
-from betterforms.multiform import MultiModelForm
-from convenient_formsets import ConvenientBaseFormSet
 from dal_select2_taggit import widgets as dal_widgets
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UsernameField
-from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.core.exceptions import ValidationError
+from django.db.models.query import QuerySet
 from django.forms.formsets import BaseFormSet
 from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from dal_select2_taggit import widgets as dal_widgets
 from betterforms.multiform import MultiModelForm
-from convenient_formsets import ConvenientBaseFormSet
+from convenient_formsets import ConvenientBaseModelFormSet
 from file_resubmit.widgets import ResubmitFileWidget
 from taggit_labels.widgets import LabelWidget
 
@@ -196,7 +195,7 @@ class InlineSupportingDocumentForm(forms.ModelForm):
         fields = "__all__"
 
 
-class OrgDetailsForm(forms.Form):
+class OrgDetailsForm(forms.ModelForm):
     """
     Part of multi-step registration form (screen 1)
     """
@@ -261,6 +260,10 @@ class OrgDetailsForm(forms.Form):
 
         return pr
 
+    class Meta:
+        model = ac_models.ProviderRequest
+        fields = ["name", "website", "description", "authorised_by_org"]
+
 
 class ServicesForm(forms.Form):
     """
@@ -302,7 +305,7 @@ class CredentialForm(forms.ModelForm):
         widgets = {"file": ResubmitFileWidget}
 
 
-class MoreConvenientFormset(ConvenientBaseFormSet):
+class MoreConvenientFormset(ConvenientBaseModelFormSet):
     def clean(self):
         """
         ConvenientBaseFormset validates empty forms in a quirky way:
@@ -334,8 +337,9 @@ class MoreConvenientFormset(ConvenientBaseFormSet):
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
 class GreenEvidenceForm(
-    forms.formset_factory(
-        CredentialForm,
+    forms.modelformset_factory(
+        model=ac_models.ProviderRequestEvidence,
+        form=CredentialForm,
         extra=0,
         formset=MoreConvenientFormset,
         validate_min=True,
@@ -370,10 +374,18 @@ class AsnForm(forms.ModelForm):
         exclude = ["request"]
 
 
-IpRangeFormset = forms.formset_factory(
-    IpRangeForm, formset=MoreConvenientFormset, extra=0
+IpRangeFormset = forms.modelformset_factory(
+    model=ac_models.ProviderRequestIPRange,
+    form=IpRangeForm,
+    formset=MoreConvenientFormset,
+    extra=0,
 )
-AsnFormset = forms.formset_factory(AsnForm, formset=MoreConvenientFormset, extra=0)
+AsnFormset = forms.modelformset_factory(
+    model=ac_models.ProviderRequestASN,
+    form=AsnForm,
+    formset=MoreConvenientFormset,
+    extra=0,
+)
 
 
 class ExtraNetworkInfoForm(forms.ModelForm):
@@ -404,7 +416,27 @@ class ExtraNetworkInfoForm(forms.ModelForm):
         fields = ["missing_network_explanation", "network_import_required"]
 
 
-class NetworkFootprintForm(MultiModelForm):
+class BetterMultiModelForm(MultiModelForm):
+    """
+    MultiModelForm does not support injecting "instance" paramater
+    as querysets when child forms are ModelFormSets.
+    See more details: https://github.com/fusionbox/django-betterforms/issues/48
+
+    This helper class fixes that.
+    """
+
+    def get_form_args_kwargs(self, key, args, kwargs):
+        fargs, fkwargs = super().get_form_args_kwargs(key, args, kwargs)
+        try:
+            if isinstance(self.instances[key], QuerySet):
+                fkwargs["queryset"] = self.instances[key]
+                fkwargs.pop("instance")
+        except KeyError:
+            pass
+        return fargs, fkwargs
+
+
+class NetworkFootprintForm(BetterMultiModelForm):
     """
     Part of multi-step registration form (screen 4).
 
@@ -540,8 +572,13 @@ class LocationForm(forms.ModelForm):
 # Part of multi-step registration form (screen 2).
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
-LocationsFormSet = forms.formset_factory(
-    LocationForm, extra=0, formset=MoreConvenientFormset, validate_min=True, min_num=1
+LocationsFormSet = forms.modelformset_factory(
+    model=ac_models.ProviderRequestLocation,
+    form=LocationForm,
+    extra=0,
+    formset=MoreConvenientFormset,
+    validate_min=True,
+    min_num=1,
 )
 
 
@@ -566,11 +603,12 @@ class LocationExtraForm(forms.Form):
         exclude = ["request"]
 
 
-class LocationStepForm(MultiModelForm):
+class LocationStepForm(BetterMultiModelForm):
     """
     A form to support at least one location as well as
     allowing a provider to flag up that they have a
-    significant number of locations to import
+    significant number of locations to import.
+
     """
 
     # We have to set base_fields to a dictionary because
