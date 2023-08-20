@@ -12,7 +12,7 @@ from apps.accounts.views import (
     UserUpdateView,
     ProviderPortalHomeView,
     ProviderRequestDetailView,
-    ProviderRegistrationView,
+    ProviderRequestWizardView,
     ProviderAutocompleteView,
 )
 
@@ -116,8 +116,13 @@ urlpatterns = [
         name="provider_request_detail",
     ),
     path(
+        "requests/<int:request_id>/edit/",
+        ProviderRequestWizardView.as_view(ProviderRequestWizardView.FORMS),
+        name="provider_request_edit",
+    ),
+    path(
         "requests/new/",
-        ProviderRegistrationView.as_view(ProviderRegistrationView.FORMS),
+        ProviderRequestWizardView.as_view(ProviderRequestWizardView.FORMS),
         name="provider_registration",
     ),
     path(
@@ -125,7 +130,7 @@ urlpatterns = [
         ProviderAutocompleteView.as_view(),
         name="provider-autocomplete",
     ),
-	path(
+    path(
         "before-starting/",
         TemplateView.as_view(template_name="provider_portal/before_starting.html"),
         name="before-starting",
