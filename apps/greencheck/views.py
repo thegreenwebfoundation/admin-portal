@@ -222,7 +222,7 @@ class ProviderFilter(django_filters.FilterSet):
 
     services = django_filters.ModelChoiceFilter(
         field_name="services",
-        label="Web hosting service",
+        label="Green web hosting service",
         queryset=ac_models.Service.objects.all(),
     )
     # note: this is commented out for Han,
