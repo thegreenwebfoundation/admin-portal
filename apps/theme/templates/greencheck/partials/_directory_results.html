@@ -23,7 +23,7 @@
 
 		<section class="country-list my-2 lg:my-4">
 
-			<h2 class="text-2xl my-4 border-b-2 border-black">{{ country.grouper }} ({{ country.list|length }})</h2>
+			<h2 class="sticky z-10 top-0 mb-4 pt-4 text-2xl bg-white border-b-2 border-black">{{ country.grouper }} ({{ country.list|length }})</h2>
 			
 			{% for obj in country.list %}
 				<article class="provider-listing lg:w-3/4 my-6 lg:mr-0 lg:ml-auto py-6 last-of-type:pb-2 border-b-2 border-neutral-200 last:border-0">
@@ -113,4 +113,6 @@
 
 			{% endfor %}
 		</section>
-{% endfor %}
+	{% endfor %}
+
+<p>End of results. <a href="#filters-top">To the top</a>. 
