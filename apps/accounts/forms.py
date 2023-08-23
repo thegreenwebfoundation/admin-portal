@@ -318,19 +318,24 @@ class MoreConvenientFormset(ConvenientBaseModelFormSet):
 
         seen = []
         for form in self.forms:
-            if not bool(form.cleaned_data):
+            # we strip the cleaned_data dict from "id" so that finding duplicated values
+            # works for both: new and existing entries
+            form_data = {
+                key: value for key, value in form.cleaned_data.items() if key != "id"
+            }
+            if not bool(form_data):
                 e = ValidationError(
                     "This row has no information - please complete or delete it",
                     code="empty",
                 )
                 form.add_error(None, e)
-            if form.cleaned_data in seen:
+            if form_data in seen:
                 e = ValidationError(
                     "Found a duplicated entry in the form, please remove the duplicate",
                     code="duplicate",
                 )
                 form.add_error(None, e)
-            seen.append(form.cleaned_data)
+            seen.append(form_data)
 
 
 # Part of multi-step registration form (screen 3).
