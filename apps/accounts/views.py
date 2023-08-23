@@ -415,7 +415,11 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         Workaround for injecting "instance" argument to MultiModelForm
         when the form is used for editing existing request
         """
-        if step == self.Steps.LOCATIONS.value and self.kwargs.get("request_id"):
+        affected_steps = [
+            self.Steps.LOCATIONS.value,
+            self.Steps.NETWORK_FOOTPRINT.value,
+        ]
+        if self.kwargs.get("request_id") and step in affected_steps:
             return {"instance": self.get_form_instance(step)}
         return {}
 
