@@ -127,14 +127,6 @@ class ProviderRequest(TimeStampedModel):
         pr_data.setdefault("status", ProviderRequestStatus.OPEN.value)
         return ProviderRequest.objects.create(**pr_data)
 
-    def set_services_from_slugs(self, service_slugs: Iterable[str]) -> None:
-        """
-        Given list of service slugs (corresponding to Tag slugs)
-        apply matching services to the ProviderRequest object
-        """
-        services = Service.objects.filter(slug__in=service_slugs)
-        self.services.set(services)
-
     @classmethod
     def get_service_choices(cls) -> List[Tuple[int, str]]:
         """
