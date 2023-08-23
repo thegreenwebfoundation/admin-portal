@@ -251,7 +251,7 @@ class OrgDetailsForm(forms.ModelForm):
         fields = ["name", "website", "description", "authorised_by_org"]
 
 
-class ServicesForm(forms.Form):
+class ServicesForm(forms.ModelForm):
     """
     Part of multi-step registration form (screen 2)
     """
@@ -264,6 +264,21 @@ class ServicesForm(forms.Form):
             'Choose all the services that your organisation offers. <a href="https://www.thegreenwebfoundation.org/directory/services-offered/" target="_blank" rel="noopener noreferrer">More information on our services</a>.'  # noqa
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        """
+        Implement injecting initial values for services field (for editing existing objects).
+        By default the initial value is passed as a queryset,
+        but TaggableManager does not handle that well - we pass a list instead.
+        """
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+        if instance:
+            self.initial = {"services": [s for s in instance.services.slugs()]}
+
+    class Meta:
+        model = ac_models.ProviderRequest
+        fields = ["services"]
 
 
 class CredentialForm(forms.ModelForm):
@@ -587,7 +602,7 @@ LocationsFormSet = forms.modelformset_factory(
 )
 
 
-class LocationExtraForm(forms.Form):
+class LocationExtraForm(forms.ModelForm):
     """
     A form for information relating to the location step, not a to a
     single one of the locations listed on the location step.
@@ -605,7 +620,8 @@ class LocationExtraForm(forms.Form):
     )
 
     class Meta:
-        exclude = ["request"]
+        model = ac_models.ProviderRequest
+        fields = ["location_import_required"]
 
 
 class LocationStepForm(BetterMultiModelForm):

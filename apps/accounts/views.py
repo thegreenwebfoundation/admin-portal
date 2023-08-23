@@ -310,7 +310,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         # process SERVICES form: assign services to ProviderRequest
         services_form = form_dict[steps.SERVICES.value]
-        pr.set_services_from_slugs(services_form.cleaned_data["services"])
+        services = services_form.cleaned_data["services"]
+        pr.services.set(*services)
         pr.created_by = self.request.user
         pr.save()
 
@@ -341,9 +342,12 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         network_explanation = extra_network_form.cleaned_data.get(
             "missing_network_explanation"
         )
-        if network_explanation:
-            pr.missing_network_explanation = network_explanation
-            pr.save()
+        network_import_required = extra_network_form.cleaned_data.get(
+            "network_import_required"
+        )
+        pr.missing_network_explanation = bool(network_explanation)
+        pr.network_import_required = bool(network_import_required)
+        pr.save()
 
         # process CONSENT form
         consent_form = form_dict[steps.CONSENT.value]
@@ -444,7 +448,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             self.Steps.ORG_DETAILS.value: pr_instance,
             self.Steps.LOCATIONS.value: {
                 "locations": location_qs,
+                "extra": pr_instance,
             },
+            self.Steps.SERVICES.value: pr_instance,
             self.Steps.GREEN_EVIDENCE.value: evidence_qs,
             self.Steps.NETWORK_FOOTPRINT.value: {
                 "ips": ip_qs,
@@ -456,6 +462,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         return instance_dict
 
     def get_form_instance(self, step):
+        # TODO: optimize this - do not construct instance_dict on every call
         request_id = self.kwargs.get("request_id")
         if not request_id:
             return None
