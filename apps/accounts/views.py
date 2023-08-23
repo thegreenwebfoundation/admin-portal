@@ -291,6 +291,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         # process ORG_DETAILS form: extract ProviderRequest and Location
         org_details_form = form_dict[steps.ORG_DETAILS.value]
         pr = org_details_form.save(commit=False)
+        pr.save()
 
         # process LOCATIONS form: extract locations
         locations_formset = form_dict[steps.LOCATIONS.value].forms["locations"]
@@ -305,8 +306,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             "location_import_required"
         ]
 
-        if location_import_required:
-            pr.location_import_required = location_import_required
+        pr.location_import_required = bool(location_import_required)
 
         # process SERVICES form: assign services to ProviderRequest
         services_form = form_dict[steps.SERVICES.value]
@@ -413,8 +413,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
     def get_form_kwargs(self, step=None):
         """
         Workaround for injecting "instance" argument to MultiModelForm
+        when the form is used for editing existing request
         """
-        if step == self.Steps.LOCATIONS.value:
+        if step == self.Steps.LOCATIONS.value and self.kwargs.get("request_id"):
             return {"instance": self.get_form_instance(step)}
         return {}
 
@@ -428,20 +429,18 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         except ProviderRequest.DoesNotExist:
             return {}
 
+        # TODO: handle DoesNotExist
         location_qs = pr_instance.providerrequestlocation_set.all()
         evidence_qs = pr_instance.providerrequestevidence_set.all()
         asn_qs = pr_instance.providerrequestasn_set.all()
         ip_qs = pr_instance.providerrequestiprange_set.all()
         consent = pr_instance.providerrequestconsent_set.get()
 
-        # TODO: check behaviour: None vs {} vs no value
-        # TODO: check FormSet argument: iterable or queryset?
         instance_dict = {
             self.Steps.ORG_DETAILS.value: pr_instance,
             self.Steps.LOCATIONS.value: {
                 "locations": location_qs,
             },
-            # self.Steps.SERVICES.value: None,
             self.Steps.GREEN_EVIDENCE.value: evidence_qs,
             self.Steps.NETWORK_FOOTPRINT.value: {
                 "ips": ip_qs,
@@ -449,7 +448,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
                 "extra": pr_instance,
             },
             self.Steps.CONSENT.value: consent,
-            # self.Steps.PREVIEW.value: None,
         }
         return instance_dict
 

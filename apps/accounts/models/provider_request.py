@@ -73,7 +73,11 @@ class ProviderRequest(TimeStampedModel):
     name = models.CharField(max_length=255)
     website = models.CharField(max_length=255)
     description = models.TextField()
-    status = models.CharField(choices=ProviderRequestStatus.choices, max_length=255)
+    status = models.CharField(
+        choices=ProviderRequestStatus.choices,
+        max_length=255,
+        default=ProviderRequestStatus.PENDING_REVIEW.value,
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
     )

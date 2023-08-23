@@ -246,20 +246,6 @@ class OrgDetailsForm(forms.ModelForm):
         coerce=lambda x: x == "True",
     )
 
-    def save(self, commit=True) -> ProviderRequest:
-        """
-        Returns model instances of: ProviderRequest
-        based on the validated data bound to this Form
-        """
-        pr = ProviderRequest.from_kwargs(
-            **self.cleaned_data, status=ProviderRequestStatus.PENDING_REVIEW.value
-        )
-
-        if commit:
-            pr.save()
-
-        return pr
-
     class Meta:
         model = ac_models.ProviderRequest
         fields = ["name", "website", "description", "authorised_by_org"]
@@ -306,6 +292,20 @@ class CredentialForm(forms.ModelForm):
 
 
 class MoreConvenientFormset(ConvenientBaseModelFormSet):
+    def get_queryset(self):
+        """
+        Built-in BaseModelFormSet uses model's default manager get_queryset,
+        which returns all objects. As a consequence
+        the formset would display all available objects.
+
+        We change that behavior so that unless a "queryset"
+        parameter is passed to the formset (i.e. in editing mode),
+        empty queryset should be returned.
+        """
+        if self.queryset is None:
+            return self.model.objects.none()
+        return super().get_queryset()
+
     def clean(self):
         """
         ConvenientBaseFormset validates empty forms in a quirky way:
