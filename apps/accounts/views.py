@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models.query import QuerySet
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
@@ -271,6 +271,29 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         Steps.CONSENT.value: "provider_registration/consent.html",
         Steps.PREVIEW.value: "provider_registration/preview.html",
     }
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Overwrite method from TemplateView to decide for which users
+        to render a 404 page
+        """
+        request_id = kwargs.get("request_id")
+
+        # all users can access this view to create a new request
+        if not request_id:
+            return super().dispatch(request, *args, **kwargs)
+
+        # edit view can be only accessed for existing PRs
+        try:
+            pr = ProviderRequest.objects.get(id=request_id)
+        except ProviderRequest.DoesNotExist:
+            raise Http404("Page not found")
+
+        # only admins and creators can access for editing existing requests
+        if not request.user.is_admin and request.user.id != pr.created_by.id:
+            raise Http404("Page not found")
+
+        return super().dispatch(request, *args, **kwargs)
 
     def done(self, form_list, form_dict, **kwargs):
         """
