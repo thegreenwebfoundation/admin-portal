@@ -311,7 +311,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         # process SERVICES form: assign services to ProviderRequest
         services_form = form_dict[steps.SERVICES.value]
         services = services_form.cleaned_data["services"]
-        pr.services.set(*services)
+        pr.services.set(services)
         pr.created_by = self.request.user
         pr.save()
 
@@ -345,7 +345,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         network_import_required = extra_network_form.cleaned_data.get(
             "network_import_required"
         )
-        pr.missing_network_explanation = bool(network_explanation)
+        pr.missing_network_explanation = network_explanation
         pr.network_import_required = bool(network_import_required)
         pr.save()
 
