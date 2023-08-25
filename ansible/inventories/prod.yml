@@ -9,22 +9,26 @@ all:
       internal_ip: "10.0.0.4"
       dramatiq_threads: 2
       dramatiq_processes: 3
+    # TODO: once we have update the worker process names we can use app3 for serving production traffic
+    # letting us decommission some of the older app servers
+    app3.thegreenwebfoundation.org:
+      internal_ip: "10.0.0.6"
+      dramatiq_threads: 1
+      dramatiq_processes: 1
     app4.thegreenwebfoundation.org:
       internal_ip: "10.0.0.7"
       dramatiq_threads: 2
       dramatiq_processes: 3
 
-    hel1.thegreenwebfoundation.org:
-      internal_ip: "10.0.0.3"
-
   vars:
+    tgwf_stage: "prod"
+    tgwf_domain_name: "admin"
     project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
     project_deploy_branch: "master"
-    tgwf_stage: "prod"
-    tgwf_domain_name: admin
-    ansible_user: deploy
-    supervisor_gunicorn_app: "admin_web"
-    supervisor_worker_job: "admin_worker"
+    ansible_user: "deploy"
+    supervisor_user: "deploy"
+    supervisor_gunicorn_app: "web_{{ tgwf_stage }}"
+    supervisor_worker_job: "worker_{{ tgwf_stage }}"
 
   # you can set child groups too
   children:
@@ -34,6 +38,7 @@ all:
       hosts:
         app1.thegreenwebfoundation.org:
         app2.thegreenwebfoundation.org:
+        app3.thegreenwebfoundation.org:
         app4.thegreenwebfoundation.org:
       # within the child group can define new vars which take
       # precedence over the ones further 'upstream'

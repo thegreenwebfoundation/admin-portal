@@ -1,0 +1,28 @@
+---
+- name: Control how many processes we are running without redeploying the TGWF django apps
+  hosts:
+    # - app1.thegreenwebfoundation.org
+    # - app2.thegreenwebfoundation.org
+    - app3.thegreenwebfoundation.org
+    - app4.thegreenwebfoundation.org
+  remote_user: "deploy"
+  become: false
+
+  vars:
+    # see vars in the inventory yaml files
+    # use one of: started, restarted, stopped
+    preferred_state: started
+
+  tasks:
+    - name: Set up process management with supervisor
+      ansible.builtin.include_tasks: "_set_up_process_mgmt.yml"
+      tags:
+        - supervisor
+
+    - name: Update django apps using supervisor
+      ansible.builtin.supervisorctl:
+        name: "{{ supervisor_gunicorn_app }}:"
+        state: "{{ preferred_state }}"
+      become: true
+      tags:
+        - supervisor
