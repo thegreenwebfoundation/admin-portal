@@ -1,0 +1,44 @@
+---
+# shared steps for provisioning boxes, deploying and controlling
+# how web workers and queue workers are scaled
+- name: Set up script for running workers and gunicorn, via supervisor in project
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: deploy
+    group: deploy
+    mode: "0755"
+  loop:
+    - {
+        src: "run_worker.sh.j2",
+        dest: "{{ project_root }}/current/run_worker.sh",
+      }
+    - {
+        src: "run_gunicorn.sh.j2",
+        dest: "{{ project_root }}/current/run_gunicorn.sh",
+      }
+  become: true
+  tags:
+    - supervisor
+    - config
+
+- name: Set up supervisor entries for workers and web
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: deploy
+    group: deploy
+    mode: "0755"
+  loop:
+    - {
+        src: "supervisor.gunicorn.conf.j2",
+        dest: "/etc/supervisor/conf.d/{{ supervisor_gunicorn_app }}.conf",
+      }
+    - {
+        src: "supervisor.worker.conf.j2",
+        dest: "/etc/supervisor/conf.d/{{ supervisor_worker_job }}.conf",
+      }
+  become: true
+  tags:
+    - supervisor
+    - config

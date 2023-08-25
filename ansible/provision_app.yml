@@ -2,7 +2,11 @@
 - name: Provision the TGWF django web-app server
   hosts:
     # - app_servers
-    - app4.thegreenwebfoundation.org
+    # - app1.thegreenwebfoundation.org
+    # - app2.thegreenwebfoundation.org
+    # - app3.thegreenwebfoundation.org
+    # - app4.thegreenwebfoundation.org
+
   remote_user: "deploy"
   become: false
 

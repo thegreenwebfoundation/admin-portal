@@ -20,13 +20,16 @@ This runs through the following steps:
 
 See `deploy.yml` and `deploy-workers.yml`, for more information.
 
-Assumign you have ssh access set up for the correct servers, you deploy  with the following command:
+Assuming you have ssh access set up for the correct servers, you deploy with the following command:
 
 ```
 ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml
 ```
 
 Alternatively, merging code into master triggers the same ansible script via github actions.
+
+
+
 
 ### how our web servers are deployed
 
@@ -68,9 +71,9 @@ flowchart LR
 
     request
     request-->master
-    
+
     subgraph gunicorn
-        
+
         master-->worker1
         master-->worker2
         master-->worker3
@@ -127,7 +130,8 @@ flowchart LR
     end
 ```
 
-As the workloads we serve change, we may need to update the numbers of workers and the kinds of workers,to make the best use of the resources available to serve the workloads facing us.
+
+As the workloads we serve change, we may need to update the numbers of workers and the kinds of workers,to make the best use of the resources available to serve the workloads facing us. See "scaling processes" below for more
 
 **See the code**
 
@@ -198,7 +202,28 @@ manage.py rundramatiq --threads 1 --processes 1 --queues stats
 manage.py rundramatiq
 ```
 
-Update the number of threads and processes accordingly to allocate the appropriate amounts of  resources for the workloads.
+Update the number of threads and processes accordingly to allocate the appropriate amounts of resources for the workloads.
+
+### Scaling processes with ansible
+
+Each new deploy using the `deploy.yml` ansible playbook deploys the version of the branch specified in `project_deploy_branch`, including number of processes for both the gunicorn web server and for the dramatiq queue workers.
+
+If you only want to scale the workers up and down, and don't want to run through the whole deployment process, updating just the processes is possible.
+
+You have two possible options - first pass the `supervisor` tag to the deploy script. This will only run the steps tagged with `supervisor` in the deploy playbook.
+
+```
+ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml --tags supervisor
+```
+
+Alternatively, you can run the dedicated `scale-processes.yml` playbook. This includes the same tasks as are defined in the larger `deploy` playbook:
+
+```
+ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml --tags supervisor
+```
+
+These playbooks template out new scripts that supervisor the installed process monitors use to run both the gunicorn web servers and dramatiq queue workers, then send a command to update stop, start or restart these processes.
+
 
 **Further reading**
 

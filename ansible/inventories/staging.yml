@@ -7,13 +7,13 @@ all:
       dramatiq_processes: 1
 
   vars:
-    project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-    project_deploy_branch: "staging"
     tgwf_stage: "staging"
     tgwf_domain_name: "admin-staging"
+    project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
+    project_deploy_branch: "staging"
     ansible_user: "deploy"
-    supervisor_gunicorn_app: "web-staging"
-    supervisor_worker_job: "worker-staging"
+    supervisor_gunicorn_app: "web_{{ tgwf_stage }}"
+    supervisor_worker_job: "worker_{{ tgwf_stage }}"
 
   # you can set child groups too
   children:
