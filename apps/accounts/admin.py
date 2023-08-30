@@ -1381,7 +1381,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "network_import_required",
         "missing_network_explanation",
     )
-    actions = ["mark_approved", "mark_rejected", "mark_removed"]
+    actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"
 
     def send_approval_email(self, provider_request, request):
@@ -1481,6 +1481,24 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
                     provider portal view.
                     The creator of this request has <em>not</em> been contacted yet - you
                     will need to contact them if appropriate.
+                    """
+            )
+            self.message_user(request, message=message, level=messages.SUCCESS)
+
+    @admin.action(description="Request changes", permissions=["change"])
+    def mark_open(self, request, queryset):
+        for provider_request in queryset:
+            provider_request.status = ProviderRequestStatus.OPEN.value
+            provider_request.save()
+
+            message = mark_safe(
+                f"""
+                    Request id <em>{provider_request.id}</em> for provider: \
+                    <em>{provider_request.name}</em> has changed the status to OPEN,
+                    making it available for editing and re-submitting.
+
+                    They creator of this request has <em>not</em> been contacted yet -
+                    you will need to contact them if appropriate.
                     """
             )
             self.message_user(request, message=message, level=messages.SUCCESS)
