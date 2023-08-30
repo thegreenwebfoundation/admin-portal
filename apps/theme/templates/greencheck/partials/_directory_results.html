@@ -26,10 +26,10 @@
 			<h2 class="sticky z-10 top-0 mb-4 pt-4 text-2xl bg-white border-b-2 border-black">{{ country.grouper }} ({{ country.list|length }})</h2>
 			
 			{% for obj in country.list %}
-				<article class="provider-listing lg:w-3/4 my-6 lg:mr-0 lg:ml-auto py-6 last-of-type:pb-2 border-b-2 border-neutral-200 last:border-0">
+				<article id="{{ obj.id }}" class="provider-listing lg:w-3/4 my-6 lg:mr-0 lg:ml-auto py-6 last-of-type:pb-2 border-b-2 border-neutral-200 last:border-0 scroll-mt-12">
 					<div class="prose mx-auto lg:ml-0 lg:mr-auto">
 
-						<h4 class="inline-block mb-0 font-bold text-xl" id="{{ obj.id }}">
+						<h4 class="inline-block mb-0 font-bold text-xl">
 							{% if obj.website %}						
 								<a class="no-underline" target="_blank" rel="noopener noreferrer" href="https://{{ obj.website|urlencode }}">	
 							{% endif %}
