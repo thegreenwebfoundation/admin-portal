@@ -742,3 +742,43 @@ def test_wizard_records_if_location_import_needed(
     pr_from_db = models.ProviderRequest.objects.filter(id=pr.id).first()
 
     assert pr_from_db.location_import_required is True
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_new_submission_doesnt_modify_available_services(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    # given: existing list of available services
+    services = models.Service.objects.all()
+
+    # given: valid form data and authenticated user
+    form_data = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        wizard_form_evidence_data,
+        wizard_form_network_data,
+        wizard_form_consent,
+        wizard_form_preview,
+    ]
+    client.force_login(user)
+
+    # when: a multi step submission has been successfully completed
+    response = _create_provider_request(client, form_data)
+
+    pr = response.context_data["providerrequest"]
+    pr_from_db = models.ProviderRequest.objects.filter(id=pr.id).first()
+
+    # then: all services in the new request already existed in the db
+    assert all(service in services for service in pr_from_db.services.all())
+    # then: no new services were created in the db
+    assert set(models.Service.objects.all()) == set(services)
