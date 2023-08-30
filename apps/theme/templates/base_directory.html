@@ -18,14 +18,16 @@
 				{% block nav %}
 				<nav class="flex gap-8 justify-between items-center bg-white py-6">
 					<div class="">
-						<a href="/">
+						<a href="https://www.thegreenwebfoundation.org/">
 							<img width="200px" height="48px" src="{% static 'img/TGWF-logo.svg' %}" alt="The Green Web Foundation logo"/>
 						</a>
 					</div>
 
 					{% block nav-menu %}
 					<div class="flex-grow border-l text-medium pl-8 h-12 flex items-center">
-						<p class="font-bold">Directory</p>
+							<p class="font-bold">
+								<a href="https://app.greenweb.org/directory/" class="no-underline">Directory</a>
+							</p>
 					</div>
 					{% endblock nav-menu %}
 
