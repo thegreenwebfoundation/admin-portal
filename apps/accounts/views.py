@@ -386,6 +386,10 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         consent.request = pr
         consent.save()
 
+        # set status
+        pr.status = ProviderRequestStatus.PENDING_REVIEW.value
+        pr.save()
+
         # send an email notification to the author and green web staff
         self._send_notification_email(pr)
 
