@@ -289,6 +289,14 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         except ProviderRequest.DoesNotExist:
             raise Http404("Page not found")
 
+        if pr.status != ProviderRequestStatus.OPEN:
+            messages.error(
+                self.request, "This verification request cannot be edited at this time"
+            )
+            return HttpResponseRedirect(
+                reverse("provider_request_detail", args=[pr.pk])
+            )
+
         # only admins and creators can access for editing existing requests
         if not request.user.is_admin and request.user.id != pr.created_by.id:
             raise Http404("Page not found")
