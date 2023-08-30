@@ -341,8 +341,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         # process SERVICES form: assign services to ProviderRequest
         services_form = form_dict[steps.SERVICES.value]
-        services = services_form.cleaned_data["services"]
-        pr.services.set(services)
+        service_slugs = services_form.cleaned_data["services"]
+        pr.set_services_from_slugs(service_slugs)
         pr.created_by = self.request.user
         pr.save()
 
