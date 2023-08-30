@@ -30,6 +30,7 @@ sphinxcontrib-mermaid = "*"
 furo = "==2022.4.7"
 myst-parser = "==0.18.0"
 ansible-lint = "*"
+django-browser-reload = "*"
 
 [packages]
 django = { extras = ["bcrypt"], version = "~=3.2" }
