@@ -52,10 +52,14 @@ def wizard_form_org_location_data():
     """
     return {
         "provider_request_wizard_view-current_step": "1",
-        "locations__1-TOTAL_FORMS": "1",
+        "locations__1-TOTAL_FORMS": "3",
         "locations__1-INITIAL_FORMS": "0",
         "locations__1-0-country": faker.country_code(),
         "locations__1-0-city": faker.city(),
+        "locations__1-1-country": faker.country_code(),
+        "locations__1-1-city": faker.city(),
+        "locations__1-2-country": faker.country_code(),
+        "locations__1-2-city": faker.city(),
         "extra__1-location_import_required": "True",
     }
 
@@ -868,8 +872,18 @@ def test_editing_pr_updates_original_submission(
     wizard_form_consent,
     wizard_form_preview,
 ):
+    """
+    This is an end-to-end test verifying that:
+    - edit view for an existing ProviderRequest displays
+        initial data correctly for each step
+    - ModelForms and ModelFormsets in consecutive steps are bound
+        to correct "instance" or "queryset" respectively.
+
+    Initial data for ProviderRequest is created in the test,
+    data used for updating the object is injected as wizard_form_* fixtures.
+    """
     # given: an open provider request
-    pr = ProviderRequestFactory.create()
+    pr = ProviderRequestFactory.create(services=["service1", "service2"])
 
     loc1 = ProviderRequestLocationFactory.create(request=pr)
     loc2 = ProviderRequestLocationFactory.create(request=pr)
@@ -883,18 +897,6 @@ def test_editing_pr_updates_original_submission(
 
     asn = ProviderRequestASNFactory.create(request=pr)
 
-    # given: valid form data for consecutive wizard steps 
-    # (to override the initial data)
-    form_data = [
-        wizard_form_org_details_data,
-        wizard_form_org_location_data,
-        wizard_form_services_data,
-        wizard_form_evidence_data,
-        wizard_form_network_data,
-        wizard_form_consent,
-        wizard_form_preview,
-    ]
-
     # given: URL of the edit view of the existing PR
     edit_url = urls.reverse("provider_request_edit", args=[str(pr.id)])
 
@@ -903,31 +905,118 @@ def test_editing_pr_updates_original_submission(
     response = client.get(edit_url)
 
     # then: ORG_DETAILS form is bound with an instance, initial data is displayed
-    assert response.context_data["wizard"]["steps"].current == "0"
-    assert response.context_data["form"].instance == pr
-    assert response.context_data["form"].initial == {
-            "name": pr.name,
-            "website": pr.website,
-            "description": pr.description,
-            "authorised_by_org": pr.authorised_by_org,
-        }
+    org_details_form = response.context_data["form"]
+    assert org_details_form.instance == pr
+    assert org_details_form.initial == {
+        "name": pr.name,
+        "website": pr.website,
+        "description": pr.description,
+        "authorised_by_org": pr.authorised_by_org,
+    }
     # when: submitting ORG_DETAILS form with overridden data
     response = client.post(edit_url, wizard_form_org_details_data, follow=True)
-    
+
     # then: wizard proceeds, LOCATIONS formset is displayed with bound queryset and initial data
     locations_formset = response.context_data["form"].forms["locations"]
-    assert all([loc in locations_formset.queryset for loc in [loc1, loc2]])
-    assert locations_formset.forms[0].initial == {"name": loc1.name, "city": loc1.city, "country": loc1.country}
-    assert locations_formset.forms[1].initial == {"name": loc2.name, "city": loc2.city, "country": loc2.country}
+    assert set(locations_formset.queryset) == set([loc1, loc2])
+    assert locations_formset.forms[0].initial == {
+        "name": loc1.name,
+        "city": loc1.city,
+        "country": loc1.country,
+    }
+    assert locations_formset.forms[1].initial == {
+        "name": loc2.name,
+        "city": loc2.city,
+        "country": loc2.country,
+    }
     # when: submitting LOCATIONS form with overridden data
     response = client.post(edit_url, wizard_form_org_location_data, follow=True)
 
     # then: wizard proceeds, SERVICES form is displayed with bound instance and initial data
+    services_form = response.context_data["form"]
+    assert services_form.instance == pr
+    assert services_form.initial == {"services": ["service1", "service2"]}
+    # when: submitting SERVICES form with overridden data
+    response = client.post(edit_url, wizard_form_services_data, follow=True)
 
+    # then: wizards proceeds, EVIDENCE formset is displayed with bound queryset and initial data
+    evidence_formset = response.context_data["form"]
+    assert set(evidence_formset.queryset) == set([ev1, ev2])
+    # we strip expected initial data from "file" key for comparison purposes
+    # because {'file': <FieldFile: None>} != {'file': <FieldFile: None>}
+    ev1_initial = {
+        "title": ev1.title,
+        "description": ev1.description,
+        "link": ev1.link,
+        "type": ev1.type,
+        "public": ev1.public,
+    }
+    ev2_initial = {
+        "title": ev2.title,
+        "description": ev2.description,
+        "link": ev2.link,
+        "type": ev2.type,
+        "public": ev2.public,
+    }
+    assert ev1_initial.items() <= evidence_formset.forms[0].initial.items()
+    assert ev2_initial.items() <= evidence_formset.forms[1].initial.items()
+
+    # when: submitting EVIDENCE step with overridden data
+    response = client.post(edit_url, wizard_form_evidence_data, follow=True)
+
+    # then: wizard proceeds, NETWORK form is displayed
+    # and child forms/formsets have queryset/instance and initial data assigned
+    network_form = response.context_data["form"]
+    ip_formset = network_form.forms["ips"]
+    assert set(ip_formset.queryset) == set([ip1, ip2, ip3])
+
+    asn_formset = network_form.forms["asns"]
+    assert set([asn]) == set(asn_formset.queryset)
+
+    extra_network_form = network_form.forms["extra"]
+    assert extra_network_form.instance == pr
+    assert extra_network_form.initial == {
+        "missing_network_explanation": pr.missing_network_explanation,
+        "network_import_required": pr.network_import_required,
+    }
+
+    # when: submitting NETWORK step with overridden data
+    response = client.post(edit_url, wizard_form_network_data, follow=True)
+
+    # then: wizard proceeds, CONSENT step is displayed with correct instance/initial data assigned
+    consent_form = response.context_data["form"]
+    assert consent_form.instance == pr
+    assert consent_form.initial == {
+        "data_processing_opt_in": pr.data_processing_opt_in,
+        "newsletter_opt_in": pr.newsletter_opt_in,
+    }
+
+    # when: submitting CONSENT step with overridden data
+    response = client.post(edit_url, wizard_form_consent, follow=True)
+
+    # then: PREVIEW step is rendered with correct data
+    preview_form_dict = response.context_data["preview_forms"]
+
+    # org_detail preview displays overridden data
+    overridden_values = {
+        "name": wizard_form_org_details_data["0-name"],
+        "description": wizard_form_org_details_data["0-description"],
+        "website": wizard_form_org_details_data["0-website"],
+    }
+    assert overridden_values.items() <= preview_form_dict["0"].initial.items()
+
+    # locations preview displays overridden data
+    assert preview_form_dict["1"].forms["locations"].total_form_count() == 3
+
+    # TODO: expand checking PREVIEW step when injecting the data is fixed
+    # when: PREVIEW form is submitted
+    response = client.post(edit_url, wizard_form_preview, follow=True)
 
     # then: submitting the final step redirects to the detail view
     assert response.resolver_match.func.view_class is views.ProviderRequestDetailView
+
     # then: a ProviderRequest object is updated in the db
     pr_id = response.context_data["providerrequest"].id
     updated_pr = models.ProviderRequest.objects.get(id=pr_id)
-    assert updated_pr # TODO: verify fields have changed
+    assert updated_pr.name == overridden_values["name"]
+    assert updated_pr.providerrequestlocation_set.count() == 3
