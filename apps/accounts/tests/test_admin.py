@@ -559,7 +559,7 @@ def test_provider_request_accessible_by_admin(
     request.user = greenweb_staff_user
 
     inline_instances = pr_admin.get_inline_instances(request, pr)
-    assert len(inline_instances) == 5
+    assert len(inline_instances) == 4
 
     assert pr_admin.has_add_permission(request)
     assert pr_admin.has_view_permission(request)

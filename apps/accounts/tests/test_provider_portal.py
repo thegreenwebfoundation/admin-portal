@@ -10,6 +10,27 @@ import pytest
 
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
+def test_provider_portal_home_view_displays_only_authored_requests(client):
+    # given: 3 provider requests exist, created by different users
+    pr1 = ProviderRequestFactory.create()
+    pr2 = ProviderRequestFactory.create()
+    pr3 = ProviderRequestFactory.create()
+
+    # when: accessing the list view as the author of pr2
+    client.force_login(pr2.created_by)
+    response = client.get(reverse("provider_portal_home"))
+
+    # then: link to detail view of pr2 is displayed
+    assert response.status_code == 200
+    assert f'href="{pr2.get_absolute_url()}"'.encode() in response.content
+
+    # then: links to pr1 and pr3 are not displayed
+    assert f'href="{pr1.get_absolute_url()}"'.encode() not in response.content
+    assert f'href="{pr3.get_absolute_url()}"'.encode() not in response.content
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
 def test_provider_portal_home_view_returns_only_unapproved_requests(client):
     # given: 1 pending verification request
     pr1 = ProviderRequestFactory.create(status=ProviderRequestStatus.PENDING_REVIEW)

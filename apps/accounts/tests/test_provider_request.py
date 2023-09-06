@@ -278,27 +278,6 @@ def test_detail_view_forbidden_for_others(client, user):
 
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
-def test_provider_portal_home_view_displays_only_authored_requests(client):
-    # given: 3 provider requests exist, created by different users
-    pr1 = ProviderRequestFactory.create()
-    pr2 = ProviderRequestFactory.create()
-    pr3 = ProviderRequestFactory.create()
-
-    # when: accessing the list view as the author of pr2
-    client.force_login(pr2.created_by)
-    response = client.get(urls.reverse("provider_portal_home"))
-
-    # then: link to detail view of pr2 is displayed
-    assert response.status_code == 200
-    assert f'href="{pr2.get_absolute_url()}"'.encode() in response.content
-
-    # then: links to pr1 and pr3 are not displayed
-    assert f'href="{pr1.get_absolute_url()}"'.encode() not in response.content
-    assert f'href="{pr3.get_absolute_url()}"'.encode() not in response.content
-
-
-@pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_wizard_view_happy_path(
     user,
     client,
@@ -782,3 +761,18 @@ def test_new_submission_doesnt_modify_available_services(
     assert all(service in services for service in pr_from_db.services.all())
     # then: no new services were created in the db
     assert set(models.Service.objects.all()) == set(services)
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_edit_view_accessible_by_creator(client):
+    # given: an approved provider request
+    pr = ProviderRequestFactory.create()
+    loc = ProviderRequestLocationFactory.create(request=pr)
+
+    # when: accessing its edit view by the creator
+    client.force_login(pr.created_by)
+    response = client.get(urls.reverse("provider_request_edit", args=[str(pr.id)]))
+
+    # then: page for the correct provider request is rendered
+    assert response.status_code == 200
