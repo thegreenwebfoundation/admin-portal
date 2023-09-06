@@ -109,15 +109,6 @@ class ProviderRequestASNFactory(factory.django.DjangoModelFactory):
         model = ac_models.ProviderRequestASN
 
 
-class ProviderRequestConsentFactory(factory.django.DjangoModelFactory):
-    data_processing_opt_in = True
-    newsletter_opt_in = factory.Faker("random_element", elements=[True, False])
-    request = factory.SubFactory(ProviderRequestFactory)
-
-    class Meta:
-        model = ac_models.ProviderRequestConsent
-
-
 @pytest.fixture
 def provider_groups():
     return auth_models.Group.objects.filter(name__in=["datacenter", "hostingprovider"])
