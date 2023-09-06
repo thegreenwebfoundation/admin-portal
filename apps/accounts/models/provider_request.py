@@ -40,7 +40,7 @@ class ProviderRequestStatus(models.TextChoices):
     PENDING_REVIEW = "Pending review"
     APPROVED = "Approved"
     REJECTED = "Rejected"
-    OPEN = "Open"
+    OPEN = "More info required"
     REMOVED = "Removed"
 
 
