@@ -14,12 +14,16 @@
         <p>Submitted on: {{ object.created }}</p>
         <p>Status: <span class="uppercase">{{ object.status }}</span></p>
 
-        {% if object.approved_at %}
+        {% if object.approved_at and object.status|lower == "approved" %}
           <p>Approved on: <span>{{ object.approved_at }}</span></p>
         {% endif %}
 
         {% if object.status|lower == "pending review" %}
-          If you want to update the information relating to this provider, please get in touch using <a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/support-form/">our support form</a>.
+          We are currently reviewing this request. If you want to update the information relating to this provider, please get in touch using <a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/support-form/">our support form</a>.
+        {% endif %}
+
+        {% if object.status|lower == "more info required" %}
+          <p class="mt-8"><a href="{% url 'provider_request_edit' object.id %}" class="btn">Update this request</a></p>
         {% endif %}
       </header>
 
