@@ -434,6 +434,10 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         will include extra (empty) forms as defined per formset factory.
         Templates should use `formset.initial_forms` for rendering non-empty forms.
         """
+        # TODO: fix passing data for the preview step
+        # PROBLEM: ModelFormSets take initial value truncated to extra forms only!
+        # that's why we only see 1 instance passed to the formset
+        # https://docs.djangoproject.com/en/3.2/topics/forms/modelforms/#id2
         preview_forms = {}
         # iterate over all forms without the last one (PREVIEW)
         for step, form in self.FORMS[:-1]:
