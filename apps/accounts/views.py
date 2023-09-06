@@ -41,7 +41,15 @@ from .forms import (
     ConsentForm,
     PreviewForm,
 )
-from .models import User, ProviderRequest, ProviderRequestStatus, Hostingprovider
+from .models import (
+    User,
+    ProviderRequest,
+    ProviderRequestStatus,
+    Hostingprovider,
+    ProviderRequestASN,
+    ProviderRequestEvidence,
+    ProviderRequestIPRange,
+)
 from .utils import send_email
 
 import logging
@@ -478,11 +486,26 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         except ProviderRequest.DoesNotExist:
             return {}
 
-        # TODO: handle DoesNotExist
-        location_qs = pr_instance.providerrequestlocation_set.all()
-        evidence_qs = pr_instance.providerrequestevidence_set.all()
-        asn_qs = pr_instance.providerrequestasn_set.all()
-        ip_qs = pr_instance.providerrequestiprange_set.all()
+        location_qs = (
+            pr_instance.providerrequestlocation_set.all()
+            if pr_instance.providerrequestlocation_set.exists()
+            else ProviderRequestASN.objects.none()
+        )
+        evidence_qs = (
+            pr_instance.providerrequestevidence_set.all()
+            if pr_instance.providerrequestevidence_set.exists()
+            else ProviderRequestEvidence.objects.none()
+        )
+        asn_qs = (
+            pr_instance.providerrequestasn_set.all()
+            if pr_instance.providerrequestasn_set.exists()
+            else ProviderRequestASN.objects.none()
+        )
+        ip_qs = (
+            pr_instance.providerrequestiprange_set.all()
+            if pr_instance.providerrequestiprange_set.exists()
+            else ProviderRequestIPRange.objects.none()
+        )
 
         instance_dict = {
             self.Steps.ORG_DETAILS.value: pr_instance,
