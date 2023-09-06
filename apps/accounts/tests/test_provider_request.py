@@ -766,9 +766,9 @@ def test_new_submission_doesnt_modify_available_services(
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
 def test_edit_view_accessible_by_creator(client):
-    # given: an approved provider request
+    # given: an open provider request
     pr = ProviderRequestFactory.create()
-    loc = ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestLocationFactory.create(request=pr)
 
     # when: accessing its edit view by the creator
     client.force_login(pr.created_by)
@@ -776,3 +776,57 @@ def test_edit_view_accessible_by_creator(client):
 
     # then: page for the correct provider request is rendered
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_edit_view_accessible_by_admin(client, greenweb_staff_user):
+    # given: an open provider request
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+
+    # when: accessing its edit view by Green Web staff
+    client.force_login(greenweb_staff_user)
+    response = client.get(urls.reverse("provider_request_edit", args=[str(pr.id)]))
+
+    # then: page for the correct provider request is rendered
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_edit_view_inaccessible_by_other_users(client, user):
+    # given: an open provider request
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+
+    # when: accessing its edit view by regular users other than the creator
+    client.force_login(user)
+    response = client.get(urls.reverse("provider_request_edit", args=[str(pr.id)]))
+
+    # then: we pretend this request does not exist and show 404
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+@pytest.mark.parametrize(
+    "request_status,status_code",
+    [
+        (models.ProviderRequestStatus.OPEN, 200),
+        (models.ProviderRequestStatus.PENDING_REVIEW, 302),
+        (models.ProviderRequestStatus.APPROVED, 302),
+    ],
+    ids=["open-accessible", "pending_review-inaccessible", "approved-inaccessible"],
+)
+def test_edit_view_accessible_for_given_status(client, request_status, status_code):
+    # given: a provider request with a given status
+    pr = ProviderRequestFactory.create(status=request_status)
+    ProviderRequestLocationFactory.create(request=pr)
+
+    # when: accessing the edit view by its creator
+    client.force_login(pr.created_by)
+    response = client.get(urls.reverse("provider_request_edit", args=[str(pr.id)]))
+
+    # then: response with an expected status code is returned
+    assert response.status_code == status_code
