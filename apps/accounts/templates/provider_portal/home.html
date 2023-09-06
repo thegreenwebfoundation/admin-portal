@@ -35,7 +35,7 @@
 		  <p><a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a></p>
 
 		{% empty %}
-		  <p>You haven't submitted any verification requests yet. <a href="{% url 'provider_registration' %}">Get started.</a>
+		  <p>You haven't submitted any verification requests yet. <a href="{% url 'before-starting' %}">Get started.</a>
 
 		{% endfor %}
 
