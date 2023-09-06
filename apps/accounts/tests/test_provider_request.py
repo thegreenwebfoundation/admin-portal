@@ -418,7 +418,8 @@ def test_wizard_sends_email_on_submission(
     assert provider_request.status in msg_body_html
 
 
-def test_approve_when_hostingprovider_for_user_exists(db, user_with_provider):
+@pytest.mark.django_db
+def test_approve_when_hostingprovider_for_user_exists(user_with_provider):
     # given: provider request submitted by a user that already has a Hostingprovider assigned
     pr = ProviderRequestFactory.create(created_by=user_with_provider)
     loc1 = ProviderRequestLocationFactory.create(request=pr)
@@ -452,7 +453,8 @@ def test_approve_fails_when_request_already_approved(db):
         pr.approve()
 
 
-def test_approve_first_location_is_persisted(db):
+@pytest.mark.django_db
+def test_approve_first_location_is_persisted():
     # given: provider request with 2 locations
     pr = ProviderRequestFactory.create()
     loc1 = ProviderRequestLocationFactory.create(request=pr)
@@ -467,7 +469,8 @@ def test_approve_first_location_is_persisted(db):
     assert hp.country == loc1.country
 
 
-def test_approve_asn_already_exists(db, green_asn):
+@pytest.mark.django_db
+def test_approve_asn_already_exists(green_asn):
     # given: provider request with ASN that already exists
     green_asn.save()
     pr = ProviderRequestFactory.create()
@@ -488,7 +491,8 @@ def test_approve_asn_already_exists(db, green_asn):
 
 
 @freeze_time("Apr 25th, 2023, 12:00:01")
-def test_approve_changes_status_to_approved(db):
+@pytest.mark.django_db
+def test_approve_changes_status_to_approved():
     # given: a provider request is created
     pr = ProviderRequestFactory.create()
     ProviderRequestLocationFactory.create(request=pr)
@@ -506,7 +510,8 @@ def test_approve_changes_status_to_approved(db):
     assert result.approved_at == datetime(2023, 4, 25, 12, 0, 1)
 
 
-def test_approve_creates_hosting_provider(db):
+@pytest.mark.django_db
+def test_approve_creates_hosting_provider():
     # given: a provider request with services is created
     pr = ProviderRequestFactory.create(services=faker.words(nb=4))
     ProviderRequestLocationFactory.create(request=pr)
@@ -536,7 +541,8 @@ def test_approve_creates_hosting_provider(db):
     assert "other-none" not in hp.services.slugs()
 
 
-def test_approve_supports_orgs_not_offering_hosted_services(db):
+@pytest.mark.django_db
+def test_approve_supports_orgs_not_offering_hosted_services():
     # given: a verification request for an organisation that does
     # not offer any services, but we still want ot recognise as green
     other_none_service = ServiceFactory(
@@ -559,7 +565,8 @@ def test_approve_supports_orgs_not_offering_hosted_services(db):
     assert "other-none" in hp.services.slugs()
 
 
-def test_approve_creates_ip_ranges(db):
+@pytest.mark.django_db
+def test_approve_creates_ip_ranges():
     # given: a provider request with multiple IP ranges
     pr = ProviderRequestFactory.create()
     ProviderRequestLocationFactory.create(request=pr)
@@ -580,7 +587,8 @@ def test_approve_creates_ip_ranges(db):
         ).exists()
 
 
-def test_approve_creates_asns(db):
+@pytest.mark.django_db
+def test_approve_creates_asns():
     # given: a provider request with multiple locations, IP ranges, ASNs, evidence and consent
     pr = ProviderRequestFactory.create()
     ProviderRequestLocationFactory.create(request=pr)
@@ -600,7 +608,8 @@ def test_approve_creates_asns(db):
 
 
 @freeze_time("Feb 15th, 2023")
-def test_approve_creates_evidence_documents(db):
+@pytest.mark.django_db
+def test_approve_creates_evidence_documents():
     # given: a provider request with multiple locations, IP ranges, ASNs, evidence and consent
     pr = ProviderRequestFactory.create()
     ProviderRequestLocationFactory.create(request=pr)
@@ -771,7 +780,6 @@ def test_new_submission_doesnt_modify_available_services(
 def test_edit_view_accessible_by_creator(client):
     # given: an open provider request
     pr = ProviderRequestFactory.create()
-    ProviderRequestLocationFactory.create(request=pr)
 
     # when: accessing its edit view by the creator
     client.force_login(pr.created_by)
@@ -786,7 +794,6 @@ def test_edit_view_accessible_by_creator(client):
 def test_edit_view_accessible_by_admin(client, greenweb_staff_user):
     # given: an open provider request
     pr = ProviderRequestFactory.create()
-    ProviderRequestLocationFactory.create(request=pr)
 
     # when: accessing its edit view by Green Web staff
     client.force_login(greenweb_staff_user)
@@ -801,7 +808,6 @@ def test_edit_view_accessible_by_admin(client, greenweb_staff_user):
 def test_edit_view_inaccessible_by_other_users(client, user):
     # given: an open provider request
     pr = ProviderRequestFactory.create()
-    ProviderRequestLocationFactory.create(request=pr)
 
     # when: accessing its edit view by regular users other than the creator
     client.force_login(user)
@@ -825,7 +831,6 @@ def test_edit_view_inaccessible_by_other_users(client, user):
 def test_edit_view_accessible_for_given_status(client, request_status, status_code):
     # given: a provider request with a given status
     pr = ProviderRequestFactory.create(status=request_status)
-    ProviderRequestLocationFactory.create(request=pr)
 
     # when: accessing the edit view by its creator
     client.force_login(pr.created_by)
@@ -840,7 +845,6 @@ def test_edit_view_accessible_for_given_status(client, request_status, status_co
 def test_edit_view_displays_form_with_prepopulated_data(client):
     # given: an open provider request
     pr = ProviderRequestFactory.create()
-    ProviderRequestLocationFactory.create(request=pr)
 
     # when: accessing the edit view by its creator
     client.force_login(pr.created_by)
