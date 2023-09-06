@@ -302,7 +302,6 @@ def test_wizard_view_happy_path(
     client.force_login(user)
 
     # when: submitting form data for consecutive wizard steps
-
     for step, data in enumerate(form_data, 1):
         response = client.post(urls.reverse("provider_registration"), data, follow=True)
         # then: for all steps except the last one,
@@ -830,3 +829,105 @@ def test_edit_view_accessible_for_given_status(client, request_status, status_co
 
     # then: response with an expected status code is returned
     assert response.status_code == status_code
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_edit_view_displays_form_with_prepopulated_data(client):
+    # given: an open provider request
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+
+    # when: accessing the edit view by its creator
+    client.force_login(pr.created_by)
+    response = client.get(urls.reverse("provider_request_edit", args=[str(pr.id)]))
+
+    # then: rendered form (we only check the first page)
+    # contains pre-filled data about the original request
+    form = response.context_data["form"]
+    assert form.instance == pr
+
+    expected_initial = {
+        "name": pr.name,
+        "website": pr.website,
+        "description": pr.description,
+        "authorised_by_org": pr.authorised_by_org,
+    }
+    assert form.initial == expected_initial
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_editing_pr_updates_original_submission(
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    # given: an open provider request
+    pr = ProviderRequestFactory.create()
+
+    loc1 = ProviderRequestLocationFactory.create(request=pr)
+    loc2 = ProviderRequestLocationFactory.create(request=pr)
+
+    ev1 = ProviderRequestEvidenceFactory.create(request=pr)
+    ev2 = ProviderRequestEvidenceFactory.create(request=pr)
+
+    ip1 = ProviderRequestIPRangeFactory.create(request=pr)
+    ip2 = ProviderRequestIPRangeFactory.create(request=pr)
+    ip3 = ProviderRequestIPRangeFactory.create(request=pr)
+
+    asn = ProviderRequestASNFactory.create(request=pr)
+
+    # given: valid form data for consecutive wizard steps 
+    # (to override the initial data)
+    form_data = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        wizard_form_evidence_data,
+        wizard_form_network_data,
+        wizard_form_consent,
+        wizard_form_preview,
+    ]
+
+    # given: URL of the edit view of the existing PR
+    edit_url = urls.reverse("provider_request_edit", args=[str(pr.id)])
+
+    # when: accessing the edit view by its creator
+    client.force_login(pr.created_by)
+    response = client.get(edit_url)
+
+    # then: ORG_DETAILS form is bound with an instance, initial data is displayed
+    assert response.context_data["wizard"]["steps"].current == "0"
+    assert response.context_data["form"].instance == pr
+    assert response.context_data["form"].initial == {
+            "name": pr.name,
+            "website": pr.website,
+            "description": pr.description,
+            "authorised_by_org": pr.authorised_by_org,
+        }
+    # when: submitting ORG_DETAILS form with overridden data
+    response = client.post(edit_url, wizard_form_org_details_data, follow=True)
+    
+    # then: wizard proceeds, LOCATIONS formset is displayed with bound queryset and initial data
+    locations_formset = response.context_data["form"].forms["locations"]
+    assert all([loc in locations_formset.queryset for loc in [loc1, loc2]])
+    assert locations_formset.forms[0].initial == {"name": loc1.name, "city": loc1.city, "country": loc1.country}
+    assert locations_formset.forms[1].initial == {"name": loc2.name, "city": loc2.city, "country": loc2.country}
+    # when: submitting LOCATIONS form with overridden data
+    response = client.post(edit_url, wizard_form_org_location_data, follow=True)
+
+    # then: wizard proceeds, SERVICES form is displayed with bound instance and initial data
+
+
+    # then: submitting the final step redirects to the detail view
+    assert response.resolver_match.func.view_class is views.ProviderRequestDetailView
+    # then: a ProviderRequest object is updated in the db
+    pr_id = response.context_data["providerrequest"].id
+    updated_pr = models.ProviderRequest.objects.get(id=pr_id)
+    assert updated_pr # TODO: verify fields have changed
