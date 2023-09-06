@@ -515,7 +515,7 @@ class ConsentForm(forms.ModelForm):
     """
     Part of multi-step registration form (screen 5).
 
-    Gathers consent information.
+    Set of agreements that the user consents to (or not) to by submitting the request.
     """
 
     data_processing_opt_in = forms.BooleanField(
@@ -543,8 +543,8 @@ class ConsentForm(forms.ModelForm):
     )
 
     class Meta:
-        model = ac_models.ProviderRequestConsent
-        exclude = ["request"]
+        model = ac_models.ProviderRequest
+        fields = ["data_processing_opt_in", "newsletter_opt_in"]
 
 
 class LocationForm(forms.ModelForm):

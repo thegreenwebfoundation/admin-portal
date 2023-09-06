@@ -76,7 +76,6 @@ class ProviderRequest(TimeStampedModel):
     status = models.CharField(
         choices=ProviderRequestStatus.choices,
         max_length=255,
-        default=ProviderRequestStatus.PENDING_REVIEW.value,
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
@@ -102,6 +101,12 @@ class ProviderRequest(TimeStampedModel):
     )
     location_import_required = models.BooleanField(default=False)
     network_import_required = models.BooleanField(default=False)
+    data_processing_opt_in = models.BooleanField(
+        default=False, verbose_name="Data processing consent"
+    )
+    newsletter_opt_in = models.BooleanField(
+        default=False, verbose_name="Newsletter signup"
+    )
 
     def __str__(self) -> str:
         return f"{self.name}"
@@ -334,18 +339,3 @@ class ProviderRequestEvidence(models.Model):
             raise ValidationError(f"{reason}, you haven't submitted either.")
         if self.link and bool(self.file):
             raise ValidationError(f"{reason}, you've attempted to submit both.")
-
-
-class ProviderRequestConsent(models.Model):
-    """
-    Set of agreements that the user consents to (or not) to by submitting the request.
-    """
-
-    data_processing_opt_in = models.BooleanField(default=False)
-    newsletter_opt_in = models.BooleanField(default=False)
-    request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
-
-    def __str__(self) -> str:
-        data_processing = f"Data processing: {self.data_processing_opt_in}"
-        newsletter = f"Newsletter signup: {self.newsletter_opt_in}"
-        return f"{data_processing}, {newsletter}"

@@ -75,7 +75,6 @@ from .models import (
     ProviderRequestIPRange,
     ProviderRequestLocation,
     ProviderRequestEvidence,
-    ProviderRequestConsent,
     ProviderRequestStatus,
     Service,
 )
@@ -1314,16 +1313,6 @@ class ProviderRequestLocationInline(AdminOnlyTabularInline):
     extra = 0
 
 
-class ProviderRequestConsentInline(AdminOnlyTabularInline):
-    model = ProviderRequestConsent
-    extra = 0
-    max_num = 1
-    readonly_fields = (
-        "data_processing_opt_in",
-        "newsletter_opt_in",
-    )
-
-
 class ActionInChangeFormMixin(object):
     """
     Adds custom admin actions
@@ -1367,7 +1356,6 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         ProviderRequestEvidenceInline,
         ProviderRequestIPRangeInline,
         ProviderRequestASNInline,
-        ProviderRequestConsentInline,
     ]
     formfield_overrides = {TaggableManager: {"widget": LabelWidget(model=Service)}}
     empty_value_display = "(empty)"
@@ -1380,6 +1368,8 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "location_import_required",
         "network_import_required",
         "missing_network_explanation",
+        "newsletter_opt_in",
+        "data_processing_opt_in",
     )
     actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"

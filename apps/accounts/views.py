@@ -382,9 +382,11 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         # process CONSENT form
         consent_form = form_dict[steps.CONSENT.value]
-        consent = consent_form.save(commit=False)
-        consent.request = pr
-        consent.save()
+        data_processing_opt_in = consent_form.cleaned_data.get("data_processing_opt_in")
+        newsletter_opt_in = consent_form.cleaned_data.get("newsletter_opt_in")
+        pr.data_processing_opt_in = bool(data_processing_opt_in)
+        pr.newsletter_opt_in = bool(newsletter_opt_in)
+        pr.save()
 
         # set status
         pr.status = ProviderRequestStatus.PENDING_REVIEW.value
@@ -481,7 +483,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         evidence_qs = pr_instance.providerrequestevidence_set.all()
         asn_qs = pr_instance.providerrequestasn_set.all()
         ip_qs = pr_instance.providerrequestiprange_set.all()
-        consent = pr_instance.providerrequestconsent_set.get()
 
         instance_dict = {
             self.Steps.ORG_DETAILS.value: pr_instance,
@@ -496,7 +497,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
                 "asns": asn_qs,
                 "extra": pr_instance,
             },
-            self.Steps.CONSENT.value: consent,
+            self.Steps.CONSENT.value: pr_instance,
         }
         return instance_dict
 
