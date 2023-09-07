@@ -116,14 +116,20 @@ urlpatterns = [
         name="provider_request_detail",
     ),
     path(
-        "requests/<int:request_id>/edit/",
-        ProviderRequestWizardView.as_view(ProviderRequestWizardView.FORMS),
-        name="provider_request_edit",
-    ),
-    path(
         "requests/new/",
         ProviderRequestWizardView.as_view(ProviderRequestWizardView.FORMS),
         name="provider_registration",
+    ),
+    # For editing verification requests, we use the same view as for adding new ones
+    # and pass instance_dict as a parameter to inject model instances to forms.
+    # See more info: https://django-formtools.readthedocs.io/en/stable/wizard.html#formtools.wizard.views.WizardView.instance_dict
+    path(
+        "requests/<int:request_id>/edit/",
+        lambda request, request_id: ProviderRequestWizardView.as_view(
+            ProviderRequestWizardView.FORMS,
+            instance_dict=ProviderRequestWizardView.get_instance_dict(request_id),
+        )(request, request_id=request_id),
+        name="provider_request_edit",
     ),
     path(
         "provider-autocomplete/",
