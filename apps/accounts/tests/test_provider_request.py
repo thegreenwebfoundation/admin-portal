@@ -1010,7 +1010,7 @@ def test_editing_pr_updates_original_submission(
     assert overridden_values.items() <= preview_form_dict["0"].initial.items()
 
     # locations preview displays overridden data
-    assert preview_form_dict["1"].forms["locations"].total_form_count() == 3
+    assert len(preview_form_dict["1"].forms["locations"].forms) == 3
 
     # TODO: expand checking PREVIEW step when injecting the data is fixed
     # when: PREVIEW form is submitted

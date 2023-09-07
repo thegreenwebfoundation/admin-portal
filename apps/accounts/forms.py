@@ -307,6 +307,22 @@ class CredentialForm(forms.ModelForm):
 
 
 class MoreConvenientFormset(ConvenientBaseModelFormSet):
+    def __init__(self, *args, **kwargs):
+        """
+        Override a whacky ModelFormSets behavior in order to
+        render initial forms correctly (important for the preview step!)
+
+        Problem: ModelFormSets take "initial" argument to populate initial forms,
+        but the value is truncated to the number of "extra" forms
+        as configured in the modelformset_factory.
+
+        Docs: https://docs.djangoproject.com/en/3.2/topics/forms/modelforms/#id2
+        """
+        initial = kwargs.get("initial")
+        if initial:
+            self.extra = len(initial) - 1
+        super().__init__(*args, **kwargs)
+
     def get_queryset(self):
         """
         Built-in BaseModelFormSet uses model's default manager get_queryset,

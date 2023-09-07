@@ -439,15 +439,11 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         - The forms are not bound: `form.data` will return {}.
         The initial data should be accessed through iterating over bound fields:
         `field.value for field in form`.
-
-        - In case of a formset instance, accessing `formset.forms`
-        will include extra (empty) forms as defined per formset factory.
-        Templates should use `formset.initial_forms` for rendering non-empty forms.
+        - Iterating over the fields like mentioned above will also include
+        the "id" field for ModelForms and ModelFormSets, that's why in the templates
+        it's recommended to use the the template tag "exclude_id_fields".
         """
-        # TODO: fix passing data for the preview step
-        # PROBLEM: ModelFormSets take initial value truncated to extra forms only!
-        # that's why we only see 1 instance passed to the formset
-        # https://docs.djangoproject.com/en/3.2/topics/forms/modelforms/#id2
+
         preview_forms = {}
         # iterate over all forms without the last one (PREVIEW)
         for step, form in self.FORMS[:-1]:
