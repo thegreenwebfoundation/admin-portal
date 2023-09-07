@@ -476,61 +476,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             return {"instance": self.get_form_instance(step)}
         return {}
 
-    def get_instance_dict(self, request_id):
-        """
-        Based on request_id, return existing instances of ProviderRequest
-        and related objects in a map that matches the structure of the forms.
-        """
-        try:
-            pr_instance = ProviderRequest.objects.get(id=request_id)
-        except ProviderRequest.DoesNotExist:
-            return {}
-
-        location_qs = (
-            pr_instance.providerrequestlocation_set.all()
-            if pr_instance.providerrequestlocation_set.exists()
-            else ProviderRequestASN.objects.none()
-        )
-        evidence_qs = (
-            pr_instance.providerrequestevidence_set.all()
-            if pr_instance.providerrequestevidence_set.exists()
-            else ProviderRequestEvidence.objects.none()
-        )
-        asn_qs = (
-            pr_instance.providerrequestasn_set.all()
-            if pr_instance.providerrequestasn_set.exists()
-            else ProviderRequestASN.objects.none()
-        )
-        ip_qs = (
-            pr_instance.providerrequestiprange_set.all()
-            if pr_instance.providerrequestiprange_set.exists()
-            else ProviderRequestIPRange.objects.none()
-        )
-
-        instance_dict = {
-            self.Steps.ORG_DETAILS.value: pr_instance,
-            self.Steps.LOCATIONS.value: {
-                "locations": location_qs,
-                "extra": pr_instance,
-            },
-            self.Steps.SERVICES.value: pr_instance,
-            self.Steps.GREEN_EVIDENCE.value: evidence_qs,
-            self.Steps.NETWORK_FOOTPRINT.value: {
-                "ips": ip_qs,
-                "asns": asn_qs,
-                "extra": pr_instance,
-            },
-            self.Steps.CONSENT.value: pr_instance,
-        }
-        return instance_dict
-
-    def get_form_instance(self, step):
-        # TODO: optimize this - do not construct instance_dict on every call
-        request_id = self.kwargs.get("request_id")
-        if not request_id:
-            return None
-        return self.get_instance_dict(request_id)[step]
-
     def _send_notification_email(self, provider_request: ProviderRequest):
         """
         Send notification to support staff, and the user to acknowledge their submission.
@@ -562,3 +507,52 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             template_txt="emails/verification-request-notify.txt",
             bcc=settings.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS,
         )
+
+    @classmethod
+    def get_instance_dict(cls, request_id):
+        """
+        Based on request_id, return existing instances of ProviderRequest
+        and related objects in a map that matches the structure of the forms.
+        """
+        try:
+            pr_instance = ProviderRequest.objects.get(id=request_id)
+        except ProviderRequest.DoesNotExist:
+            return {}
+
+        location_qs = (
+            pr_instance.providerrequestlocation_set.all()
+            if pr_instance.providerrequestlocation_set.exists()
+            else ProviderRequestASN.objects.none()
+        )
+        evidence_qs = (
+            pr_instance.providerrequestevidence_set.all()
+            if pr_instance.providerrequestevidence_set.exists()
+            else ProviderRequestEvidence.objects.none()
+        )
+        asn_qs = (
+            pr_instance.providerrequestasn_set.all()
+            if pr_instance.providerrequestasn_set.exists()
+            else ProviderRequestASN.objects.none()
+        )
+        ip_qs = (
+            pr_instance.providerrequestiprange_set.all()
+            if pr_instance.providerrequestiprange_set.exists()
+            else ProviderRequestIPRange.objects.none()
+        )
+
+        instance_dict = {
+            cls.Steps.ORG_DETAILS.value: pr_instance,
+            cls.Steps.LOCATIONS.value: {
+                "locations": location_qs,
+                "extra": pr_instance,
+            },
+            cls.Steps.SERVICES.value: pr_instance,
+            cls.Steps.GREEN_EVIDENCE.value: evidence_qs,
+            cls.Steps.NETWORK_FOOTPRINT.value: {
+                "ips": ip_qs,
+                "asns": asn_qs,
+                "extra": pr_instance,
+            },
+            cls.Steps.CONSENT.value: pr_instance,
+        }
+        return instance_dict
