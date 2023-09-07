@@ -29,3 +29,8 @@ def render_as_services(value):
     if tags:
         return ", ".join([tag.name for tag in tags])
     return None
+
+
+@register.filter
+def exclude_id_fields(form):
+    return [field for field in form if field.label.lower() != "id"]
