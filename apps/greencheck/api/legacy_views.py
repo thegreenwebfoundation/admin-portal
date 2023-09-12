@@ -155,11 +155,21 @@ def directory_provider(self, id):
     provider = Hostingprovider.objects.get(pk=provider_id)
     datacenters = [dc.legacy_representation() for dc in provider.datacenter.all() if dc]
 
+    from urllib import parse
+
+    # we strip out the protocol from our links because when the directory code is
+    # consumed in some old jquery code running in the browser to render our directory
+    # hyperlinks are mangled, and http://my-domain ends up as http//mydomain
+    # for more, see the trello card below
+    # https://trello.com/c/8Ou3mATw/124
+    domain_with_no_protocol = parse.urlparse(provider.website).netloc
+
     # basic case, no datacenters or certificates
     provider_dict = {
         "id": str(provider.id),
         "naam": provider.name,
-        "website": provider.website,
+        # "website": provider.website,
+        "website": domain_with_no_protocol,
         "countrydomain": str(provider.country),
         "model": provider.model,
         "certurl": None,

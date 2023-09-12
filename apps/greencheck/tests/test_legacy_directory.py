@@ -161,6 +161,26 @@ class TestGreenWebDirectoryDetail:
         ]:
             assert key in provider
 
+    @pytest.mark.parametrize("website_link", ["https://my-domain.com", "http://my-domain.com", "my-domain.com"])
+    def test_directory_provider_protocol_stripped(self, db, hosting_provider_a, client, website_link):
+        """
+        Test that urls are listed in the directory without the protocol,
+        so "https://my-domain.com", ends up as "my-domain.com".
+        This is avoid links breaking when rendered by old jQuery code
+        """
+
+        hosting_provider_a.save()
+        hosting_provider_a.website = website_link
+        url_path = reverse("legacy-directory-detail", args=[hosting_provider_a.id])
+
+        resp = client.get(url_path)
+
+        payload = json.loads(resp.content)
+        provider = payload[0]
+
+        assert "http" not in provider["website"]
+
+
     def test_directory_provider_with_datacentre(
         self,
         db,
