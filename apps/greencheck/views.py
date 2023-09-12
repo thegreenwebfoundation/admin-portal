@@ -223,7 +223,9 @@ class ProviderFilter(django_filters.FilterSet):
     services = django_filters.ModelChoiceFilter(
         field_name="services",
         label="Green web hosting service",
-        queryset=ac_models.Service.objects.all(),
+        # we exclude the "other" service, because it's only used
+        # when a provider enters data, and we don't want to filter for it
+        queryset=ac_models.Service.objects.exclude(slug="other-none"),
     )
     # note: this is commented out for Han,
     # name = django_filters.CharFilter(lookup_expr="icontains")
