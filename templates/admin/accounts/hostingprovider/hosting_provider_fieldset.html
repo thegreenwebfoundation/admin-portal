@@ -23,18 +23,13 @@
 
                             {% if field.field.name == 'website' %}
 
-                              <style>
-                              .extra_url {
-                                margin: 1rem;
-                              }
-                              </style>
+                                <style>
+                                    .extra_url {
+                                        margin: 1rem;
+                                    }
+                                </style>
 
-                                <a
-                                  class="extra_url"
-                                  target="_blank"
-                                  href="{{ field.field.value|make_url }}">
-                                  Visit site
-                                </a>
+
 
                                 {% if request.user|has_group:"admin" %}
                                     {% link_to_ripe_stat field.field.value %}

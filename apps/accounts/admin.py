@@ -149,7 +149,7 @@ class CustomUserAdmin(UserAdmin):
         admin_explanation = f"""
             <p>
             This user is an admin - they have access to manage all the {objects_name} in the database.<br>
-            Below is a list of those {objects_name} for which a permission has been granted explicitly for the user, 
+            Below is a list of those {objects_name} for which a permission has been granted explicitly for the user,
             rather than based on the admin role.
             </p><br>
             """
@@ -809,7 +809,9 @@ class HostingAdmin(
                 "Hostingprovider info",
                 {
                     "fields": (
-                        ("name", "website", "description"),
+                        "name",
+                        "website",
+                        "description",
                         "country",
                         "city",
                         "services",

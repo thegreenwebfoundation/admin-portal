@@ -287,7 +287,7 @@ class Hostingprovider(models.Model):
         related_name="labels",
     )
     showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
-    website = models.CharField(max_length=255)
+    website = models.URLField(max_length=255)
     datacenter = models.ManyToManyField(
         "Datacenter",
         through="HostingproviderDatacenter",
