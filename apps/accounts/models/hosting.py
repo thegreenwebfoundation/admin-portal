@@ -385,6 +385,18 @@ class Hostingprovider(models.Model):
         """
         return self.greencheckipapprove_set.all().count()
 
+    @property
+    def website_link(self) -> str:
+        """
+        Return a hyperlink for the website, accounting for whether
+        the website link is stored as a fully qualified url or not
+        """
+        if self.website.startswith("http"):
+            return self.website
+        else:
+            return f"https://{self.website}"
+
+
     # Mutators
     def refresh_shared_secret(self) -> str:
         try:
