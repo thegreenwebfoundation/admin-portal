@@ -3,9 +3,10 @@ all:
   hosts:
     app3.thegreenwebfoundation.org:
       internal_ip: "10.0.0.6"
+      gunicorn_port: 10000
       dramatiq_threads: 1
       dramatiq_processes: 1
-
+      sentry_trace_rate: 1
   vars:
     tgwf_stage: "staging"
     tgwf_domain_name: "admin-staging"

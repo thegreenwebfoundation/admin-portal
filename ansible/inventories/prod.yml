@@ -29,6 +29,7 @@ all:
     supervisor_user: "deploy"
     supervisor_gunicorn_app: "web_{{ tgwf_stage }}"
     supervisor_worker_job: "worker_{{ tgwf_stage }}"
+    port: 9000
 
   # you can set child groups too
   children:
