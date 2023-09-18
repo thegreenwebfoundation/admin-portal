@@ -13,7 +13,7 @@ RABBITMQ_URL="{{ lookup('env', "RABBITMQ_URL") }}"
 
 SENTRY_DSN="{{ lookup('env', "SENTRY_DSN") }}"
 SENTRY_ENVIRONMENT="{{ lookup('env', "SENTRY_ENVIRONMENT") }}"
-{% if sentry_sample_rate %}
+{% if sentry_sample_rate is defined %}
 SENTRY_SAMPLE_RATE = {{ sentry_sample_rate }}
 {% endif %}
 
