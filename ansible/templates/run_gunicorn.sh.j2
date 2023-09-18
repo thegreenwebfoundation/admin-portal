@@ -1,4 +1,4 @@
 # supervisor can only control processes it started itself.
 # So we need to use exec to replace the parent shell script process
 # that starts pipenv
-exec python -m pipenv run gunicorn greenweb.wsgi -b {{ internal_ip }}:$PORT -t 300 -c gunicorn.conf.py --statsd-host=10.0.0.2:9125 --statsd-prefix=member.app
+exec python -m pipenv run gunicorn greenweb.wsgi -b {{ internal_ip }}:{{ gunicorn_port }} -t 300 -c gunicorn.conf.py --statsd-host=10.0.0.2:9125 --statsd-prefix=member.app
