@@ -56,6 +56,17 @@
       ansible.builtin.include_tasks: "_assemble_deploy_assets.yml"
       when: compile_assets is true
 
+    - name: Template .env file to shared directory
+      ansible.builtin.template:
+        src: "templates/dotenv.j2"
+        dest: "{{ project_root }}/shared/.env"
+        mode: "0755"
+        owner: deploy
+        group: deploy
+      become: true
+      when: update_dotenv is true
+      tags: [dotenv]
+
     - name: Set up process management with supervisor
       ansible.builtin.include_tasks: "_set_up_process_mgmt.yml"
       tags:

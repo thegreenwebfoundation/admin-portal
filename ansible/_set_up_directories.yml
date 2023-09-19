@@ -16,7 +16,6 @@
     owner: deploy
     group: deploy
   become: true
-  when: update_dotenv is true
 
 - name: Link .env to shared directory
   ansible.builtin.file:

@@ -54,7 +54,7 @@ if sentry_dsn:
         # set our identifying credentials
         dsn=sentry_dsn,
         # Set traces_sample_rate.
-        traces_sample_rate=sentry_sample_rate,
+        traces_sample_rate=float(sentry_sample_rate),
         # activate the django specific integrations for sentry
         integrations=[DjangoIntegration()],
         # We assume that is a user is logged in, we want to be able
