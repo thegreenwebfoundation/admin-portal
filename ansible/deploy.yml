@@ -30,7 +30,7 @@
     update_front_end_deps: true
 
     # create new dotenv file in shared directory (use when adding new env vars)
-    update_dotenv: true
+    update_dotenv: false
 
     supervisor_restart: true
     supervisor_user: "deploy"
