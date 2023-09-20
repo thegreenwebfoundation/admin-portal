@@ -329,6 +329,8 @@ class MoreConvenientFormset(ConvenientBaseModelFormSet):
         which returns all objects. As a consequence
         the formset would display all available objects.
 
+        Docs: https://docs.djangoproject.com/en/3.2/topics/forms/modelforms/#changing-the-queryset
+
         We change that behavior so that unless a "queryset"
         parameter is passed to the formset (i.e. in editing mode),
         empty queryset should be returned.
@@ -380,6 +382,8 @@ class GreenEvidenceForm(
         formset=MoreConvenientFormset,
         validate_min=True,
         min_num=1,
+        can_delete=True,
+        can_delete_extra=True,
     )
 ):
     def non_form_errors(self):
@@ -415,12 +419,16 @@ IpRangeFormset = forms.modelformset_factory(
     form=IpRangeForm,
     formset=MoreConvenientFormset,
     extra=0,
+    can_delete=True,
+    can_delete_extra=True,
 )
 AsnFormset = forms.modelformset_factory(
     model=ac_models.ProviderRequestASN,
     form=AsnForm,
     formset=MoreConvenientFormset,
     extra=0,
+    can_delete=True,
+    can_delete_extra=True,
 )
 
 
@@ -615,6 +623,8 @@ LocationsFormSet = forms.modelformset_factory(
     formset=MoreConvenientFormset,
     validate_min=True,
     min_num=1,
+    can_delete=True,
+    can_delete_extra=True,
 )
 
 

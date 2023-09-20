@@ -41,7 +41,9 @@
         <section class="my-10">
           <h3>Locations</h3>
           {% for location_form in preview_forms.1.locations.forms %}
-            {% include "provider_registration/partials/_preview.html" with form=location_form %}
+            {% if not location_form.DELETE.value %}
+              {% include "provider_registration/partials/_preview.html" with form=location_form %}
+            {% endif %}
           {% endfor %}
           {% include "provider_registration/partials/_preview.html" with form=preview_forms.1.extra %}
         </section>
@@ -54,24 +56,30 @@
         <section class="my-10">
           <h3>Green evidence</h3>
           {% for evidence_form in preview_forms.3.forms %}
-            {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
+            {% if not evidence_form.DELETE.value %}
+              {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
+            {% endif %}
           {% endfor %}
         </section>
 
         <section class="my-10">
           <h3>Network footprint</h3>
 
-          {% for ip_form in preview_forms.4.ips.forms %}
-            <div class="bg-neutral-50 rounded-xl my-6 p-4">
-              <div class="mb-4 last-of-type:mb-0">
-                <p class="font-bold m-0">IP range</p>
-                <p class="m-0">{{ ip_form.start.value }} - {{ ip_form.end.value }}</p>
+          {% for ip_form in preview_forms.4.ips %}
+            {% if not ip_form.DELETE.value %}
+              <div class="bg-neutral-50 rounded-xl my-6 p-4">
+                <div class="mb-4 last-of-type:mb-0">
+                  <p class="font-bold m-0">IP range</p>
+                  <p class="m-0">{{ ip_form.start.value }} - {{ ip_form.end.value }}</p>
+                </div>
               </div>
-            </div>
+            {% endif %}
           {% endfor %}
 
-          {% for asn_form in preview_forms.4.asns.forms %}
-            {% include "provider_registration/partials/_preview.html" with form=asn_form %}
+          {% for asn_form in preview_forms.4.asns %}
+            {% if not asn_form.DELETE.value %}
+              {% include "provider_registration/partials/_preview.html" with form=asn_form %}
+            {% endif %}
           {% endfor %}
 
           {% include "provider_registration/partials/_preview.html" with form=preview_forms.4.extra %}
