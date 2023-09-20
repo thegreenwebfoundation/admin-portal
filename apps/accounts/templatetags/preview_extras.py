@@ -32,5 +32,8 @@ def render_as_services(value):
 
 
 @register.filter
-def exclude_id_fields(form):
-    return [field for field in form if field.label.lower() != "id"]
+def exclude_preview_fields(form):
+    """
+    On preview, exclude fields "id" and "delete" from forms
+    """
+    return [field for field in form if field.label.lower() not in ["id", "delete"]]

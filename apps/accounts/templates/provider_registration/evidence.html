@@ -24,6 +24,11 @@
 		});
 	});
 </script>
+<style>
+	[hidden] {
+		display: none !important;
+	}
+</style>
 
 <div class="prose mx-auto">
 
@@ -56,7 +61,7 @@
 	{% endcomment %}
 	{% if wizard.form.non_form_errors %}
 		<div class="prose my-10 mx-auto">
-			<div class="convenient-form bg-neutral-50 rounded-xl px-4 ">
+			<div class="bg-neutral-50 rounded-xl px-4 ">
 				<div class="form__basetext-fields form--location lg:flex lg:flex-wrap">
 					<div class="w-full">
 						{{ wizard.form.non_form_errors}}

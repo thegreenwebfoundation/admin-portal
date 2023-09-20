@@ -334,10 +334,12 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         # process LOCATIONS form: extract locations
         locations_formset = form_dict[steps.LOCATIONS.value].forms["locations"]
-        for location_form in locations_formset:
-            location = location_form.save(commit=False)
+        locations = locations_formset.save(commit=False)
+        for location in locations:
             location.request = pr
             location.save()
+        for object_to_delete in locations_formset.deleted_objects:
+            object_to_delete.delete()
 
         # process LOCATION: check if a bulk location import is needed
         extra_location_form = form_dict[steps.LOCATIONS.value].forms["extra"]
@@ -355,25 +357,31 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         pr.save()
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
-        evidence_forms = form_dict[steps.GREEN_EVIDENCE.value].forms
-        for evidence_form in evidence_forms:
-            evidence = evidence_form.save(commit=False)
+        evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
+        evidence_instances = evidence_formset.save(commit=False)
+        for evidence in evidence_instances:
             evidence.request = pr
             evidence.save()
+        for object_to_delete in evidence_formset.deleted_objects:
+            object_to_delete.delete()
 
         # process NETWORK_FOOTPRINT form: retrieve IP ranges
-        ip_range_forms = form_dict[steps.NETWORK_FOOTPRINT.value].forms["ips"]
-        for ip_range_form in ip_range_forms:
-            ip_range = ip_range_form.save(commit=False)
+        ip_range_formset = form_dict[steps.NETWORK_FOOTPRINT.value].forms["ips"]
+        ip_range_instances = ip_range_formset.save(commit=False)
+        for ip_range in ip_range_instances:
             ip_range.request = pr
             ip_range.save()
+        for object_to_delete in ip_range_formset.deleted_objects:
+            object_to_delete.delete()
 
         # process NETWORK_FOOTPRINT form: retrieve ASNs
-        asn_forms = form_dict[steps.NETWORK_FOOTPRINT.value].forms["asns"]
-        for asn_form in asn_forms:
-            asn = asn_form.save(commit=False)
+        asn_formset = form_dict[steps.NETWORK_FOOTPRINT.value].forms["asns"]
+        asn_instances = asn_formset.save(commit=False)
+        for asn in asn_instances:
             asn.request = pr
             asn.save()
+        for object_to_delete in asn_formset.deleted_objects:
+            object_to_delete.delete()
 
         # process NETWORK_FOOTPRINT form: retrieve network explanation
         # if network data is missing
@@ -449,7 +457,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         for step, form in self.FORMS[:-1]:
             cleaned_data = self.get_cleaned_data_for_step(step)
             preview_forms[step] = form(initial=cleaned_data)
-
         return preview_forms
 
     def get_context_data(self, form, **kwargs):

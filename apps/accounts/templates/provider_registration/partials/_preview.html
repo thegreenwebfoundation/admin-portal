@@ -2,7 +2,7 @@
 {% load countries %}
 
 <div class="bg-neutral-50 rounded-xl my-6 p-4">
-	{% for field in form|exclude_id_fields %}
+	{% for field in form|exclude_preview_fields %}
 	<div class="mb-4 last-of-type:mb-0">
 		<p class="font-bold m-0">{{ field.label }}</p>
 		{% if field.label|lower == "which services does your organisation offer?" %}
