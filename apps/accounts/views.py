@@ -440,6 +440,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         the "id" field for ModelForms and ModelFormSets, as well as "DELETE" field
         to mark deleted forms in the formsets. To render forms without these fields in the templates
         it's recommended to use the the template tag "exclude_preview_fields".
+        - Forms marked for deletion are also passed to the preview step, that's why
+        it's necessary to filter them out in the template (based on the value of the DELETE field).
         """
 
         preview_forms = {}
