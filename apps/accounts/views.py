@@ -325,6 +325,15 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         Reference: https://django-formtools.readthedocs.io/en/latest/wizard.html#formtools.wizard.views.WizardView.done
         """  # noqa
+
+        def _process_formset(formset, request):
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.request = request
+                instance.save()
+            for object_to_delete in formset.deleted_objects:
+                object_to_delete.delete()
+
         steps = ProviderRequestWizardView.Steps
 
         # process ORG_DETAILS form: extract ProviderRequest and Location
@@ -334,12 +343,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         # process LOCATIONS form: extract locations
         locations_formset = form_dict[steps.LOCATIONS.value].forms["locations"]
-        locations = locations_formset.save(commit=False)
-        for location in locations:
-            location.request = pr
-            location.save()
-        for object_to_delete in locations_formset.deleted_objects:
-            object_to_delete.delete()
+        _process_formset(locations_formset, pr)
 
         # process LOCATION: check if a bulk location import is needed
         extra_location_form = form_dict[steps.LOCATIONS.value].forms["extra"]
@@ -358,30 +362,15 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
-        evidence_instances = evidence_formset.save(commit=False)
-        for evidence in evidence_instances:
-            evidence.request = pr
-            evidence.save()
-        for object_to_delete in evidence_formset.deleted_objects:
-            object_to_delete.delete()
+        _process_formset(evidence_formset, pr)
 
         # process NETWORK_FOOTPRINT form: retrieve IP ranges
         ip_range_formset = form_dict[steps.NETWORK_FOOTPRINT.value].forms["ips"]
-        ip_range_instances = ip_range_formset.save(commit=False)
-        for ip_range in ip_range_instances:
-            ip_range.request = pr
-            ip_range.save()
-        for object_to_delete in ip_range_formset.deleted_objects:
-            object_to_delete.delete()
+        _process_formset(ip_range_formset, pr)
 
         # process NETWORK_FOOTPRINT form: retrieve ASNs
         asn_formset = form_dict[steps.NETWORK_FOOTPRINT.value].forms["asns"]
-        asn_instances = asn_formset.save(commit=False)
-        for asn in asn_instances:
-            asn.request = pr
-            asn.save()
-        for object_to_delete in asn_formset.deleted_objects:
-            object_to_delete.delete()
+        _process_formset(asn_formset, pr)
 
         # process NETWORK_FOOTPRINT form: retrieve network explanation
         # if network data is missing
@@ -448,8 +437,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         The initial data should be accessed through iterating over bound fields:
         `field.value for field in form`.
         - Iterating over the fields like mentioned above will also include
-        the "id" field for ModelForms and ModelFormSets, that's why in the templates
-        it's recommended to use the the template tag "exclude_id_fields".
+        the "id" field for ModelForms and ModelFormSets, as well as "DELETE" field
+        to mark deleted forms in the formsets. To render forms without these fields in the templates
+        it's recommended to use the the template tag "exclude_preview_fields".
         """
 
         preview_forms = {}
