@@ -312,15 +312,30 @@ class MoreConvenientFormset(ConvenientBaseModelFormSet):
         Override a whacky ModelFormSets behavior in order to
         render initial forms correctly (important for the preview step!)
 
-        Problem: ModelFormSets take "initial" argument to populate initial forms,
+        Problem #1: ModelFormSets take "initial" argument to populate initial forms,
         but the value is truncated to the number of "extra" forms
-        as configured in the modelformset_factory.
+        as configured in the modelformset_factory. Example:
+
+        MyModelFormset.extra = 1
+        formset = MyModelFormset(initial=[data1, data2, data3])
+        formset.forms == 1 # and with this fix it's 3 as we'd expect
+
+        Problem #2: FormSets that have min_num argument passed greater than 0
+        (requiring at least 1 form to be submitted) have some internal magic that
+        manipulate the number of extra forms based on that. For those the value
+        needs to be decreased to acommodate for that. Otherwise the preview step
+        displays empty extra forms. Example:
+
+        MyModelFormset.extra = 1
+        MyModelFormset.min_num = 1
+        formset = MyModelFormset(initial=[data1])
+        formset.forms == 2 # and with this fix it's 1 as we'd expect
 
         Docs: https://docs.djangoproject.com/en/3.2/topics/forms/modelforms/#id2
         """
         initial = kwargs.get("initial")
         if initial:
-            self.extra = len(initial) - 1
+            self.extra = len(initial) - self.min_num
         super().__init__(*args, **kwargs)
 
     def get_queryset(self):
