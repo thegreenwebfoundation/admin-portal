@@ -16,7 +16,7 @@ This runs through the following steps:
 - fetch dependencies for both cases
 - run build steps to generate static files for django and any artefacts needed in front end pipelines
 - reload the servers
-- if necessary, update nginx (for static files and webserver), gunicorn (for serving web requests), or dramatiq (for our queue and workers)
+- if necessary, update caddy/nginx (for static files and webserver), gunicorn (for serving web requests), or dramatiq (for our queue and workers)
 
 See `deploy.yml` and `deploy-workers.yml`, for more information.
 
@@ -28,7 +28,26 @@ ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml
 
 Alternatively, merging code into master triggers the same ansible script via github actions.
 
+### Understanding our infrastructure
 
+Broadly speaking, the green web platform is deployed onto a set servers that are kept under config management, using a combination of Ansible for mainly provisioning VMs, and Nomad for scheduling the jobs run on these VMs.
+
+See the [staff-only private github repository for more](https://github.com/thegreenwebfoundation/infra/), and if you have access see [the infrastructure tag on the team trello board](https://trello.com/b/Y3FFGswA/green-web-platform-change-work).
+
+
+#### Other relevant links:
+
+- [Google doc design document for making recent infrastructure updates](https://docs.google.com/document/d/1GeifHzEdmPUvqectFYK3jrWSvLI0UqwbQ7j2sT7tSwQ/edit#heading=h.5vcjqio8w4vn)
+- [Our Grafana instance for tracking metrics, and logs](https://grafana.greenweb.org)
+- [Our Nomad instance, which shows the state of most scheduled services and jobs](https://nomad.greenweb.org)
+
+
+
+
+
+
+
+Access to the servers, and wider config maintained using a set of ansible scripts in a private github repository
 
 
 ### how our web servers are deployed
