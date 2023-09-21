@@ -74,7 +74,10 @@ crispy-tailwind = "*"
 django-crispy-forms = "*"
 django-storages = "*"
 django-taggit-serializer = "*"
-django-autocomplete-light = "*"
+# We need to stay at 3.5.1 until this issue is resolved or we
+# stop using the tag autocomplete widget in the hoster admin
+# https://github.com/yourlabs/django-autocomplete-light/issues/1195
+django-autocomplete-light = "==3.5.1"
 markdown = "*"
 toml = "*"
 typing_extensions = "*"
