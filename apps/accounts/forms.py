@@ -332,6 +332,8 @@ class MoreConvenientFormset(ConvenientBaseModelFormSet):
         formset.forms == 2 # and with this fix it's 1 as we'd expect
 
         Docs: https://docs.djangoproject.com/en/3.2/topics/forms/modelforms/#id2
+
+        TODO: come back here to investigate the validation of initial extra forms in ModelFormSets
         """
         initial = kwargs.get("initial")
         if initial:

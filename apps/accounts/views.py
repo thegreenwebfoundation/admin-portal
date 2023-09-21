@@ -46,6 +46,7 @@ from .models import (
     ProviderRequest,
     ProviderRequestStatus,
     Hostingprovider,
+    HostingproviderCertificate,
     ProviderRequestASN,
     ProviderRequestEvidence,
     ProviderRequestIPRange,
@@ -551,3 +552,62 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             cls.Steps.CONSENT.value: pr_instance,
         }
         return instance_dict
+
+    @classmethod
+    def get_initial_dict(cls, provider_id):
+        """
+        Based on provider_id, return data about existing Hostingprovider
+        in a format expected by the consecutive forms of WizardView
+        """
+
+        def _evidence_initial_data(evidence: HostingproviderCertificate):
+            return {
+                "title": evidence.title,
+                "description": evidence.description,
+                "link": evidence.url,
+                "file": evidence.attachment,
+                "type": evidence.type,
+                "public": evidence.public,
+            }
+
+        try:
+            hp_instance = Hostingprovider.objects.get(id=provider_id)
+        except Hostingprovider.DoesNotExist:
+            return {}
+
+        initial_dict = {
+            cls.Steps.ORG_DETAILS.value: {
+                "name": hp_instance.name,
+                "website": hp_instance.website,
+                "description": hp_instance.description,
+            },
+            cls.Steps.LOCATIONS.value: {
+                # TODO: update this when HP has multiple locations
+                "locations": [
+                    {
+                        "city": hp_instance.city,
+                        "country": hp_instance.country.code,
+                    }
+                ],
+            },
+            cls.Steps.SERVICES.value: {
+                "services": [s for s in hp_instance.services.slugs()]
+            },
+            cls.Steps.GREEN_EVIDENCE.value: [
+                _evidence_initial_data(ev)
+                for ev in hp_instance.supporting_documents.all()
+            ],
+            cls.Steps.NETWORK_FOOTPRINT.value: {
+                # TODO: all IP ranges / ASNs or only active ones?
+                "ips": [
+                    {"start": range.ip_start, "end": range.ip_end}
+                    for range in hp_instance.greencheckip_set.all()
+                ],
+                "asns": [
+                    {"asn": item.asn} for item in hp_instance.greencheckasn_set.all()
+                ],
+            },
+            cls.Steps.CONSENT.value: {},
+        }
+
+        return initial_dict
