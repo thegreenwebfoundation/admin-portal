@@ -869,7 +869,6 @@ def test_edit_view_displays_form_with_prepopulated_data(client):
 def test_editing_pr_updates_original_submission(
     client,
     wizard_form_org_details_data,
-    wizard_form_org_location_data,
     wizard_form_services_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
@@ -933,7 +932,29 @@ def test_editing_pr_updates_original_submission(
         "city": loc2.city,
         "country": loc2.country,
     }
+
     # when: submitting LOCATIONS form with overridden data
+    # data to override locations: delete existing 2 locations, add 3 new ones
+    wizard_form_org_location_data = {
+        "provider_request_wizard_view-current_step": "1",
+        "locations__1-TOTAL_FORMS": "5",
+        "locations__1-INITIAL_FORMS": "2",
+        "locations__1-0-country": loc1.country.code,
+        "locations__1-0-city": loc1.city,
+        "locations__1-0-id": str(loc1.id),
+        "locations__1-0-DELETE": "on",
+        "locations__1-1-country": loc2.country.code,
+        "locations__1-1-city": loc2.city,
+        "locations__1-1-id": str(loc2.id),
+        "locations__1-1-DELETE": "on",
+        "locations__1-2-country": faker.country_code(),
+        "locations__1-2-city": faker.city(),
+        "locations__1-3-country": faker.country_code(),
+        "locations__1-3-city": faker.city(),
+        "locations__1-4-country": faker.country_code(),
+        "locations__1-4-city": faker.city(),
+        "extra__1-location_import_required": "True",
+    }
     response = client.post(edit_url, wizard_form_org_location_data, follow=True)
 
     # then: wizard proceeds, SERVICES form is displayed with bound instance and initial data
@@ -1010,9 +1031,11 @@ def test_editing_pr_updates_original_submission(
     assert overridden_values.items() <= preview_form_dict["0"].initial.items()
 
     # locations preview displays overridden data
-    assert len(preview_form_dict["1"].forms["locations"].forms) == 3
+    location_forms = preview_form_dict["1"].forms["locations"].forms
+    # 5 forms in total are passed, 3 of them not marked as deleted
+    assert len(location_forms) == 5
+    assert len([form for form in location_forms if not form["DELETE"].value()]) == 3
 
-    # TODO: expand checking PREVIEW step when injecting the data is fixed
     # when: PREVIEW form is submitted
     response = client.post(edit_url, wizard_form_preview, follow=True)
 
