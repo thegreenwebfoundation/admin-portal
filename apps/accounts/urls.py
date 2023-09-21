@@ -131,6 +131,18 @@ urlpatterns = [
         )(request, request_id=request_id),
         name="provider_request_edit",
     ),
+    # Editing a hosting provider re-uses a ProviderRequestWizardView with initial values
+    # constructed form an existing Hostingprovider instance. Newly created ProviderRequest
+    # will have Hostingprovider instance attached via FK, the approval process
+    # should handle deciding whether to create a new Hostingprovider object or update existing one
+    path(
+        "providers/<int:provider_id>/edit/",
+        lambda request, provider_id: ProviderRequestWizardView.as_view(
+            ProviderRequestWizardView.FORMS,
+            initial_dict=ProviderRequestWizardView.get_initial_dict(provider_id),
+        )(request, provider_id=provider_id),
+        name="provider_edit",
+    ),
     path(
         "provider-autocomplete/",
         ProviderAutocompleteView.as_view(),
