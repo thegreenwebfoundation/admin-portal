@@ -542,6 +542,42 @@ def test_approve_creates_hosting_provider():
 
 
 @pytest.mark.django_db
+def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
+    # given: a provider request linked to an existing hosting provider
+    pr = ProviderRequestFactory.create(
+        services=faker.words(nb=4), provider=hosting_provider_with_sample_user
+    )
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+
+    # when: the request is approved
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+
+    # then: resulting Hostingprovider is the one linked to the original request
+    assert hp.id == pr.provider.id
+
+    # then: resulting Hostingprovider is configured properly
+    assert hp.name == pr.name
+    assert hp.description == pr.description
+    assert list(hp.services.all()) == list(pr.services.all())
+    assert hp.website == pr.website
+    assert hp.request == pr
+    assert hp.created_by == pr.created_by
+    # then: user who created the request has permissions to manage the new hosting provider
+    assert hp in pr.created_by.hosting_providers
+
+    # provider is visible by default
+    # appropriate tag is added
+    assert hp.showonwebsite is True
+    assert "up-to-date" in hp.staff_labels.slugs()
+    # "other-none" is the label condition check for
+    # when someone is just trying to get a site marked
+    # as green when they don't offer hosted services
+    assert "other-none" not in hp.services.slugs()
+
+
+@pytest.mark.django_db
 def test_approve_supports_orgs_not_offering_hosted_services():
     # given: a verification request for an organisation that does
     # not offer any services, but we still want ot recognise as green
