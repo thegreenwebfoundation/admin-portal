@@ -205,7 +205,7 @@ class ProviderRequest(TimeStampedModel):
                 doc.delete()
 
         else:
-            hp = Hostingprovider.objects.crete()
+            hp = Hostingprovider.objects.create()
             self.provider = hp
 
         # fill in data from this request

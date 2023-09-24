@@ -560,7 +560,7 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
     # then: resulting Hostingprovider is configured properly
     assert hp.name == pr.name
     assert hp.description == pr.description
-    assert list(hp.services.all()) == list(pr.services.all())
+    assert set(hp.services.all()) == set(pr.services.all())
     assert hp.website == pr.website
     assert hp.request == pr
     assert hp.created_by == pr.created_by
