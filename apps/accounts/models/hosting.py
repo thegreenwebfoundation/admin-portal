@@ -294,9 +294,12 @@ class Hostingprovider(models.Model):
         through_fields=("hostingprovider", "datacenter"),
         related_name="hostingproviders",
     )
-    # prevent circular imports by lazy-loading the ProviderRequest model
+    # link to a provider request that was recently used to create or update the data
     request = models.ForeignKey(
-        "accounts.ProviderRequest", null=True, on_delete=models.SET_NULL
+        # prevent circular imports by lazy-loading the ProviderRequest model
+        "accounts.ProviderRequest",
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     def __str__(self):
@@ -395,7 +398,6 @@ class Hostingprovider(models.Model):
             return self.website
         else:
             return f"https://{self.website}"
-
 
     # Mutators
     def refresh_shared_secret(self) -> str:

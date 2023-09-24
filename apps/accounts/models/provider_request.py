@@ -107,6 +107,10 @@ class ProviderRequest(TimeStampedModel):
     newsletter_opt_in = models.BooleanField(
         default=False, verbose_name="Newsletter signup"
     )
+    # if this field is set, approving a request will update the provider instead of creating a new one
+    provider = models.ForeignKey(
+        to=Hostingprovider, on_delete=models.SET_NULL, null=True
+    )
 
     def __str__(self) -> str:
         return f"{self.name}"
@@ -151,7 +155,8 @@ class ProviderRequest(TimeStampedModel):
     @transaction.atomic
     def approve(self) -> Hostingprovider:
         """
-        Create a new Hostingprovider and underlying objects and set appropriate permissions.
+        Create a new Hostingprovider and underlying objects or update an existing one
+        and set appropriate permissions.
 
         This method is defined as an atomic transaction:
         in case any exception occurs, all changes will be rolled back,
@@ -173,8 +178,8 @@ class ProviderRequest(TimeStampedModel):
         existing_hp = Hostingprovider.objects.filter(request=self)
         if existing_hp.exists():
             raise ValueError(
-                f"{failed_msg} because a related hosting provider '{existing_hp.get()}'"
-                "already exists in the database"
+                f"{failed_msg} an existing hosting provider '{existing_hp.get()}'"
+                "was already updated using the data from this verification request"
             )
 
         # Temporarily use only the first location
@@ -183,17 +188,35 @@ class ProviderRequest(TimeStampedModel):
         if not first_location:
             raise ValueError(f"{failed_msg} because there are no locations provided")
 
-        # create a Hostingprovider and assign it to the user who created ProviderRequest
-        hp = Hostingprovider.objects.create(
-            name=self.name,
-            description=self.description,
-            # set the first location from the list
-            country=first_location.country,
-            city=first_location.city,
-            website=self.website,
-            request=self,
-            created_by=self.created_by,
-        )
+        # decide whether to update an existing provider or create a new one
+        if self.provider:
+            hp = Hostingprovider.objects.get(pk=self.provider.id)
+
+            # delete related objects, they will be recreated with recent data
+            hp.services.clear()
+
+            for asn in hp.greencheckasn_set.all():
+                asn.delete()
+
+            for ip_range in hp.greencheckip_set.all():
+                ip_range.delete()
+
+            for doc in hp.supporting_documents.all():
+                doc.delete()
+
+        else:
+            hp = Hostingprovider.objects.crete()
+            self.provider = hp
+
+        # fill in data from this request
+        hp.name = self.name
+        hp.description = self.description
+        # set the first location from the list
+        hp.country = first_location.country
+        hp.city = first_location.city
+        hp.website = self.website
+        hp.request = self
+        hp.created_by = self.created_by
 
         # set services (https://django-taggit.readthedocs.io/en/latest/api.html)
         hp.services.set(list(self.services.all()))
