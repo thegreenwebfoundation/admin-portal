@@ -328,6 +328,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         """  # noqa
 
         def _process_formset(formset, request):
+            """
+            Helper function to process the data from ModelFormSets used in this view
+            """
             instances = formset.save(commit=False)
             for instance in instances:
                 instance.request = request
@@ -393,6 +396,16 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         pr.data_processing_opt_in = bool(data_processing_opt_in)
         pr.newsletter_opt_in = bool(newsletter_opt_in)
         pr.save()
+
+        # if this view was used to edit an existing hosting provider,
+        # mark its ID in the new ProviderRequest object
+        provider_id = self.kwargs.get("provider_id")
+        if provider_id:
+            try:
+                pr.provider = Hostingprovider.objects.get(id=provider_id)
+            except Hostingprovider.DoesNotExist:
+                # fallback to creating a new provider
+                pr.provider = None
 
         # set status
         pr.status = ProviderRequestStatus.PENDING_REVIEW.value
