@@ -356,6 +356,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             """
             Helper function to process the data from ModelFormSets used in this view
             """
+            # TODO: check ModelFormSets weird behavior:
+            # formset.save() with initial data submitted as unchanged returns None
             instances = formset.save(commit=False)
             for instance in instances:
                 instance.request = request
