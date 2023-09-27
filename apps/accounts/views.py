@@ -51,6 +51,7 @@ from .models import (
     ProviderRequestEvidence,
     ProviderRequestIPRange,
 )
+from .permissions import manage_provider
 from .utils import send_email
 
 import logging
@@ -283,32 +284,56 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
     def dispatch(self, request, *args, **kwargs):
         """
-        Overwrite method from TemplateView to decide for which users
-        to render a 404 page
+        This view is re-used for 3 different use cases:
+        - /requests/new to submit a new verification request
+        - /requests/{request_id}/edit to edit an existing request
+        - /providers/{provider_id}/edit to edit an existing provider
+
+        This method catches all the cases in which users should be stopped
+        (e.g. lack of permissions or nonexistent objects) by raising exceptions
+        and using HTTP redirects.
+        It will proceed (by calling the same method on the parent class)
+        if no issue was found.
         """
         request_id = kwargs.get("request_id")
+        provider_id = kwargs.get("provider_id")
 
-        # all users can access this view to create a new request
-        if not request_id:
-            return super().dispatch(request, *args, **kwargs)
+        if provider_id:
+            # edit view can be only accessed for existing Providers
+            try:
+                hp = Hostingprovider.objects.get(id=provider_id)
+            except Hostingprovider.DoesNotExist:
+                raise Http404("Page not found")
 
-        # edit view can be only accessed for existing PRs
-        try:
-            pr = ProviderRequest.objects.get(id=request_id)
-        except ProviderRequest.DoesNotExist:
-            raise Http404("Page not found")
+            # only users with object-level perms for provider can access its edit view
+            if (
+                not request.user.has_perm(manage_provider.full_name, hp)
+                and not request.user.is_admin
+            ):
+                messages.error(
+                    self.request,
+                    "You don't have the required permission to edit this listing",
+                )
+                return HttpResponseRedirect(reverse("provider_portal_home"))
+        elif request_id:
+            # edit view can be only accessed for existing PRs
+            try:
+                pr = ProviderRequest.objects.get(id=request_id)
+            except ProviderRequest.DoesNotExist:
+                raise Http404("Page not found")
 
-        if pr.status != ProviderRequestStatus.OPEN:
-            messages.error(
-                self.request, "This verification request cannot be edited at this time"
-            )
-            return HttpResponseRedirect(
-                reverse("provider_request_detail", args=[pr.pk])
-            )
-
-        # only admins and creators can access for editing existing requests
-        if not request.user.is_admin and request.user.id != pr.created_by.id:
-            raise Http404("Page not found")
+            # only OPEN requests are editable
+            if pr.status != ProviderRequestStatus.OPEN:
+                messages.error(
+                    self.request,
+                    "This verification request cannot be edited at this time",
+                )
+                return HttpResponseRedirect(
+                    reverse("provider_request_detail", args=[pr.pk])
+                )
+            # only admins and creators can access for editing existing requests
+            if not request.user.is_admin and request.user.id != pr.created_by.id:
+                raise Http404("Page not found")
 
         return super().dispatch(request, *args, **kwargs)
 

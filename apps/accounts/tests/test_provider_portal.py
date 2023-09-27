@@ -66,7 +66,7 @@ def test_provider_portal_home_view_filters_out_removed_requests(client):
     # and to visit as that user
     user = removed_request.created_by
 
-    # given: 1 approved verification request
+    # given: 1 pending verification request
     pending_request = ProviderRequestFactory.create(
         created_by=user, status=ProviderRequestStatus.PENDING_REVIEW
     )
