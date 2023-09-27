@@ -153,6 +153,15 @@ class GreenIpFactory(dj_factory.DjangoModelFactory):
         model = gc_models.GreencheckIp
 
 
+class GreenASNFactory(dj_factory.DjangoModelFactory):
+    active = True
+    asn = factory.Faker("random_int")
+    hostingprovider = factory.SubFactory(HostingProviderFactory)
+
+    class Meta:
+        model = gc_models.GreencheckASN
+
+
 class GreenDomainFactory(dj_factory.DjangoModelFactory):
     url = factory.Faker("domain_name")
     green = True

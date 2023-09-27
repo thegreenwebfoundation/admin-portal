@@ -373,6 +373,9 @@ class MoreConvenientFormset(ConvenientBaseModelFormSet):
             form_data = {
                 key: value for key, value in form.cleaned_data.items() if key != "id"
             }
+            # handle initial data
+            if form.initial:
+                form_data.update(**form.initial)
             if not bool(form_data):
                 e = ValidationError(
                     "This row has no information - please complete or delete it",

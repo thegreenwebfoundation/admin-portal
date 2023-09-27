@@ -5,7 +5,6 @@ import random
 from django import urls
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from django.shortcuts import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from waffle.testutils import override_flag
@@ -22,7 +21,13 @@ from conftest import (
     ProviderRequestEvidenceFactory,
 )
 from .. import views, models
-from apps.greencheck.factories import ServiceFactory
+from apps.greencheck.factories import (
+    ServiceFactory,
+    UserFactory,
+    GreenIpFactory,
+    GreenASNFactory,
+)
+from apps.accounts.factories import SupportingEvidenceFactory
 
 from django.conf import settings
 
@@ -403,7 +408,7 @@ def test_wizard_sends_email_on_submission(
     # and the correct organisation
     provider_name = wizard_form_org_details_data["0-name"]
     provider_request = models.ProviderRequest.objects.get(name=provider_name)
-    request_path = reverse("provider_request_detail", args=[provider_request.id])
+    request_path = urls.reverse("provider_request_detail", args=[provider_request.id])
 
     link_to_verification_request = f"http://testserver{request_path}"
 
@@ -1070,6 +1075,234 @@ def test_editing_pr_updates_original_submission(
     location_forms = preview_form_dict["1"].forms["locations"].forms
     # 5 forms in total are passed, 3 of them not marked as deleted
     assert len(location_forms) == 5
+    assert len([form for form in location_forms if not form["DELETE"].value()]) == 3
+
+    # when: PREVIEW form is submitted
+    response = client.post(edit_url, wizard_form_preview, follow=True)
+
+    # then: submitting the final step redirects to the detail view
+    assert response.resolver_match.func.view_class is views.ProviderRequestDetailView
+
+    # then: a ProviderRequest object is updated in the db
+    pr_id = response.context_data["providerrequest"].id
+    updated_pr = models.ProviderRequest.objects.get(id=pr_id)
+    assert updated_pr.name == overridden_values["name"]
+    assert updated_pr.providerrequestlocation_set.count() == 3
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_provider_edit_view_accessible_by_user_with_required_perms(
+    client, hosting_provider_with_sample_user, sample_hoster_user
+):
+    # given: existing hosting provider with assigned user
+    # when: accessing its edit view by that user
+    client.force_login(sample_hoster_user)
+    response = client.get(
+        urls.reverse("provider_edit", args=[str(hosting_provider_with_sample_user.id)])
+    )
+
+    # then: page for the correct provider request is rendered
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_provider_edit_view_accessible_by_admins(
+    client, hosting_provider_with_sample_user, greenweb_staff_user
+):
+    # given: existing hosting provider with assigned user
+    # when: accessing its edit view by GWF staff
+    client.force_login(greenweb_staff_user)
+    response = client.get(
+        urls.reverse("provider_edit", args=[str(hosting_provider_with_sample_user.id)])
+    )
+
+    # then: page for the correct provider request is rendered
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_provider_edit_view_inaccessible_by_unauthorized_users(
+    client, hosting_provider_with_sample_user
+):
+    # given: existing hosting provider with assigned user
+    # when: accessing its edit view by another user
+    another_user = UserFactory.build()
+    another_user.save()
+
+    client.force_login(another_user)
+    response = client.get(
+        urls.reverse("provider_edit", args=[str(hosting_provider_with_sample_user.id)])
+    )
+
+    # then: user is redirected to the provider portal
+    assert response.status_code == 302
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_edit_view_inaccessible_for_nonexistent_provider(client, greenweb_staff_user):
+    client.force_login(greenweb_staff_user)
+    response = client.get(urls.reverse("provider_edit", args=[str(123456)]))
+
+    # then: user is redirected to the provider portal
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_editing_hp_creates_new_verification_request(
+    client,
+    hosting_provider_with_sample_user,
+    sorted_ips,
+    wizard_form_org_details_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    """
+    This is an end-to-end test verifying that edit view for
+    an existing HostingProvider displays initial data correctly for each step.
+
+
+    Initial data for HostingProvider is created in the test,
+    data used for updating the object is injected as wizard_form_* fixtures.
+    """
+    # given: URL of the edit view of the existing HP
+    hp = hosting_provider_with_sample_user
+    ev1 = SupportingEvidenceFactory.create(hostingprovider=hp)
+    ev2 = SupportingEvidenceFactory.create(hostingprovider=hp)
+    ip1 = GreenIpFactory.create(
+        ip_start=sorted_ips[0], ip_end=sorted_ips[1], hostingprovider=hp
+    )
+    ip2 = GreenIpFactory.create(
+        ip_start=sorted_ips[1], ip_end=sorted_ips[2], hostingprovider=hp
+    )
+    ip3 = GreenIpFactory.create(
+        ip_start=sorted_ips[2], ip_end=sorted_ips[3], hostingprovider=hp
+    )
+    asn = GreenASNFactory.create(hostingprovider=hp)
+
+    edit_url = urls.reverse("provider_edit", args=[str(hp.id)])
+
+    # when: accessing the edit view by its creator
+    client.force_login(hp.created_by)
+    response = client.get(edit_url)
+
+    # then: ORG_DETAILS form is bound with an instance, initial data is displayed
+    org_details_form = response.context_data["form"]
+    assert org_details_form.initial == {
+        "name": hp.name,
+        "website": hp.website,
+        "description": hp.description,
+    }
+    # when: submitting ORG_DETAILS form with overridden data
+    response = client.post(edit_url, wizard_form_org_details_data, follow=True)
+
+    # then: wizard proceeds, LOCATIONS formset is displayed with initial data
+    locations_formset = response.context_data["form"].forms["locations"]
+    assert locations_formset.forms[0].initial == {
+        "city": hp.city,
+        "country": hp.country,
+    }
+
+    # when: submitting LOCATIONS form with overridden data
+    # data to override locations: delete existing location, add 3 new ones
+    wizard_form_org_location_data = {
+        "provider_request_wizard_view-current_step": "1",
+        "locations__1-TOTAL_FORMS": "4",
+        "locations__1-INITIAL_FORMS": "1",
+        "locations__1-0-country": hp.country.code,
+        "locations__1-0-city": "Berlin",
+        "locations__1-0-id": "",
+        "locations__1-0-DELETE": "on",
+        "locations__1-1-country": faker.country_code(),
+        "locations__1-1-city": faker.city(),
+        "locations__1-2-country": faker.country_code(),
+        "locations__1-2-city": faker.city(),
+        "locations__1-3-country": faker.country_code(),
+        "locations__1-3-city": faker.city(),
+        "extra__1-location_import_required": "True",
+    }
+    response = client.post(edit_url, wizard_form_org_location_data, follow=True)
+    # then: wizard proceeds, SERVICES form is displayed with initial data
+    services_form = response.context_data["form"]
+    assert services_form.initial == {"services": []}
+    # when: submitting SERVICES form with overridden data
+    response = client.post(edit_url, wizard_form_services_data, follow=True)
+
+    # then: wizards proceeds, EVIDENCE formset is displayed with initial data
+    evidence_formset = response.context_data["form"]
+    # we strip expected initial data from "file" key for comparison purposes
+    # because {'file': <FieldFile: None>} != {'file': <FieldFile: None>}
+    ev1_initial = {
+        "title": ev1.title,
+        "description": ev1.description,
+        "link": ev1.link,
+        "type": ev1.type,
+        "public": ev1.public,
+    }
+    ev2_initial = {
+        "title": ev2.title,
+        "description": ev2.description,
+        "link": ev2.link,
+        "type": ev2.type,
+        "public": ev2.public,
+    }
+
+    assert ev1_initial.items() <= evidence_formset.forms[0].initial.items()
+    assert ev2_initial.items() <= evidence_formset.forms[1].initial.items()
+
+    # when: submitting EVIDENCE step with overridden data
+    response = client.post(edit_url, wizard_form_evidence_data, follow=True)
+
+    # then: wizard proceeds, NETWORK form is displayed
+    # and child forms/formsets have initial data assigned
+    network_form = response.context_data["form"]
+    ip_formset = network_form.forms["ips"]
+    # GOTCHA: ModelFormSets created with initial data will store that
+    # in initial_extra
+    assert ip_formset.initial_extra == [
+        {"start": ip1.ip_start, "end": ip1.ip_end},
+        {"start": ip2.ip_start, "end": ip2.ip_end},
+        {"start": ip3.ip_start, "end": ip3.ip_end},
+    ]
+
+    asn_formset = network_form.forms["asns"]
+    assert asn_formset.initial_extra == [{"asn": asn.asn}]
+
+    extra_network_form = network_form.forms["extra"]
+    assert extra_network_form.initial == {}
+
+    # when: submitting NETWORK step with overridden data
+    response = client.post(edit_url, wizard_form_network_data, follow=True)
+
+    # then: wizard proceeds, CONSENT step is displayed with correct instance/initial data assigned
+    consent_form = response.context_data["form"]
+    assert consent_form.initial == {}
+
+    # when: submitting CONSENT step with overridden data
+    response = client.post(edit_url, wizard_form_consent, follow=True)
+
+    # then: PREVIEW step is rendered with correct data
+    preview_form_dict = response.context_data["preview_forms"]
+
+    # org_detail preview displays overridden data
+    overridden_values = {
+        "name": wizard_form_org_details_data["0-name"],
+        "description": wizard_form_org_details_data["0-description"],
+        "website": wizard_form_org_details_data["0-website"],
+    }
+    assert overridden_values.items() <= preview_form_dict["0"].initial.items()
+
+    # locations preview displays overridden data
+    location_forms = preview_form_dict["1"].forms["locations"].forms
+    # 4 forms in total are passed, 3 of them not marked as deleted
+    assert len(location_forms) == 4
     assert len([form for form in location_forms if not form["DELETE"].value()]) == 3
 
     # when: PREVIEW form is submitted
