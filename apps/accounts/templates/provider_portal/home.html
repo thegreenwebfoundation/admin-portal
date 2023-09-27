@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
-{% load i18n static humanize widget_tweaks tailwind_filters waffle_tags %}
-
+{% load i18n static humanize widget_tweaks tailwind_filters waffle_tags guardian_tags%}
 {% block content %}
 
   <article>
@@ -22,7 +21,20 @@
 		{% endif %}
 
 		{% for provider in object_list.providers %}
-			<p><a href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">{{ provider }}</a></p>
+			<p>
+				<a href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">{{ provider }}</a>
+			</p>
+			{% if provider.request and provider.request.approved_at %}
+				<p>Last updated: {{ provider.request.approved_at }}</p>
+			{% endif %}
+				{% flag "edit_provider" %}
+					{% get_obj_perms request.user for provider as "provider_perms" %}
+					{% if "manage_provider" in provider_perms %}
+					<p>
+						<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white" target="_blank" rel="noopener noreferrer">Update listing</a>
+					</p>
+					{% endif %}
+				{% endflag %}
 		{% endfor %}
 
 		{% endif %}
