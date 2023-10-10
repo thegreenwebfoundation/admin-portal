@@ -102,11 +102,15 @@
     <section class="prose mx-auto bg-white border-2 rounded-xl mb-6 lg:mb-0 p-6">
 
       <h3 class="text-3xl mt-0">Identify this provider by IP range</h3>
-      <p>Any services or websites running on IP addresses within these ranges below will be recognised as being managed by this provider,
-        and any green credentials from the provider will count towards any green checks.</p>
-      <p>A valid IP address should be in the format of ‘xxx.xxx.xxx.xxx’ where each ‘xxx’ is a number field that ranges from 0-255.</p>
-
+      <p>You can submit one or more IP ranges which will be used to identify any websites running on this provider.</p>
+		<p class="font-bold">Notes:</p>
+		<ul class="!pl-4">
+			<li class="list-disc">IPv4 and IPv6 formats are supported</li>
+			<li class="list-disc">To add a single IP address, put the same address in both the START and END fields</li>
+		</ul>
+	
       {{ wizard.form.ips.management_form }}
+
       <div id="convenient-formset-ips">
         {% for form in wizard.form.ips %}
           <div class="convenient-form-ips bg-neutral-50 rounded-xl my-6 p-4">
