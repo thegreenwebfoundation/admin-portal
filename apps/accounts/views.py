@@ -363,7 +363,14 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
                 instance.request = request
                 instance.save()
             for object_to_delete in formset.deleted_objects:
+                logger.info(f"we have {len(formset.deleted_objects)} objects to delete")
                 object_to_delete.delete()
+            logger.info(f"checking for changed forms: {formset.form}")
+            if formset.changed_objects:
+                logger.info(f"we have {len(formset.changed_objects)} objects to change")
+                pass
+
+            
 
         steps = ProviderRequestWizardView.Steps
 
