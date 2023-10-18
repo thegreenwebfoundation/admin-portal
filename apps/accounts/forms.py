@@ -25,6 +25,21 @@ from django.utils.safestring import mark_safe
 
 User = get_user_model()
 
+class AlwaysChangedModelFormMixin:
+    """
+    A mixin for ModelForms that makes sure that a form with this Mixin
+    is always marked as changed in checks like `has_changed()`.
+    Used in form wizards containing formsets, to return true for all forms 
+    in a formset, so that all data is saved at the end of the wizard.
+    """
+
+    def has_changed(self):
+        """
+        Always returns True, so that the form is always marked as changed.
+        """
+        return True
+
+
 
 class CustomUserCreationForm(forms.ModelForm):
     """
@@ -281,7 +296,7 @@ class ServicesForm(forms.ModelForm):
         fields = ["services"]
 
 
-class CredentialForm(forms.ModelForm):
+class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
     class Meta:
         model = ac_models.ProviderRequestEvidence
         exclude = ["request"]
@@ -419,7 +434,7 @@ class GreenEvidenceForm(
         return ErrorList(error.replace(original_msg, target_msg) for error in errors)
 
 
-class IpRangeForm(forms.ModelForm):
+class IpRangeForm(AlwaysChangedModelFormMixin, forms.ModelForm):
     start = forms.GenericIPAddressField()
     end = forms.GenericIPAddressField()
 
@@ -428,7 +443,7 @@ class IpRangeForm(forms.ModelForm):
         exclude = ["request"]
 
 
-class AsnForm(forms.ModelForm):
+class AsnForm(AlwaysChangedModelFormMixin, forms.ModelForm):
     class Meta:
         model = ac_models.ProviderRequestASN
         exclude = ["request"]
@@ -554,7 +569,7 @@ class NetworkFootprintForm(BetterMultiModelForm):
 
         return self.cleaned_data
 
-
+    
 class ConsentForm(forms.ModelForm):
     """
     Part of multi-step registration form (screen 5).
