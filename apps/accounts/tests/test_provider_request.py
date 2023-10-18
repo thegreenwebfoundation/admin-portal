@@ -1751,15 +1751,20 @@ def test_saving_changes_to_hp_with_new_verification_request(client,
     for green_as in updated_pr_green_asns:
         assert green_as.asn in [asn.asn for asn in updated_pr_green_asns]
 
-    # and: one piece of evidence from the original provider
+    
     updated_pr_evidence_set = updated_pr.providerrequestevidence_set.all()
     updated_hp_evidence_set = updated_hp.supporting_documents.all()
-
-    # TODO figure out why this test is failing
-    # for ev in updated_hp_evidence_set:
-    #     assert ev.title in [pr_ev.title for pr_ev in updated_pr_evidence_set]
-    #     assert ev.link in [pr_ev.link for pr_ev in updated_pr_evidence_set]
     
+    # and: we have same evidence on the provider as was on the 
+    # verification request
+    for ev in updated_hp_evidence_set:
+        assert ev.title in [pr_ev.title for pr_ev in updated_pr_evidence_set]
+        if not ev.url:
+            pr_file_urls = [pr_ev.file.url for pr_ev in updated_pr_evidence_set if pr_ev.file]
+            assert ev.attachment.url in pr_file_urls
+    
+    # and: one piece of evidence from the original provider remains
+
     # and: ev2, the old piece of evidence is no longer in the updated provider
     assert ev2.title not in [pr_ev.title for pr_ev in updated_pr_evidence_set]
     assert ev2.link not in [pr_ev.link for pr_ev in updated_pr_evidence_set]
