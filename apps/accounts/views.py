@@ -356,21 +356,25 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             """
             Helper function to process the data from ModelFormSets used in this view
             """
-            # TODO: check ModelFormSets weird behavior:
-            # formset.save() with initial data submitted as unchanged returns None
+            logger.info(f"formset: {formset.__class__.__name__}")
+            if formset.__class__.__name__ == 'ProviderRequestIPRangeFormFormSet':
+                for form in formset.forms:
+                    logger.debug(form.__class__.__name__)
+                    logger.debug(f"form.has_changed(): {form.has_changed()}")
+                
             instances = formset.save(commit=False)
             for instance in instances:
                 instance.request = request
                 instance.save()
-            for object_to_delete in formset.deleted_objects:
-                logger.info(f"we have {len(formset.deleted_objects)} objects to delete")
-                object_to_delete.delete()
-            logger.info(f"checking for changed forms: {formset.form}")
-            if formset.changed_objects:
-                logger.info(f"we have {len(formset.changed_objects)} objects to change")
-                pass
 
-            
+            for object_to_delete in formset.deleted_objects:
+                logger.debug(f"we have {len(formset.deleted_objects)} objects to delete")
+                object_to_delete.delete()
+                
+            logger.debug(f"checking for changed forms: {formset.form.__class__.__name__}")
+            if formset.changed_objects:
+                logger.debug(f"we have {len(formset.changed_objects)} objects to change")
+
 
         steps = ProviderRequestWizardView.Steps
 
