@@ -1322,7 +1322,6 @@ def test_editing_hp_creates_new_verification_request(
 
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
-@pytest.mark.only
 def test_saving_changes_to_verification_request_from_hp_via_wizard(
     client,
     hosting_provider_with_sample_user,
@@ -1529,6 +1528,232 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
     # and: we should see 3 locations, 
     assert updated_pr.providerrequestlocation_set.count() == 3
 
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+@pytest.mark.only
+def test_saving_changes_to_hp_with_new_verification_request(client,
+    hosting_provider_with_sample_user,
+    sorted_ips,
+    wizard_form_org_details_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+    fake_evidence):
+    """
+    Check that the updated verification request when approved saves changes 
+    to the hosting provider as we expect
+    """
+    # given: A hosting provider with corresponding evidence already in the 
+    # database
+    hp = hosting_provider_with_sample_user
+    ev1 = SupportingEvidenceFactory.create(hostingprovider=hp)
+    ev2 = SupportingEvidenceFactory.create(hostingprovider=hp)
+    ip1 = GreenIpFactory.create(
+        ip_start=sorted_ips[0], ip_end=sorted_ips[1], hostingprovider=hp
+    )
+    ip2 = GreenIpFactory.create(
+        ip_start=sorted_ips[1], ip_end=sorted_ips[2], hostingprovider=hp
+    )
+    ip3 = GreenIpFactory.create(
+        ip_start=sorted_ips[2], ip_end=sorted_ips[3], hostingprovider=hp
+    )
+    asn = GreenASNFactory.create(hostingprovider=hp)
+    
+
+    # given: URL of the edit view of the existing HP
+    edit_url = urls.reverse("provider_edit", args=[str(hp.id)])
+
+    # when: accessing the edit view by its creator
+    client.force_login(hp.created_by)
+    response = client.get(edit_url)
+
+    # and: submitting ORG_DETAILS form with overridden data
+    response = client.post(edit_url, wizard_form_org_details_data, follow=True)
+
+    # then: when wizard proceeds, LOCATIONS formset is displayed with 
+    # initial data
+    locations_formset = response.context_data["form"].forms["locations"]
+    
+    # when: submitting LOCATIONS form with overridden data
+    # data to override locations: delete existing location, add 3 new ones
+    wizard_form_org_location_data = {
+        "provider_request_wizard_view-current_step": "1",
+        "locations__1-TOTAL_FORMS": "4",
+        "locations__1-INITIAL_FORMS": "1",
+        "locations__1-0-country": hp.country.code,
+        "locations__1-0-city": "Berlin",
+        "locations__1-0-id": "",
+        "locations__1-0-DELETE": "on",
+        "locations__1-1-country": faker.country_code(),
+        "locations__1-1-city": faker.city(),
+        "locations__1-2-country": faker.country_code(),
+        "locations__1-2-city": faker.city(),
+        "locations__1-3-country": faker.country_code(),
+        "locations__1-3-city": faker.city(),
+        "extra__1-location_import_required": "True",
+    }
+    response = client.post(edit_url, wizard_form_org_location_data, follow=True)
+    
+    # then: wizard proceeds, SERVICES form is displayed with initial data
+    services_form = response.context_data["form"]
+    assert services_form.initial == {"services": []}
+    # when: submitting SERVICES form with overridden data
+    response = client.post(edit_url, wizard_form_services_data, follow=True)
+
+    # then: wizards proceeds, 
+    # when: EVIDENCE formset is displayed with initial data
+    evidence_formset = response.context_data["form"]
+    
+    assert isinstance(evidence_formset, account_forms.GreenEvidenceForm)
+
+    # when: submitting EVIDENCE step with one piece of overridden data
+    # and one saved data
+    updated_evidence_data = {
+        "provider_request_wizard_view-current_step": "3",
+        "3-TOTAL_FORMS": 2,
+        "3-INITIAL_FORMS": 0,
+        # first an evisting piece of evidence from ev1
+        "3-0-title": ev1.title,
+        "3-0-link": ev1.url,
+        "3-0-file": "",
+        "3-0-type": ev1.type,
+        "3-0-public": ev1.public,
+        # then a new piece of evidence
+        "3-1-title": " ".join(faker.words(3)),
+        "3-1-link": "",
+        "3-1-file": fake_evidence,
+        "3-1-type": models.EvidenceType.ANNUAL_REPORT.value,
+        "3-1-public": "on",
+    }
+
+
+    response = client.post(edit_url, updated_evidence_data, follow=True)
+
+    # then: wizard proceeds, NETWORK form is displayed
+    # and child forms/formsets have initial data assigned
+    network_form = response.context_data["form"]
+    assert isinstance(network_form, account_forms.NetworkFootprintForm)
+    
+    ip_formset = network_form.forms["ips"]
+    for formset_form in ip_formset.forms:
+        assert isinstance(formset_form, account_forms.IpRangeForm)
+    
+    assert ip_formset.initial_extra == [
+        {"start": ip1.ip_start, "end": ip1.ip_end},
+        {"start": ip2.ip_start, "end": ip2.ip_end},
+        {"start": ip3.ip_start, "end": ip3.ip_end},
+    ]
+
+    asn_formset = network_form.forms["asns"]
+    for formset_form in asn_formset.forms:
+        assert isinstance(formset_form, account_forms.AsnForm)
+
+    assert asn_formset.initial_extra == [{"asn": asn.asn}]
+
+    extra_network_form = network_form.forms["extra"]
+    assert isinstance(extra_network_form, account_forms.ExtraNetworkInfoForm)
+    assert extra_network_form.initial == {}
+
+    # when: submitting NETWORK step with overridden data, where we 
+    # have one less IP  range than before
+    modified_network_data = {
+        "provider_request_wizard_view-current_step": "4",
+        "ips__4-TOTAL_FORMS": "2",
+        "ips__4-INITIAL_FORMS": "0",
+        "ips__4-0-start": ip1.ip_start,
+        "ips__4-0-end": ip1.ip_end,
+        "ips__4-1-start": ip2.ip_start,
+        "ips__4-1-end": ip2.ip_end,
+        "asns__4-TOTAL_FORMS": "1",
+        "asns__4-INITIAL_FORMS": "0",
+        "asns__4-0-asn": asn.asn,
+    }
+
+    response = client.post(edit_url, modified_network_data, follow=True)
+
+    # then: wizard proceeds, CONSENT step is displayed with correct instance/initial data assigned
+    consent_form = response.context_data["form"]
+    assert isinstance(consent_form, account_forms.ConsentForm)
+    assert consent_form.initial == {}
+
+    # when: submitting CONSENT step with data
+    response = client.post(edit_url, wizard_form_consent, follow=True)
+
+    # org_detail preview displays overridden data
+    overridden_values = {
+        "name": wizard_form_org_details_data["0-name"],
+        "description": wizard_form_org_details_data["0-description"],
+        "website": wizard_form_org_details_data["0-website"],
+    }
+
+    # when: PREVIEW form is submitted
+    response = client.post(edit_url, wizard_form_preview, follow=True)
+
+    # then: a ProviderRequest object is updated in the db
+    pr_id = response.context_data["providerrequest"].id
+    updated_pr = models.ProviderRequest.objects.get(id=pr_id)
+
+    # and: we should see the updated name
+    assert updated_pr.name == wizard_form_org_details_data["0-name"]
+
+    # and: we should see 2 IP ranges and 1 ASN
+    assert updated_pr.providerrequestiprange_set.count() == 2
+    assert updated_pr.providerrequestasn_set.count() == 1
+
+    # and: we should see 3 services listed
+    assert updated_pr.providerrequestservice_set.count() == 3
+
+    # and: we should see 2 pieces of evidence, where one is from the original 
+    # hosting provider, and the other a newly supplied one
+    assert updated_pr.providerrequestevidence_set.count() == 2
+    # and the values from the first piece of evidence in this test, ev1 correspond 
+    # with the first piece of evidence in the verification request
+    vr_evidence_set = updated_pr.providerrequestevidence_set.all()
+    assert ev1.title in [ev.title for ev in vr_evidence_set]
+    assert ev1.url in [ev.url for ev in vr_evidence_set]
+    assert ev1.url in [ev.url for ev in vr_evidence_set]
+
+    # and: we should see 3 locations, 
+    assert updated_pr.providerrequestlocation_set.count() == 3
+
+    updated_hp = updated_pr.approve()
+    breakpoint()
+
+
+    # # check that the values
+    # provider_attributes = [key for key in hp.__dict__.keys() if not key.startswith('_')]
+    # hp.refresh_from_db()
+
+    # new_green_ip_vals = hp.greencheckip_set.all().values()
+    
+    # rich.print("vf_greencheck_ip_vals")
+    # rich.inspect(vf_greencheck_ip_vals)
+
+    # rich.print("new_green_ip_vals")
+    # rich.inspect(new_green_ip_vals)
+
+    # # these should be the same now
+    # # assert len(prev_green_ip_vals) == len(new_green_ip_vals)
+    
+    # # but
+    # assert len(prev_green_ip_vals) == 3
+    # # assert len(prev_green_ip_vals) == len(vf_greencheck_ip_vals)
+    
+    # # now that we are 'changing' two but deleting one we
+    # # should see 2 ip ranges, but not the third one
+    # assert len(new_green_ip_vals) == len(vf_greencheck_ip_vals)
+
+    # # for green_ip in prev_green_ip_vals:
+    # #     assert green_ip in new_green_ip_vals
+
+    # # breakpoint()
+
+
+    pass
 
 
 
