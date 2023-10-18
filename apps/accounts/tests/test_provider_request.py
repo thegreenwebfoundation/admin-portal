@@ -1783,21 +1783,23 @@ def test_saving_changes_to_hp_with_new_verification_request(client,
     assert pr_first_location.country == updated_hp.country
     assert pr_first_location.city == updated_hp.city
     
-
-def test_other_hosting_provider_with_no_city_creates_location(self):
+@pytest.mark.skip(reason="pending")
+def test_other_hosting_provider_with_no_city_creates_location():
     """
     hosting provider with just a country should show the city and country
     """
     pass
 
-def test_request_from_hosting_provider_with_loads_of_IP_ranges(self):
+@pytest.mark.skip(reason="pending")
+def test_request_from_hosting_provider_with_loads_of_IP_ranges():
     """
     hosting provider has loads of IP ranges more than is reasonable
     to add manually. we dont' want them to appear as NONE on the preview
     """
     pass
 
-def test_request_from_host_provider_finishes_in_sensible_time(self):
+@pytest.mark.skip(reason="pending")
+def test_request_from_host_provider_finishes_in_sensible_time():
     """
     hosting provider with just a country should show the city and country
     """
