@@ -17,8 +17,12 @@ from . import checks
 
 logger = logging.getLogger(__name__)
 
-now = timezone.now()
-yesterday = now - relativedelta(days=1)
+def yesterday():
+    """Return the the day before today.
+    Used as default value for date fields.
+    """
+    now = timezone.now()
+    return now - relativedelta(days=1)
 
 
 class Stats(models.Model):
