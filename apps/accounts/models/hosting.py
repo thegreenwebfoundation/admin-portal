@@ -846,7 +846,7 @@ class HostingproviderCertificate(Certificate):
 
 
 class HostingproviderStats(models.Model):
-    hostingprovider = models.ForeignKey(
+    hostingprovider = models.OneToOneField(
         Hostingprovider,
         on_delete=models.CASCADE,
         db_column="id_hp",
