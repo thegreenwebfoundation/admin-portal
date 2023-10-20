@@ -5,52 +5,83 @@
 
   <article>
     <div class="prose mx-auto mt-8">
-      	<h1 class="text-center">Provider portal</h1>
-      	
-		<p>Do you want to become part of the Green Web Dataset as a verified green hosting provider? 
-		Do you want to keep your submitted information up-to-date? Get started here.</p>
+      	<h1 class="text-center leading-10">
+			<span class="text-xl">Welcome to our</span><br> 
+			Provider portal</h1>
 
-		<p class="mt-8"><a href="{% url 'before-starting' %}" class="btn">Submit a new verification request</a></p>
-		
-		{% if object_list.providers %}
+		{% for request in object_list.requests %}
+			<h3 class="text-xl pt-8">Pending approval</h3>
+			
+			{% if request.status|lower == "more info required" %}
+			<div class="alert__warning">
+			{% endif %}
+
+			<div class="verification_request">
+				<p class="mb-0"><a href="{{ request.get_absolute_url }}">{{ request.name }}</a> <span class="text-black">|</span> <b>{{ request.status | upper }}</b></p>
+				<p class="mt-0 text-neutral-500 text-sm">Submitted: {{ request.created }}</p>
+			</div>
+
+			{% if request.status|lower == "more info required" %}
+			</div>
+			{% endif %}
+
+		{% empty %}
+
+		{% endfor %}
+
+
 		<h3 class="text-xl pt-10">Your verified providers</h3>
+
+		<p>Verified providers appear in our 
+			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/green-web-dataset/">Green Web Dataset</a> and 
+			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/directory/">Green Web Directory</a>.</p>
+
 		{% if request.user.is_admin %}
-		<p>You belong to the admin group, which gives you permission to manage all providers in the database.
-			Below is a list of those providers for which a permission has been granted explicitly for you, rather than based on the group membership.
-		</p>
+			<div class="alert__warning">
+				<p>You belong to the admin group, which gives you permission to manage all providers in the database.
+				Below is a list of those providers for which a permission has been granted explicitly for you, rather than based on the group membership.</p>
+			</div>
 		{% endif %}
 
-		{% for provider in object_list.providers %}
-			<p>
-				<a href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">{{ provider }}</a>
-			</p>
-			{% if provider.request and provider.request.approved_at %}
-				<p>Last updated: {{ provider.request.approved_at }}</p>
-			{% endif %}
-				{% flag "edit_provider" %}
-					{% get_obj_perms request.user for provider as "provider_perms" %}
-					{% if "manage_provider" in provider_perms %}
-					<p>
-						<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white" target="_blank" rel="noopener noreferrer">Update listing</a>
-					</p>
-					{% endif %}
-				{% endflag %}
-		{% endfor %}
+		{% if object_list.providers %}
+
+			<p>We ask you to ensure listings are kept up to date, and recommend that you review your submitted evidence every 12 months.</p>
+
+			<div class="provider_listings">
+				{% for provider in object_list.providers %}
+				<div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center">
+					
+					<div class="md:w-1/2">
+						<p class="my-0">
+							<a href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">{{ provider }}</a>
+						</p>
+
+						{% if provider.request and provider.request.approved_at %}
+						<p class="my-0 text-sm">Last updated: {{ provider.request.approved_at }}</p>
+						{% endif %}
+					</div>
+
+					<div class="md:w-1/2 text-right">
+						{% flag "edit_provider" %}
+							{% get_obj_perms request.user for provider as "provider_perms" %}
+						
+							{% if "manage_provider" in provider_perms %}
+								<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white" target="_blank" rel="noopener noreferrer">Update listing</a>
+							{% endif %}
+						{% endflag %}
+					</div>
+
+				</div>
+				{% endfor %}
+			</div>
+
+		{% else %}
+			<p>You don't have any verified listings yet.</p>
+			<p><a class="btn mt-0" href="{% url 'before-starting' %}" class="btn">Submit a new verification request</a></p>
 
 		{% endif %}
 
 		<p class="text-neutral-500 mt-8">Looking for the <a href="{% url 'greenweb_admin:index' %}" class="text-neutral-500">old style admin screens</a>?</p>
-		
-		<h3 class="text-xl pt-10">Your submitted verification requests</h3>
-
-		{% for request in object_list.requests %}
-		  <p><a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a></p>
-
-		{% empty %}
-		  <p>You haven't submitted any verification requests yet. <a href="{% url 'before-starting' %}">Get started.</a>
-
-		{% endfor %}
-
 
 	</div>
 
