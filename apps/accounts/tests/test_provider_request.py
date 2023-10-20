@@ -4,7 +4,6 @@ from datetime import date, datetime
 from ipaddress import ip_address
 
 import pytest
-import rich
 from django import urls
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -582,6 +581,107 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
     # when someone is just trying to get a site marked
     # as green when they don't offer hosted services
     assert "other-none" not in hp.services.slugs()
+
+# @pytest.mark.only
+@pytest.mark.wip
+@pytest.mark.django_db
+def test_approve_updates_existing_provider_without_deleting_asns(
+    hosting_provider_with_sample_user
+):
+    # an existing ASN linked to our provider
+    original_asn = GreenASNFactory.create(hostingprovider=hosting_provider_with_sample_user)
+
+    # and: a provider request linked to an existing hosting provider
+    pr = ProviderRequestFactory.create(
+        services=faker.words(nb=4), provider=hosting_provider_with_sample_user
+    )
+
+    
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+    ProviderRequestASNFactory.create(request=pr, asn=original_asn.asn)
+
+    # when: the request is approved
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+    post_approval_asn = hp.greencheckasn_set.first()
+
+    # then: resulting Hostingprovider is the one linked to the original request
+    assert hp.id == pr.provider.id
+
+    # and: the active ASN is the same one that was attached before,
+    # not a newly created one
+    assert original_asn.id == post_approval_asn.id
+
+
+# @pytest.mark.only
+@pytest.mark.wip
+@pytest.mark.django_db
+def test_approve_updates_existing_provider_without_deleting_ips(
+    hosting_provider_with_sample_user
+):
+    # given: existing ips linked to our provider
+    active_ip = GreenIpFactory.create(
+        hostingprovider=hosting_provider_with_sample_user)
+    inactive_ip = GreenIpFactory.create(
+        hostingprovider=hosting_provider_with_sample_user, active=False)
+    hosting_provider_with_sample_user.save()
+
+    assert active_ip in hosting_provider_with_sample_user.greencheckip_set.all()
+    assert inactive_ip in hosting_provider_with_sample_user.greencheckip_set.all()
+
+    # given: a provider request linked to an existing hosting provider
+    pr = ProviderRequestFactory.create(
+        services=faker.words(nb=4), provider=hosting_provider_with_sample_user
+    )
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+    ProviderRequestIPRangeFactory(
+        start=active_ip.ip_start, end=active_ip.ip_end, request=pr)
+    ProviderRequestIPRangeFactory(
+        start=inactive_ip.ip_start, end=inactive_ip.ip_end, request=pr)
+
+
+    # when: the request is approved
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+    # and: I fetch provider request IP ranges
+    pr_ips = hp.greencheckip_set.all()
+
+    # then: resulting Hostingprovider is the one linked to the original request
+    assert hp.id == pr.provider.id
+
+    # and: the active ip is the same one that was attached before    
+    assert active_ip.id in [ip.id for ip in pr_ips]
+    # and: the inactive ip is the same one that was attached before
+    assert inactive_ip.id in [ip.id for ip in pr_ips]
+
+
+@pytest.mark.only
+@pytest.mark.wip
+@pytest.mark.django_db
+def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
+    hosting_provider_with_sample_user
+):
+    # given: a provider request linked to an existing hosting provider
+
+    original_evidence = SupportingEvidenceFactory.create(
+        hostingprovider=hosting_provider_with_sample_user
+    )
+
+    pr = ProviderRequestFactory.create(
+        services=faker.words(nb=4), provider=hosting_provider_with_sample_user
+    )
+    ProviderRequestLocationFactory.create(request=pr)
+    original_evidence = ProviderRequestEvidenceFactory.create(request=pr)
+
+    # when: the request is approved
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+
+    pr_evidence_items = hp.supporting_documents.all()
+    
+    assert original_evidence.id in [evidence.id for evidence in pr_evidence_items]
 
 
 @pytest.mark.django_db
