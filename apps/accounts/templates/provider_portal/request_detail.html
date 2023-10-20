@@ -12,7 +12,17 @@
       <h1 class="text-6xl mb-0"><span class="uppercase">Summary of request</h1>
 
         <p>Submitted on: {{ object.created }}</p>
-        <p>Status: <span class="uppercase">{{ object.status }}</span></p>
+
+		{% if object.status|lower == "more info required" %}
+		<div class="alert__warning">
+		{% endif %}
+
+        <p><span class="text-black">Status:</span> <span class="uppercase font-bold">{{ object.status }}</span></p>
+
+		{% if object.status|lower == "more info required" %}
+		<p class="mt-4"><a href="{% url 'provider_request_edit' object.id %}" class="btn">Update request now</a></p>
+		</div>
+		{% endif %}
 
         {% if object.approved_at and object.status|lower == "approved" %}
           <p>Approved on: <span>{{ object.approved_at }}</span></p>
@@ -22,9 +32,7 @@
           We are currently reviewing this request. If you want to update the information relating to this provider, please get in touch using <a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/support-form/">our support form</a>.
         {% endif %}
 
-        {% if object.status|lower == "more info required" %}
-          <p class="mt-8"><a href="{% url 'provider_request_edit' object.id %}" class="btn">Update this request</a></p>
-        {% endif %}
+          
       </header>
 
       <article class="pb-12">
