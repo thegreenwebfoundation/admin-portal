@@ -62,13 +62,14 @@
 					</div>
 
 					<div class="md:w-1/2 text-right">
-						{% flag "edit_provider" %}
+	
+							{% flag "edit_provider" %}
 							{% get_obj_perms request.user for provider as "provider_perms" %}
 						
 							{% if "manage_provider" in provider_perms %}
-								<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white" target="_blank" rel="noopener noreferrer">Update listing</a>
+								<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white">Update listing</a>
 							{% endif %}
-						{% endflag %}
+							{% endflag %}
 					</div>
 
 				</div>
