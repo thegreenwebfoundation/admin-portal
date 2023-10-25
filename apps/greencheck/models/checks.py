@@ -204,6 +204,15 @@ class GreencheckIp(mu_models.TimeStampedModel):
         self.save()
         return self
 
+    def unarchive(self) -> "GreencheckIp":
+        """
+        Mark a GreencheckIp as inactive, as a softer alternative to deletion, 
+        returning the Greencheck IP for further processing.
+        """
+        self.active = True
+        self.save()
+        return self
+
     def __str__(self):
         return f"{self.ip_start} - {self.ip_end}"
 
@@ -393,6 +402,15 @@ class GreencheckASN(mu_models.TimeStampedModel):
         returning the Greencheck ASN for further processing.
         """
         self.active = False
+        self.save()
+        return self
+
+    def unarchive(self) -> "GreencheckASN":
+        """
+        Mark a GreencheckASN as inactive, as a softer alternative to deletion, 
+        returning the Greencheck ASN for further processing.
+        """
+        self.active = True
         self.save()
         return self
 

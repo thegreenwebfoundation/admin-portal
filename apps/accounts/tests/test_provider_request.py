@@ -676,19 +676,42 @@ def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
         hostingprovider=hosting_provider_with_sample_user
     )
 
+    assert original_evidence.id in [
+        evidence.id 
+        for evidence in 
+        hosting_provider_with_sample_user.supporting_documents.all()
+    ]
+
+    # given: a provider request linked to an existing hosting provider
     pr = ProviderRequestFactory.create(
         services=faker.words(nb=4), provider=hosting_provider_with_sample_user
     )
+    # and: a location
     ProviderRequestLocationFactory.create(request=pr)
-    original_evidence = ProviderRequestEvidenceFactory.create(request=pr)
+    # and: a matching piece of supporting evidence
+    pr_original_evidence = ProviderRequestEvidenceFactory.create(
+        request=pr,
+        title=original_evidence.title,
+        description=original_evidence.description,
+        public=original_evidence.public,
+        type=original_evidence.type,
+        file=original_evidence.attachment,
+        link=original_evidence.url,
+        )
 
     # when: the request is approved
     result = pr.approve()
     hp = models.Hostingprovider.objects.get(id=result.id)
 
-    pr_evidence_items = hp.supporting_documents.all()
+    updated_hp_evidence = hp.supporting_documents.all()
 
-    assert original_evidence.id in [evidence.id for evidence in pr_evidence_items]
+    import rich
+    for pr_ev in updated_hp_evidence:
+        rich.inspect(pr_ev)
+
+    rich.inspect(original_evidence)
+
+    assert original_evidence.id in [evidence.id for evidence in updated_hp_evidence]
 
 
 @pytest.mark.django_db
@@ -1635,7 +1658,6 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
 
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
-@pytest.mark.only
 def test_saving_changes_to_hp_with_new_verification_request(
     client,
     hosting_provider_with_sample_user,

@@ -233,6 +233,7 @@ class ProviderService(tag_models.TaggedItemBase):
     )
 
 
+
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
@@ -306,6 +307,8 @@ class Hostingprovider(models.Model):
     def __str__(self):
         return self.name
 
+
+
     @property
     def users(self) -> models.QuerySet["User"]:
         """
@@ -351,14 +354,7 @@ class Hostingprovider(models.Model):
         except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
             return None
 
-    @property
-    def public_supporting_evidence(self):
-        """
-        Return the supporting evidence that has explictly been marked as public
-        by the users uploading it to the database
-        """
-        return self.supporting_documents.filter(public=True).order_by("-valid_to")
-
+    
     @property
     def evidence_expiry_date(self) -> typing.Optional[datetime.date]:
         """
@@ -470,9 +466,14 @@ class Hostingprovider(models.Model):
         return False
 
     # Queries
-    # set the return type to be a Queryset of the relevant model
-    # import queryset from django
     
+    def public_supporting_evidence(self) -> models.QuerySet["HostingproviderSupportingDocument"]:
+        """
+        Return the supporting evidence that has explictly been marked as public
+        by the users uploading it to the database
+        """
+        return self.supporting_documents.filter(public=True).order_by("-valid_to")
+        
      
     def active_ip_ranges(self) -> models.QuerySet["GreencheckIP"]:
         """
@@ -754,6 +755,14 @@ class AbstractSupportingDocument(models.Model):
             "document/page in your entry in the green web directory."
         ),
     )
+    archived = models.BooleanField(
+        default=False, 
+        editable=False,
+        help_text=(
+            "If this is checked, this document will not show up in any queries. "
+            "Should not editable via the admin interface by non-staff users."
+        )
+    )
 
     def __str__(self):
         return f"{self.valid_from} - {self.title}"
@@ -780,11 +789,24 @@ class DatacenterSupportingDocument(AbstractSupportingDocument):
     def parent(self):
         return self.datacentre
 
+class SupportingEvidenceManager(models.Manager):
+    """
+    A manager to filter out archived items of supporting evidence
+    for a given provider
+    """
+    def get_queryset(self):
+        return super().get_queryset().filter(archived=False)
+    
+
+
 
 class HostingProviderSupportingDocument(AbstractSupportingDocument):
     """
     The subclass for hosting providers.
     """
+
+    objects = SupportingEvidenceManager()
+    objects_all = models.Manager()
 
     hostingprovider = models.ForeignKey(
         Hostingprovider,
@@ -794,6 +816,23 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         related_name="supporting_documents",
         # related_name="hostingprovider_evidence",
     )
+
+    def archive(self) -> "HostingProviderSupportingDocument":
+        self.archived=True
+        self.save()
+        # TODO if we are using object storage, use the boto3 API to mark the 
+        # file as no longer public
+
+        return self
+
+    def unarchive(self) -> "HostingProviderSupportingDocument":
+        self.archived=False
+        self.save()
+        # TODO if we are using object storage, use the boto3 API to mark the 
+        # file as no longer public
+
+        return self
+
 
     @property
     def parent(self):
@@ -813,6 +852,8 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
             return self.attachment.url
 
         return self.url
+
+
 
 
 class Certificate(models.Model):
