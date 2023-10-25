@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+import rich
 from django_countries.fields import CountryField
 from taggit.managers import TaggableManager
 from taggit import models as tag_models
@@ -192,21 +193,24 @@ class ProviderRequest(TimeStampedModel):
         if self.provider:
             hp = Hostingprovider.objects.get(pk=self.provider.id)
 
+            
+
             # delete related objects, they will be recreated with recent data
             hp.services.clear()
 
             for asn in hp.greencheckasn_set.all():
-                # TODO: decide about logging this change if it changes 
+                # TODO: decide about logging this change if it changes
                 # the state the ASN
                 asn.archive()
 
             for ip_range in hp.greencheckip_set.all():
-                # TODO: decide about logging this change if it changes 
+                # TODO: decide about logging this change if it changes
                 # the state the ASN
                 ip_range.archive()
 
             for doc in hp.supporting_documents.all():
-                doc.delete()
+                rich.print(doc)
+                doc.archive()
 
         else:
             hp = Hostingprovider.objects.create()
@@ -241,8 +245,10 @@ class ProviderRequest(TimeStampedModel):
 
         # create related objects: ASNs
         for asn in self.providerrequestasn_set.all():
-            if matching_inactive_asn := GreencheckASN.objects.filter(active=False, asn=asn.asn, hostingprovider=hp):
-                matching_inactive_asn.update(active=True)
+            if matching_inactive_asn := GreencheckASN.objects.filter(
+                active=False, asn=asn.asn, hostingprovider=hp
+            ):
+                [inactive_asn.unarchive() for inactive_asn in matching_inactive_asn]
                 continue
             try:
                 GreencheckASN.objects.create(
@@ -253,17 +259,18 @@ class ProviderRequest(TimeStampedModel):
                     f"Failed to approve the request `{self}` because the ASN '{asn}' already exists in the database"
                 ) from e
 
-        # create related objects: new IP ranges, or activate existing ones 
+        # create related objects: new IP ranges, or activate existing ones
         # if inactive matching ones exist in the database
         for ip_range in self.providerrequestiprange_set.all():
-            if matching_inactive_ip := GreencheckIp.objects.filter(active=False,
+            if matching_inactive_ip := GreencheckIp.objects.filter(
+                active=False,
                 ip_start=ip_range.start,
                 ip_end=ip_range.end,
-                hostingprovider=hp
-                ):
-                matching_inactive_ip.update(active=True)
+                hostingprovider=hp,
+            ):
+                [inactive_ip.unarchive() for inactive_ip in matching_inactive_ip]
                 continue
-            
+
             GreencheckIp.objects.create(
                 active=True,
                 ip_start=ip_range.start,
@@ -276,6 +283,19 @@ class ProviderRequest(TimeStampedModel):
             # AbstractSupportingDocument does not accept null values for `url` and `attachment` fields
             url = evidence.link or ""
             attachment = evidence.file or ""
+
+            
+            # assert HostingProviderSupportingDocument.objects_all.filter(archived=True)
+            if archived_evidence := HostingProviderSupportingDocument.objects_all.filter(
+                hostingprovider=hp,
+                title=evidence.title,
+                archived=True,
+                type=evidence.type,
+                public=evidence.public,
+            ):
+                [archived_ev.unarchive() for archived_ev in archived_evidence]
+                continue
+
             HostingProviderSupportingDocument.objects.create(
                 hostingprovider=hp,
                 title=evidence.title,
@@ -350,7 +370,6 @@ class ProviderRequestIPRange(models.Model):
         if self.start and self.end:
             validate_ip_range(self.start, self.end)
 
-    
 
 class ProviderRequestEvidence(models.Model):
     """
