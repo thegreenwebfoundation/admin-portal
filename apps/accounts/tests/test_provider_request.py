@@ -705,12 +705,6 @@ def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
 
     updated_hp_evidence = hp.supporting_documents.all()
 
-    import rich
-    for pr_ev in updated_hp_evidence:
-        rich.inspect(pr_ev)
-
-    rich.inspect(original_evidence)
-
     assert original_evidence.id in [evidence.id for evidence in updated_hp_evidence]
 
 

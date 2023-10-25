@@ -233,7 +233,6 @@ class ProviderService(tag_models.TaggedItemBase):
     )
 
 
-
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
@@ -307,8 +306,6 @@ class Hostingprovider(models.Model):
     def __str__(self):
         return self.name
 
-
-
     @property
     def users(self) -> models.QuerySet["User"]:
         """
@@ -354,7 +351,6 @@ class Hostingprovider(models.Model):
         except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
             return None
 
-    
     @property
     def evidence_expiry_date(self) -> typing.Optional[datetime.date]:
         """
@@ -466,15 +462,16 @@ class Hostingprovider(models.Model):
         return False
 
     # Queries
-    
-    def public_supporting_evidence(self) -> models.QuerySet["HostingproviderSupportingDocument"]:
+
+    def public_supporting_evidence(
+        self
+    ) -> models.QuerySet["HostingproviderSupportingDocument"]:
         """
         Return the supporting evidence that has explictly been marked as public
         by the users uploading it to the database
         """
         return self.supporting_documents.filter(public=True).order_by("-valid_to")
-        
-     
+
     def active_ip_ranges(self) -> models.QuerySet["GreencheckIP"]:
         """
         Return the active IP ranges for this provider
@@ -486,7 +483,6 @@ class Hostingprovider(models.Model):
         Return the active ASNs for this provider
         """
         return self.greencheckasn_set.filter(active=True)
-
 
     # Properties
 
@@ -756,12 +752,12 @@ class AbstractSupportingDocument(models.Model):
         ),
     )
     archived = models.BooleanField(
-        default=False, 
+        default=False,
         editable=False,
         help_text=(
             "If this is checked, this document will not show up in any queries. "
-            "Should not editable via the admin interface by non-staff users."
-        )
+            "Should not be editable via the admin interface by non-staff users."
+        ),
     )
 
     def __str__(self):
@@ -789,15 +785,17 @@ class DatacenterSupportingDocument(AbstractSupportingDocument):
     def parent(self):
         return self.datacentre
 
-class SupportingEvidenceManager(models.Manager):
-    """
-    A manager to filter out archived items of supporting evidence
-    for a given provider
-    """
-    def get_queryset(self):
-        return super().get_queryset().filter(archived=False)
-    
 
+class NonArchivedEvidenceManager(models.Manager):
+    """
+    A custom manager to filter out archived items of supporting evidence
+    for a given provider. Used as a default manager for
+    Hosting Provider Supporting Documents, so we do not accidentally
+    show archived evidence in queries.
+    """
+
+    def get_queryset(self) -> models.QuerySet:
+        return super().get_queryset().filter(archived=False)
 
 
 class HostingProviderSupportingDocument(AbstractSupportingDocument):
@@ -805,7 +803,10 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
     The subclass for hosting providers.
     """
 
-    objects = SupportingEvidenceManager()
+    # our default manager should filter out archived items
+    objects = NonArchivedEvidenceManager()
+    # but we still should have access if neeed by via the
+    # original non-filtered manager
     objects_all = models.Manager()
 
     hostingprovider = models.ForeignKey(
@@ -814,25 +815,23 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         null=True,
         on_delete=models.CASCADE,
         related_name="supporting_documents",
-        # related_name="hostingprovider_evidence",
     )
 
     def archive(self) -> "HostingProviderSupportingDocument":
-        self.archived=True
+        self.archived = True
         self.save()
-        # TODO if we are using object storage, use the boto3 API to mark the 
+        # TODO if we are using object storage, use the boto3 API to mark the
         # file as no longer public
 
         return self
 
     def unarchive(self) -> "HostingProviderSupportingDocument":
-        self.archived=False
+        self.archived = False
         self.save()
-        # TODO if we are using object storage, use the boto3 API to mark the 
+        # TODO if we are using object storage, use the boto3 API to mark the
         # file as no longer public
 
         return self
-
 
     @property
     def parent(self):
@@ -852,8 +851,6 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
             return self.attachment.url
 
         return self.url
-
-
 
 
 class Certificate(models.Model):

@@ -1,25 +1,24 @@
-from django.db import models, IntegrityError, transaction
-from django.urls import reverse
+from datetime import date, datetime, timedelta
+from typing import Iterable, List, Tuple
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
-
-import rich
+from django.db import IntegrityError, models, transaction
+from django.urls import reverse
 from django_countries.fields import CountryField
-from taggit.managers import TaggableManager
-from taggit import models as tag_models
-from datetime import date, timedelta, datetime
 from guardian.shortcuts import assign_perm
-
-
-from apps.greencheck.models import IpAddressField, GreencheckASN, GreencheckIp
-from apps.greencheck.validators import validate_ip_range
-from apps.accounts.permissions import manage_provider
 from model_utils.models import TimeStampedModel
-from typing import Iterable, Tuple, List
+from taggit import models as tag_models
+from taggit.managers import TaggableManager
+
+from apps.accounts.permissions import manage_provider
+from apps.greencheck.models import GreencheckASN, GreencheckIp, IpAddressField
+from apps.greencheck.validators import validate_ip_range
+
 from .hosting import (
+    EvidenceType,
     Hostingprovider,
     HostingProviderSupportingDocument,
-    EvidenceType,
     Service,
 )
 
@@ -193,8 +192,6 @@ class ProviderRequest(TimeStampedModel):
         if self.provider:
             hp = Hostingprovider.objects.get(pk=self.provider.id)
 
-            
-
             # delete related objects, they will be recreated with recent data
             hp.services.clear()
 
@@ -209,7 +206,6 @@ class ProviderRequest(TimeStampedModel):
                 ip_range.archive()
 
             for doc in hp.supporting_documents.all():
-                rich.print(doc)
                 doc.archive()
 
         else:
@@ -284,14 +280,16 @@ class ProviderRequest(TimeStampedModel):
             url = evidence.link or ""
             attachment = evidence.file or ""
 
-            
             # assert HostingProviderSupportingDocument.objects_all.filter(archived=True)
-            if archived_evidence := HostingProviderSupportingDocument.objects_all.filter(
-                hostingprovider=hp,
-                title=evidence.title,
-                archived=True,
-                type=evidence.type,
-                public=evidence.public,
+            if (
+                archived_evidence
+                := HostingProviderSupportingDocument.objects_all.filter(
+                    hostingprovider=hp,
+                    title=evidence.title,
+                    archived=True,
+                    type=evidence.type,
+                    public=evidence.public,
+                )
             ):
                 [archived_ev.unarchive() for archived_ev in archived_evidence]
                 continue
