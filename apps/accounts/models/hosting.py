@@ -27,6 +27,7 @@ from .choices import (
 )
 from ..permissions import manage_provider, manage_datacenter
 from apps.greencheck.choices import StatusApproval, GreenlistChoice
+# import apps.greencheck.models as gc_models
 
 logger = logging.getLogger(__name__)
 
@@ -467,6 +468,26 @@ class Hostingprovider(models.Model):
             return True
 
         return False
+
+    # Queries
+    # set the return type to be a Queryset of the relevant model
+    # import queryset from django
+    
+     
+    def active_ip_ranges(self) -> models.QuerySet["GreencheckIP"]:
+        """
+        Return the active IP ranges for this provider
+        """
+        return self.greencheckip_set.filter(active=True)
+
+    def active_asns(self) -> models.QuerySet["GreencheckASN"]:
+        """
+        Return the active ASNs for this provider
+        """
+        return self.greencheckasn_set.filter(active=True)
+
+
+    # Properties
 
     def counts_as_green(self):
         """

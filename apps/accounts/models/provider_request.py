@@ -196,10 +196,14 @@ class ProviderRequest(TimeStampedModel):
             hp.services.clear()
 
             for asn in hp.greencheckasn_set.all():
-                asn.delete()
+                # TODO: decide about logging this change if it changes 
+                # the state the ASN
+                asn.archive()
 
             for ip_range in hp.greencheckip_set.all():
-                ip_range.delete()
+                # TODO: decide about logging this change if it changes 
+                # the state the ASN
+                ip_range.archive()
 
             for doc in hp.supporting_documents.all():
                 doc.delete()
@@ -237,6 +241,9 @@ class ProviderRequest(TimeStampedModel):
 
         # create related objects: ASNs
         for asn in self.providerrequestasn_set.all():
+            if matching_inactive_asn := GreencheckASN.objects.filter(active=False, asn=asn.asn, hostingprovider=hp):
+                matching_inactive_asn.update(active=True)
+                continue
             try:
                 GreencheckASN.objects.create(
                     active=True, asn=asn.asn, hostingprovider=hp
@@ -246,8 +253,17 @@ class ProviderRequest(TimeStampedModel):
                     f"Failed to approve the request `{self}` because the ASN '{asn}' already exists in the database"
                 ) from e
 
-        # create related objects: IP ranges
+        # create related objects: new IP ranges, or activate existing ones 
+        # if inactive matching ones exist in the database
         for ip_range in self.providerrequestiprange_set.all():
+            if matching_inactive_ip := GreencheckIp.objects.filter(active=False,
+                ip_start=ip_range.start,
+                ip_end=ip_range.end,
+                hostingprovider=hp
+                ):
+                matching_inactive_ip.update(active=True)
+                continue
+            
             GreencheckIp.objects.create(
                 active=True,
                 ip_start=ip_range.start,

@@ -195,6 +195,15 @@ class GreencheckIp(mu_models.TimeStampedModel):
 
         return end_number - start_number + extra_one_ip
 
+    def archive(self) -> "GreencheckIp":
+        """
+        Mark a GreencheckIp as inactive, as a softer alternative to deletion, 
+        returning the Greencheck IP for further processing.
+        """
+        self.active = False
+        self.save()
+        return self
+
     def __str__(self):
         return f"{self.ip_start} - {self.ip_end}"
 
@@ -377,6 +386,15 @@ class GreencheckASN(mu_models.TimeStampedModel):
     hostingprovider = models.ForeignKey(
         ac_models.Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
     )
+
+    def archive(self) -> "GreencheckASN":
+        """
+        Mark a GreencheckASN as inactive, as a softer alternative to deletion, 
+        returning the Greencheck ASN for further processing.
+        """
+        self.active = False
+        self.save()
+        return self
 
     def __str__(self):
         active_state = "Inactive"
