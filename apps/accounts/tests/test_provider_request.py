@@ -583,7 +583,6 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
     assert "other-none" not in hp.services.slugs()
 
 
-@pytest.mark.wip
 @pytest.mark.django_db
 def test_approve_updates_existing_provider_without_deleting_asns(
     hosting_provider_with_sample_user
@@ -621,7 +620,6 @@ def test_approve_updates_existing_provider_without_deleting_asns(
     assert original_asn.id == post_approval_asn.id
 
 
-@pytest.mark.wip
 @pytest.mark.django_db
 def test_approve_updates_existing_provider_without_deleting_ips(
     hosting_provider_with_sample_user
@@ -664,8 +662,6 @@ def test_approve_updates_existing_provider_without_deleting_ips(
     assert inactive_ip.id in [ip.id for ip in pr_ips]
 
 
-@pytest.mark.only
-@pytest.mark.wip
 @pytest.mark.django_db
 def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
     hosting_provider_with_sample_user
@@ -677,9 +673,8 @@ def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
     )
 
     assert original_evidence.id in [
-        evidence.id 
-        for evidence in 
-        hosting_provider_with_sample_user.supporting_documents.all()
+        evidence.id
+        for evidence in hosting_provider_with_sample_user.supporting_documents.all()
     ]
 
     # given: a provider request linked to an existing hosting provider
@@ -697,7 +692,7 @@ def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
         type=original_evidence.type,
         file=original_evidence.attachment,
         link=original_evidence.url,
-        )
+    )
 
     # when: the request is approved
     result = pr.approve()
@@ -705,6 +700,9 @@ def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
 
     updated_hp_evidence = hp.supporting_documents.all()
 
+    # then we should have the same item of evidence that was attached to the
+    # provider still associated, rather than being deleted and replaced with
+    # a similar but new one
     assert original_evidence.id in [evidence.id for evidence in updated_hp_evidence]
 
 
