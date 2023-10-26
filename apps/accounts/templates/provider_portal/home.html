@@ -5,61 +5,107 @@
 
   <article>
     <div class="prose mx-auto mt-8">
-      	<h1 class="text-center">Provider portal</h1>
-      	
-		<p>Do you want to become part of the Green Web Dataset as a verified green hosting provider? 
-		Do you want to keep your submitted information up-to-date? Get started here.</p>
+      	<h1 class="text-center leading-10">
+			<span class="text-xl">Welcome to our</span><br> 
+			Provider portal</h1>
 
-		<p class="mt-8"><a href="{% url 'before-starting' %}" class="btn">Submit a new verification request</a></p>
-		
-		{% if object_list.providers %}
+		<h2 class="border-0 my-3 pb-0">Providers overview</h2>
+
+		<p>Verified providers appear in our 
+			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/green-web-dataset/">Green Web Dataset</a> and 
+			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/directory/">Green Web Directory</a>.</p>
+
+
+		{% for request in object_list.requests %}
+			<h3 class="text-xl pt-8" id="pending">Pending verification</h3>
+			
+			<a class="no-underline drop-shadow-lg hover:drop-shadow-none" href="{{ request.get_absolute_url }}">
+				<div class="verification_request">
+					{% if request.status|lower == "more info required" %}
+					<div class="alert__warning hover:bg-neutral-100">
+					{% endif %}
+				
+					<p class="mb-0"><span class="verification_request__name text-black font-bold underline">{{ request.name }}</span> <span class="text-black">|</span> <b class="">{{ request.status | upper }}</b></p>
+					<p class="verification_request__date mt-0 text-neutral-500 text-sm">Submitted: {{ request.created }}</p>
+
+					{% if request.status|lower == "more info required" %}
+					</div>
+					{% endif %}
+				</div>
+			</a>
+
+		{% empty %}
+
+		{% endfor %}
+
 		<h3 class="text-xl pt-10">Your verified providers</h3>
+
 		{% if request.user.is_admin %}
-		<p>You belong to the admin group, which gives you permission to manage all providers in the database.
-			Below is a list of those providers for which a permission has been granted explicitly for you, rather than based on the group membership.
-		</p>
+			<div class="alert__warning">
+				<p>You belong to the admin group, which gives you permission to manage all providers in the database.
+				Below is a list of those providers for which a permission has been granted explicitly for you, rather than based on the group membership.</p>
+			</div>
 		{% endif %}
 
-		{% for provider in object_list.providers %}
-			<p>
-				<a href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">{{ provider }}</a>
-			</p>
-			{% if provider.request and provider.request.approved_at %}
-				<p>Last updated: {{ provider.request.approved_at }}</p>
+
+		{% if object_list.providers %}
+
+			<p>We ask you to ensure the listings below are kept up to date, and request you review your submitted evidence every 12 months.</p>
+
+			<div class="provider_listings">
+				{% for provider in object_list.providers %}
+				<div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2">
+					
+					<div class="md:w-1/2">
+						<p class="my-0">
+							<a class="font-bold" href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">{{ provider }}</a>
+						</p>
+
+						{% if provider.request and provider.request.approved_at %}
+						<p class="my-0 text-sm">Last updated: {{ provider.request.approved_at }}</p>
+						{% endif %}
+					</div>
+
+					<div class="md:w-1/2 text-right">
+	
+						{% flag "edit_provider" %}
+							{% get_obj_perms request.user for provider as "provider_perms" %}
+						
+							{% if "manage_provider" in provider_perms %}
+								<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white text-sm">📝 Update listing</a>
+							{% endif %}
+						{% endflag %}
+					</div>
+
+				</div>
+				{% endfor %}
+			</div>
+
+			<p><a class="" href="{% url 'before-starting' %}" class="btn">Or create entirely new provider</a></p>
+
+
+		{% else %}
+
+			{% if object_list.requests|length == 0 %}
+				<p>You don't have any verified listings yet.</p>
+				<p><a class="btn mt-0" href="{% url 'before-starting' %}" class="btn">Submit a new verification request</a></p>
+			{% else %}
+				<p class="">Thank you! We're already working on a verification request you've submitted, listed in the <a href="#pending">pending verification</a> above.</p>
+				<p>If you wish, you can <a class="" href="{% url 'before-starting' %}" class="btn">create an entirely new provider verification request</a> to restart the process.</p>
 			{% endif %}
-				{% flag "edit_provider" %}
-					{% get_obj_perms request.user for provider as "provider_perms" %}
-					{% if "manage_provider" in provider_perms %}
-					<p>
-						<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white" target="_blank" rel="noopener noreferrer">Update listing</a>
-					</p>
-					{% endif %}
-				{% endflag %}
-		{% endfor %}
 
 		{% endif %}
 
 		<p class="text-neutral-500 mt-8">Looking for the <a href="{% url 'greenweb_admin:index' %}" class="text-neutral-500">old style admin screens</a>?</p>
-		
-		<h3 class="text-xl pt-10">Your submitted verification requests</h3>
-
-		{% for request in object_list.requests %}
-		  <p><a href="{{ request.get_absolute_url }}">{{ request.name }} | <b>{{ request.status | upper }}</b></a></p>
-
-		{% empty %}
-		  <p>You haven't submitted any verification requests yet. <a href="{% url 'before-starting' %}">Get started.</a>
-
-		{% endfor %}
-
 
 	</div>
 
 	<div class="lg:grid grid-cols-2 gap-16 my-10">
 		<section class="prose border-2 rounded-xl mb-6 lg:mb-0 p-6">
             <h3 class="text-2xl border-b-2">Why should I get verified? </h3>
-            <p>Green Web Foundation is on a mission to make the internet fossil-free by 2030. We maintain the world's largest open dataset on websites running on green energy, the <i>Green Domains Dataset</i>.</p>
+            <p>Green Web Foundation is on a mission to make the internet fossil-free by 2030. We maintain the world's largest open dataset on websites running on green energy, the <i>Green Web Dataset</i>.</p>
 			<p>Every day, across the globe, more than seven million checks against this dataset are made.</p>
-			<p>If you are a hosting provider getting verified with us allow you to show as green, and therefore become visible as a findable and trusted source.</p>
+			<p>If you are a hosting provider getting verified with us allows you to show as green, and therefore become visible as a trusted supplier.</p>
 		</section>
 
 		<section class="prose bg-white border-2 rounded-xl p-6">
