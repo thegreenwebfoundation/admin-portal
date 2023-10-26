@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestImportFromCarbonTxt:
-    @pytest.mark.only
+    # @pytest.mark.only
     def test_import_from_url(self, db):
         """
         Check we can run an import from the command line
@@ -32,7 +32,7 @@ class TestImportFromCarbonTxt:
         for name in names:
             assert name in out.getvalue()
 
-    @pytest.mark.only
+    # @pytest.mark.only
     def test_import_from_url_then_check_against_api(self, db, client):
         """
         Sanity check to make sure we don't override the imported

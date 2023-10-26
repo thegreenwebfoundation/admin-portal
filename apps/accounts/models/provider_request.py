@@ -157,6 +157,9 @@ class ProviderRequest(TimeStampedModel):
         """
         Create a new Hostingprovider and underlying objects or update an existing one
         and set appropriate permissions.
+        When a Hostingprovider is being updated, information that was associated with them
+        before, but is no longer present in the verification request, will be archived.
+        This means it will not show up in the admin or on the provider.
 
         This method is defined as an atomic transaction:
         in case any exception occurs, all changes will be rolled back,
@@ -195,14 +198,16 @@ class ProviderRequest(TimeStampedModel):
             # delete related objects, they will be recreated with recent data
             hp.services.clear()
 
+            # TODO: we currently do not log to djanog admin any changes to a 
+            # provider if their IPs, ASNs or evidence have changed as a result
+            # of this approval workflow. We had this in the django admin and it
+            # was very handy.
+            # We need to make a decision about whether we want to log these
+            # changes here or not.
             for asn in hp.greencheckasn_set.all():
-                # TODO: decide about logging this change if it changes
-                # the state the ASN
                 asn.archive()
 
             for ip_range in hp.greencheckip_set.all():
-                # TODO: decide about logging this change if it changes
-                # the state the ASN
                 ip_range.archive()
 
             for doc in hp.supporting_documents.all():
@@ -239,8 +244,10 @@ class ProviderRequest(TimeStampedModel):
         # set permissions
         assign_perm(manage_provider.codename, self.created_by, hp)
 
-        # create related objects: ASNs
+        # (re)create related objects: ASNs
         for asn in self.providerrequestasn_set.all():
+            # check if this asn was one we just archived, and make it visible
+            # if so
             if matching_inactive_asn := GreencheckASN.objects.filter(
                 active=False, asn=asn.asn, hostingprovider=hp
             ):
@@ -255,9 +262,10 @@ class ProviderRequest(TimeStampedModel):
                     f"Failed to approve the request `{self}` because the ASN '{asn}' already exists in the database"
                 ) from e
 
-        # create related objects: new IP ranges, or activate existing ones
-        # if inactive matching ones exist in the database
+        # (re)create related objects: new IP ranges
         for ip_range in self.providerrequestiprange_set.all():
+            # check inactive matching IP ranges exist in the database
+            # and mark them as active is so
             if matching_inactive_ip := GreencheckIp.objects.filter(
                 active=False,
                 ip_start=ip_range.start,
@@ -276,11 +284,13 @@ class ProviderRequest(TimeStampedModel):
 
         # create related objects: supporting documents
         for evidence in self.providerrequestevidence_set.all():
-            # AbstractSupportingDocument does not accept null values for `url` and `attachment` fields
+            # AbstractSupportingDocument does not accept null values for `url` 
+            # and `attachment` fields
             url = evidence.link or ""
             attachment = evidence.file or ""
 
-            # assert HostingProviderSupportingDocument.objects_all.filter(archived=True)
+            # check for the existence of archived evidence. Unarchive if found, like we do 
+            # for ASNs and ips
             if (
                 archived_evidence
                 := HostingProviderSupportingDocument.objects_all.filter(
