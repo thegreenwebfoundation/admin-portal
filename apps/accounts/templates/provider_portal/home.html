@@ -21,7 +21,7 @@
 					{% endif %}
 				
 					<p class="mb-0"><span class="verification_request__name text-black font-bold underline">{{ request.name }}</span> <span class="text-black">|</span> <b class="">{{ request.status | upper }}</b></p>
-					<p class="verification_request__date mt-0 text-neutral-500 text-sm">Submitted: {{ request.created }}</p>
+					<p class="verification_request__date mt-0 text-neutral-500 text-sm">Submitted: {{ request.modified }}</p>
 
 					{% if request.status|lower == "more info required" %}
 					</div>

@@ -11,7 +11,7 @@
 
       <h1 class="text-6xl mb-0"><span class="uppercase">Summary of request</h1>
 
-        <p>Submitted on: {{ object.created }}</p>
+        <p>Submitted on: {{ object.modified }}</p>
 
 		{% if object.status|lower == "more info required" %}
 		<div class="alert__warning">
