@@ -11,11 +11,6 @@
 
 		<h2 class="border-0 my-3 pb-0">Providers overview</h2>
 
-		<p>Verified providers appear in our 
-			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/green-web-dataset/">Green Web Dataset</a> and 
-			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/directory/">Green Web Directory</a>.</p>
-
-
 		{% for request in object_list.requests %}
 			<h3 class="text-xl pt-8" id="pending">Pending verification</h3>
 			
@@ -46,6 +41,10 @@
 				Below is a list of those providers for which a permission has been granted explicitly for you, rather than based on the group membership.</p>
 			</div>
 		{% endif %}
+
+		<p>Verified providers appear in our 
+			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/green-web-dataset/">Green Web Dataset</a> and 
+			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/directory/">Green Web Directory</a>.</p>
 
 
 		{% if object_list.providers %}
