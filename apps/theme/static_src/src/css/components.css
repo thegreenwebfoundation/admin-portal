@@ -159,4 +159,12 @@
 	.heading-icon__lightning--black::before {
 		@apply bg-lightning-black;
 	}
+	.verification_request:hover {
+		.verification_request__date {
+			@apply text-black;
+		}
+		.verification_request__name {
+			@apply no-underline;
+		}
+	}
 }
