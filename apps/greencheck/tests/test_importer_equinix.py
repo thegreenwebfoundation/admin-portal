@@ -20,6 +20,7 @@ def sample_data_raw():
 @pytest.fixture(autouse=True)
 def settings_with_equinix(settings):
     settings.EQUINIX_PROVIDER_ID = 123
+    return settings
 
 
 @pytest.mark.django_db

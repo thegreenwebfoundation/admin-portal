@@ -22,6 +22,7 @@ def sample_data_raw():
 @pytest.fixture()
 def settings_with_aws_provider(settings):
     settings.AMAZON_PROVIDER_ID = 123
+    return settings
 
 
 class TestAmazonImporter:
@@ -45,7 +46,10 @@ class TestAmazonImporter:
 
     @pytest.mark.django_db
     def test_process_ip_import(
-        self, settings_with_aws_provider, hosting_provider_factory, sample_data_raw
+        self,
+        settings_with_aws_provider,
+        hosting_provider_factory,
+        sample_data_raw,
     ):
         """
         Test that we can import the parsed and reshaped list of IP addresses.

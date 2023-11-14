@@ -23,6 +23,7 @@ def sample_data_raw():
 @pytest.fixture()
 def settings_with_ms_provider(settings):
     settings.MICROSOFT_PROVIDER_ID = 123
+    return settings
 
 
 @pytest.mark.django_db
