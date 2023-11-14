@@ -1,20 +1,31 @@
 import requests
 import logging
 
-from apps.greencheck.importers.importer_interface import BaseImporter, Importer
+from apps.greencheck.importers.network_importer import NetworkImporter
+from apps.greencheck.importers.importer_interface import ImporterProtocol
 
+from apps.accounts.models.hosting import Hostingprovider
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-class EquinixImporter(BaseImporter):
+
+class EquinixImporter:
     def __init__(cls):
         cls.hosting_provider_id = settings.EQUINIX_PROVIDER_ID
+
+    def process(self, list_of_addresses):
+        provider = Hostingprovider.objects.get(id=settings.EQUINIX_PROVIDER_ID)
+
+        network_importer = NetworkImporter(provider)
+        network_importer.deactivate_ips()
+        network_importer.deactivate_asns()
+        return network_importer.process_addresses(list_of_addresses)
 
     def fetch_data_from_source(cls) -> list:
         try:
             response = requests.get(settings.EQUINIX_REMOTE_API_ENDPOINT)
-            return cls.parse_to_list(response.text)
+            return response.text
         except requests.RequestException:
             logger.warning("Unable to fetch text file. Aborting early.")
 
@@ -32,3 +43,6 @@ class EquinixImporter(BaseImporter):
             return list_of_ips
         except Exception as e:
             logger.exception("Something really unexpected happened. Aborting")
+
+
+assert isinstance(EquinixImporter(), ImporterProtocol)

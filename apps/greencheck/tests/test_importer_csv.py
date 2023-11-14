@@ -27,16 +27,6 @@ def sample_data_raw():
     return pd.read_csv(csv_path, header=None)
 
 
-@pytest.fixture
-def sample_data_as_list(sample_data_raw, hosting_provider: Hostingprovider):
-    """
-    Retrieve a locally saved sample of the population to use for this test and parse it to a list
-    Return: List
-    """
-    importer = CSVImporter()
-    return importer.parse_to_list(sample_data_raw)
-
-
 @pytest.mark.django_db
 class TestCSVImporter:
     def test_parse_to_list(self, sample_data_raw, hosting_provider: Hostingprovider):
@@ -44,8 +34,8 @@ class TestCSVImporter:
         Test the parsing function.
         """
         # Initialize Csv importer
-        hosting_provider.save()
-        importer = CSVImporter(hosting_provider)
+        # hosting_provider.save()
+        importer = CSVImporter()
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
@@ -69,36 +59,34 @@ class TestCSVImporter:
         expected_ip_range = ("104.21.2.197", "104.21.2.199")
         assert expected_ip_range in list_of_addresses
 
-    @pytest.mark.skip(reason="Fixed in a separate PR")
     def test_process_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
-
-        # Initialize Csv importer
         hosting_provider.save()
-        importer = CSVImporter(hosting_provider)
+        importer = CSVImporter()
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
-        created_networks = importer.process_addresses(list_of_addresses)
+        created_networks = importer.process(
+            provider=hosting_provider, list_of_networks=list_of_addresses
+        )
 
         # we should have seen one AS network added
-        assert "1 ASN" in created_networks
-        # have we created two new IP ranges?
-        assert "2 IP" in created_networks
+        created_green_ips = created_networks["created_green_ips"]
+        created_green_asns = created_networks["created_asns"]
+
+        assert len(created_green_ips) == 2
+        assert len(created_green_asns) == 1
 
         # have we created the new Green ASN in the db?
         green_asns = hosting_provider.greencheckasn_set.all()
-        assert green_asns.first().asn == 234
+
+        for green_asn in created_green_asns:
+            assert green_asn in green_asns
 
         # have we created the green ip ranges in the db?
         green_ips = hosting_provider.greencheckip_set.all().order_by("ip_start")
 
-        # have we converted a network to a range?
-        assert green_ips[0].ip_start == "104.21.2.1"
-        assert green_ips[0].ip_end == "104.21.2.255"
-
-        # have do we have the range added as well?
-        assert green_ips[1].ip_start == "104.21.2.197"
-        assert green_ips[1].ip_end == "104.21.2.199"
+        for green_ip in created_green_ips:
+            assert green_ip in green_ips
 
     def test_preview_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
         """
@@ -107,15 +95,19 @@ class TestCSVImporter:
         """
         # Initialize Csv importer
         hosting_provider.save()
-        importer = CSVImporter(hosting_provider)
+        importer = CSVImporter()
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
-        preview = importer.preview(hosting_provider, list_of_addresses)
+
+        preview = importer.preview(
+            provider=hosting_provider, list_of_networks=list_of_addresses
+        )
 
         assert len(preview["green_ips"]) == 2
         assert len(preview["green_asns"]) == 1
 
+    @pytest.mark.only
     def test_view_processed_imports(
         self, sample_data_raw, hosting_provider: Hostingprovider
     ):
@@ -125,19 +117,24 @@ class TestCSVImporter:
         """
         # Initialize Csv importer
         hosting_provider.save()
-        importer = CSVImporter(hosting_provider)
+        importer = CSVImporter()
 
         # Run parse list with sample data
         list_of_addresses = importer.parse_to_list(sample_data_raw)
         # Run our import to save them to the database, simulating saving
         # via our the form
-        created_networks = importer.process_addresses(list_of_addresses)
+        created_networks = importer.process(
+            provider=hosting_provider, list_of_networks=list_of_addresses
+        )
         # Generate a view of the data, to check if we are fetching from
         # the database now
-        preview = importer.preview(hosting_provider, list_of_addresses)
 
-        green_ips = [gip for gip in preview["green_ips"]]
-        green_asns = [gip for gip in preview["green_asns"]]
+        preview = importer.preview(
+            provider=hosting_provider, list_of_networks=list_of_addresses
+        )
+
+        green_ips = [green_ip for green_ip in preview["green_ips"]]
+        green_asns = [green_asn for green_asn in preview["green_asns"]]
 
         # are these the IPs checked against the database?
         for green_ip in green_ips:
