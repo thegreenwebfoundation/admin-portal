@@ -17,6 +17,11 @@ def sample_data_raw():
     return open(path).read()
 
 
+@pytest.fixture(autouse=True)
+def settings_with_equinix(settings):
+    settings.EQUINIX_PROVIDER_ID = 123
+
+
 @pytest.mark.django_db
 class TestEquinixImporter:
     def test_parse_to_list(self, hosting_provider, sample_data_raw):
@@ -40,7 +45,9 @@ class TestEquinixImportCommand:
     We _could_ mock the call to fetch ip ranges, if this turns out to be a slow test.
     """
 
-    def test_handle(self, mocker, hosting_provider_factory, settings, sample_data_raw):
+    def test_handle(
+        self, mocker, hosting_provider_factory, settings_with_equinix, sample_data_raw
+    ):
         # mock the call to retrieve from source, to a locally stored
         # testing sample. By instead using the test sample,
         # we avoid unnecessary network requests.
@@ -50,7 +57,10 @@ class TestEquinixImportCommand:
             "apps.greencheck.importers.importer_equinix."
             "EquinixImporter.fetch_data_from_source"
         )
-        fake_equinix = hosting_provider_factory.create(id=settings.EQUINIX_PROVIDER_ID)
+
+        fake_equinix = hosting_provider_factory.create(
+            id=settings_with_equinix.EQUINIX_PROVIDER_ID
+        )
 
         # define a different return when the targeted mock
         # method is called
