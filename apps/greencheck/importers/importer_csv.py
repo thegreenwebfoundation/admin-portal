@@ -1,24 +1,39 @@
-import requests
 import logging
 import pandas as pd
-import re
-import ipaddress
-import rich
+
 from typing import List
 from apps.accounts.models.hosting import Hostingprovider
 
-from apps.greencheck.importers.importer_interface import BaseImporter, Importer
-from apps.greencheck.models import GreencheckIp, GreencheckASN
+from apps.greencheck.importers.network_importer import (
+    NetworkImporter,
+    is_ip_network,
+    is_ip_range,
+    is_asn,
+)
+from apps.greencheck.importers.importer_interface import ImporterProtocol
 
+from apps.greencheck.models import GreencheckIp, GreencheckASN
+import ipaddress
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 
-class CSVImporter(BaseImporter):
-    def __init__(self, provider: Hostingprovider):
-        self.hosting_provider = provider
+class NoProviderException(Exception):
+    pass
+
+
+class CSVImporter:
+    def __init__(self):
         self.processed_ips = []
+
+    def process(self, provider: Hostingprovider = None, list_of_networks: list = None):
+        if not provider:
+            raise NoProviderException
+
+        network_importer = NetworkImporter(provider)
+        network_importer.deactivate_ips()
+        return network_importer.process_addresses(list_of_networks)
 
     def fetch_data_from_source(cls, filepath_or_buffer) -> List:
         """
@@ -26,6 +41,7 @@ class CSVImporter(BaseImporter):
         for importing
         """
         raw_data = pd.read_csv(filepath_or_buffer, header=None)
+
         return cls.parse_to_list(raw_data)
 
     def parse_to_list(self, raw_data: pd.DataFrame) -> List:
@@ -36,49 +52,30 @@ class CSVImporter(BaseImporter):
         rows = raw_data.values
         imported_networks = {"asns": [], "ip_networks": [], "ip_ranges": []}
         for row in rows:
+            # try read the IP Network
+            if is_ip_network(row[0]):
+                logger.info(f"IP Network found. Adding {row[0]}")
+                imported_networks["ip_networks"].append(row[0])
+                continue
 
-            # just one column? it's probably an AS or a IP network
-            just_one_column = len(row) == 1
-            
-            if not just_one_column:
-                # is there a second column, but it is empty?
-                # we might have a mix of IP ranges and IP networks
-                null_second_column = pd.isnull(row[1])
-            
-            if just_one_column or null_second_column:
+            # try for an ASN
+            if is_asn(row[0]):
+                imported_networks["asns"].append(row[0])
+                continue
 
-                # is it an AS number?
-                if row[0].startswith("AS"):
-                    # split out the as number from the row,
-                    # add check for people getting AS number
-                    as_number = row[0].split("AS ")[0]
-                    just_as_with_no_number = as_number.lower() == "as"
+            # finally, try to parse out an IP Range
+            first_ip = row[0].strip()
+            null_second_column = pd.isnull(row[1])
+            last_ip = None if null_second_column else row[1].strip()
+            ip_range_found = is_ip_range((first_ip, last_ip))
 
-                    if as_number and not just_as_with_no_number:
-                        imported_networks["asns"].append(row[0])
-                else:
-                    # if it isn't an AS number it's probably an IP network
-                    try:
-                        ip_network = ipaddress.ip_network(row[0])
-                        imported_networks["ip_networks"].append(row[0])
-                    except ValueError:
-                        logger.warn(
-                            f"Item {row[0]} has host bits set. Probably not a network."
-                        )
-                    except Exception as e:
-                        logger.exception(
-                            f"Item {row[0]} was not an ip network. Not importing. Full error: {e}" 
-                        )
-            else:
-                try:
-                    first_ip, last_ip = row[0].strip(), row[1].strip()
-                    ip_begin = ipaddress.ip_address(first_ip)
-                    ip_end = ipaddress.ip_address(last_ip)
-                    imported_networks["ip_ranges"].append((first_ip, last_ip))
-                except Exception:
-                    logger.warn(
-                        f"Row {row} does not look like an IP address. Not importing"
-                    )
+            if ip_range_found:
+                imported_networks["ip_ranges"].append((first_ip, last_ip))
+                continue
+
+            logger.warn(
+                f"No valid networks or IP ranges identified in row {row}  Not importing"
+            )
 
         flattened_network_list = [
             *imported_networks["asns"],
@@ -88,7 +85,9 @@ class CSVImporter(BaseImporter):
 
         return flattened_network_list
 
-    def preview(self, provider: Hostingprovider, list_of_networks: List) -> List:
+    def preview(
+        self, provider: Hostingprovider = None, list_of_networks: List = None
+    ) -> List:
         """
         Return a list of the GreencheckIPs that would be updated
         or created based on the current provided file.
@@ -101,8 +100,7 @@ class CSVImporter(BaseImporter):
         green_asns = []
         # try to find a GreenIP
         for network in list_of_networks:
-
-            if self.is_as_number(network):
+            if is_asn(network):
                 # this looks like an AS number
                 try:
                     as_number = network.split("AS")[1]
@@ -115,8 +113,13 @@ class CSVImporter(BaseImporter):
                         active=True, asn=as_number, hostingprovider=provider
                     )
                     green_asns.append(green_asn)
+                continue
 
-            if ip_network := self.is_ip_network(network):
+            if is_ip_network(network):
+                # create an ip network from the
+                # network address/network prefix
+                # pair
+                ip_network = ipaddress.ip_network(network)
                 try:
                     green_ip = GreencheckIp.objects.get(
                         active=True,
@@ -134,24 +137,29 @@ class CSVImporter(BaseImporter):
                         hostingprovider=provider,
                     )
                     green_ips.append(green_ip)
+                continue
 
-            if ip_range := self.is_ip_range(network):
+            if is_ip_range(network):
                 try:
                     green_ip = GreencheckIp.objects.get(
                         active=True,
                         hostingprovider=provider,
-                        ip_start=ip_range[0],
-                        ip_end=ip_range[1],
+                        ip_start=network[0],
+                        ip_end=network[1],
                     )
                     green_ips.append(green_ip)
                 except GreencheckIp.DoesNotExist:
                     green_ip = GreencheckIp(
                         active=True,
                         hostingprovider=provider,
-                        ip_start=ip_range[0],
-                        ip_end=ip_range[1],
+                        ip_start=network[0],
+                        ip_end=network[1],
                     )
                     green_ips.append(green_ip)
+                continue
 
         # or make a new one, in memory
         return {"green_ips": green_ips, "green_asns": green_asns}
+
+
+assert isinstance(CSVImporter(), ImporterProtocol)
