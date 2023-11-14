@@ -1,11 +1,12 @@
-import requests
 import logging
+from typing import List, Tuple, Union
 
-from apps.greencheck.importers.network_importer import NetworkImporter
-from apps.greencheck.importers.importer_interface import ImporterProtocol
+import requests
+from django.conf import settings
 
 from apps.accounts.models.hosting import Hostingprovider
-from django.conf import settings
+from apps.greencheck.importers.importer_interface import ImporterProtocol
+from apps.greencheck.importers.network_importer import NetworkImporter
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class MicrosoftImporter:
         except requests.RequestException:
             logger.warning("Unable to fetch ip range data. Aborting early.")
 
-    def parse_to_list(self, raw_data) -> list:
+    def parse_to_list(self, raw_data) -> List[Union[str, Tuple]]:
         list_of_ips = []
 
         # Extract IPv4 and IPv6

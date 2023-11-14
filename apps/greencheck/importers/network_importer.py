@@ -1,10 +1,9 @@
 import ipaddress
 import logging
-
 from typing import Union
 
-from apps.greencheck.models import GreencheckIp, GreencheckASN
 from apps.accounts.models import Hostingprovider
+from apps.greencheck.models import GreencheckASN, GreencheckIp
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +12,8 @@ def is_ip_network(address: str) -> bool:
     """
     Check that "address" is a string we can parse to an ip network,
     ready for saving as an ip range.
-    where we get addresses like '104.21.2.192/24'
-    we want to raise an exception rather than try to fix them on
-    the way in
+    Where we get addresses like '104.21.2.192/24'
+    we want to raise an exception rather than try to fix
     """
 
     # exit early if we do not have  slash dividing
@@ -32,9 +30,7 @@ def is_ip_network(address: str) -> bool:
 
 def is_ip_range(address: Union[str, tuple]) -> bool:
     """
-    Check if "address" is a usable ip range, and return the tuple
-    containing the required ip addresses, ready for importing
-    as an ip range
+    Check if "address" is a valid ip range.
     """
     # return early if not a tuple we can parse
     if not isinstance(address, tuple):
@@ -54,7 +50,7 @@ def is_ip_range(address: Union[str, tuple]) -> bool:
 
 def is_asn(address: Union[str, tuple]) -> bool:
     """
-    Check that "address" is a string suitable for saving as a AS number
+    Check that "address" is a string suitable for saving as an AS number
     """
     # return early if not a string we cacn parse
     if not isinstance(address, str):
@@ -110,10 +106,9 @@ class NetworkImporter:
         )
 
         gc_asn.active = True
-        gc_asn.save()  # Save the newly created or updated object
+        gc_asn.save()
 
         if created:
-            logger.debug(gc_asn)
             return (gc_asn, created)
 
         return (gc_asn, False)
@@ -137,11 +132,9 @@ class NetworkImporter:
             gc_ip.location = location
 
         gc_ip.active = True
-        gc_ip.save()  # Save the newly created or updated object
+        gc_ip.save()
 
         if created:
-            # Only log and return when a new object was created
-            logger.debug(gc_ip)
             return (gc_ip, created)
 
         return (gc_ip, False)
@@ -167,7 +160,7 @@ class NetworkImporter:
 
                 if is_ip_network(address):
                     # address looks like IPv4 or IPv6 network
-                    # turn it to an ip_network opbject
+                    # turn it to an ip_network object
                     network = ipaddress.ip_network(address)
                     green_ip, created = self.save_ip((network[0], network[-1]))
 
@@ -197,7 +190,7 @@ class NetworkImporter:
                 "created_green_ips": created_green_ips,
             }
         except ValueError:
-            logger.warn(f"An error occurred while adding new entries")
+            logger.warn("An error occurred while adding new entries")
             return {
                 "green_ips": green_ips,
                 "green_asns": green_asns,
@@ -205,7 +198,7 @@ class NetworkImporter:
                 "created_green_ips": created_green_ips,
             }
         except Exception as e:
-            logger.exception(f"Something really unexpected happened. Aborting")
+            logger.exception("Something really unexpected happened. Aborting")
             logger.exception(e)
             return {
                 "green_ips": green_ips,

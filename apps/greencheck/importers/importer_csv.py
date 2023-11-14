@@ -1,20 +1,18 @@
+import ipaddress
 import logging
+from typing import List, Tuple, Union
+
 import pandas as pd
 
-from typing import List
 from apps.accounts.models.hosting import Hostingprovider
-
+from apps.greencheck.importers.importer_interface import ImporterProtocol
 from apps.greencheck.importers.network_importer import (
     NetworkImporter,
+    is_asn,
     is_ip_network,
     is_ip_range,
-    is_asn,
 )
-from apps.greencheck.importers.importer_interface import ImporterProtocol
-
-from apps.greencheck.models import GreencheckIp, GreencheckASN
-import ipaddress
-from django.conf import settings
+from apps.greencheck.models import GreencheckASN, GreencheckIp
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +42,7 @@ class CSVImporter:
 
         return cls.parse_to_list(raw_data)
 
-    def parse_to_list(self, raw_data: pd.DataFrame) -> List:
+    def parse_to_list(self, raw_data: pd.DataFrame) -> List[Union[str, Tuple]]:
         """
         Parse the provided pandas DataFrame, and return a flattened list
         of ip ranges, or importable IP networks, or AS numbers

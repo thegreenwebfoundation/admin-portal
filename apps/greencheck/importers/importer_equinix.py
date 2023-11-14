@@ -1,11 +1,12 @@
-import requests
 import logging
+from typing import List, Tuple, Union
 
-from apps.greencheck.importers.network_importer import NetworkImporter
-from apps.greencheck.importers.importer_interface import ImporterProtocol
+import requests
+from django.conf import settings
 
 from apps.accounts.models.hosting import Hostingprovider
-from django.conf import settings
+from apps.greencheck.importers.importer_interface import ImporterProtocol
+from apps.greencheck.importers.network_importer import NetworkImporter
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class EquinixImporter:
         except requests.RequestException:
             logger.warning("Unable to fetch text file. Aborting early.")
 
-    def parse_to_list(cls, raw_data) -> list:
+    def parse_to_list(self, raw_data) -> List[Union[str, Tuple]]:
         try:
             list_of_ips = []
             for line in raw_data.splitlines():
@@ -41,7 +42,7 @@ class EquinixImporter:
                     )  # Format as follows: IP range/ASN, Naming
 
             return list_of_ips
-        except Exception as e:
+        except Exception:
             logger.exception("Something really unexpected happened. Aborting")
 
 

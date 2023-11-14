@@ -1,7 +1,5 @@
 import logging
-
-from typing import Protocol, runtime_checkable
-
+from typing import List, Protocol, Tuple, Union, runtime_checkable
 
 logger = logging.getLogger(__name__)
 
@@ -15,10 +13,11 @@ class ImporterProtocol(Protocol):
         """
         raise NotImplementedError
 
-    def parse_to_list(self, str) -> "list[str]":
+    def parse_to_list(self, raw_data) -> List[Union[str, Tuple]]:
         """
         Returns a list of either strings that can be
-        parsed as AS numbers or IP networks
+        parsed as AS numbers or IP networks, or tuples
+        representing IP ranges
         """
         raise NotImplementedError
 

@@ -1,19 +1,19 @@
-import requests
 import logging
+from typing import List, Tuple, Union
 
-from apps.greencheck.importers.network_importer import NetworkImporter
-from apps.greencheck.importers.importer_interface import ImporterProtocol
+import requests
+from django.conf import settings
 
 from apps.accounts.models.hosting import Hostingprovider
-
-from django.conf import settings
+from apps.greencheck.importers.importer_interface import ImporterProtocol
+from apps.greencheck.importers.network_importer import NetworkImporter
 
 logger = logging.getLogger(__name__)
 
 
 class AmazonImporter:
     """
-    An importer that consumes an set of IP ranges from Amazon's AWS endpoint,
+    An importer that consumes a set of IP ranges from Amazon's AWS endpoint,
     and updates the database with the new IP ranges for each region for the
     provider
     """
@@ -45,7 +45,7 @@ class AmazonImporter:
         network_importer.deactivate_ips()
         return network_importer.process_addresses(list_of_addresses)
 
-    def fetch_data_from_source(self) -> str:
+    def fetch_data_from_source(self) -> dict:
         """
         Fetch the data from the endpoint, returning the parsed json
         """
@@ -56,7 +56,7 @@ class AmazonImporter:
             logger.warning("Unable to fetch ip data. Aborting early.")
 
     # fill in the type signature to be a list of either IP Networks, or AS names
-    def parse_to_list(self, raw_data) -> "list[str]":
+    def parse_to_list(self, raw_data) -> List[Union[str, Tuple]]:
         """
         Convert the parsed data into a list of either IP Ranges
         """
