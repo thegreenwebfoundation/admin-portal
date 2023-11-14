@@ -20,6 +20,11 @@ def sample_data_raw():
         return json.loads(ipr.read())
 
 
+@pytest.fixture()
+def settings_with_ms_provider(settings):
+    settings.MICROSOFT_PROVIDER_ID = 123
+
+
 @pytest.mark.django_db
 class TestMicrosoftImporter:
     def test_parse_to_list(self, sample_data_raw):
@@ -43,7 +48,13 @@ class TestMicrosoftImportCommand:
     We _could_ mock the call to fetch ip ranges, if this turns out to be a slow test.
     """
 
-    def test_handle(self, mocker, hosting_provider_factory, settings, sample_data_raw):
+    def test_handle(
+        self,
+        mocker,
+        hosting_provider_factory,
+        settings_with_ms_provider,
+        sample_data_raw,
+    ):
         # mock the call to retrieve from source, to a locally stored
         # testing sample. By instead using the test sample,
         # we avoid unnecessary network requests.
@@ -53,7 +64,9 @@ class TestMicrosoftImportCommand:
             "apps.greencheck.importers.importer_microsoft."
             "MicrosoftImporter.fetch_data_from_source"
         )
-        fake_ms = hosting_provider_factory.create(id=settings.MICROSOFT_PROVIDER_ID)
+        fake_ms = hosting_provider_factory.create(
+            id=settings_with_ms_provider.MICROSOFT_PROVIDER_ID
+        )
 
         # define a different return when the targeted mock
         # method is called
