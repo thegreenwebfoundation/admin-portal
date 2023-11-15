@@ -1,5 +1,4 @@
 {% extends "admin/change_form.html" %}
-
 {% block field_sets %}
     {% for fieldset in adminform %}
         {% if fieldset.name == "Hostingprovider info" %}
@@ -11,24 +10,39 @@
         {% endif %}
     {% endfor %}
 {% endblock %}
-
 {% block inline_field_sets %}
+    {% comment %}
+    Some providers have too many IP ranges to realistically show on the page.
+    So we need some special logic to to handle them. We remove the "green IP" 
+    inline in `get_inlines()` if we have more than 500 IP ranges, and then
+    after removing, we show this information below
+    We need to provide a template that tells users where to see IP ranges 
+
+    This relies on having access to the ip_range_count variable
+    which is set in '_changeform_view'.
+    
+    {% endcomment %}
     {% for inline_admin_formset in inline_admin_formsets %}
         {% comment %}
-    We only want to serve the special inline tabular version
-    of the IP approvals widgets and for IP range widgets,
-    as some providers have massive numbers that stop the page loading
-    properly.
-    The rest we want to serve as using their default inlines.
-  {% endcomment %}
-
+        We only want to serve the special inline tabular version
+        of the IP approvals widgets and for IP range widgets,
+        as some providers have massive numbers that stop the page loading
+        properly.
+        The rest we want to serve as using their default inlines.
+        {% endcomment %}
         {% if inline_admin_formset.opts.verbose_name_plural == "IP approvals" %}
-
+            {% if ip_range_count > 500 %}
+                <fieldset class="module">
+                    <h2>IP Ranges</h2>
+                    <p>
+                        There are {{ ip_range_count }} ip ranges associated with this provider, which is too many to show on this page. Follow this
+                        <a href="{{ bulk_edit_ip_range_link }}">this link to the bulk editing interface, with this provider pre-selected.</a>
+                    </p>
+                </fieldset>
+            {% endif %}
             {% if ip_approval_count > 500 %}
                 <fieldset class="module {{ inline_admin_formset.classes }}">
-                    <h2>
-                        {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
-                    </h2>
+                    <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
                     <p>
                         There are {{ ip_approval_count }} ip approval requests associated with this provider, which is too many to show on this page. Follow this
                         <a href="{{ bulk_edit_ip_approval_link }}">
@@ -39,29 +53,6 @@
             {% else %}
                 {% include "admin/accounts/hostingprovider/inline_tabular.html" %}
             {% endif %}
-
-        {% elif inline_admin_formset.opts.verbose_name_plural == "IPs" %}
-
-            {% if ip_range_count > 500 %}
-                <fieldset class="module {{ inline_admin_formset.classes }}">
-                    <h2>
-                        {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
-                    </h2>
-
-                    <p>
-                        There are {{ ip_range_count }} ip ranges associated with this provider, which is too many to show on this page. Follow this
-                        <a href="{{ bulk_edit_ip_range_link }}">
-                            this link to the bulk editing interface, with this provider pre-selected.
-                        </a>
-                    </p>
-                </fieldset>
-            {% else %}
-                <h2>
-                    {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
-                </h2>
-                {% include "admin/accounts/hostingprovider/inline_tabular.html" %}
-            {% endif %}
-
         {% else %}
             {% include inline_admin_formset.opts.template %}
         {% endif %}
