@@ -50,7 +50,7 @@ class AmazonImporter:
         Fetch the data from the endpoint, returning the parsed json
         """
         try:
-            response = requests.get(settings.AMAZON_REMOTE_API_ENDPOINT).text
+            response = requests.get(settings.AMAZON_REMOTE_API_ENDPOINT)
             return response.json()
         except requests.RequestException:
             logger.warning("Unable to fetch ip data. Aborting early.")
