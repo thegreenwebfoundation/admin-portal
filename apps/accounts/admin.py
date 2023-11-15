@@ -916,11 +916,13 @@ class HostingAdmin(
                     filtered_inlines.append(inline)
             return filtered_inlines
 
-        if obj.ip_range_count > 500:
+        # when we have too many IPs to realistically show on the page
+        # we top trying to show the GreencheckIPs inline, and instead
+        # use a link to the relvevant change list in the template.
+        # see admin/accounts/hostingprovider/change_form.html
+        if obj and obj.ip_range_count > 500:
             if GreencheckIpInline in inlines:
                 inlines.remove(GreencheckIpInline)
-
-            # inlines.remove(GreencheckIpInline)
 
         return inlines
 
