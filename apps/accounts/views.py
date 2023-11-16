@@ -18,6 +18,13 @@ from django.shortcuts import redirect
 
 from django.conf import settings
 
+import rich
+from apps.greencheck.object_storage import (
+    object_storage_bucket,
+    create_presigned_url,
+)
+import tempfile
+
 from django_registration import signals
 from django_registration.backends.activation.views import (
     ActivationView,
@@ -357,24 +364,29 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             Helper function to process the data from ModelFormSets used in this view
             """
             logger.info(f"formset: {formset.__class__.__name__}")
-            if formset.__class__.__name__ == 'ProviderRequestIPRangeFormFormSet':
+            if formset.__class__.__name__ == "ProviderRequestIPRangeFormFormSet":
                 for form in formset.forms:
                     logger.debug(form.__class__.__name__)
                     logger.debug(f"form.has_changed(): {form.has_changed()}")
-                
+
             instances = formset.save(commit=False)
             for instance in instances:
                 instance.request = request
                 instance.save()
 
             for object_to_delete in formset.deleted_objects:
-                logger.debug(f"we have {len(formset.deleted_objects)} objects to delete")
+                logger.debug(
+                    f"we have {len(formset.deleted_objects)} objects to delete"
+                )
                 object_to_delete.delete()
-                
-            logger.debug(f"checking for changed forms: {formset.form.__class__.__name__}")
-            if formset.changed_objects:
-                logger.debug(f"we have {len(formset.changed_objects)} objects to change")
 
+            logger.debug(
+                f"checking for changed forms: {formset.form.__class__.__name__}"
+            )
+            if formset.changed_objects:
+                logger.debug(
+                    f"we have {len(formset.changed_objects)} objects to change"
+                )
 
         steps = ProviderRequestWizardView.Steps
 
@@ -498,9 +510,48 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         preview_forms = {}
         # iterate over all forms without the last one (PREVIEW)
+
         for step, form in self.FORMS[:-1]:
             cleaned_data = self.get_cleaned_data_for_step(step)
+
+            if form.__name__ == "GreenEvidenceForm":
+                form_data = form(cleaned_data)
+
+                files_to_show_in_preview = [
+                    obj["file"] for obj in form_data.data if obj.get("file")
+                ]
+
+                temp_file_candidates = []
+                for uploaded_file in files_to_show_in_preview:
+                    if not hasattr(uploaded_file, "url"):
+                        temp_file_candidates.append(uploaded_file)
+
+                bucket = object_storage_bucket(settings.AWS_STORAGE_BUCKET_NAME)
+
+                for temp_file_candidate in temp_file_candidates:
+                    with tempfile.TemporaryDirectory() as tmpdirname:
+                        # write file to temporary path
+                        with open(
+                            f"{tmpdirname}/{temp_file_candidate.name}", "wb"
+                        ) as f:
+                            f.write(temp_file_candidate.read())
+
+                            upload_key = (
+                                f"wizard-form{tmpdirname}/{temp_file_candidate.name}"
+                            )
+                            bucket.upload_file(
+                                f"{tmpdirname}/{temp_file_candidate.name}",
+                                upload_key,
+                            )
+                            presigned_url = create_presigned_url(
+                                settings.AWS_STORAGE_BUCKET_NAME, upload_key
+                            )
+                            # link to our file that we want to make available in
+                            # the preview step
+                            rich.print(f"URL: {presigned_url}")
+
             preview_forms[step] = form(initial=cleaned_data)
+
         return preview_forms
 
     def get_context_data(self, form, **kwargs):
