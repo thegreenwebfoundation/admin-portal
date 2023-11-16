@@ -2,11 +2,12 @@
 We use scaleway as a AWS S3 API compatible provider of object storage.
 Below is the wrapper around it for working with the objects.
 """
-import boto3
-from django.conf import settings
-from botocore.exceptions import ClientError
 import logging
 import typing
+
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
 
 
 def object_storage_bucket(bucket_name: str):
@@ -80,5 +81,4 @@ def create_presigned_url(
         logging.error(e)
         return None
 
-    # The response contains the presigned URL
     return response
