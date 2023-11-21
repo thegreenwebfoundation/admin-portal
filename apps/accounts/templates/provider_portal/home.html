@@ -70,13 +70,11 @@
 					</div>
 
 					<div class="md:w-1/2 text-right">
-						{% flag "edit_provider" %}
-							{% get_obj_perms request.user for provider as "provider_perms" %}
-					
-							{% if "manage_provider" in provider_perms %}
-								<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white text-sm">📝 Update listing</a>
-							{% endif %}
-						{% endflag %}
+						{% get_obj_perms request.user for provider as "provider_perms" %}
+				
+						{% if "manage_provider" in provider_perms %}
+							<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white text-sm">📝 Update listing</a>
+						{% endif %}
 					</div>
 				</div>
 				{% endfor %}
