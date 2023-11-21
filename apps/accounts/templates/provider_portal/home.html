@@ -3,7 +3,7 @@
 {% load i18n static humanize widget_tweaks tailwind_filters waffle_tags guardian_tags%}
 {% block content %}
 
-  <article>
+<article>
     <div class="prose mx-auto mt-8">
       	<h1 class="text-center leading-10">
 			<span class="text-xl">Welcome to our</span><br> 
@@ -87,10 +87,10 @@
 
 			{% if object_list.requests|length == 0 %}
 				<p>You don't have any verified listings yet.</p>
-				<p><a class="btn mt-0" href="{% url 'before-starting' %}" class="btn">Submit a new verification request</a></p>
+				<p><a class="btn mt-0" href="{% url 'before-starting' %}">Submit a new verification request</a></p>
 			{% else %}
 				<p class="">Thank you! We're already working on a verification request you've submitted, listed in the <a href="#pending">pending verification</a> above.</p>
-				<p>If you wish, you can <a class="" href="{% url 'before-starting' %}" class="btn">create an entirely new provider verification request</a> to restart the process.</p>
+				<p>If you wish, you can <a class="btn" href="{% url 'before-starting' %}">create an entirely new provider verification request</a> to restart the process.</p>
 			{% endif %}
 
 		{% endif %}
@@ -99,22 +99,27 @@
 
 	</div>
 
-	<div class="lg:grid grid-cols-2 gap-16 my-10">
-		<section class="prose border-2 rounded-xl mb-6 lg:mb-0 p-6">
-            <h3 class="text-2xl border-b-2">Why should I get verified? </h3>
-            <p>Green Web Foundation is on a mission to make the internet fossil-free by 2030. We maintain the world's largest open dataset on websites running on green energy, the <i>Green Web Dataset</i>.</p>
-			<p>Every day, across the globe, more than seven million checks against this dataset are made.</p>
-			<p>If you are a hosting provider getting verified with us allows you to show as green, and therefore become visible as a trusted supplier.</p>
-		</section>
-
-		<section class="prose bg-white border-2 rounded-xl p-6">
-            <h3 class="text-2xl border-b-2">How can I get verified? </h3>
+	<div class="lg:grid grid-cols-2 gap-16 mt-10 lg:my-10">
+		<section class="prose bg-white border-2 rounded-xl mb-6 lg:mb-0 p-6">
+            <h3 class="text-2xl border-b-2 mt-2 pb-3">How can I get verified? </h3>
             <p>To become verified, you need to submit a verification request that provides proof that you use green energy for your services. You can prove this if you are avoiding, reducing, or offsetting emissions.</p>
 			<p>Submitting the request will approximately take you 15 minutes and is free of charge.</p>
-			<p>Once submitted, we will review your request and get in touch if further evidence is needed. We are a non-profit organisation, so the verification process is independent.</p>
+			<p>Once submitted, we will review your request and get in touch if further evidence is needed. As we are a non-profit organisation the verification process is independent.</p>
 			<p><a href="https://www.thegreenwebfoundation.org/what-you-need-to-get-verified/" target="_blank" rel="noreferrer noopener">More information on how to get verified</a>.</p>
-          </section>
-        </div>
-      </article>
+		</section>
+
+		<section class="prose border-2 rounded-xl p-6 bg-black text-white">
+            <div class="border-b-2 border-white pb-3 flex items-center">
+				<img class="inline border-r-2 border-green my-0 pr-4" width="60px" height="60px" src="{% static 'img/GWF-icon-sunburst--green.svg' %}" alt="The Green Web Foundation logo"/>
+           	 	<h3 class="text-2xl inline text-white my-0 ml-4 p-0">Support the mission</h3>
+			</div>
+            <p>Green Web Foundation is on a mission to accelerate the transition to a fossil-free internet by 2030.</p>
+			<p>We maintain the world's largest open dataset of websites running on green energy, the <i>Green Web Dataset</i>.
+				Every day, across the globe, more than seven million checks against this dataset are made.</p>
+			<p>Donations help keep this work freely available and state-of-the-art.</p>
+			<p><a class="btn mt-0 font-bold" href="https://www.thegreenwebfoundation.org/donate/" target="_blank" rel="noopener noreferrer">Donate</a></p>
+		</section>
+	</div>
+</article>
 
 {% endblock %}
