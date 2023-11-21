@@ -57,7 +57,11 @@
 					
 					<div class="md:w-1/2">
 						<p class="my-0">
-							<a class="font-bold" href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">{{ provider }}</a>
+							{% if provider.last_approved_verification_req %}
+								<a class="font-bold" href="{% url 'provider_request_detail' provider.last_approved_verification_req.id %}">{{ provider }}</a>
+							{% else %}
+								<span class="font-bold">{{ provider }}</span>
+							{% endif %}
 						</p>
 
 						{% if provider.request and provider.request.approved_at %}
@@ -66,16 +70,14 @@
 					</div>
 
 					<div class="md:w-1/2 text-right">
-	
 						{% flag "edit_provider" %}
 							{% get_obj_perms request.user for provider as "provider_perms" %}
-						
+					
 							{% if "manage_provider" in provider_perms %}
 								<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white text-sm">📝 Update listing</a>
 							{% endif %}
 						{% endflag %}
 					</div>
-
 				</div>
 				{% endfor %}
 			</div>

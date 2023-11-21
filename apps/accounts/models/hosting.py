@@ -557,6 +557,9 @@ class Hostingprovider(models.Model):
             notification_subject, notification_email_copy, notification_email_html
         )
 
+    def last_approved_verification_req(self):
+        return self.providerrequest_set.filter(status="Approved").order_by('-modified').first()
+
     class Meta:
         # managed = False
         verbose_name = "Hosting Provider"
