@@ -1,3 +1,21 @@
+{% if provider %}
+{%- comment -%} Approved an update to an existing provider {%- endcomment -%}
+<p>Dear provider,</p>
+
+<p>Thank you for taking the time to update {{ provider.name }} in the Green Web Dataset.</p>
+
+<p>The updated information you provided has been reviewed and approved.</p>
+
+<p>If you need to update {{ provider.name }} again, you can do so by logging in to the <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a>.</p>
+
+<p>Thanks for your help in keeping the Green Web Dataset up to date!</p>
+
+<p>
+Best regards,
+<br>Green Web Foundation 
+</p>
+{% else %}
+{%- comment -%} Approved an update to a new verification request {%- endcomment -%}
 <p>Dear provider,</p>
 
 <p>Thank you for taking the time to submit {{ org_name }} for verification to the Green Web Database. It's great to know that you are committed to providing green services to your customers.</p>
@@ -12,7 +30,7 @@
 
 <p>
 You can review and update your listing yourself!
-<br>Please go to: <a href="{{ update_url }}">{{ update_url }}</a>
+<br>Please go to the <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a> and log in.
 <br>Your username is: {{ username }}
 </p>
 
@@ -31,5 +49,6 @@ You can review and update your listing yourself!
 
 <p>
 Best regards,
-<br>Green Web Foundation support team
+<br>Green Web Foundation 
 </p>
+{% endif %}
