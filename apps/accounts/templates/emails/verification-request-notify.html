@@ -1,39 +1,39 @@
 <p>Hello</p>
-
 <p>
-    Thank you for taking the time to 
+    Thank you for taking the time to
     {% if provider %}
-    {%- comment -%} If it's an update to an existing provider. {%- endcomment -%}
+        {% comment %} If it's an update to an existing provider. {% endcomment %}
         update the listing for {{ provider.name }} in the Green Web Dataset.
     {% else %}
-    {%- comment -%} If it's a new provider request. {%- endcomment -%}
+        {% comment %} If it's a new provider request. {% endcomment %}
         complete a Green Web Dataset verification request for {{ org_name }}.
     {% endif %}
 </p>
-
 {% if provider %}
     <p>You can see your update you have submitted and its current status at the link below:</p>
 {% else %}
     <p>You can see your submitted request and its current status at the link below:</p>
 {% endif %}
-
-<p><a href="{{ link_to_verification_request }}"">{{ link_to_verification_request }}</a></p>
-
+<p>
+    <a href="{{ link_to_verification_request }}"">{{ link_to_verification_request }}</a>
+</p>
 <h4>What happens next?</h4>
-
-<p>We aim to review every 
+<p>
+    We aim to review every
     {% if provider %}
-    {%- comment -%} If it's an update to an existing provider. {%- endcomment -%}
+        {% comment %} If it's an update to an existing provider. {% endcomment %}
         update
     {% else %}
-    {%- comment -%} If it's a new provider request. {%- endcomment -%}
+        {% comment %} If it's a new provider request. {% endcomment %}
         new verification request
     {% endif %}
-     within 3 working days. Once we have reviewed the verification request, we will contact you by email to let you know that it is approved, or that we need more information from you.</p>
-
-<p>If you have further questions, or need to edit your verification request,  please contact <a href="mailto:support@thegreenwebfoundation.org">support@thegreenwebfoundation.org</a>.</p>
-
+    within 3 working days. Once we have reviewed the verification request, we will contact you by email to let you know that it is approved, or that we need more information from you.
+</p>
+<p>
+    If you have further questions, or need to edit your verification request,  please contact <a href="mailto:support@thegreenwebfoundation.org">support@thegreenwebfoundation.org</a>.
+</p>
 <p>
     Many thanks,
-    <br>Green Web Foundation
-    </p>
+    <br>
+    Green Web Foundation
+</p>
