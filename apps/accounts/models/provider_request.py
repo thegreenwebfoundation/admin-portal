@@ -198,7 +198,7 @@ class ProviderRequest(TimeStampedModel):
             # delete related objects, they will be recreated with recent data
             hp.services.clear()
 
-            # TODO: we currently do not log to djanog admin any changes to a 
+            # TODO: we currently do not log to djanog admin any changes to a
             # provider if their IPs, ASNs or evidence have changed as a result
             # of this approval workflow. We had this in the django admin and it
             # was very handy.
@@ -284,22 +284,19 @@ class ProviderRequest(TimeStampedModel):
 
         # create related objects: supporting documents
         for evidence in self.providerrequestevidence_set.all():
-            # AbstractSupportingDocument does not accept null values for `url` 
+            # AbstractSupportingDocument does not accept null values for `url`
             # and `attachment` fields
             url = evidence.link or ""
             attachment = evidence.file or ""
 
-            # check for the existence of archived evidence. Unarchive if found, like we do 
+            # check for the existence of archived evidence. Unarchive if found, like we do
             # for ASNs and ips
-            if (
-                archived_evidence
-                := HostingProviderSupportingDocument.objects_all.filter(
-                    hostingprovider=hp,
-                    title=evidence.title,
-                    archived=True,
-                    type=evidence.type,
-                    public=evidence.public,
-                )
+            if archived_evidence := HostingProviderSupportingDocument.objects_all.filter(
+                hostingprovider=hp,
+                title=evidence.title,
+                archived=True,
+                type=evidence.type,
+                public=evidence.public,
             ):
                 [archived_ev.unarchive() for archived_ev in archived_evidence]
                 continue
