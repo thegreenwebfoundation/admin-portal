@@ -586,7 +586,7 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
 @pytest.mark.wip
 @pytest.mark.django_db
 def test_approve_updates_existing_provider_without_deleting_asns(
-    hosting_provider_with_sample_user
+    hosting_provider_with_sample_user,
 ):
     """
     Check that approving a provider request does not delete an existing ASN, but
@@ -624,7 +624,7 @@ def test_approve_updates_existing_provider_without_deleting_asns(
 @pytest.mark.wip
 @pytest.mark.django_db
 def test_approve_updates_existing_provider_without_deleting_ips(
-    hosting_provider_with_sample_user
+    hosting_provider_with_sample_user,
 ):
     # given: existing ips linked to our provider
     active_ip = GreenIpFactory.create(hostingprovider=hosting_provider_with_sample_user)
@@ -668,7 +668,7 @@ def test_approve_updates_existing_provider_without_deleting_ips(
 @pytest.mark.wip
 @pytest.mark.django_db
 def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
-    hosting_provider_with_sample_user
+    hosting_provider_with_sample_user,
 ):
     # given: a provider request linked to an existing hosting provider
 
@@ -677,9 +677,8 @@ def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
     )
 
     assert original_evidence.id in [
-        evidence.id 
-        for evidence in 
-        hosting_provider_with_sample_user.supporting_documents.all()
+        evidence.id
+        for evidence in hosting_provider_with_sample_user.supporting_documents.all()
     ]
 
     # given: a provider request linked to an existing hosting provider
@@ -697,7 +696,7 @@ def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
         type=original_evidence.type,
         file=original_evidence.attachment,
         link=original_evidence.url,
-        )
+    )
 
     # when: the request is approved
     result = pr.approve()
@@ -706,6 +705,7 @@ def test_approve_updates_existing_provider_without_deleting_supporting_evidence(
     updated_hp_evidence = hp.supporting_documents.all()
 
     import rich
+
     for pr_ev in updated_hp_evidence:
         rich.inspect(pr_ev)
 
@@ -1930,4 +1930,44 @@ def test_request_from_host_provider_finishes_in_sensible_time():
     """
     hosting provider with just a country should show the city and country
     """
+    pass
+
+
+@pytest.mark.django_db
+@override_flag("provider_request", active=True)
+def test_email_sent_on_approval(
+    user,
+    client,
+    greenweb_staff_user,
+    provider_request_factory,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+    mailoutbox,
+    hosting_provider_with_sample_user,
+):
+    """
+    Given: a provider request to update an existing provider
+    When: it is approved by staff, we should send an email
+    Then:
+    """
+
+    pr = provider_request_factory.create(provider=hosting_provider_with_sample_user)
+
+    client.force_login(greenweb_staff_user)
+
+    from django.urls import reverse
+
+    admin_update_path = reverse(
+        "greenweb_admin:accounts_providerrequest_change", args=[pr.id]
+    )
+
+    client.get(admin_update_path)
+
+    breakpoint()
+
     pass

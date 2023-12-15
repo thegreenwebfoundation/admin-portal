@@ -193,8 +193,6 @@ class ProviderRequest(TimeStampedModel):
         if self.provider:
             hp = Hostingprovider.objects.get(pk=self.provider.id)
 
-            
-
             # delete related objects, they will be recreated with recent data
             hp.services.clear()
 
@@ -284,7 +282,6 @@ class ProviderRequest(TimeStampedModel):
             url = evidence.link or ""
             attachment = evidence.file or ""
 
-            
             # assert HostingProviderSupportingDocument.objects_all.filter(archived=True)
             if archived_evidence := HostingProviderSupportingDocument.objects_all.filter(
                 hostingprovider=hp,
