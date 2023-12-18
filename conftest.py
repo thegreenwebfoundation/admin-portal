@@ -29,9 +29,7 @@ register(gc_factories.GreenIpFactory)
 register(gc_factories.GreenDomainFactory)
 register(gc_factories.DailyStatFactory)
 register(gc_factories.SiteCheckFactory)
-
 register(ac_factories.SupportingEvidenceFactory)
-
 register(ac_factories.ProviderRequestFactory)
 
 

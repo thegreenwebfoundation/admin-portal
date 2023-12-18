@@ -1,54 +1,54 @@
 {% if provider %}
-{%- comment -%} Approved an update to an existing provider {%- endcomment -%}
-<p>Dear provider,</p>
-
-<p>Thank you for taking the time to update {{ provider.name }} in the Green Web Dataset.</p>
-
-<p>The updated information you provided has been reviewed and approved.</p>
-
-<p>If you need to update {{ provider.name }} again, you can do so by logging in to the <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a>.</p>
-
-<p>Thanks for your help in keeping the Green Web Dataset up to date!</p>
-
-<p>
-Best regards,
-<br>Green Web Foundation 
-</p>
+    {% comment %} Approved an update to an existing provider {% endcomment %}
+    <p>Dear provider,</p>
+    <p>Thank you for taking the time to update {{ provider.name }} in the Green Web Dataset.</p>
+    <p>The updated information you provided has been reviewed and approved.</p>
+    <p>
+        If you need to update {{ provider.name }} again, you can do so by logging in to the <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a>.
+    </p>
+    <p>Thanks for your help in keeping the Green Web Dataset up to date!</p>
+    <p>
+        Best regards,
+        <br>
+        Green Web Foundation
+    </p>
 {% else %}
-{%- comment -%} Approved an update to a new verification request {%- endcomment -%}
-<p>Dear provider,</p>
-
-<p>Thank you for taking the time to submit {{ org_name }} for verification to the Green Web Database. It's great to know that you are committed to providing green services to your customers.</p>
-
-<p>The information you provided has been checked and approved.</p>
-
-<p>Any checks against sites hosted by you will now show as green on the basis of the ASN/IP ranges you provided.</p>
-
-{% comment %} <p>If you have publicly shared links to documents or websites to support any sustainability claims, these will also be available in the Green Web Directory: <a href="https://www.thegreenwebfoundation.org/directory/">https://www.thegreenwebfoundation.org/directory/</a>.</p> {% endcomment %}
-
-<p>If there are any changes in your ASN or IP ranges for your green domains in the future, you are required to update your listing accordingly. Our Green Web Checker is only able to recognize the sustainably hosted domains of you and your customers when they resolve to an IP address that has been entered in the Green Web Database.</p>
-
-<p>
-You can review and update your listing yourself!
-<br>Please go to the <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a> and log in.
-<br>Your username is: {{ username }}
-</p>
-
-<p>Your customers can find a Green Web Badge by performing a check for their website using our <a href="https://www.thegreenwebfoundation.org/green-web-check/">Green Web Check tool</a>. Their customised badge, which shows your organisation name, will be on the Green Web Check result page and can be downloaded or embedded on a site using a snippet of HTML.</p>
-
-{% if locations %}
-<p>
-    <b>Locations:</b> {{ locations }}
-    <br>For now, {{ org_name }} is marked as a provider in {{ first_location }} only (where your headquarters are). At
-    the moment, we are developing our database to allow for multiple locations. Once that feature is up and running, we
-    will add the other countries and let you know if we have further questions.
-</p>
-{% endif %}
-
-<p>If you have any further questions, please let us know. Thanks for your help in keeping the Green Web Database up to date!</p>
-
-<p>
-Best regards,
-<br>Green Web Foundation 
-</p>
+    {% comment %} Approved an update to a new verification request {% endcomment %}
+    <p>Dear provider,</p>
+    <p>
+        Thank you for taking the time to submit {{ org_name }} for verification to the Green Web Database. It's great to know that you are committed to providing green services to your customers.
+    </p>
+    <p>The information you provided has been checked and approved.</p>
+    <p>Any checks against sites hosted by you will now show as green on the basis of the ASN/IP ranges you provided.</p>
+    {% comment %} <p>If you have publicly shared links to documents or websites to support any sustainability claims, these will also be available in the Green Web Directory: <a href="https://www.thegreenwebfoundation.org/directory/">https://www.thegreenwebfoundation.org/directory/</a>.</p> {% endcomment %}
+    <p>
+        If there are any changes in your ASN or IP ranges for your green domains in the future, you are required to update your listing accordingly. Our Green Web Checker is only able to recognize the sustainably hosted domains of you and your customers when they resolve to an IP address that has been entered in the Green Web Database.
+    </p>
+    <p>
+        You can review and update your listing yourself!
+        <br>
+        Please go to the <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a> and log in.
+        <br>
+        Your username is: {{ username }}
+    </p>
+    <p>
+        Your customers can find a Green Web Badge by performing a check for their website using our <a href="https://www.thegreenwebfoundation.org/green-web-check/">Green Web Check tool</a>. Their customised badge, which shows your organisation name, will be on the Green Web Check result page and can be downloaded or embedded on a site using a snippet of HTML.
+    </p>
+    {% if locations %}
+        <p>
+            <b>Locations:</b> {{ locations }}
+            <br>
+            For now, {{ org_name }} is marked as a provider in {{ first_location }} only (where your headquarters are). At
+            the moment, we are developing our database to allow for multiple locations. Once that feature is up and running, we
+            will add the other countries and let you know if we have further questions.
+        </p>
+    {% endif %}
+    <p>
+        If you have any further questions, please let us know. Thanks for your help in keeping the Green Web Database up to date!
+    </p>
+    <p>
+        Best regards,
+        <br>
+        Green Web Foundation
+    </p>
 {% endif %}

@@ -1,6 +1,6 @@
 from ..views import ProviderPortalHomeView
 from ..models import ProviderRequestStatus
-from conftest import ProviderRequestFactory, ProviderRequestLocationFactory
+from ..factories import ProviderRequestFactory, ProviderRequestLocationFactory
 from django.test import RequestFactory
 from django.urls import reverse
 from waffle.testutils import override_flag
