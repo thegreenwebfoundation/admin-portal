@@ -13,7 +13,7 @@ from guardian.shortcuts import assign_perm
 from apps.accounts.models.hosting import Hostingprovider
 from apps.accounts.permissions import manage_datacenter, manage_provider
 from apps.greencheck.tests import setup_domains
-from conftest import ProviderRequestFactory
+from apps.accounts.factories import ProviderRequestFactory
 
 from ...greencheck import domain_check
 from .. import admin as ac_admin

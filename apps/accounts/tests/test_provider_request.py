@@ -22,7 +22,7 @@ from apps.greencheck.factories import (
     ServiceFactory,
     UserFactory,
 )
-from conftest import (
+from apps.accounts.factories import (
     ProviderRequestASNFactory,
     ProviderRequestEvidenceFactory,
     ProviderRequestFactory,
@@ -1934,6 +1934,7 @@ def test_request_from_host_provider_finishes_in_sensible_time():
 
 
 @pytest.mark.django_db
+@pytest.mark.skip(reason="stil WIP")
 @override_flag("provider_request", active=True)
 def test_email_sent_on_approval(
     user,
@@ -1958,6 +1959,10 @@ def test_email_sent_on_approval(
 
     pr = provider_request_factory.create(provider=hosting_provider_with_sample_user)
 
+    # two approaches we can take:
+    # 1. go through the login admin
+    # 2. build the request and call mark_approved on the admin object
+
     client.force_login(greenweb_staff_user)
 
     from django.urls import reverse
@@ -1968,6 +1973,8 @@ def test_email_sent_on_approval(
 
     client.get(admin_update_path)
 
-    breakpoint()
+    # approve the listing
+
+    # breakpoint()
 
     pass

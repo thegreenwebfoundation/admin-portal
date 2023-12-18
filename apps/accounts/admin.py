@@ -1370,6 +1370,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "missing_network_explanation",
         "newsletter_opt_in",
         "data_processing_opt_in",
+        "provider",
     )
     actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"
@@ -1384,6 +1385,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             "username": provider_request.created_by.username,
             "org_name": provider_request.name,
             "update_url": request.build_absolute_uri(provider_url),
+            "provider": provider_request.provider,
         }
 
         # inject additional info to providers with multiple locations

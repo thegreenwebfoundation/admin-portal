@@ -1,5 +1,5 @@
 {% if provider %}
-{%- comment -%} Approved an update to an existing provider {%- endcomment -%}
+{% comment %} Approved an update to an existing provider {% endcomment %}
 Dear provider,
 
 Thank you for taking the time to update {{ provider.name }} in the Green Web Dataset.
@@ -13,7 +13,7 @@ Thanks for your help in keeping the Green Web Dataset up to date!
 Best regards,
 Green Web Foundation 
 {% else %}
-{%- comment -%} Approved an update to a new verification request {%- endcomment -%}
+{% comment %} Approved an update to a new verification request {% endcomment %}
 Dear provider,
 
 Thank you for taking the time to submit {{ org_name }} for verification to the Green Web Database. It's great to know that you are committed to providing green services to your customers.
