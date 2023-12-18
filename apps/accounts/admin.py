@@ -1393,6 +1393,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             "username": provider_request.created_by.username,
             "org_name": provider_request.name,
             "update_url": request.build_absolute_uri(provider_url),
+            "provider": provider_request.provider,
         }
 
         # inject additional info to providers with multiple locations
