@@ -2,7 +2,7 @@ import io
 import random
 from datetime import date, datetime
 from ipaddress import ip_address
-
+from django.urls import reverse
 import pytest
 from django import urls
 from django.conf import settings
@@ -13,6 +13,8 @@ from django.http import HttpResponse
 from faker import Faker
 from freezegun import freeze_time
 from waffle.testutils import override_flag
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.sessions.middleware import SessionMiddleware
 
 from apps.accounts import forms as account_forms
 from apps.accounts.factories import SupportingEvidenceFactory
@@ -29,6 +31,9 @@ from apps.accounts.factories import (
     ProviderRequestIPRangeFactory,
     ProviderRequestLocationFactory,
 )
+from apps.accounts import admin_site
+from apps.accounts import admin as ac_admin
+
 
 from .. import models, views
 
@@ -1934,47 +1939,78 @@ def test_request_from_host_provider_finishes_in_sensible_time():
 
 
 @pytest.mark.django_db
-@pytest.mark.skip(reason="stil WIP")
+@pytest.mark.parametrize(
+    "provider_exists, email_copy",
+    (
+        (True, "taking the time to update"),
+        (False, "taking the time to submit"),
+    ),
+)
 @override_flag("provider_request", active=True)
 def test_email_sent_on_approval(
-    user,
-    client,
+    hosting_provider_with_sample_user,
     greenweb_staff_user,
     provider_request_factory,
-    wizard_form_org_details_data,
-    wizard_form_org_location_data,
-    wizard_form_services_data,
-    wizard_form_evidence_data,
-    wizard_form_network_data,
-    wizard_form_consent,
-    wizard_form_preview,
+    rf,
     mailoutbox,
-    hosting_provider_with_sample_user,
+    provider_exists,
+    email_copy,
 ):
     """
     Given: a provider request to update an existing provider
     When: it is approved by staff, we should send an email
-    Then:
+    Then: We should see content referring to the updated request,
+    not a totally new request
     """
 
-    pr = provider_request_factory.create(provider=hosting_provider_with_sample_user)
+    if provider_exists:
+        pr = provider_request_factory.create(provider=hosting_provider_with_sample_user)
+    else:
+        pr = provider_request_factory.create()
 
-    # two approaches we can take:
-    # 1. go through the login admin
-    # 2. build the request and call mark_approved on the admin object
+    ProviderRequestLocationFactory.create(request=pr)
 
-    client.force_login(greenweb_staff_user)
-
-    from django.urls import reverse
+    pr_admin = ac_admin.ProviderRequest(
+        models.ProviderRequest, admin_site.greenweb_admin
+    )
 
     admin_update_path = reverse(
         "greenweb_admin:accounts_providerrequest_change", args=[pr.id]
     )
 
-    client.get(admin_update_path)
+    # create our request and add the user simulating them
+    # being logged in
+    req = rf.get(admin_update_path)
+    req.user = greenweb_staff_user
 
-    # approve the listing
+    # we need to add a session middleware to the request
+    # without this attempts to place a message in the request
+    # for the staff user will fail in this test
+    middleware = SessionMiddleware()
+    middleware.process_request(req)
+    messages = FallbackStorage(req)
+    req._messages = messages
 
-    # breakpoint()
+    queryset = models.ProviderRequest.objects.filter(id=pr.id)
 
-    pass
+    # simulate the admin approving the request
+    pr_admin.mark_approved(req, queryset)
+
+    # do we have the expected number of emails?
+    assert len(mailoutbox) == 1
+
+    email = mailoutbox[0]
+
+    # do we have our expected email subject?
+
+    assert (
+        email.subject
+        == "Approval of your verification request for the Green Web database"
+    )
+
+    # Does our content refer to the correct copy?
+    assert email_copy in email.body
+
+    # And does the html as well?
+    html_content = email.alternatives[0][0]
+    assert email_copy in html_content

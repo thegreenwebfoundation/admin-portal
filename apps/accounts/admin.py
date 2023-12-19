@@ -81,6 +81,7 @@ from .models import (
 from .permissions import manage_provider, manage_datacenter
 
 logger = logging.getLogger(__name__)
+from typing import Union
 
 
 @admin.register(Group, site=greenweb_admin)
@@ -1375,9 +1376,12 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
     actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"
 
-    def send_approval_email(self, provider_request, request):
+    def send_approval_email(
+        self, provider_request, request, existing_provider: Union[Hostingprovider, None]
+    ):
         """
-        Send an email to the provider whose request was approved by staff.
+        Send an email to the provider whose request was approved by staff, changing
+        the copy based on the state of the provider.
         """
 
         provider_url = provider_request.hostingprovider_set.first().admin_url
@@ -1385,8 +1389,10 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             "username": provider_request.created_by.username,
             "org_name": provider_request.name,
             "update_url": request.build_absolute_uri(provider_url),
-            "provider": provider_request.provider,
         }
+
+        if existing_provider:
+            context["provider"] = provider_request.provider
 
         # inject additional info to providers with multiple locations
 
@@ -1415,6 +1421,9 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
     def mark_approved(self, request, queryset):
         for provider_request in queryset:
             try:
+                # check if this a request for an existing provider or not,
+                # so we can send the appropriate email
+                existing_provider = provider_request.provider
                 hp = provider_request.approve()
                 hp_href = reverse(
                     "greenweb_admin:accounts_hostingprovider_change", args=[hp.id]
@@ -1426,7 +1435,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
                     """
                 )
                 self.message_user(request, message=message, level=messages.SUCCESS)
-                self.send_approval_email(provider_request, request)
+                self.send_approval_email(provider_request, request, existing_provider)
 
             except Exception as e:
                 message = mark_safe(
