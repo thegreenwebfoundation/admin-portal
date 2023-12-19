@@ -2,38 +2,38 @@ import io
 import random
 from datetime import date, datetime
 from ipaddress import ip_address
-from django.urls import reverse
+
 import pytest
 from django import urls
 from django.conf import settings
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
+from django.urls import reverse
 from faker import Faker
 from freezegun import freeze_time
 from waffle.testutils import override_flag
-from django.contrib.messages.storage.fallback import FallbackStorage
-from django.contrib.sessions.middleware import SessionMiddleware
 
+from apps.accounts import admin as ac_admin
+from apps.accounts import admin_site
 from apps.accounts import forms as account_forms
-from apps.accounts.factories import SupportingEvidenceFactory
-from apps.greencheck.factories import (
-    GreenASNFactory,
-    GreenIpFactory,
-    ServiceFactory,
-    UserFactory,
-)
 from apps.accounts.factories import (
     ProviderRequestASNFactory,
     ProviderRequestEvidenceFactory,
     ProviderRequestFactory,
     ProviderRequestIPRangeFactory,
     ProviderRequestLocationFactory,
+    SupportingEvidenceFactory,
 )
-from apps.accounts import admin_site
-from apps.accounts import admin as ac_admin
-
+from apps.greencheck.factories import (
+    GreenASNFactory,
+    GreenIpFactory,
+    ServiceFactory,
+    UserFactory,
+)
 
 from .. import models, views
 

@@ -1,87 +1,80 @@
-from django.db import models
-from django.core.mail import send_mail
-from django.core.exceptions import PermissionDenied
-from django.conf import settings
-from django.contrib import messages
-from django.contrib import admin
-from django.urls import reverse
-from django.http import HttpResponseRedirect
-from django.contrib.auth.admin import UserAdmin, GroupAdmin, Group
-from django.utils.safestring import mark_safe
-from django.shortcuts import redirect, render
-from django.utils.translation import gettext_lazy as _
-from django import template as dj_template
-from guardian.admin import AdminUserObjectPermissionsForm, GuardedModelAdminMixin
+import logging
+import typing
 
-from apps.greencheck.admin import (
-    GreencheckIpApproveInline,
-    GreencheckIpInline,
-    GreencheckAsnInline,
-    GreencheckAsnApproveInline,
-)
+import django.forms as dj_forms
+import markdown
+from dal_select2 import views as dal_select2_views
+from django import template as dj_template
+from django.conf import settings
+from django.contrib import admin, messages
+from django.contrib.auth.admin import Group, GroupAdmin, UserAdmin
+from django.core.exceptions import PermissionDenied
+from django.core.mail import send_mail
+from django.db import models
+from django.http import HttpRequest, HttpResponseRedirect
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
+from guardian.admin import AdminUserObjectPermissionsForm, GuardedModelAdminMixin
 from logentry_admin.admin import (
+    ActionListFilter,
     LogEntry,
     LogEntryAdmin,
-    ActionListFilter,
 )
-
-
 from taggit.managers import TaggableManager
 from taggit_labels.widgets import LabelWidget
-
-import logging
-import markdown
-import django.forms as dj_forms
-
-from dal_select2 import views as dal_select2_views
-
-from waffle.models import Flag
 from waffle.admin import FlagAdmin
+from waffle.models import Flag
 
-from apps.greencheck.models import GreencheckIpApprove, GreencheckIp
-from apps.greencheck.models import GreencheckASNapprove
-
-
+from apps.greencheck.admin import (
+    GreencheckAsnApproveInline,
+    GreencheckAsnInline,
+    GreencheckIpApproveInline,
+    GreencheckIpInline,
+)
 from apps.greencheck.forms import ImporterCSVForm
+from apps.greencheck.models import (
+    GreencheckASNapprove,
+    GreencheckIp,
+    GreencheckIpApprove,
+)
 
-
-from .utils import get_admin_name, reverse_admin_name, send_email
+from . import filters, forms
 from .admin_site import greenweb_admin
-from . import filters
-from . import forms
 from .forms import (
     CustomUserCreationForm,
-    HostingProviderNoteForm,
     DatacenterNoteNoteForm,
+    HostingProviderNoteForm,
 )
 from .models import (
     Datacenter,
     DatacenterCertificate,
     DatacenterClassification,
     DatacenterCooling,
-    DatacenterNote,
     DataCenterLocation,
-    HostingCommunication,
-    HostingproviderCertificate,
-    Hostingprovider,
-    Label,
-    HostingProviderNote,
-    User,
+    DatacenterNote,
     DatacenterSupportingDocument,
+    HostingCommunication,
+    Hostingprovider,
+    HostingproviderCertificate,
+    HostingProviderNote,
     HostingProviderSupportingDocument,
-    SupportMessage,
+    Label,
     ProviderRequest,
     ProviderRequestASN,
+    ProviderRequestEvidence,
     ProviderRequestIPRange,
     ProviderRequestLocation,
-    ProviderRequestEvidence,
     ProviderRequestStatus,
     Service,
+    SupportMessage,
+    User,
 )
-from .permissions import manage_provider, manage_datacenter
+from .permissions import manage_datacenter, manage_provider
+from .utils import get_admin_name, reverse_admin_name, send_email
 
 logger = logging.getLogger(__name__)
-from typing import Union
 
 
 @admin.register(Group, site=greenweb_admin)
@@ -1377,7 +1370,10 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
     change_form_template = "admin/provider_request/change_form.html"
 
     def send_approval_email(
-        self, provider_request, request, existing_provider: Union[Hostingprovider, None]
+        self,
+        provider_request: ProviderRequest,
+        request: HttpRequest,
+        existing_provider: typing.Union[Hostingprovider, None],
     ):
         """
         Send an email to the provider whose request was approved by staff, changing
