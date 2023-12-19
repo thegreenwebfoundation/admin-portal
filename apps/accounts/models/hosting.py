@@ -30,7 +30,6 @@ from apps.greencheck.choices import StatusApproval, GreenlistChoice
 
 # import apps.greencheck.models as gc_models
 
-from .provider_request import ProviderRequest
 
 logger = logging.getLogger(__name__)
 
@@ -491,7 +490,7 @@ class Hostingprovider(models.Model):
         """
         return self.greencheckasn_set.filter(active=True)
 
-    def last_approved_verification_req(self) -> ProviderRequest:
+    def last_approved_verification_req(self) -> "ProviderRequest":
         return (
             self.providerrequest_set.filter(status="Approved")
             .order_by("-modified")
