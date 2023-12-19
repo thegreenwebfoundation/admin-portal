@@ -397,14 +397,8 @@ def test_wizard_sends_email_on_submission(
     # then: and our email has the subject and copy we were expecting
     assert "Your verification request for the Green Web Database" in eml.subject
 
-    assert (
-        "Thank you for taking the time to complete a verification request"
-        in msg_body_txt
-    )
-    assert (
-        "Thank you for taking the time to complete a verification request"
-        in msg_body_html
-    )
+    assert "complete a Green Web Dataset verification request" in msg_body_txt
+    assert "complete a Green Web Dataset verification request" in msg_body_html
 
     # then: and our email includes a BCC address so we can track status in
     # trello via sending a message to the email-to-board address
@@ -424,9 +418,6 @@ def test_wizard_sends_email_on_submission(
 
     assert provider_request.name in msg_body_txt
     assert provider_request.name in msg_body_html
-
-    assert provider_request.status in msg_body_txt
-    assert provider_request.status in msg_body_html
 
 
 @pytest.mark.django_db
@@ -1292,6 +1283,7 @@ def test_editing_hp_creates_new_verification_request(
     wizard_form_network_data,
     wizard_form_consent,
     wizard_form_preview,
+    mailoutbox,
 ):
     """
     This is an end-to-end test verifying that edit view for
@@ -1446,6 +1438,16 @@ def test_editing_hp_creates_new_verification_request(
     assert updated_pr.name == overridden_values["name"]
     assert updated_pr.providerrequestlocation_set.count() == 3
 
+    # and: we should see an email sent to the hosting provider
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+    email_copy = "update the listing for"
+    html_content = email.alternatives[0][0]
+
+    # and: email txt and html should acknowledge the request being an update
+    assert email_copy in email.body
+    assert email_copy in html_content
+
 
 @pytest.mark.django_db
 @override_flag("provider_request", active=True)
@@ -1460,6 +1462,7 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
     wizard_form_consent,
     wizard_form_preview,
     fake_evidence,
+    mailoutbox,
 ):
     """
     Support the case where we are making changes to save back to
@@ -1651,6 +1654,16 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
 
     # and: we should see 3 locations,
     assert updated_pr.providerrequestlocation_set.count() == 3
+
+    # and: we should see an email sent to the hosting provider
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+    email_copy = "update the listing for"
+    html_content = email.alternatives[0][0]
+
+    # and: email txt and html should acknowledge the request being an update
+    assert email_copy in email.body
+    assert email_copy in html_content
 
 
 @pytest.mark.django_db
@@ -1953,6 +1966,84 @@ def test_email_sent_on_approval(
     When: it is approved by staff, we should send an email
     Then: We should see content referring to the updated request,
     not a totally new request
+    """
+
+    if provider_exists:
+        pr = provider_request_factory.create(provider=hosting_provider_with_sample_user)
+    else:
+        pr = provider_request_factory.create()
+
+    ProviderRequestLocationFactory.create(request=pr)
+
+    pr_admin = ac_admin.ProviderRequest(
+        models.ProviderRequest, admin_site.greenweb_admin
+    )
+
+    admin_update_path = reverse(
+        "greenweb_admin:accounts_providerrequest_change", args=[pr.id]
+    )
+
+    # create our request and add the user simulating them
+    # being logged in
+    req = rf.get(admin_update_path)
+    req.user = greenweb_staff_user
+
+    # we need to add a session middleware to the request
+    # without this attempts to place a message in the request
+    # for the staff user will fail in this test
+    middleware = SessionMiddleware()
+    middleware.process_request(req)
+    messages = FallbackStorage(req)
+    req._messages = messages
+
+    queryset = models.ProviderRequest.objects.filter(id=pr.id)
+
+    # simulate the admin approving the request
+    pr_admin.mark_approved(req, queryset)
+
+    # do we have the expected number of emails?
+    assert len(mailoutbox) == 1
+
+    email = mailoutbox[0]
+
+    # do we have our expected email subject?
+
+    assert (
+        email.subject
+        == "Approval of your verification request for the Green Web database"
+    )
+
+    # Does our content refer to the correct copy?
+    assert email_copy in email.body
+
+    # And does the html as well?
+    html_content = email.alternatives[0][0]
+    assert email_copy in html_content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "provider_exists, email_copy",
+    (
+        (True, "taking the time to update"),
+        (False, "taking the time to submit"),
+    ),
+)
+@override_flag("provider_request", active=True)
+def test_email_request_email_confirmation_is_sent(
+    hosting_provider_with_sample_user,
+    greenweb_staff_user,
+    provider_request_factory,
+    rf,
+    mailoutbox,
+    provider_exists,
+    email_copy,
+):
+    """
+    Given: a provider request is being created by the user
+    When: they submit it
+    Then: An email should be sent confirming the submission, with
+    copy matching whether a new, or existing provider
     """
 
     if provider_exists:
