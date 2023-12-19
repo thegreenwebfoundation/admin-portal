@@ -357,24 +357,29 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             Helper function to process the data from ModelFormSets used in this view
             """
             logger.info(f"formset: {formset.__class__.__name__}")
-            if formset.__class__.__name__ == 'ProviderRequestIPRangeFormFormSet':
+            if formset.__class__.__name__ == "ProviderRequestIPRangeFormFormSet":
                 for form in formset.forms:
                     logger.debug(form.__class__.__name__)
                     logger.debug(f"form.has_changed(): {form.has_changed()}")
-                
+
             instances = formset.save(commit=False)
             for instance in instances:
                 instance.request = request
                 instance.save()
 
             for object_to_delete in formset.deleted_objects:
-                logger.debug(f"we have {len(formset.deleted_objects)} objects to delete")
+                logger.debug(
+                    f"we have {len(formset.deleted_objects)} objects to delete"
+                )
                 object_to_delete.delete()
-                
-            logger.debug(f"checking for changed forms: {formset.form.__class__.__name__}")
-            if formset.changed_objects:
-                logger.debug(f"we have {len(formset.changed_objects)} objects to change")
 
+            logger.debug(
+                f"checking for changed forms: {formset.form.__class__.__name__}"
+            )
+            if formset.changed_objects:
+                logger.debug(
+                    f"we have {len(formset.changed_objects)} objects to change"
+                )
 
         steps = ProviderRequestWizardView.Steps
 
@@ -542,6 +547,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             "status": provider_request.status,
             "link_to_verification_request": link_to_verification_request,
         }
+        if provider_request.provider:
+            ctx["provider"] = provider_request.provider
 
         send_email(
             address=user.email,
