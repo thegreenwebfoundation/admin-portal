@@ -6,14 +6,14 @@ from unittest.mock import MagicMock
 import markdown
 import pytest
 from django import urls
-from django.core.exceptions import PermissionDenied
 from django.contrib.auth import models as auth_models
+from django.core.exceptions import PermissionDenied
 from guardian.shortcuts import assign_perm
 
+from apps.accounts.factories import ProviderRequestFactory
 from apps.accounts.models.hosting import Hostingprovider
 from apps.accounts.permissions import manage_datacenter, manage_provider
 from apps.greencheck.tests import setup_domains
-from apps.accounts.factories import ProviderRequestFactory
 
 from ...greencheck import domain_check
 from .. import admin as ac_admin
