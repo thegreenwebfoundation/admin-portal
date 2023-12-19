@@ -27,7 +27,10 @@ from .choices import (
 )
 from ..permissions import manage_provider, manage_datacenter
 from apps.greencheck.choices import StatusApproval, GreenlistChoice
+
 # import apps.greencheck.models as gc_models
+
+from .provider_request import ProviderRequest
 
 logger = logging.getLogger(__name__)
 
@@ -306,6 +309,10 @@ class Hostingprovider(models.Model):
     def __str__(self):
         return self.name
 
+    # Properties
+    # TODO: we should try to move to only using properties for methods that
+    # do not touch the database
+
     @property
     def users(self) -> models.QuerySet["User"]:
         """
@@ -464,7 +471,7 @@ class Hostingprovider(models.Model):
     # Queries
 
     def public_supporting_evidence(
-        self
+        self,
     ) -> models.QuerySet["HostingproviderSupportingDocument"]:
         """
         Return the supporting evidence that has explictly been marked as public
@@ -484,7 +491,12 @@ class Hostingprovider(models.Model):
         """
         return self.greencheckasn_set.filter(active=True)
 
-    # Properties
+    def last_approved_verification_req(self) -> ProviderRequest:
+        return (
+            self.providerrequest_set.filter(status="Approved")
+            .order_by("-modified")
+            .first()
+        )
 
     def counts_as_green(self):
         """
@@ -492,6 +504,7 @@ class Hostingprovider(models.Model):
         needing to implement the logic for determining
         if a provider counts as green in multiple places
         """
+        # TODO: this method should probably be a property
         return GREEN_VIA_CARBON_TXT in self.staff_labels.names()
 
     def outstanding_approval_requests(self):
@@ -556,9 +569,6 @@ class Hostingprovider(models.Model):
         self.notify_admins(
             notification_subject, notification_email_copy, notification_email_html
         )
-
-    def last_approved_verification_req(self):
-        return self.providerrequest_set.filter(status="Approved").order_by('-modified').first()
 
     class Meta:
         # managed = False
