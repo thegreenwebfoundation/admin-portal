@@ -2,7 +2,7 @@ from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 import factory
 import factory.django as dj_factory
-
+from ipaddress import ip_address
 from apps.accounts import models as ac_models
 
 from apps.greencheck import factories as gc_factories
