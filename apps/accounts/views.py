@@ -1,24 +1,23 @@
-import waffle
-from waffle.mixins import WaffleFlagMixin
+import logging
 from enum import Enum
+
+import waffle
 from dal import autocomplete
-from django.core.files.storage import DefaultStorage
-from django.contrib import messages
-from django.contrib.auth.models import Group
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.sites.shortcuts import get_current_site
-from django.db.models.query import QuerySet
-from django.http import HttpResponseRedirect, Http404
-from django.urls import reverse
-from django.utils.safestring import mark_safe
-from django.utils.encoding import force_text
-from django.views.generic import UpdateView, DetailView, ListView
-from django.views.generic.base import TemplateView
-from django.shortcuts import redirect
-
 from django.conf import settings
-
-from django_registration import signals
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import Group
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.files.storage import DefaultStorage
+from django.db.models.query import QuerySet
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils.encoding import force_text
+from django.utils.safestring import mark_safe
+from django.views.generic import DetailView, ListView, UpdateView
+from django.views.generic.base import TemplateView
+from django_registration import signals, validators
 from django_registration.backends.activation.views import (
     ActivationView,
     RegistrationView,
@@ -28,33 +27,31 @@ from django_registration.forms import (
     RegistrationFormCaseInsensitive,
     RegistrationFormUniqueEmail,
 )
-from django_registration import validators
 from formtools.wizard.views import SessionWizardView
+from waffle.mixins import WaffleFlagMixin
 
 from .forms import (
-    UserUpdateForm,
-    OrgDetailsForm,
-    LocationStepForm,
-    ServicesForm,
-    GreenEvidenceForm,
-    NetworkFootprintForm,
     ConsentForm,
+    GreenEvidenceForm,
+    LocationStepForm,
+    NetworkFootprintForm,
+    OrgDetailsForm,
     PreviewForm,
+    ServicesForm,
+    UserUpdateForm,
 )
 from .models import (
-    User,
-    ProviderRequest,
-    ProviderRequestStatus,
     Hostingprovider,
     HostingproviderCertificate,
+    ProviderRequest,
     ProviderRequestASN,
     ProviderRequestEvidence,
     ProviderRequestIPRange,
+    ProviderRequestStatus,
+    User,
 )
 from .permissions import manage_provider
 from .utils import send_email
-
-import logging
 
 logger = logging.getLogger(__name__)
 

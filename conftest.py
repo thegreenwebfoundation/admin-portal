@@ -1,19 +1,18 @@
 import pathlib
-import pytest
+
 import dramatiq
 import factory
-
+import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth import models as auth_models
-from pytest_factoryboy import register
-from ipaddress import ip_address
 from guardian.shortcuts import assign_perm
+from pytest_factoryboy import register
 
-from apps.greencheck.models import GreencheckIp, GreencheckASN
-from apps.greencheck import factories as gc_factories
 from apps.accounts import factories as ac_factories
 from apps.accounts import models as ac_models
-from apps.accounts.permissions import manage_provider, manage_datacenter
+from apps.accounts.permissions import manage_datacenter, manage_provider
+from apps.greencheck import factories as gc_factories
+from apps.greencheck.models import GreencheckASN, GreencheckIp
 
 # https://factoryboy.readthedocs.io/en/stable/recipes.html#using-reproducible-randomness
 factory.random.reseed_random("venture not into the land of flaky tests")
