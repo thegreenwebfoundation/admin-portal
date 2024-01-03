@@ -82,21 +82,20 @@
 		
 			const scrollFunc = () => {
 
+				// Have a timer to prevent unnecessary work in the browser.
 				if( timer ) {
 					window.clearTimeout( timer );
 				}
 
 				timer = window.setTimeout( function() {
 
-					// Get the current scroll value
+					// Get the current scroll value.
 					let y = window.scrollY;
 					
 					// If the main-content box is at the top of the screen, show button.
 					if ( y > mainContentTopPos ) {
-						console.log( "remove" );
 						scrollToTopButton.classList.remove( "invisible" );
 					} else {
-						console.log( "add" );
 						scrollToTopButton.classList.add( "invisible" );
 					}
 				}, 150);
