@@ -6,7 +6,7 @@
 
 {% block content %}
     <div class="full-width bg-neutral-900 relative -top-6 md:-top-8">
-        <section class="container mx-auto text-white pt-12 pb-8 px-2 sm:px-4 lg:pb-12" id="filters-top">
+        <section class="container mx-auto text-white pt-12 pb-8 px-2 sm:px-4 lg:pb-12">
             
             <h2 class="text-5xl md:text-disp-sm md:mt-6 pb-4">I'm looking for</h2>
             <form method="get"
@@ -16,7 +16,8 @@
             </form>
 
 			<details class="prose mt-6 md:mt-8 lg:mt-0">
-				<summary class="uppercase text-green">More about this directory 
+				<summary class="uppercase text-green">
+					<span class="underline hover:no-underline">About this directory</span> 
 					<span class="utility-icon info-circle">&#x2139;</span>
 				</summary>
 				<p class="text-white mt-2">
@@ -47,7 +48,7 @@
         </section>
     </div>
 
-    <section class="main-content container mx-auto md:mb-8 mt-4 lg:mt-6">
+    <section id="main-content" class="main-content container mx-auto md:mb-8 mt-4 lg:mt-6">
         {% if not ordered_results %}
             {% include "greencheck/partials/_directory_no_results.html" %}
         {% else %}
@@ -56,6 +57,13 @@
 	</section> 
 
 	{% include "greencheck/partials/_directory_ctas.html" %}
+
+	<a href="#">
+		<button id="scroll-to-top" class="fixed bottom-2 sm:bottom-4 right-2 sm:right-4 z-50 btn btn-sm hover:bg-purple hover:text-white m-0 py-4 rounded-md border-0 flex items-center invisible">
+			<svg class="scroll-to-top-icon -mt-1" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15"><rect width="15" height="15" fill="none"></rect><path fill="currentColor" d="M2,8.48l-.65-.65a.71.71,0,0,1,0-1L7,1.14a.72.72,0,0,1,1,0l5.69,5.7a.71.71,0,0,1,0,1L13,8.48a.71.71,0,0,1-1,0L8.67,4.94v8.42a.7.7,0,0,1-.7.7H7a.7.7,0,0,1-.7-.7V4.94L3,8.47a.7.7,0,0,1-1,0Z"></path></svg>
+			<span class="scroll-to-top-label font-bold pl-1.5">To the top</span>
+		</button>
+	</a>
 
 {% endblock %}
 

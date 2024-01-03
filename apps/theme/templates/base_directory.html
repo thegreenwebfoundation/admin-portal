@@ -70,5 +70,46 @@
 
 		<script async defer src="https://scripts.withcabin.com/hello.js"></script>
 
+		<script>
+			// Get distance of main-content box from top.
+			const mainContent = document.getElementById('main-content'),
+				mainContentTopPos = mainContent.getBoundingClientRect().top + window.scrollY;		
+
+			// Set a variable for our button element.
+			const scrollToTopButton = document.getElementById('scroll-to-top');
+
+			var timer;
+		
+			const scrollFunc = () => {
+
+				if( timer ) {
+					window.clearTimeout( timer );
+				}
+
+				timer = window.setTimeout( function() {
+
+					// Get the current scroll value
+					let y = window.scrollY;
+					
+					// If the main-content box is at the top of the screen, show button.
+					if ( y > mainContentTopPos ) {
+						console.log( "remove" );
+						scrollToTopButton.classList.remove( "invisible" );
+					} else {
+						console.log( "add" );
+						scrollToTopButton.classList.add( "invisible" );
+					}
+				}, 150);
+			};
+		
+			window.addEventListener( "scroll", scrollFunc );
+
+			// When the button is clicked scroll to the top.
+			scrollToTopButton.onclick = function( e ) {
+				e.preventDefault();
+				document.body.scrollIntoView({ behavior: "smooth" });
+			}
+		</script>
+
 	</body>
 </html>
