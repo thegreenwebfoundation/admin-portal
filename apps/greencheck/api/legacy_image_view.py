@@ -13,20 +13,13 @@ from rest_framework_jsonp.renderers import JSONPRenderer
 from ..domain_check import GreenDomainChecker
 from ..models import GreenDomain
 
-GREEN_DOMAIN_TEXT_COLOR = (00, 70, 00)
-GREEN_DOMAIN_TEXT_SHADOW = (79, 138, 74)
-GREEN_HOSTED_BY_TEXT_COLOR = (255, 255, 255)
-GREEN_HOSTED_BY_SHADOW_COLOR = (93, 173, 19)
-
-GREY_DOMAIN_TEXT_COLOR = (100, 100, 100)
-GREY_DOMAIN_TEXT_SHADOW = (170, 170, 170)
-GREY_HOSTED_BY_TEXT_COLOR = (255, 255, 255)
-GREY_HOSTED_BY_TEXT_SHADOW = (210, 210, 210)
+TEXT_COLOR = (0, 0, 0)
+TEXT_POSITION_LEFT = 21
 
 app_dir = Path(__file__).parent.parent
-font_path = app_dir / "badges" / "OpenSans-Regular.ttf"
-domain_font = ImageFont.truetype(str(font_path), 14)
-hosted_by_font = ImageFont.truetype(str(font_path), 11)
+font_path = app_dir / "badges" / "TWKEverett-Regular.otf"
+
+font_settings = ImageFont.truetype(str(font_path), 11)
 
 logger = logging.getLogger(__name__)
 checker = GreenDomainChecker()
@@ -55,36 +48,25 @@ def fetch_template_image(domain, green=False) -> Image:
         color = "grey"
 
     app_dir = Path(__file__).parent.parent
-    img_path = app_dir / "badges" / f"blank-badge-{color}.png"
+    img_path = app_dir / "badges" / f"blank-badge-{color}-sunburst.png"
     img = Image.open(img_path)
     return img
 
 
-def add_domain_text(draw, domain, text_color, text_shadow):
-    left_inside_block = (18, 80)
-    left_inside_block_offset = (17, 79)
-
-    draw.text(left_inside_block_offset, f"{domain}", text_shadow, font=domain_font)
-    draw.text(left_inside_block, f"{domain}", text_color, font=domain_font)
-
-
-def add_hosted_text(draw, text_color, text_shadow, provider=None, green=False):
-
-    left_inside_block = (18, 100)
-    left_inside_block_offset = (18, 100)
+def add_hosted_text(draw, text_color, domain, provider=None, green=False):
 
     if green:
         if provider:
-            hosted_by_message = f"is green hosted by {provider}."
+            draw.text((TEXT_POSITION_LEFT, 74), f"{domain}", TEXT_COLOR, font=font_settings)
+            hosted_by_message = f"hosted by {provider}"
         else:
-            hosted_by_message = "is hosted green."
+            draw.text((TEXT_POSITION_LEFT, 80), f"{domain}", TEXT_COLOR, font=font_settings)
+            hosted_by_message = ""
     else:
+        draw.text((TEXT_POSITION_LEFT, 80), f"{domain}", TEXT_COLOR, font=font_settings)
         hosted_by_message = "is hosted grey"
 
-    draw.text(
-        left_inside_block_offset, hosted_by_message, text_shadow, font=hosted_by_font
-    )
-    draw.text(left_inside_block, hosted_by_message, text_color, font=hosted_by_font)
+    draw.text((TEXT_POSITION_LEFT, 89), hosted_by_message, text_color, font=font_settings)
 
 
 def annotate_img(img, domain, green=False, provider=None) -> Image:
@@ -94,21 +76,20 @@ def annotate_img(img, domain, green=False, provider=None) -> Image:
     draw = ImageDraw.Draw(img)
 
     if green:
-        add_domain_text(draw, domain, GREEN_DOMAIN_TEXT_COLOR, GREEN_DOMAIN_TEXT_SHADOW)
+        
         add_hosted_text(
             draw,
-            GREEN_HOSTED_BY_TEXT_COLOR,
-            GREEN_HOSTED_BY_SHADOW_COLOR,
+            TEXT_COLOR,
+            domain,
             provider=provider,
             green=True,
         )
         return img
     else:
-        add_domain_text(draw, domain, GREY_DOMAIN_TEXT_COLOR, GREY_DOMAIN_TEXT_SHADOW)
         add_hosted_text(
             draw,
-            GREY_HOSTED_BY_TEXT_COLOR,
-            GREY_HOSTED_BY_TEXT_SHADOW,
+            TEXT_COLOR,
+            domain,
             provider=provider,
             green=False,
         )
