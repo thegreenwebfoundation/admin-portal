@@ -14,7 +14,7 @@ from ..domain_check import GreenDomainChecker
 from ..models import GreenDomain
 
 TEXT_COLOR = (0, 0, 0)
-TEXT_POSITION_LEFT = 21
+TEXT_POSITION_LEFT = 22
 
 app_dir = Path(__file__).parent.parent
 font_path = app_dir / "badges" / "TWKEverett-Regular.otf"
@@ -57,11 +57,11 @@ def add_hosted_text(draw, text_color, domain, provider=None, green=False):
 
     if green:
         if provider:
-            draw.text((TEXT_POSITION_LEFT, 74), f"{domain}", TEXT_COLOR, font=font_settings)
+            draw.text((TEXT_POSITION_LEFT, 75), f"{domain}", TEXT_COLOR, font=font_settings)
             hosted_by_message = f"hosted by {provider}"
-            draw.text((TEXT_POSITION_LEFT, 89), hosted_by_message, text_color, font=font_settings)
+            draw.text((TEXT_POSITION_LEFT, 90), hosted_by_message, text_color, font=font_settings)
         else:
-            draw.text((TEXT_POSITION_LEFT, 80), f"{domain}", TEXT_COLOR, font=font_settings)
+            draw.text((TEXT_POSITION_LEFT, 84), f"{domain}", TEXT_COLOR, font=font_settings)
     else:
         draw.text((TEXT_POSITION_LEFT, 86), f"{domain}", TEXT_COLOR, font=font_settings)
 
