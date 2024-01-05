@@ -48,7 +48,7 @@ def fetch_template_image(domain, green=False) -> Image:
         color = "grey"
 
     app_dir = Path(__file__).parent.parent
-    img_path = app_dir / "badges" / f"blank-badge-{color}-sunburst.png"
+    img_path = app_dir / "badges" / f"blank-badge-{color}.png"
     img = Image.open(img_path)
     return img
 
@@ -59,14 +59,12 @@ def add_hosted_text(draw, text_color, domain, provider=None, green=False):
         if provider:
             draw.text((TEXT_POSITION_LEFT, 74), f"{domain}", TEXT_COLOR, font=font_settings)
             hosted_by_message = f"hosted by {provider}"
+            draw.text((TEXT_POSITION_LEFT, 89), hosted_by_message, text_color, font=font_settings)
         else:
             draw.text((TEXT_POSITION_LEFT, 80), f"{domain}", TEXT_COLOR, font=font_settings)
-            hosted_by_message = ""
     else:
-        draw.text((TEXT_POSITION_LEFT, 80), f"{domain}", TEXT_COLOR, font=font_settings)
-        hosted_by_message = "is hosted grey"
+        draw.text((TEXT_POSITION_LEFT, 86), f"{domain}", TEXT_COLOR, font=font_settings)
 
-    draw.text((TEXT_POSITION_LEFT, 89), hosted_by_message, text_color, font=font_settings)
 
 
 def annotate_img(img, domain, green=False, provider=None) -> Image:
