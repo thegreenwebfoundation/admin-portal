@@ -544,15 +544,21 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             "status": provider_request.status,
             "link_to_verification_request": link_to_verification_request,
         }
+        subject = subject=(
+                f"Your Green Web Dataset verification request: "
+                f"{mark_safe(provider_request.name)}"
+            ),
+        
         if provider_request.provider:
             ctx["provider"] = provider_request.provider
+            subject=(
+                f"Your Green Web Dataset update request: "
+                f"{mark_safe(provider_request.name)}"
+            ),
 
         send_email(
             address=user.email,
-            subject=(
-                f"Your verification request for the Green Web Database: "
-                f"{mark_safe(provider_request.name)}"
-            ),
+            subject=subject,
             context=ctx,
             template_html="emails/verification-request-notify.html",
             template_txt="emails/verification-request-notify.txt",
