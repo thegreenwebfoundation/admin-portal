@@ -1,7 +1,7 @@
 {% if provider %}
     {% comment %} Approved an update to an existing provider {% endcomment %}
-    <p>Dear provider,</p>
-    <p>Thank you for taking the time to update {{ provider.name }} in the Green Web Dataset.</p>
+    <p>Dear {{ provider.name }},</p>
+    <p>Thank you for taking the time to update your listing in the Green Web Dataset.</p>
     <p>The updated information you provided has been reviewed and approved.</p>
     <p>
         If you need to update {{ provider.name }} again, you can do so by logging in to the <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a>.
@@ -14,41 +14,37 @@
     </p>
 {% else %}
     {% comment %} Approved an update to a new verification request {% endcomment %}
-    <p>Dear provider,</p>
+    <p>Dear {{ provider.name }},</p>
     <p>
-        Thank you for taking the time to submit {{ org_name }} for verification to the Green Web Database. It's great to know that you are committed to providing green services to your customers.
+        Thank you for taking the time to submitting a verification request to the Green Web Dataset. <strong>The information you provided has been checked and approved.</strong>
     </p>
-    <p>The information you provided has been checked and approved.</p>
-    <p>Any checks against sites hosted by you will now show as green on the basis of the ASN/IP ranges you provided.</p>
-    {% comment %} <p>If you have publicly shared links to documents or websites to support any sustainability claims, these will also be available in the Green Web Directory: <a href="https://www.thegreenwebfoundation.org/directory/">https://www.thegreenwebfoundation.org/directory/</a>.</p> {% endcomment %}
+    <p>Any <a href="https://www.thegreenwebfoundation.org/green-web-check/">Green Web Checks</a> for sites hosted on the IP rangers/AS numbers you provided will now be shown as green.</p>
+    <h2>Updating your listing</h2>
+    <p>Our platform is self-service, meaning that you can update your listing yourself! To update your listing:</p>
+    <ol>
+        <li>Go to our <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a> and login.</li>
+        <li>You will be shown your verified providers. Find the one you want to change, and click the “Edit” link.</li>
+        <li>Complete the form, making any changes you need.</li>
+        <li>Once you are done, submit the updates.</li>
+        <li>Any changes made will need to be manually verified.</li>
+        <li>You will receive an email once your changes have been approved.</li>
+    </ol>
+    <h2>Yearly reverification</h2>
+    <p>In order to remain as an active verified green host in our dataset, you will need to update/reconfirm your evidence on a yearly basis. By doing this, you demonstrate to us that you still meet the criteria for being a verified hosting provider.</p>
+    <p>Learn more about reverification in this FAQ: <a href="https://www.thegreenwebfoundation.org/support/what-is-reverification-for-hosting-providers/">What is reverification for hosting providers?</a></p>
+    <h2>Useful links</h2>
+    <ul>
+        <li><a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a></li>
+        <li><a href="https://www.thegreenwebfoundation.org/tools/directory/">Hosting Directory</a></li>
+        <li><a href="https://www.thegreenwebfoundation.org/green-web-check/">Green Web Check</a></li>
+        <li><a href="https://www.thegreenwebfoundation.org/support/">FAQs</a></li>
+        <li><a href="https://www.thegreenwebfoundation.org/support-form/">Contact Support</a></li>
+    </ul>
+    <h2>Support our work</h2>
+    <p>The work we do to maintain the Green Web Dataset, Hosting Directory, and Green Web Check rely on grant funding and donations.</p>
+    <p>Visit our website to learn how your organisation can <a href="https://www.thegreenwebfoundation.org/donate/">support our work</a>.</p>
     <p>
-        If there are any changes in your ASN or IP ranges for your green domains in the future, you are required to update your listing accordingly. Our Green Web Checker is only able to recognize the sustainably hosted domains of you and your customers when they resolve to an IP address that has been entered in the Green Web Database.
-    </p>
-    <p>
-        You can review and update your listing yourself!
-        <br>
-        Please go to the <a href="https://admin.thegreenwebfoundation.org/provider-portal/">Provider Portal</a> and log in.
-        <br>
-        Your username is: {{ username }}
-    </p>
-    <p>
-        Your customers can find a Green Web Badge by performing a check for their website using our <a href="https://www.thegreenwebfoundation.org/green-web-check/">Green Web Check tool</a>. Their customised badge, which shows your organisation name, will be on the Green Web Check result page and can be downloaded or embedded on a site using a snippet of HTML.
-    </p>
-    {% if locations %}
-        <p>
-            <b>Locations:</b> {{ locations }}
-            <br>
-            For now, {{ org_name }} is marked as a provider in {{ first_location }} only (where your headquarters are). At
-            the moment, we are developing our database to allow for multiple locations. Once that feature is up and running, we
-            will add the other countries and let you know if we have further questions.
-        </p>
-    {% endif %}
-    <p>
-        If you have any further questions, please let us know. Thanks for your help in keeping the Green Web Database up to date!
-    </p>
-    <p>
-        Best regards,
-        <br>
-        Green Web Foundation
+        Thanks and regards, <br>
+        Green Web Foundation team
     </p>
 {% endif %}
