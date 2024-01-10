@@ -1395,8 +1395,19 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             "update_url": request.build_absolute_uri(provider_url),
         }
 
+        # For a new provider request, use this subject line
+        subject = (
+                f"Verification request to the Green Web Dataset is approved: "
+                f"{mark_safe(provider_request.name)}"
+            )
+
         if existing_provider:
             context["provider"] = provider_request.provider
+            # For an update to an existing provider, use this subject line
+            subject = (
+                f"Update to the Green Web Dataset has been approved: "
+                f"{mark_safe(provider_request.name)}"
+            )
 
         # inject additional info to providers with multiple locations
 
@@ -1415,7 +1426,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
 
         send_email(
             address=provider_request.created_by.email,
-            subject="Approval of your verification request for the Green Web database",
+            subject=subject,
             context=context,
             template_txt="emails/verification_request_approved.txt",
             template_html="emails/verification_request_approved.html",
