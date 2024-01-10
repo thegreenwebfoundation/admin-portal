@@ -16,7 +16,7 @@ Dear {{ org_name }},
 
 Thank you for taking the time to submitting a verification request to the Green Web Dataset. The information you provided has been checked and approved.
 
-Any Green Web Checks for sites hosted on the IP rangers/AS numbers you provided will now be shown as green.
+Any Green Web Checks for sites hosted on the IP ranges/AS numbers you provided will now be shown as green.
 
 Updating your listing
 Our platform is self-service, meaning that you can update your listing yourself! To update your listing:
