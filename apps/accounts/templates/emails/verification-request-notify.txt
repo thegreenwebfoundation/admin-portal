@@ -3,7 +3,7 @@ Thank you for taking the time to {% if provider %}update the listing for {{ prov
 {% else %}complete a Green Web Dataset verification request for {{ org_name }}.
 {% endif %}
 {% if provider %}
-    You can see your update you have submitted and its current status at the link below:
+    You can see the update you submitted and its current status at the link below:
 {% else %}
     You can see your submitted request and its current status at the link below:
 {% endif %}
