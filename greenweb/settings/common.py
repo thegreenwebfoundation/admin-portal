@@ -303,6 +303,11 @@ EQUINIX_REMOTE_API_ENDPOINT = env("EQUINIX_REMOTE_API_ENDPOINT")
 AMAZON_PROVIDER_ID = env("AMAZON_PROVIDER_ID")
 AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT")
 
+# Google
+GOOGLE_PROVIDER_ID = env("AMAZON_PROVIDER_ID", default=595)
+GOOGLE_DATASET_ENDPOINT = env(
+    "GOOGLE_DATASET_ENDPOINT", default="https://www.gstatic.com/ipranges/goog.json"
+)
 RABBITMQ_URL = env("RABBITMQ_URL")
 
 # Redis
@@ -372,9 +377,6 @@ LOGGING = {
 
 SITE_URL = "https://admin.thegreenwebfoundation.org"
 
-
-GOOGLE_PROVIDER_ID = 2345
-GOOGLE_DATASET_ENDPOINT = "https://www.gstatic.com/ipranges/cloud.json"
 
 TAGGIT_CASE_INSENSITIVE = True
 
