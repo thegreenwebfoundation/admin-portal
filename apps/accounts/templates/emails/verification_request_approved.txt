@@ -14,22 +14,22 @@ Green Web Foundation
 {% else %}
 Dear {{ org_name }},
 
-Thank you for taking the time to submitting a verification request to the Green Web Dataset. The information you provided has been checked and approved.
+Thank you for taking the time to submit a verification request to the Green Web Dataset. The information you provided has been checked and approved.
 
 Any Green Web Checks for sites hosted on the IP ranges/AS numbers you provided will now be shown as green.
 
 Updating your listing
-Our platform is self-service, meaning that you can update your listing yourself! To update your listing:
+Our platform is self-service meaning that you can update your listing yourself. To update your listing:
 
 1. Go to https://admin.thegreenwebfoundation.org/provider-portal/ and login.
 2. You will be shown your verified providers. Find the one you want to change, and click the “Edit” link.
 3. Complete the form, making any changes you need.
 4. Once you are done, submit the updates.
-5. Any changes made will need to be manually verified.
+5. Any changes made will need to be manually verified by us.
 6. You will receive an email once your changes have been approved.
 
 Yearly reverification
-In order to remain as an active verified green host in our dataset, you will need to update/reconfirm your evidence on a yearly basis. By doing this, you demonstrate to us that you still meet the criteria for being a verified hosting provider.
+In order to remain as an active verified green host in our dataset, you need to update/reconfirm your evidence on a yearly basis. By doing this, you demonstrate to us that you still meet the criteria for being a verified hosting provider.
 Learn more about reverification in this FAQ: https://www.thegreenwebfoundation.org/support/what-is-reverification-for-hosting-providers/
 
 Useful links
@@ -40,9 +40,8 @@ Useful links
 - Contact Support: https://www.thegreenwebfoundation.org/support-form/
 
 Support out work
-The work we do to maintain the Green Web Dataset, Hosting Directory, and Green Web Check rely on grant funding and donations.
-Visit our website to learn how your organisation can support our work.
-https://www.thegreenwebfoundation.org/donate/
+The work we do to maintain the Green Web Dataset, Hosting Directory, and Green Web Check relies on grant funding and donations.
+Help us keep this work state of the art by supporting our work. https://www.thegreenwebfoundation.org/donate/
 
 If you have any further questions, please let us know.
 
