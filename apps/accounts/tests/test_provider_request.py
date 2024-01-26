@@ -2084,7 +2084,7 @@ def test_email_request_email_confirmation_is_sent(
     email = mailoutbox[0]
 
     # do we have our expected email subject?
-    assert email_subject_copy in  email.subject
+    assert email_subject_copy in email.subject
 
     # Does our content refer to the correct copy?
     assert email_copy in email.body
