@@ -546,10 +546,10 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         }
 
         # For a new provider request, use this subject line
-        subject = subject=(
+        subject = (
                 f"Your Green Web Dataset verification request: "
                 f"{mark_safe(provider_request.name)}"
-            ),
+        )
         
         if provider_request.provider:
             ctx["provider"] = provider_request.provider
@@ -557,7 +557,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             subject=(
                 f"Your Green Web Dataset update request: "
                 f"{mark_safe(provider_request.name)}"
-            ),
+            )
 
         send_email(
             address=user.email,
