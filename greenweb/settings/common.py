@@ -306,8 +306,10 @@ AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT")
 # Google
 GOOGLE_PROVIDER_ID = env("AMAZON_PROVIDER_ID", default=595)
 GOOGLE_DATASET_ENDPOINT = env(
-    "GOOGLE_DATASET_ENDPOINT", default="https://www.gstatic.com/ipranges/goog.json"
+    "GOOGLE_DATASET_ENDPOINT", default="https://www.gstatic.com/ipranges/cloud.json"
 )
+
+
 RABBITMQ_URL = env("RABBITMQ_URL")
 
 # Redis

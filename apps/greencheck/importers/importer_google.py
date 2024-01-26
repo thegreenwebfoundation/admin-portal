@@ -5,6 +5,7 @@ import requests
 from django.conf import settings
 
 from apps.accounts.models import Hostingprovider
+from apps.greencheck.importers.importer_interface import ImporterProtocol
 from apps.greencheck.importers.network_importer import NetworkImporter
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ class GoogleImporter:
             elif "ipv6Prefix" in addressDict.keys():
                 list_of_ips.append(addressDict.get("ipv6Prefix"))
         # This provider only has IPv4 and IPv6, so we
-        # don't have to include ASN here
+        # don't have to look for ASNs here
         return list_of_ips
 
     def process(self, list_of_addresses):
@@ -42,3 +43,6 @@ class GoogleImporter:
         network_importer = NetworkImporter(provider)
         network_importer.deactivate_ips()
         return network_importer.process_addresses(list_of_addresses)
+
+
+assert isinstance(GoogleImporter(), ImporterProtocol)
