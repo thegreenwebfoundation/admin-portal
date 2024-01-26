@@ -14,12 +14,13 @@ from ..domain_check import GreenDomainChecker
 from ..models import GreenDomain
 
 TEXT_COLOR = (0, 0, 0)
-TEXT_POSITION_LEFT = 22
+TEXT_POSITION_LEFT = 15
 
 app_dir = Path(__file__).parent.parent
 font_path = app_dir / "badges" / "TWKEverett-Regular.otf"
 
-font_settings = ImageFont.truetype(str(font_path), 11)
+font_settings_green = ImageFont.truetype(str(font_path), 10)
+font_settings_grey = ImageFont.truetype(str(font_path), 9)
 
 logger = logging.getLogger(__name__)
 checker = GreenDomainChecker()
@@ -57,13 +58,13 @@ def add_hosted_text(draw, text_color, domain, provider=None, green=False):
 
     if green:
         if provider:
-            draw.text((TEXT_POSITION_LEFT, 75), f"{domain}", TEXT_COLOR, font=font_settings)
+            draw.text((TEXT_POSITION_LEFT, 43), f"{domain}", TEXT_COLOR, font=font_settings_green)
             hosted_by_message = f"hosted by {provider}"
-            draw.text((TEXT_POSITION_LEFT, 90), hosted_by_message, text_color, font=font_settings)
+            draw.text((TEXT_POSITION_LEFT, 55), hosted_by_message, text_color, font=font_settings_green)
         else:
-            draw.text((TEXT_POSITION_LEFT, 84), f"{domain}", TEXT_COLOR, font=font_settings)
+            draw.text((TEXT_POSITION_LEFT, 50), f"{domain}", TEXT_COLOR, font=font_settings_green)
     else:
-        draw.text((TEXT_POSITION_LEFT, 86), f"{domain}", TEXT_COLOR, font=font_settings)
+        draw.text((TEXT_POSITION_LEFT, 53), f"{domain}", TEXT_COLOR, font=font_settings_grey)
 
 
 
