@@ -1553,7 +1553,7 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
         "provider_request_wizard_view-current_step": "3",
         "3-TOTAL_FORMS": 2,
         "3-INITIAL_FORMS": 0,
-        # first an evisting piece of evidence from ev1
+        # first an existing piece of evidence from ev1
         "3-0-title": ev1.title,
         "3-0-link": ev1.url,
         "3-0-file": "",
@@ -1945,10 +1945,10 @@ def test_request_from_host_provider_finishes_in_sensible_time():
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "provider_exists, email_copy",
+    "provider_exists, email_copy, email_subject_copy",
     (
-        (True, "taking the time to update"),
-        (False, "taking the time to submit"),
+        (True, "taking the time to update", "Update to the Green Web Dataset has been approved"),
+        (False, "taking the time to submit", "Verification request to the Green Web Dataset is approved"),
     ),
 )
 @override_flag("provider_request", active=True)
@@ -1960,6 +1960,7 @@ def test_email_sent_on_approval(
     mailoutbox,
     provider_exists,
     email_copy,
+    email_subject_copy,
 ):
     """
     Given: a provider request to update an existing provider
@@ -2008,10 +2009,7 @@ def test_email_sent_on_approval(
 
     # do we have our expected email subject?
 
-    assert (
-        email.subject
-        == "Approval of your verification request for the Green Web database"
-    )
+    assert email_subject_copy in email.subject
 
     # Does our content refer to the correct copy?
     assert email_copy in email.body
@@ -2023,10 +2021,10 @@ def test_email_sent_on_approval(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "provider_exists, email_copy",
+    "provider_exists, email_copy, email_subject_copy",
     (
-        (True, "taking the time to update"),
-        (False, "taking the time to submit"),
+        (True, "taking the time to update", "Update to the Green Web Dataset has been approved"),
+        (False, "taking the time to submit", "Verification request to the Green Web Dataset is approved"),
     ),
 )
 @override_flag("provider_request", active=True)
@@ -2038,6 +2036,7 @@ def test_email_request_email_confirmation_is_sent(
     mailoutbox,
     provider_exists,
     email_copy,
+    email_subject_copy,
 ):
     """
     Given: a provider request is being created by the user
@@ -2085,11 +2084,7 @@ def test_email_request_email_confirmation_is_sent(
     email = mailoutbox[0]
 
     # do we have our expected email subject?
-
-    assert (
-        email.subject
-        == "Approval of your verification request for the Green Web database"
-    )
+    assert email_subject_copy in  email.subject
 
     # Does our content refer to the correct copy?
     assert email_copy in email.body
