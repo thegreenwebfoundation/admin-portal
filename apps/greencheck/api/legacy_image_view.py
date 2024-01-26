@@ -19,7 +19,7 @@ TEXT_POSITION_LEFT = 15
 app_dir = Path(__file__).parent.parent
 font_path = app_dir / "badges" / "TWKEverett-Regular.otf"
 
-font_settings_green = ImageFont.truetype(str(font_path), 10)
+font_settings_green = ImageFont.truetype(str(font_path), 9)
 font_settings_grey = ImageFont.truetype(str(font_path), 9)
 
 logger = logging.getLogger(__name__)
@@ -62,9 +62,9 @@ def add_hosted_text(draw, text_color, domain, provider=None, green=False):
             hosted_by_message = f"hosted by {provider}"
             draw.text((TEXT_POSITION_LEFT, 55), hosted_by_message, text_color, font=font_settings_green)
         else:
-            draw.text((TEXT_POSITION_LEFT, 50), f"{domain}", TEXT_COLOR, font=font_settings_green)
+            draw.text((TEXT_POSITION_LEFT, 54), f"{domain}", TEXT_COLOR, font=font_settings_green)
     else:
-        draw.text((TEXT_POSITION_LEFT, 53), f"{domain}", TEXT_COLOR, font=font_settings_grey)
+        draw.text((TEXT_POSITION_LEFT, 54), f"{domain}", TEXT_COLOR, font=font_settings_grey)
 
 
 
