@@ -58,13 +58,13 @@ def add_hosted_text(draw, text_color, domain, provider=None, green=False):
 
     if green:
         if provider:
-            draw.text((TEXT_POSITION_LEFT, 43), f"{domain}", TEXT_COLOR, font=font_settings_green)
+            draw.text((TEXT_POSITION_LEFT, 33), f"{domain}", TEXT_COLOR, font=font_settings_green)
             hosted_by_message = f"hosted by {provider}"
-            draw.text((TEXT_POSITION_LEFT, 55), hosted_by_message, text_color, font=font_settings_green)
+            draw.text((TEXT_POSITION_LEFT, 48), hosted_by_message, text_color, font=font_settings_green)
         else:
-            draw.text((TEXT_POSITION_LEFT, 54), f"{domain}", TEXT_COLOR, font=font_settings_green)
+            draw.text((TEXT_POSITION_LEFT, 40), f"{domain}", TEXT_COLOR, font=font_settings_green)
     else:
-        draw.text((TEXT_POSITION_LEFT, 54), f"{domain}", TEXT_COLOR, font=font_settings_grey)
+        draw.text((TEXT_POSITION_LEFT, 48), f"{domain}", TEXT_COLOR, font=font_settings_grey)
 
 
 
