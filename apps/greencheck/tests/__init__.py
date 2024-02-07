@@ -28,7 +28,6 @@ def greencheck_sitecheck(
     hosting_provider: ac_models.Hostingprovider,
     green_ip: gc_models.GreencheckIp,
 ):
-
     return gc_models.SiteCheck(
         url=domain,
         ip="192.30.252.153",
@@ -79,6 +78,9 @@ def view_in_browser(content):
     with the system browser
     """
     with open("webpage.html", "w") as page:
-        page.write(content.decode("utf-8"))
+        try:
+            page.write(content.decode("utf-8"))
+        except AttributeError:
+            page.write(content)
 
     webbrowser.open("webpage.html")
