@@ -7,6 +7,46 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		{%- comment -%} Load sentry before any CSS/other JS loads {%- endcomment -%}
+		
+
+<script
+  src="https://js.sentry-cdn.com/dd30eb65f140420688f813ab96721a1c.min.js"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      dsn: "https://dd30eb65f140420688f813ab96721a1c@o14742.ingest.sentry.io/2071988",
+
+      // Alternatively, use `process.env.npm_package_version` for a dynamic release version
+      // if your build tool supports it.
+      release: "my-project-name@2.3.12",
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration(),
+      ],
+
+      // Set tracesSampleRate to 1.0 to capture 100%
+      // of transactions for performance monitoring.
+      // We recommend adjusting this value in production
+      tracesSampleRate: 1.0,
+
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /
+^
+https:\/\/yourserver\.io\/api/],
+
+      // Capture Replay for 10% of all sessions,
+      // plus for 100% of sessions with an error
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+    });
+  };
+</script>
+
+
 		{% tailwind_css %}
 	</head>
 
