@@ -19,31 +19,47 @@
   window.sentryOnLoad = function () {
     Sentry.init({
       dsn: "https://dd30eb65f140420688f813ab96721a1c@o14742.ingest.sentry.io/2071988",
-
-      // Alternatively, use `process.env.npm_package_version` for a dynamic release version
-      // if your build tool supports it.
-      release: "my-project-name@2.3.12",
+	//   This should be updated with each release.
+	// TODO: Is there a way to automate this?
+      release: "provider-portal@1.4",
       integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration(),
       ],
 
-      // Set tracesSampleRate to 1.0 to capture 100%
-      // of transactions for performance monitoring.
-      // We recommend adjusting this value in production
+    //   Set tracesSampleRate to 1.0 to capture 100%
+	//  TODO: Let's start with this rate & adjust it down if we feel theres too much noise later.
       tracesSampleRate: 1.0,
-
-      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-      tracePropagationTargets: ["localhost", /
-^
-https:\/\/yourserver\.io\/api/],
 
       // Capture Replay for 10% of all sessions,
       // plus for 100% of sessions with an error
+	//   TODO: Leaving these default for now, but we should revisit this.
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
     });
   };
+
+//   Adding this code from Sentry's docs to capture resource loading errors.
+// https://docs.sentry.io/platforms/javascript/troubleshooting/#capturing-resource-404s
+  document.body.addEventListener(
+  "error",
+  (event) => {
+    if (!event.target) return;
+
+    if (event.target.tagName === "IMG") {
+      Sentry.captureMessage(
+        `Failed to load image: ${event.target.src}`,
+        "warning"
+      );
+    } else if (event.target.tagName === "LINK") {
+      Sentry.captureMessage(
+        `Failed to load css: ${event.target.href}`,
+        "warning"
+      );
+    }
+  },
+  true // useCapture - necessary for resource loading errors
+);
 </script>
 
 
