@@ -3,10 +3,13 @@
 # {{ ansible_managed }}
 # Last run: {{ template_run_date }}
 
+# make sure we fail on any error
 set -euo pipefail
 
+# make sure we are in the right directory
 cd {{ project_root }}/current/
 
+# run our imports
 python -m pipenv run ./manage.py update_networks_in_db_amazon
 python -m pipenv run ./manage.py update_networks_in_db_google
 python -m pipenv run ./manage.py update_networks_in_db_microsoft
