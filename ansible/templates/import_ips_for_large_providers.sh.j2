@@ -9,7 +9,7 @@ set -euo pipefail
 # make sure we are in the right directory
 cd {{ project_root }}/current/
 
-# run our imports
+# run our ip imports
 python -m pipenv run ./manage.py update_networks_in_db_amazon
 python -m pipenv run ./manage.py update_networks_in_db_google
 python -m pipenv run ./manage.py update_networks_in_db_microsoft
