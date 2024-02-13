@@ -1,0 +1,31 @@
+---
+# This is convenience function used for setting up servers, or troubleshooting.
+
+- name: Run a command on all hosts, seeing the output
+  gather_facts: false
+
+  hosts:
+    # - all
+    - app1.thegreenwebfoundation.org
+    - app2.thegreenwebfoundation.org
+    - app3.thegreenwebfoundation.org
+    - app4.thegreenwebfoundation.org
+
+  remote_user: deploy
+  vars:
+    # a shell command defined here will be run on all the machines listed above
+    # the example below lists the available memory in human readable format
+    cli_command: "free -h"
+
+  tasks:
+    - name: "Run command as shell command"
+      # ansibile has other ways to run commands, see the command module as well
+      # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/command_module.html
+      ansible.builtin.shell:
+        cmd: "{{ cli_command }}"
+      become: false
+      register: output
+
+    - name: "See the output from stdout"
+      debug:
+        msg: "{{ output.stdout_lines }}"
