@@ -3,6 +3,10 @@
 # {{ ansible_managed }}
 # Last run: {{ template_run_date }}
 
+set -euo pipefail
+
+cd {{ project_root }}/current/
+
 python -m pipenv run ./manage.py update_networks_in_db_amazon
 python -m pipenv run ./manage.py update_networks_in_db_google
 python -m pipenv run ./manage.py update_networks_in_db_microsoft

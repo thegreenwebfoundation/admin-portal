@@ -46,10 +46,10 @@
 
     - name: Ensure job to run IP hyperscaler importers is present
       ansible.builtin.cron:
-        name: "every Wednesday at 2:30 run our importers"
+        name: "every Wednesday at 4:30 run our importers"
         state: present
         weekday: "WED"
-        hour: "2"
+        hour: "4"
         minute: "30"
         user: deploy
         job: >
