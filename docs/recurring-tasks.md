@@ -16,9 +16,9 @@ While the Green Web Foundation offers a self-service way to maintain up to date 
 These can be run on the command line using the following commands
 
 ```
-./manage.py update_networks_in_db_amazon
-./manage.py update_networks_in_db_google
-./manage.py update_networks_in_db_microsoft
+pipnev run ./manage.py update_networks_in_db_amazon
+pipnev run ./manage.py update_networks_in_db_google
+pipnev run ./manage.py update_networks_in_db_microsoft
 ```
 
 Look in the `import_ips_for_large_providers.sh.j2` file to see the specific shell script run each week, and the `setup_cronjobs.yml` ansible playbook to see the specific tasks used to set up a a server to run these on a recurring schedule.
@@ -63,4 +63,23 @@ pipenv run ansible-playbook -i ansible/inventories/prod.yml ansible/setup_cronjo
 
 ### Daily Green Domain Exports
 
-TODO: add docs here for this cronjob too.
+In addition to offering the greencheck API, we create regular exports of the green domains table as compressed sqlite files, available in object storage.
+
+These are intended for cases when hitting an external API is either impractical, or in places where privacy is a higher priority, avoiding making network requests that show which domain is being checked.
+
+This export is normally run with the following django management command.
+
+```
+pipenv run ./manage.py dump_green_domains
+```
+
+To upload the database snapshot to object storage, pass long the `--upload` flag.
+
+
+```
+pipenv run ./manage.py dump_green_domains --upload
+```
+
+This is currently set to run every day, but historically, this job not run consistently every single day.
+
+There is ongoing work to backfill these domains for the missing days
