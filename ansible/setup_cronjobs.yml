@@ -6,7 +6,7 @@
     # there is nothing special about app4 versus the
     # other app serves. We just needed to pick one machine
     # to run these cron jobs on
-    - app4.thegreenwebfoundation.org
+    - app1.thegreenwebfoundation.org
 
   remote_user: deploy
   tasks:
