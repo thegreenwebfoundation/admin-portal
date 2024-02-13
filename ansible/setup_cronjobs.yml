@@ -1,0 +1,59 @@
+---
+- name: Set up regular django cronjobs in our app server pool
+  gather_facts: false
+
+  hosts:
+    # there is nothing special about app4 versus the
+    # other app serves. We just needed to pick one machine
+    # to run these cron jobs on
+    - app4.thegreenwebfoundation.org
+
+  remote_user: deploy
+  tasks:
+    - name: Set up backup script directory
+      ansible.builtin.file:
+        path: /home/deploy/cronjobs
+        state: directory
+        owner: deploy
+        group: deploy
+      become: true
+      tags: [ip-importers]
+
+    - name: Upload backup script
+      ansible.builtin.template:
+        src: import_ips_for_large_providers.sh.j2
+        dest: /home/deploy/cronjobs/import_ips_for_large_providers.sh
+        mode: "0755"
+      tags: [ip-importers]
+
+    - name: Ensure log files exist for /home/deploy/cronjobs
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: touch
+        owner: deploy
+        group: deploy
+      become: true
+      loop:
+        - {
+            name: "STDOUT",
+            path: "/var/log/import_ips_for_large_providers.log",
+          }
+        - {
+            name: "STDERR",
+            path: "/var/log/import_ips_for_large_providers.error.log",
+          }
+      tags: [ip-importers]
+
+    - name: Ensure job to run IP hyperscaler importers is present
+      ansible.builtin.cron:
+        name: "every Wednesday at 2:30 run our importers"
+        state: present
+        weekday: "WED"
+        hour: "2"
+        minute: "30"
+        user: deploy
+        job: >
+          bash /home/deploy/cronjobs/import_ips_for_large_providers.sh 
+          >> /var/log/import_ips_for_large_providers.log 
+          2>> /var/log/import_ips_for_large_providers.error.log
+      tags: [crontab]
