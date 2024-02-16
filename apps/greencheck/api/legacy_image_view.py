@@ -14,7 +14,7 @@ from ..domain_check import GreenDomainChecker
 from ..models import GreenDomain
 
 TEXT_COLOR = (0, 0, 0)
-TEXT_POSITION_LEFT = 15
+TEXT_POSITION_LEFT = 12
 
 app_dir = Path(__file__).parent.parent
 font_path = app_dir / "badges" / "TWKEverett-Regular.otf"
