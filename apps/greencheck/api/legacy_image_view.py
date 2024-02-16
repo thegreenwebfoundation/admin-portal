@@ -111,11 +111,19 @@ def legacy_greencheck_image(request, url):
     browser_visit = False
 
     domain = checker.validate_domain(url)
+    domain_name = domain
 
     if browser_visit:
         return redirect(
             f"https://www.thegreenwebfoundation.org/green-web-check/?url={domain}"
         )
+    
+    # is the name too long ? shorten if so
+    if len( domain_name ) > 30:
+    # only choose the first 30 characters
+        shortened_name = domain_name[:30]
+        # and add the ellipsis to show it's been shortened
+        domain_name = f"{shortened_name}..."
 
     # `nocache=true` is the same string used by nginx. Using the same params
     # means we won't have to worry about nginx caching our request before it
@@ -129,7 +137,7 @@ def legacy_greencheck_image(request, url):
         provider = checked_domain.hosted_by
 
     img = fetch_template_image(url, green=green)
-    annotated_img = annotate_img(img, domain, green=green, provider=provider)
+    annotated_img = annotate_img(img, domain_name, green=green, provider=provider)
 
     # responses work a bit like FileObjects, so we can write directly into like so
     response = HttpResponse(content_type="image/png")
