@@ -49,7 +49,7 @@ jobs:
           RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_RELEASE: ${{ secrets.SENTRY_RELEASE }}
           SENTRY_ENVIRONMENT: ${{ secrets.SENTRY_ENVIRONMENT }}
           OBJECT_STORAGE_ENDPOINT: ${{ secrets.OBJECT_STORAGE_ENDPOINT }}
           OBJECT_STORAGE_REGION: ${{ secrets.OBJECT_STORAGE_REGION }}
