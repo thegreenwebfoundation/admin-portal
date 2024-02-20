@@ -16,11 +16,11 @@
 
         <script>
             window.sentryOnLoad = function () {
-                Sentry.init({
-                    dsn: "https://dd30eb65f140420688f813ab96721a1c@o14742.ingest.sentry.io/2071988",
+                Sentry.init(
+                    dsn: "{{ sentry.dsn }}",
                     //   This should be updated with each release.
                     // TODO: Is there a way to automate this?
-                    release: "provider-portal@1.4",
+                    release: "{{ sentry.release }}",
                     integrations: [
                         Sentry.browserTracingIntegration(),
                         Sentry.replayIntegration(),
@@ -38,7 +38,7 @@
                 });
             };
 
-            //   Adding this code from Sentry's docs to capture resource loading errors.
+            // Adding this code from Sentry's docs to capture resource loading errors.
             // https://docs.sentry.io/platforms/javascript/troubleshooting/#capturing-resource-404s
             document.body.addEventListener(
                 "error",
