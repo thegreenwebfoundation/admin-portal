@@ -6,11 +6,14 @@ def sentry_info(request: HttpRequest):
     """
     Add sentry configuration to the context in a HTTP request.
 
-    This allows for the sentry config to be used in templates for front end libraries.
+    This allows for the sentry config to be used in templates for
+    frontend libraries.
     """
 
     # exit early if we don't have a sentry DSN set up
-    if not settings.SENTRY_DSN:
+    try:
+        sentry_dsn = settings.SENTRY_DSN
+    except AttributeError:
         return {}
 
     return {
