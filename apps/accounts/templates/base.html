@@ -1,159 +1,158 @@
 {% load static tailwind_tags %}
 <!DOCTYPE html>
 <html lang="en">
-	<head>
+    <head>
 
-    <title>The Green Web Foundation</title>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta http-equiv="X-UA-Compatible" content="ie=edge">
-		{%- comment -%} Load sentry before any CSS/other JS loads {%- endcomment -%}
-		
+        <title>The Green Web Foundation</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        {% comment %} Load sentry before any CSS/other JS loads {% endcomment %}
 
-<script
-  src="https://js.sentry-cdn.com/dd30eb65f140420688f813ab96721a1c.min.js"
-  crossorigin="anonymous"
-></script>
+        <script
+            src="https://js.sentry-cdn.com/dd30eb65f140420688f813ab96721a1c.min.js"
+            crossorigin="anonymous"
+        ></script>
 
-<script>
-  window.sentryOnLoad = function () {
-    Sentry.init({
-      dsn: "https://dd30eb65f140420688f813ab96721a1c@o14742.ingest.sentry.io/2071988",
-	//   This should be updated with each release.
-	// TODO: Is there a way to automate this?
-      release: "provider-portal@1.4",
-      integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration(),
-      ],
+        <script>
+            window.sentryOnLoad = function () {
+                Sentry.init({
+                    dsn: "https://dd30eb65f140420688f813ab96721a1c@o14742.ingest.sentry.io/2071988",
+                    //   This should be updated with each release.
+                    // TODO: Is there a way to automate this?
+                    release: "provider-portal@1.4",
+                    integrations: [
+                        Sentry.browserTracingIntegration(),
+                        Sentry.replayIntegration(),
+                    ],
 
-    //   Set tracesSampleRate to 1.0 to capture 100%
-	//  TODO: Let's start with this rate & adjust it down if we feel theres too much noise later.
-      tracesSampleRate: 1.0,
+                    //   Set tracesSampleRate to 1.0 to capture 100%
+                    //  TODO: Let's start with this rate & adjust it down if we feel theres too much noise later.
+                    tracesSampleRate: 1.0,
 
-      // Capture Replay for 10% of all sessions,
-      // plus for 100% of sessions with an error
-	//   TODO: Leaving these default for now, but we should revisit this.
-      replaysSessionSampleRate: 0.1,
-      replaysOnErrorSampleRate: 1.0,
-    });
-  };
+                    // Capture Replay for 10% of all sessions,
+                    // plus for 100% of sessions with an error
+                    //   TODO: Leaving these default for now, but we should revisit this.
+                    replaysSessionSampleRate: 0.1,
+                    replaysOnErrorSampleRate: 1.0,
+                });
+            };
 
-//   Adding this code from Sentry's docs to capture resource loading errors.
-// https://docs.sentry.io/platforms/javascript/troubleshooting/#capturing-resource-404s
-  document.body.addEventListener(
-  "error",
-  (event) => {
-    if (!event.target) return;
+            //   Adding this code from Sentry's docs to capture resource loading errors.
+            // https://docs.sentry.io/platforms/javascript/troubleshooting/#capturing-resource-404s
+            document.body.addEventListener(
+                "error",
+                (event) => {
+                    if (!event.target) return;
 
-    if (event.target.tagName === "IMG") {
-      Sentry.captureMessage(
-        `Failed to load image: ${event.target.src}`,
-        "warning"
-      );
-    } else if (event.target.tagName === "LINK") {
-      Sentry.captureMessage(
-        `Failed to load css: ${event.target.href}`,
-        "warning"
-      );
-    }
-  },
-  true // useCapture - necessary for resource loading errors
-);
-</script>
-
-
-		{% tailwind_css %}
-	</head>
-
-	<body class="min-h-[100vh] flex flex-col">
-
-		<header class="bg-white border-b-2">
-			<div class="container mx-auto px-2 sm:px-4">
-			
-				{% block nav %}
-				<nav class="flex flex-wrap sm:flex-nowrap justify-between items-center bg-white mt-6 sm:mb-6 md:justify-start md:space-x-10 ">
-					<div class="w-full sm:w-auto sm:flex-grow flex flex-row">
-
-						<div class="logo">
-							<a href="{% url 'provider_portal_home' %}">
-								<img width="200px" height="48px" src="{% static 'img/TGWF-logo.svg' %}" alt="The Green Web Foundation logo"/>
-							</a>
-						</div>
-
-						<div class="subbrand border-l text-medium ml-8 pl-8 h-12 flex items-center">
-							<p class="font-bold">Provider<br/>Portal</p>
-						</div>
-					</div>
-
-					<div class="w-full sm:w-auto mt-4 sm:mt-0 pb-4 sm:pb-0 sm:pl-10 text-right">
-						{% if request.user.is_authenticated %}
-							<span>Hello {{ request.user.username }}</span>
-							<span role="img" aria-label="waving hand">👋</span>
-							<span class="pl-3"><a href="{% url 'logout' %}">Log out</a></span>
-						{% else %}
-							<a href="{% url 'login' %}">Log in</a>
-						{% endif %}
-					</div>
-				</nav>
-				{% endblock nav %}
-
-			</div>
-		</header>
-		
-		<div class="relative flex-auto">
-			
-			{% block bg-image %}
-				<div class="hidden lg:block fixed -z-50 w-11/12 -top-24" style="background: radial-gradient(circle, rgba(187,247,187,1) 0%, rgba(255,255,255,1) 71%); height: calc(100% + 100px); right: -50vw;"></div>
-			{% endblock %}
-
-			<div class="container mx-auto pt-6 md:pt-8 px-2 sm:px-4">
-
-				{% if messages %}
-					{% for message in messages %}
-						<div class="prose mx-auto mt-8">
-							<div{% if message.tags %} class="alert__{{ message.tags }}"{% endif %}>
-								<p>{{ message }}</p>
-							</div>
-						</div>
-					{% endfor %}
-				{% endif %}
-		
-				{% block content %}
-				<section class="flex items-center justify-center h-screen">
-					<h1 class="text-5xl">Django + Tailwind = ❤️</h1>
-				</section>
-				{% endblock  %}
-
-			</div>
-		</div>
+                    if (event.target.tagName === "IMG") {
+                        Sentry.captureMessage(
+                            `Failed to load image: ${event.target.src}`,
+                            "warning"
+                        );
+                    } else if (event.target.tagName === "LINK") {
+                        Sentry.captureMessage(
+                            `Failed to load css: ${event.target.href}`,
+                            "warning"
+                        );
+                    }
+                },
+                true // useCapture - necessary for resource loading errors
+            );
+        </script>
 
 
-		{% block footer-open %}
-		<footer class="bg-green mt-12 py-12 border-t-2">
-		{% endblock  %}
+        {% tailwind_css %}
+    </head>
 
-		{% block footer-content %}
-			<div class="container mx-auto px-2 sm:px-4 md:p-0 prose">
-				<div class="p-6 bg-white border-2 rounded-xl">
-					<h3 class="text-xl uppercase">Need help?</h3>
-					<p>Common questions and their answers - <a href="https://www.thegreenwebfoundation.org/support/" target="_blank" rel="noopener noreferrer">browse our FAQs</a>.</p>
-					<p>Our friendly support team are on hand to clarify anything you're not sure about.</p>
-					<p class="mt-4 mb-6"><a href="https://www.thegreenwebfoundation.org/support-form/" class="btn btn-white" target="_blank" rel="noopener noreferrer">Contact our support team</a></p>
-					{% comment %}
+    <body class="min-h-[100vh] flex flex-col">
+
+        <header class="bg-white border-b-2">
+            <div class="container mx-auto px-2 sm:px-4">
+
+                {% block nav %}
+                    <nav class="flex flex-wrap sm:flex-nowrap justify-between items-center bg-white mt-6 sm:mb-6 md:justify-start md:space-x-10 ">
+                        <div class="w-full sm:w-auto sm:flex-grow flex flex-row">
+
+                            <div class="logo">
+                                <a href="{% url 'provider_portal_home' %}">
+                                    <img width="200px" height="48px" src="{% static 'img/TGWF-logo.svg' %}" alt="The Green Web Foundation logo"/>
+                                </a>
+                            </div>
+
+                            <div class="subbrand border-l text-medium ml-8 pl-8 h-12 flex items-center">
+                                <p class="font-bold">Provider<br/>Portal</p>
+                            </div>
+                        </div>
+
+                        <div class="w-full sm:w-auto mt-4 sm:mt-0 pb-4 sm:pb-0 sm:pl-10 text-right">
+                            {% if request.user.is_authenticated %}
+                                <span>Hello {{ request.user.username }}</span>
+                                <span role="img" aria-label="waving hand">👋</span>
+                                <span class="pl-3"><a href="{% url 'logout' %}">Log out</a></span>
+                            {% else %}
+                                <a href="{% url 'login' %}">Log in</a>
+                            {% endif %}
+                        </div>
+                    </nav>
+                {% endblock nav %}
+
+            </div>
+        </header>
+
+        <div class="relative flex-auto">
+
+            {% block bg-image %}
+                <div class="hidden lg:block fixed -z-50 w-11/12 -top-24" style="background: radial-gradient(circle, rgba(187,247,187,1) 0%, rgba(255,255,255,1) 71%); height: calc(100% + 100px); right: -50vw;"></div>
+            {% endblock %}
+
+            <div class="container mx-auto pt-6 md:pt-8 px-2 sm:px-4">
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="prose mx-auto mt-8">
+                            <div{% if message.tags %} class="alert__{{ message.tags }}"{% endif %}>
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}
+                    <section class="flex items-center justify-center h-screen">
+                        <h1 class="text-5xl">Django + Tailwind = ❤️</h1>
+                    </section>
+                {% endblock  %}
+
+            </div>
+        </div>
+
+
+        {% block footer-open %}
+            <footer class="bg-green mt-12 py-12 border-t-2">
+        {% endblock  %}
+
+        {% block footer-content %}
+            <div class="container mx-auto px-2 sm:px-4 md:p-0 prose">
+                <div class="p-6 bg-white border-2 rounded-xl">
+                    <h3 class="text-xl uppercase">Need help?</h3>
+                    <p>Common questions and their answers - <a href="https://www.thegreenwebfoundation.org/support/" target="_blank" rel="noopener noreferrer">browse our FAQs</a>.</p>
+                    <p>Our friendly support team are on hand to clarify anything you're not sure about.</p>
+                    <p class="mt-4 mb-6"><a href="https://www.thegreenwebfoundation.org/support-form/" class="btn btn-white" target="_blank" rel="noopener noreferrer">Contact our support team</a></p>
+                    {% comment %}
 					<h3 class="text-xl uppercase mt-12">Want to help?</h3>
 					<p>If you want to financially support our mission to green the internet, please make a donation.</p> 
 					<p class="mt-4 mb-6"><a href="https://www.thegreenwebfoundation.org/support-our-mission" class="btn btn-white" target="_blank" rel="noopener noreferrer">Donate to us</a></p>
 					{% endcomment %}
-				</div>
-			</div>
-		</footer>
-		{% endblock  %}
+                </div>
+            </div>
+            </footer>
+        {% endblock  %}
 
-		
-		{% block extra_js %}
 
-		{% endblock %}
+        {% block extra_js %}
 
-	</body>
+        {% endblock %}
+
+    </body>
 </html>
