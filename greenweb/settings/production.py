@@ -35,7 +35,9 @@ AWS_S3_ENDPOINT_URL = env("OBJECT_STORAGE_ENDPOINT")  # noqa
 AWS_S3_FILE_OVERWRITE = False
 
 # report when things asplode
-sentry_dsn = os.environ.get("SENTRY_DSN", False)  # noqa
+SENTRY_DSN = os.environ.get("SENTRY_DSN", False)  # noqa
+SENTRY_ENVIRONMENT = os.environ.get("SENTRY_ENVIRONMENT", "production")  # noqa
+SENTRY_RELEASE = os.environ.get("SENTRY_RELEASE", "provider-portal@1.4.x")  # noqa
 
 # Set to a value between 0 for 0% of request and
 # 1.0 to capture 100% of requests and annotate
@@ -49,10 +51,12 @@ sentry_dsn = os.environ.get("SENTRY_DSN", False)  # noqa
 # https://docs.sentry.io/platforms/python/guides/django/performance/
 sentry_sample_rate = os.environ.get("SENTRY_SAMPLE_RATE", 0)  # noqa
 
-if sentry_dsn:
+if SENTRY_DSN:
     sentry_sdk.init(
         # set our identifying credentials
-        dsn=sentry_dsn,
+        dsn=SENTRY_DSN,
+        release=SENTRY_RELEASE,
+        environment=SENTRY_ENVIRONMENT,
         # Set traces_sample_rate.
         traces_sample_rate=float(sentry_sample_rate),
         # activate the django specific integrations for sentry
