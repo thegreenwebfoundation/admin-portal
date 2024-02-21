@@ -189,6 +189,10 @@ def tiered_lookup(domain: str) -> GreenDomain:
     fallback to doing a slower, full lookup, returning a
     "Greendomain" lookup.
     """
+    # catch anything that clearly is not a domain
+    if not checker.validate_domain(domain):
+        return
+
     if res := GreenDomain.objects.filter(url__in=domain):
         return res.first()
 
