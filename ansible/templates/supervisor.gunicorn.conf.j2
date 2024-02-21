@@ -1,15 +1,16 @@
 # {{ ansible_managed }}
 # Last run: {{ template_run_date }}
+
 [supervisord]
 environment=LC_ALL='en_US.UTF-8',LANG='en_US.UTF-8'
+
 [program:{{ supervisor_gunicorn_app }}]
 directory=/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/current/
 numprocs=1
 command=bash ./run_gunicorn.sh
-process_name=%(process_num)02d
 autostart=true
 autorestart=true
 stopsignal=QUIT
 user={{ supervisor_user }}
-stdout_logfile=%(program_name)s_%(process_num)02d_.log
-stderr_logfile=%(program_name)s_%(process_num)02d_.error.log
+stdout_logfile=/var/log/supervisor/%(program_name)s_%(process_num)02d.log
+stderr_logfile=/var/log/supervisor/%(program_name)s_%(process_num)02d.error.log
