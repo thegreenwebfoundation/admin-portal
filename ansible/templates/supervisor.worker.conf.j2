@@ -1,12 +1,15 @@
 # {{ ansible_managed }}
 # Last run: {{ template_run_date }}
+
 [supervisord]
 environment=LC_ALL='en_US.UTF-8',LANG='en_US.UTF-8'
+
 [program:{{ supervisor_worker_job }}]
 directory=/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org/current/
 command=bash ./run_worker.sh
-process_name=%(process_num)02d
 autostart=true
 autorestart=true
 stopsignal=TERM
 user={{ supervisor_user }}
+stdout_logfile=/var/log/supervisor/%(program_name)s_%(process_num)02d.log
+stderr_logfile=/var/log/supervisor/%(program_name)s_%(process_num)02d.error.log
