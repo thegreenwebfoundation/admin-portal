@@ -40,7 +40,7 @@ class GreenDomainChecker:
     matching SiteCheck result, that we might log.
     """
 
-    def validate_domain(self, url) -> typing.Union[str | None]:
+    def validate_domain(self, url) -> typing.Union[str, None]:
         """
         Attempt to clean the provided url, and pull
         return the domain, or ip address
