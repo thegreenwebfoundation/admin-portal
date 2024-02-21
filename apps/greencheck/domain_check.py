@@ -12,6 +12,7 @@ This follows largely the same approach:
 5. check against registered ASNs
 6. if no matches left, report grey
 """
+
 import ipaddress
 import logging
 import socket
@@ -32,13 +33,14 @@ import ipwhois
 
 import typing
 
+
 class GreenDomainChecker:
     """
     The checking class. Used to run a check against a domain, to find the
     matching SiteCheck result, that we might log.
     """
 
-    def validate_domain(self, url) -> str:
+    def validate_domain(self, url) -> typing.Union[str | None]:
         """
         Attempt to clean the provided url, and pull
         return the domain, or ip address
@@ -51,14 +53,19 @@ class GreenDomainChecker:
             res = tld.get_tld(url, fix_protocol=True, as_object=True)
             return res.parsed_url.netloc
 
-        # not a domain, try ip address:
-        if not is_valid_tld:
-            parsed_url = urllib.parse.urlparse(url)
-            if not parsed_url.netloc:
-                # add the //, so that our url reading code
-                # parses it properly
-                parsed_url = urllib.parse.urlparse(f"//{url}")
-            return parsed_url.netloc
+        # not a domain, try ip address, ending early if not
+        try:
+            ipaddress.ip_address(url)
+        except ValueError:
+            # not an ip address either, return an empty result
+            return
+
+        parsed_url = urllib.parse.urlparse(url)
+        if not parsed_url.netloc:
+            # add the //, so that our url reading code
+            # parses it properly
+            parsed_url = urllib.parse.urlparse(f"//{url}")
+        return parsed_url.netloc
 
     def perform_full_lookup(self, domain: str) -> GreenDomain:
         """
@@ -157,7 +164,9 @@ class GreenDomainChecker:
         )
 
     def grey_sitecheck(
-        self, domain, ip_address,
+        self,
+        domain,
+        ip_address,
     ):
         return SiteCheck(
             url=domain,
