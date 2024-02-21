@@ -17,7 +17,7 @@
 
             <script>
                 window.sentryOnLoad = function () {
-                    Sentry.init(
+                    Sentry.init({
                         dsn: "{{ sentry.dsn }}",
                         //   This should be updated with each release.
                         // TODO: Is there a way to automate this?
