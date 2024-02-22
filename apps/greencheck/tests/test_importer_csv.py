@@ -107,7 +107,6 @@ class TestCSVImporter:
         assert len(preview["green_ips"]) == 2
         assert len(preview["green_asns"]) == 1
 
-    @pytest.mark.only
     def test_view_processed_imports(
         self, sample_data_raw, hosting_provider: Hostingprovider
     ):

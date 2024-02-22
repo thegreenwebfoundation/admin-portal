@@ -66,7 +66,7 @@ class CarbonTxtParser:
                 valid_from=timezone.now(),
                 valid_to=timezone.now() + relativedelta.relativedelta(years=1),
             )
-            logger.info(f"New supporting doc {doc} for {prov}")
+            logger.debug(f"New supporting doc {doc} for {prov}")
 
         # rich.inspect({"provider": prov, "provider_set": provider_set})
 

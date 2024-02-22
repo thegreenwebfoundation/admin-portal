@@ -354,6 +354,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             Helper function to process the data from ModelFormSets used in this view
             """
             logger.info(f"formset: {formset.__class__.__name__}")
+            logger.debug(f"formset: {formset.__class__.__name__}")
             if formset.__class__.__name__ == "ProviderRequestIPRangeFormFormSet":
                 for form in formset.forms:
                     logger.debug(form.__class__.__name__)
