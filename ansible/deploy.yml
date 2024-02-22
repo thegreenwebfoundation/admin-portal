@@ -74,7 +74,7 @@
 
     - name: Trigger restart for app with supervisor
       ansible.builtin.supervisorctl:
-        name: "{{ supervisor_gunicorn_app }}:"
+        name: "{{ supervisor_gunicorn_app }}"
         state: restarted
       become: true
       when: supervisor_restart is true
