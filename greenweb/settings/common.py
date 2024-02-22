@@ -228,6 +228,11 @@ if EXPLORER_TOKEN:
 
 # Geo IP database
 GEOIP_PATH = pathlib.Path(ROOT) / "data" / "GeoLite2-City.mmdb"
+GEOIP_PROVIDER_DOWNLOAD_URL = (
+    "https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz"
+)
+GEOIP_USER = env("MAXMIND_USER_ID", default=None)
+GEOIP_PASSWORD = env("MAXMIND_LICENCE_KEY", default=None)
 
 # Allow requests from any origin, but only make the API urls available
 # CORS_URLS_REGEX = r"^/api/.*$"
