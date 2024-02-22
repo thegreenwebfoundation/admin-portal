@@ -46,10 +46,15 @@ class GreenDomainChecker:
         return the domain, or ip address
         """
 
-        is_valid_tld = tld.is_tld(url)
+        try:
+            fetched_tld = tld.get_tld(url, fix_protocol=True)
+            has_valid_tld = tld.is_tld(fetched_tld)
+        except tld.exceptions.TldDomainNotFound:
+            return ""
 
         # looks like a domain
-        if is_valid_tld:
+        if has_valid_tld:
+            # note: we fetch this "as an object" this time
             res = tld.get_tld(url, fix_protocol=True, as_object=True)
             return res.parsed_url.netloc
 
@@ -58,7 +63,7 @@ class GreenDomainChecker:
             ipaddress.ip_address(url)
         except ValueError:
             # not an ip address either, return an empty result
-            return
+            return ""
 
         parsed_url = urllib.parse.urlparse(url)
         if not parsed_url.netloc:
