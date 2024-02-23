@@ -123,3 +123,16 @@ To create new importers, take the following steps:
 1. Create a new importer class, satisfying the `ImporterProtocol`
 2. Create a management command to allow the importer to be run on a schedule.
 3. Add the management command to to the script defined in `import_ips_for_large_providers.sh.j2`, checking if any extra environment variables need to be added, to make sure the importer is updating the correct provider.
+
+```{admonition} Thinking of making a new importer?
+
+While the green web platform code is open source, we have published API endpoints for sending updates to a provider programatically, for updating IP ranges and AS numbers. We intend to extend this API to avoid the need for creating totally new importers in future, so these can be run independently of the platform. Please contact us if you're thinking of creating an importer so we can advise the simplest way to integrate with the platform.
+```
+
+### Further Reading
+
+**On using protocols, and composition rather than inheritance.**
+
+https://hynek.me/articles/python-subclassing-redux/
+https://tech.octopus.energy/news/2019/03/21/python-interfaces-a-la-go.html
+https://idego-group.com/blog/2023/02/21/we-need-to-talk-about-protocols-in-python/
