@@ -122,7 +122,7 @@ def backup_day_to_parquet(target_date: datetime.date):
     # and avoid clashes
     with tempfile.TemporaryDirectory() as tmpdir:
         date_string = target_date.strftime("%Y-%m-%d")
-        greencheck_table = "greencheck_2021"
+        greencheck_table = "greencheck"
 
         csv_path = f"{tmpdir}/{date_string}.local_file.csv"
         parquet_path = f"{tmpdir}/{date_string}.zstd.parquet"

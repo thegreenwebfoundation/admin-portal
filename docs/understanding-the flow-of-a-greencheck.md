@@ -23,7 +23,7 @@ sequenceDiagram
     Django Web->>+RabbitMQ: Queue domain for logging
 ```
 
-In most cases we try to find a result we can return quickly, and check in a local cache table called `greendomain`, described by the GreenDomain model. Assuming we find a result in the database, we put the checked domain on a Rabbit MQ queue, so that a separate worker process can update to the cache to record the time of the check, and so it can write the check result to a logging table, currently named `greencheck_2021`, and represented by the Greencheck model.
+In most cases we try to find a result we can return quickly, and check in a local cache table called `greendomain`, described by the GreenDomain model. Assuming we find a result in the database, we put the checked domain on a Rabbit MQ queue, so that a separate worker process can update to the cache to record the time of the check, and so it can write the check result to a logging table, currently named `greencheck`, and represented by the Greencheck model.
 
 _Note: See the model definitions Greencheck and GreenDomain for the definitive listing of the names the tables we write to - they have changed over time._
 
