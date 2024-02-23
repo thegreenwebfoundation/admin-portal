@@ -467,6 +467,15 @@ class Hostingprovider(models.Model):
 
         return False
 
+    def deactivate_networks(self):
+        """
+        Deactivate all the IP ranges and ASNs for this provider.
+        """
+        active_green_ips = self.greencheckip_set.filter(active=True)
+        active_green_asns = self.greencheckasn_set.filter(active=True)
+        active_green_ips.update(active=False)
+        active_green_asns(active=False)
+
     # Queries
 
     def public_supporting_evidence(

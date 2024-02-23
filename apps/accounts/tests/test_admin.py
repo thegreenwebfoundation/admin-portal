@@ -463,6 +463,24 @@ class TestHostingProviderAdmin:
                 str(sample_hoster_user.groups.first().id),
             )
 
+    def test_archiving_a_provider_also_deactivates_their_networks(
+        self, db, hosting_provider, sample_hoster_user, greenweb_staff_user
+    ):
+        """
+        Archiving a provider should also deactivate their networks
+        without staff needing to do this manually.
+        """
+        hosting_provider.save()
+
+        # given: a provider has been created, with ASNs and IP ranges
+        # allocated to them
+
+        # when: I update the provider marking them as archived
+
+        # then: the ASNs and IP ranges are also deactivated
+
+        pass
+
 
 class TestUserAdmin:
     """

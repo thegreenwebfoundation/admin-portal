@@ -946,6 +946,17 @@ class HostingAdmin(
         except self.model.DoesNotExist:
             logger.warning(f"Could not find provider with the id {object_id}")
 
+        if request.method == "POST":
+            # "archived" only appears in the payload if the box is checked
+            # in an admin form submission
+            archive_in_payload = "archived" in request.POST
+
+            # we only trigger this if a provider isn't already archived
+            # to avoid making needless queries
+            if archive_in_payload and not instance.archived:
+                # deactivate IP ranges and ASNs
+                # instance.deactivate_networks()
+
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
     @mark_safe
