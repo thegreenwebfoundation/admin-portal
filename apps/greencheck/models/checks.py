@@ -261,7 +261,7 @@ class Greencheck(mysql_models.Model):
     url = models.CharField(max_length=255)
 
     class Meta:
-        db_table = "greencheck_2021"
+        db_table = "greencheck"
 
     def __str__(self):
         return f"{self.url} - {self.ip}"
