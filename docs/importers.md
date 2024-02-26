@@ -72,7 +72,7 @@ def process(self, list_of_addresses):
 
 ```
 
-In this example, the `process` method on thea CloudImporter object will:
+In this example, the `process` method on the CloudImporter object will:
 
 1. Determine the provider to update
 2. Deactivate any existing networks associated with the provider (to account for IP addresses being returned to registrars like RIPE)
@@ -93,7 +93,7 @@ assert isinstance(MicrosoftImporter(), ImporterProtocol)
 
 ### Running the import from the command line
 
-The most commmon way to run an import from a large provider is on a recurring cronjob, from a django management command.
+The most common way to run an import from a large provider is on a recurring cronjob, from a django management command.
 
 An simplified management command looks like the example below.
 
