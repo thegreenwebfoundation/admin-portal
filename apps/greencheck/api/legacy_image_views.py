@@ -31,16 +31,7 @@ def legacy_greencheck_image(request, url):
     """
     green = False
     provider = None
-
-    # browser_visit = check_for_browser_visit(request)
-    browser_visit = False
-
     domain = checker.validate_domain(url)
-
-    if browser_visit:
-        return redirect(
-            f"https://www.thegreenwebfoundation.org/green-web-check/?url={domain}"
-        )
 
     # `nocache=true` is the same string used by nginx. Using the same params
     # means we won't have to worry about nginx caching our request before it
@@ -59,8 +50,8 @@ def legacy_greencheck_image(request, url):
         img, domain, green=green, provider=provider
     )
 
-    # HttpResponses work a bit like FileObjects.
-    # This means we can write directly into them with save()
+    # responses work a bit like FileObjects, so we can write directly
+    # into them, like so
     response = HttpResponse(content_type="image/png")
     annotated_img.save(response, "PNG")
 
