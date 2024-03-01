@@ -1,1 +1,1 @@
-from .. import exceptions
+from .. import exceptions  # noqa

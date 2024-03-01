@@ -31,6 +31,7 @@ from apps.greencheck.viewsets import (
 from apps.greencheck.swagger import TGWFSwaggerView
 
 from apps.greencheck.api import legacy_views
+from apps.greencheck.api import image_views
 from apps.greencheck.api import views as api_views
 from apps.accounts.admin import LabelAutocompleteView
 from apps.accounts import urls as accounts_urls
@@ -112,6 +113,11 @@ urlpatterns += [
         "api/v3/carbontxt_shared_secret",
         api_views.ProviderSharedSecretView.as_view(),
         name="carbon-txt-shared-secret",
+    ),
+    path(
+        "api/v3/greencheckimage/<url>",
+        image_views.greencheck_image,
+        name="greencheck-image",
     ),
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
     path(
