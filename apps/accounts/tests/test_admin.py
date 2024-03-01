@@ -333,54 +333,6 @@ class TestHostingProviderAdmin:
         assert len(labels) == 1
         assert labels[0].name == "welcome-email sent"
 
-    @pytest.mark.parametrize(
-        "archived",
-        (
-            (True, 0),
-            (False, 1),
-        ),
-    )
-    def test_archived_providers_are_hidden_by_default(
-        self, db, client, hosting_provider_with_sample_user, archived
-    ):
-        """Test that by default, archived users to not show up in our listings."""
-
-        hosting_provider_with_sample_user.archived = archived[0]
-        hosting_provider_with_sample_user.save()
-        client.force_login(hosting_provider_with_sample_user.users.first())
-
-        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
-        resp = client.get(admin_url, follow=True)
-
-        assert len(resp.context["results"]) == archived[1]
-        assert resp.status_code == 200
-
-    @pytest.mark.skip(reason="we handle this with a list filter option now")
-    @pytest.mark.parametrize(
-        "archived",
-        (
-            (True, 1),
-            (False, 0),
-        ),
-    )
-    def test_archived_providers_hidden_by_seen_with_override_params(
-        self, db, client, hosting_provider_with_sample_user, archived
-    ):
-        """
-        If we really need to see archived users, we can with a
-        special GET param, to override our view
-        """
-
-        hosting_provider_with_sample_user.archived = archived[0]
-        hosting_provider_with_sample_user.save()
-        client.force_login(hosting_provider_with_sample_user.users.first())
-
-        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
-        resp = client.get(admin_url, {"archived": True}, follow=True)
-
-        assert len(resp.context["results"]) == archived[1]
-        assert resp.status_code == 200
-
     def test_list_of_users_who_can_manage_provider_is_displayed(
         self, db, sample_hoster_user, greenweb_staff_user, hosting_provider
     ):
@@ -463,23 +415,56 @@ class TestHostingProviderAdmin:
                 str(sample_hoster_user.groups.first().id),
             )
 
-    def test_archiving_a_provider_also_deactivates_their_networks(
-        self, db, hosting_provider, sample_hoster_user, greenweb_staff_user
+
+class TestArchivingHostingProviderAdmin:
+
+    @pytest.mark.parametrize(
+        "archived",
+        (
+            (True, 0),
+            (False, 1),
+        ),
+    )
+    def test_archived_providers_are_hidden_by_default(
+        self, db, client, hosting_provider_with_sample_user, archived
+    ):
+        """Test that by default, archived users do not show up in our listings."""
+
+        hosting_provider_with_sample_user.archived = archived[0]
+        hosting_provider_with_sample_user.save()
+        client.force_login(hosting_provider_with_sample_user.users.first())
+
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
+        resp = client.get(admin_url, follow=True)
+
+        assert len(resp.context["results"]) == archived[1]
+        assert resp.status_code == 200
+
+    @pytest.mark.skip(reason="we handle this with a list filter option now")
+    @pytest.mark.parametrize(
+        "archived",
+        (
+            (True, 1),
+            (False, 0),
+        ),
+    )
+    def test_archived_providers_hidden_by_seen_with_override_params(
+        self, db, client, hosting_provider_with_sample_user, archived
     ):
         """
-        Archiving a provider should also deactivate their networks
-        without staff needing to do this manually.
+        If we really need to see archived users, we can with a
+        special GET param, to override our view
         """
-        hosting_provider.save()
 
-        # given: a provider has been created, with ASNs and IP ranges
-        # allocated to them
+        hosting_provider_with_sample_user.archived = archived[0]
+        hosting_provider_with_sample_user.save()
+        client.force_login(hosting_provider_with_sample_user.users.first())
 
-        # when: I update the provider marking them as archived
+        admin_url = urls.reverse("greenweb_admin:accounts_hostingprovider_changelist")
+        resp = client.get(admin_url, {"archived": True}, follow=True)
 
-        # then: the ASNs and IP ranges are also deactivated
-
-        pass
+        assert len(resp.context["results"]) == archived[1]
+        assert resp.status_code == 200
 
 
 class TestUserAdmin:
