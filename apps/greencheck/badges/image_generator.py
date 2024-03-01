@@ -150,6 +150,18 @@ class GreencheckImageV3:
     font_settings_green = ImageFont.truetype(str(font_path), 9)
     font_settings_grey = ImageFont.truetype(str(font_path), 9)
 
+    def normalise_domain_name_length(domain: str) -> str:
+        """
+        Truncate the domain name if it's too long,
+        to fit in the badge
+        """
+        if len(domain) > 30:
+            shortened_name = domain[:30]
+            # add the ellipsis to show it's been shortened
+            return f"{shortened_name}..."
+
+        return domain
+
     def fetch_template_image(self, green: bool = False) -> Image:
         """
         Fetch our image, return the image object, that we can
@@ -165,6 +177,9 @@ class GreencheckImageV3:
         return img
 
     def add_hosted_text(self, draw, text_color, domain, provider=None, green=False):
+
+        # is the name too long ? shorten if so
+        domain = self.normalise_domain_name_length(domain)
 
         if green:
             if provider:
