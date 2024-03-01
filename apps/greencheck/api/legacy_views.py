@@ -17,7 +17,7 @@ from ..serializers import GreenDomainSerializer
 
 # we import legacy_greencheck_image, to provide one module to import all
 # legacy API views from
-from .legacy_image_view import legacy_greencheck_image  # noqa
+from .legacy_image_views import legacy_greencheck_image  # noqa
 
 logger = logging.getLogger(__name__)
 
