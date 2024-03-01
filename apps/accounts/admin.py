@@ -649,6 +649,23 @@ class HostingAdmin(
 
     # Mutators
 
+    def save_model(self, request, obj, form, change):
+        """
+        Extra actions in response to specific options being set on the main model go here.
+        Note: this will not catch changes made to inlines. For that see the overrides in
+        the save_formset()
+
+        https://docs.djangoproject.com/en/dev/ref/contrib/admin/#django.contrib.admin.ModelAdmin.save_model
+        """
+
+        # if the provider is being archived, deactivate all networks to avoid having to manually
+        # do this for each network
+        breakpoint()
+        if "archived" in form.changed_data and not obj.archived:
+            obj.deactivate_networks()
+
+        super().save_model(request, obj, form, change)
+
     def save_formset(self, request, form, formset, change):
         """
         Save the child objects in this form, and account for the special cases
@@ -946,17 +963,6 @@ class HostingAdmin(
         except self.model.DoesNotExist:
             logger.warning(f"Could not find provider with the id {object_id}")
 
-        if request.method == "POST":
-            # "archived" only appears in the payload if the box is checked
-            # in an admin form submission
-            archive_in_payload = "archived" in request.POST
-
-            # we only trigger this if a provider isn't already archived
-            # to avoid making needless queries
-            if archive_in_payload and not instance.archived:
-                # deactivate IP ranges and ASNs
-                # instance.deactivate_networks()
-
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
     @mark_safe
@@ -1196,9 +1202,9 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
 
             if associated_providers_count:
                 extra_context["associated_providers_count"] = associated_providers_count
-                extra_context[
-                    "associated_providers"
-                ] = datacentre.hostingproviders.all()
+                extra_context["associated_providers"] = (
+                    datacentre.hostingproviders.all()
+                )
                 extra_context["dc_has_providers"] = True
 
         return super().change_view(
@@ -1408,9 +1414,9 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
 
         # For a new provider request, use this subject line
         subject = (
-                f"Verification request to the Green Web Dataset is approved: "
-                f"{mark_safe(provider_request.name)}"
-            )
+            f"Verification request to the Green Web Dataset is approved: "
+            f"{mark_safe(provider_request.name)}"
+        )
 
         if existing_provider:
             context["provider"] = provider_request.provider

@@ -62,6 +62,28 @@ class TestHostingProvider:
 
         assert datacenter.model == accounting_model
 
+    def test_deactivate_networks(
+        self, db, hosting_provider_factory, green_ip_factory, green_asn_factory
+    ):
+
+        provider = hosting_provider_factory.create()
+        # make a green ip range
+        ip_range = green_ip_factory.create(hostingprovider=provider)
+        # make a green asn range
+        as_network = green_asn_factory.create(hostingprovider=provider)
+
+        assert ip_range.active is True
+        assert as_network.active is True
+
+        provider.deactivate_networks()
+        ip_range.refresh_from_db()
+        as_network.refresh_from_db()
+
+        assert provider.active_ip_ranges().count() == 0
+        assert provider.active_asns().count() == 0
+        assert ip_range.active is False
+        assert as_network.active is False
+
 
 class TestHostingProviderEvidence:
     """
