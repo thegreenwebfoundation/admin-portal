@@ -150,7 +150,7 @@ class GreencheckImageV3:
     font_settings_green = ImageFont.truetype(str(font_path), 9)
     font_settings_grey = ImageFont.truetype(str(font_path), 9)
 
-    def normalise_domain_name_length(domain: str) -> str:
+    def normalise_domain_name_length(self, domain: str) -> str:
         """
         Truncate the domain name if it's too long,
         to fit in the badge
