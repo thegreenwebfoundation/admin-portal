@@ -660,7 +660,6 @@ class HostingAdmin(
 
         # if the provider is being archived, deactivate all networks to avoid having to manually
         # do this for each network
-        breakpoint()
         if "archived" in form.changed_data and not obj.archived:
             obj.deactivate_networks()
 
