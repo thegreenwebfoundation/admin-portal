@@ -661,7 +661,8 @@ class HostingAdmin(
         # if the provider is being archived, deactivate all networks to avoid having
         # to manually do this for each network
         if "archived" in form.changed_data and form.instance.archived:
-            obj.deactivate_networks()
+            form.instance.deactivate_networks()
+            form.instance.update(showonwebsite=False)
 
         super().save_model(request, obj, form, change)
 
