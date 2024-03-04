@@ -81,8 +81,13 @@
               <td>
                 <div>
                   Type: {{ evidence.type }}<br>
-                  Link: {{ evidence.link|conditional_yesno:"Yes,No,-" }}<br>
-                  File upload: {{ evidence.file|conditional_yesno:"Yes,No,-" }}<br>
+
+                  {% comment %} evidence can either be an uploade file, or a link. {% endcomment %}
+                  {% if evidence.file %}
+                    File upload link: <a href="{{ evidence.file.url }}">{{ evidence.file }}</a><br>
+                  {% else %}
+                    Link: <a href="{{ evidence.link }}">{{ evidence.link }}</a><br>
+                  {% endif %}
                   Description: {{ evidence.description|conditional_yesno:"Yes,No,-" }}<br>
                   Public: {{ evidence.public|conditional_yesno:"Yes,No,-" }}
                 </div>
