@@ -82,7 +82,7 @@
                 <div>
                   Type: {{ evidence.type }}<br>
 
-                  {% comment %} evidence can either be an uploade file, or a link. {% endcomment %}
+                  {% comment %} evidence can either be an uploaded file, or a link. {% endcomment %}
                   {% if evidence.file %}
                     File upload link: <a href="{{ evidence.file.url }}">{{ evidence.file }}</a><br>
                   {% else %}
