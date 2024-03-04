@@ -658,9 +658,9 @@ class HostingAdmin(
         https://docs.djangoproject.com/en/dev/ref/contrib/admin/#django.contrib.admin.ModelAdmin.save_model
         """
 
-        # if the provider is being archived, deactivate all networks to avoid having to manually
-        # do this for each network
-        if "archived" in form.changed_data and not obj.archived:
+        # if the provider is being archived, deactivate all networks to avoid having
+        # to manually do this for each network
+        if "archived" in form.changed_data and form.instance.archived:
             obj.deactivate_networks()
 
         super().save_model(request, obj, form, change)
