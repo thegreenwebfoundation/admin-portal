@@ -467,14 +467,20 @@ class Hostingprovider(models.Model):
 
         return False
 
-    def deactivate_networks(self):
+    def archive(self) -> "Hostingprovider":
         """
-        Deactivate all the IP ranges and ASNs for this provider.
+        Archive the provider, deactivating all the IP ranges
+        and ASNs for this provider, removing it from listings
         """
         active_green_ips = self.greencheckip_set.filter(active=True)
         active_green_asns = self.greencheckasn_set.filter(active=True)
         active_green_ips.update(active=False)
         active_green_asns.update(active=False)
+
+        self.archived = True
+        self.showonwebsite = False
+        self.save()
+        return self
 
     # Queries
 

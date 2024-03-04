@@ -62,7 +62,8 @@ class TestHostingProvider:
 
         assert datacenter.model == accounting_model
 
-    def test_deactivate_networks(
+    @pytest.mark.only
+    def test_archive(
         self, db, hosting_provider_factory, green_ip_factory, green_asn_factory
     ):
 
@@ -75,7 +76,7 @@ class TestHostingProvider:
         assert ip_range.active is True
         assert as_network.active is True
 
-        provider.deactivate_networks()
+        provider.archive()
         ip_range.refresh_from_db()
         as_network.refresh_from_db()
 
@@ -83,6 +84,9 @@ class TestHostingProvider:
         assert provider.active_asns().count() == 0
         assert ip_range.active is False
         assert as_network.active is False
+        #
+        assert provider.archived is True
+        assert provider.showonwebsite is False
 
 
 class TestHostingProviderEvidence:
