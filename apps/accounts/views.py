@@ -642,8 +642,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             Fetches locations from the request if it exists, otherwise
             the single location originally associated with the provider.
             """
-            if not hosting_provider is not None:
-                hp_provider_request = hosting_provider.request
+
+            hp_provider_request = hosting_provider.request
 
             if hp_provider_request:
 
@@ -660,20 +660,19 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
             return [
                 {
-                    "city": hp_instance.city,
-                    "country": hp_instance.country,
+                    "city": hosting_provider.city,
+                    "country": hosting_provider.country,
                 }
             ]
 
         def _org_details_initial_data(hosting_provider: Hostingprovider):
-            if not hosting_provider is not None:
-                hp_provider_request = hosting_provider.request
 
             initial_org_dict = {
                 "name": hosting_provider.name,
                 "website": hosting_provider.website,
                 "description": hosting_provider.description,
             }
+            hp_provider_request = hosting_provider.request
             if hp_provider_request:
                 initial_org_dict["authorised_by_org"] = (
                     hp_provider_request.authorised_by_org
@@ -682,16 +681,16 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         def _network_footprint_initial_data(hosting_provider: Hostingprovider):
 
-            if not hosting_provider is not None:
-                hp_provider_request = hosting_provider.request
+            hp_provider_request = hosting_provider.request
             network_dict = {
                 # TODO: all IP ranges / ASNs or only active ones?
                 "ips": [
                     {"start": range.ip_start, "end": range.ip_end}
-                    for range in hp_instance.greencheckip_set.all()
+                    for range in hosting_provider.greencheckip_set.all()
                 ],
                 "asns": [
-                    {"asn": item.asn} for item in hp_instance.greencheckasn_set.all()
+                    {"asn": item.asn}
+                    for item in hosting_provider.greencheckasn_set.all()
                 ],
             }
             if hp_provider_request:
