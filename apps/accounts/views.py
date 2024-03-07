@@ -640,6 +640,34 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         except Hostingprovider.DoesNotExist:
             return {}
 
+        def _location_initial_data(hosting_provider: Hostingprovider):
+            """
+            Accept a hosting provider instance and return a list of
+            locations in a format expected by the form.
+            Fetches locations from the request if it exists, otherwise
+            the single location originally associated with the provider.
+            """
+            hp_provider_request = hp_instance.request
+
+            if hp_provider_request:
+
+                locations = hp_provider_request.providerrequestlocation_set.all()
+                return [
+                    {
+                        "city": location.city,
+                        "country": location.country,
+                        "name": location.name,
+                    }
+                    for location in locations
+                ]
+
+            return [
+                {
+                    "city": hp_instance.city,
+                    "country": hp_instance.country,
+                }
+            ]
+
         initial_dict = {
             cls.Steps.ORG_DETAILS.value: {
                 "name": hp_instance.name,
@@ -648,12 +676,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             },
             cls.Steps.LOCATIONS.value: {
                 # TODO: update this when HP has multiple locations
-                "locations": [
-                    {
-                        "city": hp_instance.city,
-                        "country": hp_instance.country.code,
-                    }
-                ],
+                "locations": _location_initial_data(hp_instance),
             },
             cls.Steps.SERVICES.value: {
                 "services": [s for s in hp_instance.services.slugs()]

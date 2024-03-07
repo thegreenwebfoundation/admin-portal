@@ -606,7 +606,7 @@ class ConsentForm(forms.ModelForm):
         fields = ["data_processing_opt_in", "newsletter_opt_in"]
 
 
-class LocationForm(forms.ModelForm):
+class LocationForm(AlwaysChangedModelFormMixin, forms.ModelForm):
     name = forms.CharField(
         max_length=255,
         label="Location name",
