@@ -707,7 +707,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
             return {}
 
         initial_dict = {
-            cls.Steps.ORG_DETAILS.value: _org_details_initial_data(),
+            cls.Steps.ORG_DETAILS.value: _org_details_initial_data(hp_instance),
             cls.Steps.LOCATIONS.value: {
                 # TODO: update this when HP has multiple locations, not just the
                 # provider request
