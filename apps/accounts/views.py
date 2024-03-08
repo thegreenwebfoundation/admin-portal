@@ -635,25 +635,82 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
                 "public": evidence.public,
             }
 
+        def _location_initial_data(hosting_provider: Hostingprovider):
+            """
+            Accept a hosting provider instance and return a list of
+            locations in a format expected by the form.
+            Fetches locations from the request if it exists, otherwise
+            the single location originally associated with the provider.
+            """
+
+            hp_provider_request = hosting_provider.request
+
+            if hp_provider_request:
+
+                locations = hp_provider_request.providerrequestlocation_set.all()
+                # return only the locations that are associated with the request
+                return [
+                    {
+                        "city": location.city,
+                        "country": location.country,
+                        "name": location.name,
+                    }
+                    for location in locations
+                ]
+
+            return [
+                {
+                    "city": hosting_provider.city,
+                    "country": hosting_provider.country,
+                }
+            ]
+
+        def _org_details_initial_data(hosting_provider: Hostingprovider):
+
+            initial_org_dict = {
+                "name": hosting_provider.name,
+                "website": hosting_provider.website,
+                "description": hosting_provider.description,
+            }
+            hp_provider_request = hosting_provider.request
+            if hp_provider_request:
+                initial_org_dict["authorised_by_org"] = (
+                    hp_provider_request.authorised_by_org
+                )
+            return initial_org_dict
+
+        def _network_footprint_initial_data(hosting_provider: Hostingprovider):
+
+            hp_provider_request = hosting_provider.request
+            network_dict = {
+                # TODO: all IP ranges / ASNs or only active ones?
+                "ips": [
+                    {"start": range.ip_start, "end": range.ip_end}
+                    for range in hosting_provider.greencheckip_set.all()
+                ],
+                "asns": [
+                    {"asn": item.asn}
+                    for item in hosting_provider.greencheckasn_set.all()
+                ],
+            }
+            if hp_provider_request:
+                network_dict["missing_network_explanation"] = (
+                    hp_provider_request.missing_network_explanation
+                )
+
+            return network_dict
+
         try:
             hp_instance = Hostingprovider.objects.get(id=provider_id)
         except Hostingprovider.DoesNotExist:
             return {}
 
         initial_dict = {
-            cls.Steps.ORG_DETAILS.value: {
-                "name": hp_instance.name,
-                "website": hp_instance.website,
-                "description": hp_instance.description,
-            },
+            cls.Steps.ORG_DETAILS.value: _org_details_initial_data(hp_instance),
             cls.Steps.LOCATIONS.value: {
-                # TODO: update this when HP has multiple locations
-                "locations": [
-                    {
-                        "city": hp_instance.city,
-                        "country": hp_instance.country.code,
-                    }
-                ],
+                # TODO: update this when HP has multiple locations, not just the
+                # provider request
+                "locations": _location_initial_data(hp_instance),
             },
             cls.Steps.SERVICES.value: {
                 "services": [s for s in hp_instance.services.slugs()]
@@ -662,16 +719,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
                 _evidence_initial_data(ev)
                 for ev in hp_instance.supporting_documents.all()
             ],
-            cls.Steps.NETWORK_FOOTPRINT.value: {
-                # TODO: all IP ranges / ASNs or only active ones?
-                "ips": [
-                    {"start": range.ip_start, "end": range.ip_end}
-                    for range in hp_instance.greencheckip_set.all()
-                ],
-                "asns": [
-                    {"asn": item.asn} for item in hp_instance.greencheckasn_set.all()
-                ],
-            },
+            cls.Steps.NETWORK_FOOTPRINT.value: _network_footprint_initial_data(
+                hp_instance
+            ),
             cls.Steps.CONSENT.value: {},
         }
 
