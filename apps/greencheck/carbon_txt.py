@@ -141,15 +141,7 @@ class CarbonTxtParser:
 
         Returns a true boolean result if there is a match
         """
-
-        shared_secret = provider.shared_secret
-
-        # return early if there is no shared secret to check
-        if not shared_secret:
-            raise exceptions.NoSharedSecret
-
-        res = hashlib.sha256(f"{domain}{shared_secret.body}".encode("utf-8"))
-        return res.hexdigest() == hash
+        return provider.domain_hash_for_domain(domain) == hash
 
     def _add_domain_if_hash_matches_provider(
         self, new_domain, provider_domain, domain_hash
@@ -168,15 +160,11 @@ class CarbonTxtParser:
         ).hosting_provider
         try:
             matched_domain_hash = self._check_domain_hash_against_provider(
-                domain_hash, provider_domain
+                domain_hash, provider, new_domain
             )
 
             if matched_domain_hash:
                 # create our new domain
-                provider = gc_models.GreenDomain.objects.get(
-                    url=provider_domain
-                ).hosting_provider
-
                 gc_models.GreenDomain.upsert_for_provider(new_domain, provider)
         except Exception as ex:
             logger.exception(
@@ -289,7 +277,6 @@ class CarbonTxtParser:
         self, domain: str, lookup_sequence: List
     ) -> Union[List[str], List]:
 
-        # breakpoint()
         try:
             answers = dns.resolver.resolve(domain, "TXT")
         except dns.resolver.NoAnswer:
@@ -323,7 +310,7 @@ class CarbonTxtParser:
                     )
                     override_domain = parse.urlparse(override_url).netloc
 
-                    # breakpoint()
+                    # MOCKED
                     self._add_domain_if_hash_matches_provider(
                         domain, override_domain, domain_hash
                     )
@@ -382,11 +369,8 @@ class CarbonTxtParser:
         lookup_sequence = []
         lookup_sequence.append({"reason": "Initial URL provided ", "url": url})
 
-        # breakpoint()
-
         # do a DNS lookup to see if we have a carbon.txt file at a new url we
-        # delegating to instead
-        breakpoint()
+        # are delegating to instead
         override_url, lookup_sequence = self._check_for_carbon_txt_dns_record(
             url_domain, lookup_sequence
         )
@@ -430,8 +414,8 @@ class CarbonTxtParser:
                 res, lookup_sequence
             )
         except Exception as ex:
+            breakpoint()
             pass
-            # breakpoint()
 
         try:
             carbon_txt_string = res.content.decode("utf-8")

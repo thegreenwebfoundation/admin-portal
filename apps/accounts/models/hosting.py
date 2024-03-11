@@ -1,5 +1,5 @@
 import logging
-
+import hashlib
 import secrets
 import typing
 import datetime
@@ -15,6 +15,8 @@ from taggit import models as tag_models
 from django.utils.translation import ugettext_lazy as _
 from guardian.shortcuts import get_users_with_perms
 
+from urllib.parse import urlparse
+
 from model_utils.models import TimeStampedModel
 
 from .choices import (
@@ -27,6 +29,7 @@ from .choices import (
 )
 from ..permissions import manage_provider, manage_datacenter
 from apps.greencheck.choices import StatusApproval, GreenlistChoice
+from apps.greencheck.exceptions import NoSharedSecret
 
 # import apps.greencheck.models as gc_models
 
@@ -355,7 +358,7 @@ class Hostingprovider(models.Model):
         try:
             return self.providersharedsecret
         except Hostingprovider.providersharedsecret.RelatedObjectDoesNotExist:
-            return None
+            raise NoSharedSecret
 
     @property
     def evidence_expiry_date(self) -> typing.Optional[datetime.date]:
@@ -386,6 +389,11 @@ class Hostingprovider(models.Model):
         Used to when deciding how many to show on an admin page.
         """
         return self.greencheckipapprove_set.all().count()
+
+    @property
+    def website_domain(self) -> str:
+        """Return the domain of the provider's website"""
+        return urlparse(self.website_link).netloc
 
     @property
     def website_link(self) -> str:
@@ -483,6 +491,19 @@ class Hostingprovider(models.Model):
         return self
 
     # Queries
+
+    def domain_hash_for_domain(self, domain: str) -> str:
+        """
+        Accept a domain, and return a hash of the domain and the
+        shared secret for this provider.
+        """
+        if not self.shared_secret:
+            raise NoSharedSecret
+
+        hash_object = hashlib.sha256(
+            f"{domain}{self.shared_secret.body}".encode("utf-8")
+        )
+        return hash_object.hexdigest()
 
     def public_supporting_evidence(
         self,
