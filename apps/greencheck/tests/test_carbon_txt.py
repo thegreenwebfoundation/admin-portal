@@ -1,14 +1,13 @@
-import pytest
+import hashlib
 import pathlib
+
+import pytest
+
 from apps.accounts.models.hosting import Hostingprovider
 
-
-from .. import carbon_txt
 from ...accounts import models as ac_models
+from .. import carbon_txt, choices, workers
 from .. import models as gc_models
-from .. import choices
-from .. import workers
-
 
 #
 # hashlib.sha256(f"{domain} {shared_secret.body}".encode("utf-8"))
@@ -466,10 +465,118 @@ class TestCarbonTxtParser:
         assert result["lookup_sequence"][0]["url"] == hosted_domain
         assert result["lookup_sequence"][1]["url"] == via_domain
 
+    @pytest.mark.only
+    def test_domain_hash_with_shared_secret_and_existing_domain(
+        self, db, hosting_provider_factory
+    ):
+        """
+        Check that for a provider with a shared secret, we can check its domain
+        against the hash of the domain and its shared secret.
+        This simulates the process of checking a domain hash for a provider's
+        own website.
+        """
+
+        carb = carbon_txt.CarbonTxtParser()
+        provider = hosting_provider_factory.create()
+        provider.refresh_shared_secret()
+
+        hash_obj = hashlib.sha256(
+            f"{provider.website}{provider.shared_secret.body}".encode("utf-8")
+        )
+        hash_text = hash_obj.hexdigest()
+
+        check_result = carb._check_domain_hash_against_provider(
+            hash_text, provider, provider.website
+        )
+
+        assert check_result is True
+
+    @pytest.mark.only
+    def test_domain_hash_with_shared_secret_and_new_domain_for_existing_provider(
+        self, db, hosting_provider_factory
+    ):
+        """
+        Check that for provider with a shared secret, we can check new domain can be
+        added by passing a hash of the new domain and the shared secret.
+        This simulates adding a new domain to a provider's list of green domains, by
+        linking to the carbon.txt on a verified provider, and passing the hash of the
+        new domain to be added in the DNS record or HTTP header
+        """
+        carb = carbon_txt.CarbonTxtParser()
+        provider = hosting_provider_factory.create()
+        provider.refresh_shared_secret()
+
+        new_domain = "new_website.com"
+
+        hash_obj = hashlib.sha256(
+            f"{new_domain}{provider.shared_secret.body}".encode("utf-8")
+        )
+        hash_text = hash_obj.hexdigest()
+        check_result = carb._check_domain_hash_against_provider(
+            hash_text, provider, new_domain
+        )
+
+        assert check_result is True
+
+    @pytest.mark.only
+    def test_adding_a_new_domain_is_impossible_without_access_to_shared_secret(
+        self, db, hosting_provider_factory
+    ):
+        """
+        Check that for provider with a shared secret, we are unable to add a new domain
+        that is simply reusing a domain hash form an existing domain.
+        This simulates someone trying to add a new domain to a provider's list of
+        green domains, when they do not have access to the provider's shared secret to
+        make the required domain hash.
+        """
+
+        # Given a provider with a shared secret, and a carbontxt parser
+        carb = carbon_txt.CarbonTxtParser()
+        provider = hosting_provider_factory.create()
+        provider.refresh_shared_secret()
+
+        new_good_domain = "new_website.com"
+        new_bad_domain = "bad_website.com"
+
+        good_hash_obj = hashlib.sha256(
+            f"{new_good_domain}{provider.shared_secret.body}".encode("utf-8")
+        )
+        good_hash_text = good_hash_obj.hexdigest()
+        good_check_result = carb._check_domain_hash_against_provider(
+            good_hash_text, provider, new_good_domain
+        )
+        # Then the check should work fine
+        assert good_check_result is True
+
+        # And When someone tries to add a new domain, reusing the existing
+        # domain hash, the result should how as false
+        bad_check_result = carb._check_domain_hash_against_provider(
+            good_hash_text, provider, new_bad_domain
+        )
+
+        assert bad_check_result is False
+
+    @pytest.mark.only
+    def test_checking_a_domain_hash_is_only_possible_if_a_provider_has_created_a_shared_secret(
+        self, db, hosting_provider_factory
+    ):
+        carb = carbon_txt.CarbonTxtParser()
+        provider = hosting_provider_factory.create()
+
+        hash_obj = hashlib.sha256(
+            f"{provider.website}{provider.shared_secret.body}".encode("utf-8")
+        )
+        hash_text = hash_obj.hexdigest()
+
+        from apps.greencheck.exceptions import NoSharedSecret
+
+        with pytest.raises(NoSharedSecret):
+            carb._check_domain_hash_against_provider(
+                hash_text, provider, provider.website
+            )
+
     def test_check_with_domain_aliases(self, db, carbon_txt_string):
-        """
-        Does
-        """
+        """ """
         psr = carbon_txt.CarbonTxtParser()
         psr.parse_and_import("www.hillbob.de", carbon_txt_string)
 
