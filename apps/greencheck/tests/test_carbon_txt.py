@@ -380,7 +380,11 @@ class TestCarbonTxtParser:
         assert result["lookup_sequence"][1]["url"] == via_domain
 
     def test_mark_dns_text_override_green_with_domain_hash(
-        self, db, hosting_provider_factory, green_domain_factory, minimal_carbon_txt_org
+        self,
+        db,
+        hosting_provider_factory,
+        green_domain_factory,
+        minimal_carbon_txt_org,
     ):
         # given a provider, at one domain serving files on behalf of another on a
         # separate domain
@@ -426,12 +430,13 @@ class TestCarbonTxtParser:
     def test_mark_http_via_override_green_with_domain_hash(
         self, db, hosting_provider_factory, green_domain_factory
     ):
-        # given a provider at one domain serving files on behalf of another org
+
+        # Given: a provider at one domain serving files on behalf of another org
         # on a different domain
         hosted_domain = "https://hosted.carbontxt.org/carbon.txt"
         via_domain = "https://managed-service.carbontxt.org/carbon.txt"
 
-        # and: there is an organisation, Org B who operate managed-service.carbontxt.org
+        # and: there is an organisation, Org B who operates managed-service.carbontxt.org
         carbon_txt_provider = hosting_provider_factory.create(
             website="https://managed-service.carbontxt.org"
         )
@@ -440,7 +445,7 @@ class TestCarbonTxtParser:
             url="managed-service.carbontxt.org", hosted_by=carbon_txt_provider
         )
 
-        # and: a shaed secret set up for our provider
+        # and: a shared secret set up for our provider
         ac_models.ProviderSharedSecret.objects.create(
             provider=carbon_txt_provider, body=SAMPLE_SECRET_BODY
         )
@@ -465,7 +470,6 @@ class TestCarbonTxtParser:
         assert result["lookup_sequence"][0]["url"] == hosted_domain
         assert result["lookup_sequence"][1]["url"] == via_domain
 
-    @pytest.mark.only
     def test_domain_hash_with_shared_secret_and_existing_domain(
         self, db, hosting_provider_factory
     ):
@@ -491,7 +495,6 @@ class TestCarbonTxtParser:
 
         assert check_result is True
 
-    @pytest.mark.only
     def test_domain_hash_with_shared_secret_and_new_domain_for_existing_provider(
         self, db, hosting_provider_factory
     ):
@@ -518,7 +521,6 @@ class TestCarbonTxtParser:
 
         assert check_result is True
 
-    @pytest.mark.only
     def test_adding_a_new_domain_is_impossible_without_access_to_shared_secret(
         self, db, hosting_provider_factory
     ):
@@ -535,9 +537,12 @@ class TestCarbonTxtParser:
         provider = hosting_provider_factory.create()
         provider.refresh_shared_secret()
 
+        # And: two domains we want to check, as if a carbon.txt file was being parsed
+        # from each domain
         new_good_domain = "new_website.com"
         new_bad_domain = "bad_website.com"
 
+        # When: we create a hash of the new domain and the shared secret and check it
         good_hash_obj = hashlib.sha256(
             f"{new_good_domain}{provider.shared_secret.body}".encode("utf-8")
         )
@@ -545,28 +550,25 @@ class TestCarbonTxtParser:
         good_check_result = carb._check_domain_hash_against_provider(
             good_hash_text, provider, new_good_domain
         )
+
         # Then the check should work fine
         assert good_check_result is True
 
-        # And When someone tries to add a new domain, reusing the existing
-        # domain hash, the result should how as false
+        # And: when someone tries to add a new domain, reusing the existing
+        # domain hash, the result should show as false
         bad_check_result = carb._check_domain_hash_against_provider(
             good_hash_text, provider, new_bad_domain
         )
 
         assert bad_check_result is False
 
-    @pytest.mark.only
     def test_checking_a_domain_hash_is_only_possible_if_a_provider_has_created_a_shared_secret(
         self, db, hosting_provider_factory
     ):
         carb = carbon_txt.CarbonTxtParser()
         provider = hosting_provider_factory.create()
 
-        hash_obj = hashlib.sha256(
-            f"{provider.website}{provider.shared_secret.body}".encode("utf-8")
-        )
-        hash_text = hash_obj.hexdigest()
+        hash_text = "20f745d77773a3a910dc5a864373e5ff00a5f783b51fcadf2b3e706a1d42478a"
 
         from apps.greencheck.exceptions import NoSharedSecret
 
