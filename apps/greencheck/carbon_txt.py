@@ -2,7 +2,6 @@ import logging
 import typing
 from typing import Dict, List, Set, Union
 from urllib import parse
-import hashlib
 import dns.resolver
 import requests
 import toml
@@ -332,6 +331,7 @@ class CarbonTxtParser:
 
         via_header_payload = res.headers["via"].split(" ")
 
+        # check for delegation via HTTP header with no domain hash
         if len(via_header_payload) == 2:
             protocol, via_url = via_header_payload
             lookup_sequence.append(
@@ -339,6 +339,7 @@ class CarbonTxtParser:
             )
             res = requests.get(via_url)
 
+        # check for delegation via HTTP header *with* domain hash
         if len(via_header_payload) == 3:
             protocol, via_url, domain_hash = via_header_payload
             lookup_sequence.append(
@@ -407,14 +408,13 @@ class CarbonTxtParser:
                 "We found valid TOML, but we could not parse the contents."
             )
 
-        # TODO check if we are delegating via an HTTP header, as a final fallback
-
+        # TODO check if we are delegating via an HTTP header, as a final fallbac
         try:
             res, lookup_sequence = self._check_for_carbon_txt_via_header(
                 res, lookup_sequence
             )
         except Exception as ex:
-            breakpoint()
+            logger.exception(ex)
             pass
 
         try:
