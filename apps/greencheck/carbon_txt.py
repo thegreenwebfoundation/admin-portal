@@ -294,12 +294,15 @@ class CarbonTxtParser:
 
                 domain_hash_check = txt_record_body.split(" ")
 
+                # check for delegation with no domain hash
                 if len(domain_hash_check) == 1:
                     override_url = domain_hash_check[0]
                     lookup_sequence.append(
                         {"reason": "Delegated via DNS TXT record", "url": override_url}
                     )
 
+                # check for delegation *with* domain hash, and try to add
+                # the domain to our list of known green domains
                 if len(domain_hash_check) == 2:
                     override_url = domain_hash_check[0]
                     domain_hash = domain_hash_check[1]
@@ -309,7 +312,6 @@ class CarbonTxtParser:
                     )
                     override_domain = parse.urlparse(override_url).netloc
 
-                    # MOCKED
                     self._add_domain_if_hash_matches_provider(
                         domain, override_domain, domain_hash
                     )
@@ -317,10 +319,12 @@ class CarbonTxtParser:
         return override_url, lookup_sequence
 
     def _check_for_carbon_txt_via_header(
-        self, res, lookup_sequence: List = None
+        self, res: requests.Response, lookup_sequence: List = None
     ) -> Union[List[str], List]:
         """
-        Look for a HTTP header we can use
+        Look for a 'via' HTTP header in the HTTP response passed in, and
+        if found, try looking for a carbon.txt file at the URL in the header
+        to delegate our lookup to
         """
         original_url = lookup_sequence[0]["url"]
         original_domain = parse.urlparse(original_url).netloc
@@ -345,12 +349,11 @@ class CarbonTxtParser:
             lookup_sequence.append(
                 {"reason": "Delegated via HTTP 'via:' header", "url": via_url}
             )
-            # TODO handle cases when there is just a domain, and not a full url
+            # TODO handle cases when there is just a domain, like 'example.com'
+            # and not a full url like https://example.com/carbon.txt
             res = requests.get(via_url)
+            via_domain = parse.urlparse(via_url).netloc
 
-        via_domain = parse.urlparse(via_url).netloc
-
-        if domain_hash:
             self._add_domain_if_hash_matches_provider(
                 original_domain, via_domain, domain_hash
             )
