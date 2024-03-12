@@ -32,6 +32,15 @@ dev.test:
 dev.test.only:
 	pytest -s --create-db --looponfail -m only -v  --ds=greenweb.settings.testing
 
+# start a marimo notebook session
+notebook.gitpod:
+
+	# checkout our data analysis repo
+	git clone https://github.com/thegreenwebfoundation/data-analysis.git
+
+	# set up our start notebook with django initialised ready for queries
+	marimo edit data-analysis/starter-notebook.py
+
 
 
 # Run a basic test(with pytest) that creates a database using the testing settings
