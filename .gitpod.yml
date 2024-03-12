@@ -1,4 +1,3 @@
-
 image:
   file: .gitpod.dockerfile
 
@@ -41,9 +40,10 @@ tasks:
       docker run 
       --hostname green-rabbit 
       -p 5672:5672 
-      --rm  
+      --rm
+      --privileged
       --name green-rabbit 
-      bitnami/rabbitmq:3.11
+      rabbitmq:3.11
 
   - name: mailhog
     command: >
