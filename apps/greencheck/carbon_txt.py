@@ -408,7 +408,7 @@ class CarbonTxtParser:
                 "We found valid TOML, but we could not parse the contents."
             )
 
-        # TODO check if we are delegating via an HTTP header, as a final fallbac
+        # TODO check if we are delegating via an HTTP header, as a final fallback
         try:
             res, lookup_sequence = self._check_for_carbon_txt_via_header(
                 res, lookup_sequence

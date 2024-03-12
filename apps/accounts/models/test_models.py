@@ -62,7 +62,6 @@ class TestHostingProvider:
 
         assert datacenter.model == accounting_model
 
-    @pytest.mark.only
     def test_archive(
         self, db, hosting_provider_factory, green_ip_factory, green_asn_factory
     ):
