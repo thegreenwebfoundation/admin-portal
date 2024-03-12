@@ -1,3 +1,4 @@
+
 image:
   file: .gitpod.dockerfile
 
@@ -42,15 +43,7 @@ tasks:
       -p 5672:5672 
       --rm  
       --name green-rabbit 
-      rabbitmq:3
-
-  - name: redis
-    command: >
-      docker run  
-      --rm
-      --name green-redis
-      -p 6379:6379
-      redis:6
+      bitnami/rabbitmq:3.11
 
   - name: mailhog
     command: >
