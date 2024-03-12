@@ -32,12 +32,14 @@ dev.test:
 dev.test.only:
 	pytest -s --create-db --looponfail -m only -v  --ds=greenweb.settings.testing
 
+data_analysis_repo:
+	if test -d data-analysis; \
+	then echo "data-analysis repo already checked out";  \
+	else git clone https://github.com/thegreenwebfoundation/data-analysis.git; \
+	fi
+
 # start a marimo notebook session
-notebook.gitpod:
-
-	# checkout our data analysis repo
-	git clone https://github.com/thegreenwebfoundation/data-analysis.git
-
+notebook.gitpod: data_analysis_repo
 	# set up our start notebook with django initialised ready for queries
 	marimo edit data-analysis/starter-notebook.py
 
