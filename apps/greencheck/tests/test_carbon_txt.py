@@ -9,8 +9,6 @@ from ...accounts import models as ac_models
 from .. import carbon_txt, choices, workers
 from .. import models as gc_models
 
-#
-# hashlib.sha256(f"{domain} {shared_secret.body}".encode("utf-8"))
 SAMPLE_SECRET_BODY = "9b77e6f009dee68ae5307f2e54f4f36bc25d6d0dc65c86714784ad33a5480a64"
 
 
@@ -474,13 +472,13 @@ class TestCarbonTxtParser:
         self, db, hosting_provider_factory
     ):
         """
-        Check that for a provider with a shared secret, we can check its domain
-        against the hash of the domain and its shared secret.
+        Check that for a provider with a shared secret, we can check its
+        domain against the hash of the domain and its shared secret.
         This simulates the process of checking a domain hash for a provider's
         own website.
         """
 
-        carb = carbon_txt.CarbonTxtParser()
+        psr = carbon_txt.CarbonTxtParser()
         provider = hosting_provider_factory.create()
         provider.refresh_shared_secret()
 
@@ -489,7 +487,7 @@ class TestCarbonTxtParser:
         )
         hash_text = hash_obj.hexdigest()
 
-        check_result = carb._check_domain_hash_against_provider(
+        check_result = psr._check_domain_hash_against_provider(
             hash_text, provider, provider.website
         )
 
@@ -499,13 +497,14 @@ class TestCarbonTxtParser:
         self, db, hosting_provider_factory
     ):
         """
-        Check that for provider with a shared secret, we can check new domain can be
-        added by passing a hash of the new domain and the shared secret.
-        This simulates adding a new domain to a provider's list of green domains, by
-        linking to the carbon.txt on a verified provider, and passing the hash of the
-        new domain to be added in the DNS record or HTTP header
+        Check that for a provider with a shared secret, we can check new domain
+        can be added by passing a hash of the new domain and the shared secret.
+
+        This simulates adding a new domain to a provider's list of green domains
+        by linking to the carbon.txt on a verified provider, and passing the
+        hash of the new domain to be added in the DNS record or HTTP header.
         """
-        carb = carbon_txt.CarbonTxtParser()
+        psr = carbon_txt.CarbonTxtParser()
         provider = hosting_provider_factory.create()
         provider.refresh_shared_secret()
 
@@ -515,7 +514,7 @@ class TestCarbonTxtParser:
             f"{new_domain}{provider.shared_secret.body}".encode("utf-8")
         )
         hash_text = hash_obj.hexdigest()
-        check_result = carb._check_domain_hash_against_provider(
+        check_result = psr._check_domain_hash_against_provider(
             hash_text, provider, new_domain
         )
 
@@ -525,11 +524,13 @@ class TestCarbonTxtParser:
         self, db, hosting_provider_factory
     ):
         """
-        Check that for provider with a shared secret, we are unable to add a new domain
-        that is simply reusing a domain hash form an existing domain.
-        This simulates someone trying to add a new domain to a provider's list of
-        green domains, when they do not have access to the provider's shared secret to
-        make the required domain hash.
+        Check that for provider with a shared secret, we are unable
+        to add a new domain that is simply reusing a domain hash from
+        an existing domain.
+
+        This simulates someone trying to add a new domain to a provider's
+        list of green domains when they do not have access to the provider's
+        shared secret to make a new domain hash.
         """
 
         # Given a provider with a shared secret, and a carbontxt parser
