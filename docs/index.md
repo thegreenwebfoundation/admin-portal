@@ -30,6 +30,7 @@ users-permissions.md
 verification-request.md
 how-we-check-for-green.md
 understanding-the flow-of-a-greencheck.md
+importers.md
 other-greenweb-software.md
 working-with-greenweb-datasets.md
 ```
