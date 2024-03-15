@@ -1,4 +1,4 @@
-### Automated Importers
+# Automated Importers
 
 As mentioned in [recurring tasks](recurring-tasks.md), the green web platform has a set of automated importers designed for bulk import of IP ranges from very large providers. This section details their design, and how to create new ones.
 
@@ -141,6 +141,6 @@ We also have a published API with endpoints for sending updates to a provider pr
 
 **On using protocols, and composition rather than inheritance.**
 
-https://hynek.me/articles/python-subclassing-redux/
-https://tech.octopus.energy/news/2019/03/21/python-interfaces-a-la-go.html
-https://idego-group.com/blog/2023/02/21/we-need-to-talk-about-protocols-in-python/
+- https://hynek.me/articles/python-subclassing-redux/
+- https://tech.octopus.energy/news/2019/03/21/python-interfaces-a-la-go.html
+- https://idego-group.com/blog/2023/02/21/we-need-to-talk-about-protocols-in-python/

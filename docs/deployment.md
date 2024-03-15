@@ -1,4 +1,4 @@
-## Deployment
+# Deployment
 
 ### Github conventions
 
@@ -250,11 +250,11 @@ These playbooks template out new scripts that supervisor the installed process m
 2. [Django Dramatiq, the pacakge we use for interfacing with dramatiq](https://github.com/Bogdanp/django_dramatiq)
 
 
-## Logging
+### Logging
 
 As mentioned before, we use supervisor to run our both our workers and web server processes. This means processes are restarted automatically for us, and logs are rotated for us.
 
-##  Gunicorn logging
+### Gunicorn logging
 
 By default, gunicorn, our web server logs at the `INFO` level. This means successful requests are not logged, and only errors (with the status code 5xx) or not found requests (4xx)  show up in logs.
 
