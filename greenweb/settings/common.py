@@ -220,6 +220,17 @@ EXPLORER_AUTORUN_QUERY_WITH_PARAMS = False
 EXPLORER_PERMISSION_VIEW = lambda r: r.user.is_admin
 EXPLORER_PERMISSION_CHANGE = lambda r: r.user.is_admin
 
+DATABASES["default"]["OPTIONS"] = {
+    # Tell MySQLdb to connect with 'utf8mb4' character set
+    "charset": "utf8mb4",
+}
+
+DATABASES["read_only"]["OPTIONS"] = {
+    # Tell MySQLdb to connect with 'utf8mb4' character set
+    "charset": "utf8mb4",
+}
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # only support API access with the sql explorer if we
 # explicitly set the token
 EXPLORER_TOKEN = os.getenv("EXPLORER_TOKEN")
