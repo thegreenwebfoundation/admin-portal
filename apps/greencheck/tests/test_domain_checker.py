@@ -33,16 +33,37 @@ class TestDomainChecker:
         assert res.ip in (green_ip.ip_start, green_ip.ip_end)
 
     @pytest.mark.parametrize(
-        "domain", ["ipv6.api.mythic-beasts.com", "ipv4.api.mythic-beasts.com"]
+        "domain",
+        [
+            "ipv6.api.mythic-beasts.com",
+            "ipv4.api.mythic-beasts.com",
+        ],
     )
     def test_domain_to_ip_supports_ipv4_and_ipv6(self, checker, domain):
         """
         When we check a a domain that resolves to an IPv6 address
         Do we get the appropriate response back?
         """
-        res = checker.check_domain(domain)
+        res = checker.convert_domain_to_ip(domain)
 
-        assert res.ip is not None and res.ip != "None"
+        assert isinstance(res, ipaddress.IPv6Address) or isinstance(
+            res, ipaddress.IPv4Address
+        )
+
+    @pytest.mark.parametrize(
+        "domain",
+        ["defintelynotavaliddomain", "defintelynotavaliddomain.com"],
+    )
+    def test_domain_to_ip_does_not_fail_silently(self, checker, domain):
+        """
+        When we check a domain that does resolve, are we notified so we
+        can catch exception appropriately?
+        """
+        import ipaddress
+        import socket
+
+        with pytest.raises((ipaddress.AddressValueError, socket.gaierror)):
+            checker.convert_domain_to_ip(domain)
 
     def test_with_green_domain_by_asn(self, green_asn, checker):
         """
