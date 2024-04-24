@@ -16,8 +16,10 @@ This follows largely the same approach:
 import ipaddress
 import logging
 import socket
+import typing
 import urllib
 
+import ipwhois
 import tld
 from django.utils import timezone
 from ipwhois.asn import IPASN
@@ -28,10 +30,6 @@ from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
 
 logger = logging.getLogger(__name__)
-
-import ipwhois
-
-import typing
 
 
 class GreenDomainChecker:
@@ -127,14 +125,49 @@ class GreenDomainChecker:
 
     def convert_domain_to_ip(
         self, domain
-    ) -> ipaddress.IPv4Network or ipaddress.IPv6Network or None:
+    ) -> typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, None]:
         """
         Accepts a domain name or IP address, and returns an IPV4 or IPV6
         address
         """
+
+        # if we don't get a response back, assume we need to check for an ipv6 address,
+        # or raise an exception
         try:
-            ip_string = socket.gethostbyname(domain)
-            return ipaddress.ip_address(ip_string)
+            # TODO: support multiple addresses being returned
+
+            # `getaddrinfo`` actually returns a list of possible addresses,
+            # but our current code only assumes a domain would resolve to a single IP
+            # address when we look up a domain.
+            # Ideally we'd check that ALL the IP addresses resolved are within our
+            # green IP ranges but until we know how much this impacts performance
+            # we choose the first one.
+            ip_info = socket.getaddrinfo(domain, None)
+
+            # each item in the list is a tuple containing:
+
+            # Address family (like socket.AF_INET for IPv4 or socket.AF_INET6 for IPv6)
+            # Socket type (like socket.SOCK_STREAM for TCP or socket.SOCK_DGRAM for UDP)
+            # Protocol (usually just 0)
+            # Canonical name (an alias for the host, if applicable)
+            # Socket address (a tuple containing the IP address and port number)
+
+            ip_address_list = [
+                # we are fetching the ip address in our socket address returned above
+                ip[4][0]
+                for ip in ip_info
+            ]
+
+            ip = ipaddress.ip_address(ip_address_list[0])
+            logger.debug(ip)
+
+            if ip:
+                return ip
+
+            raise ipaddress.AddressValueError(
+                f"Unable to convert domain to IP: {domain}"
+            )
+
         except socket.gaierror as err:
             logger.warning(f"Unable to lookup domain: {domain} - error: {err}")
 
