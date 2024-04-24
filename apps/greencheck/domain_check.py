@@ -93,8 +93,12 @@ class GreenDomainChecker:
         about it, like extended whois data, and any relevant sitecheck
         or green domain objects.
         """
-
-        ip_address = self.convert_domain_to_ip(domain_to_check)
+        try:
+            ip_address = self.convert_domain_to_ip(domain_to_check)
+        except (socket.gaierror, ipaddress.AddressValueError) as err:
+            logger.warning(f"Unable to lookup domain: {domain_to_check} - error: {err}")
+        except Exception as err:
+            logger.warning(f"Unable to lookup domain: {domain_to_check} - error: {err}")
 
         # fetch our sitecheck object
         site_check = self.check_domain(domain_to_check)
@@ -125,51 +129,42 @@ class GreenDomainChecker:
 
     def convert_domain_to_ip(
         self, domain
-    ) -> typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, None]:
+    ) -> typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]:
         """
         Accepts a domain name or IP address, and returns an IPV4 or IPV6
-        address
+        address, raising an exception if not resolution occurs.
         """
 
-        # if we don't get a response back, assume we need to check for an ipv6 address,
-        # or raise an exception
-        try:
-            # TODO: support multiple addresses being returned
+        # TODO: support multiple addresses being returned:
+        # `getaddrinfo`` actually returns a list of possible addresses,
+        # but our current code only assumes a domain would resolve to a single IP
+        # address when we look up a domain.
+        # Ideally we'd check that ALL the IP addresses resolved are within our
+        # green IP ranges but until we know how much this impacts performance
+        # we choose the first one.
+        ip_info = socket.getaddrinfo(domain, None)
 
-            # `getaddrinfo`` actually returns a list of possible addresses,
-            # but our current code only assumes a domain would resolve to a single IP
-            # address when we look up a domain.
-            # Ideally we'd check that ALL the IP addresses resolved are within our
-            # green IP ranges but until we know how much this impacts performance
-            # we choose the first one.
-            ip_info = socket.getaddrinfo(domain, None)
+        # each item in the list is a tuple containing:
 
-            # each item in the list is a tuple containing:
+        # Address family (like socket.AF_INET for IPv4 or socket.AF_INET6 for IPv6)
+        # Socket type (like socket.SOCK_STREAM for TCP or socket.SOCK_DGRAM for UDP)
+        # Protocol (usually just 0)
+        # Canonical name (an alias for the host, if applicable)
+        # Socket address (a tuple containing the IP address and port number)
 
-            # Address family (like socket.AF_INET for IPv4 or socket.AF_INET6 for IPv6)
-            # Socket type (like socket.SOCK_STREAM for TCP or socket.SOCK_DGRAM for UDP)
-            # Protocol (usually just 0)
-            # Canonical name (an alias for the host, if applicable)
-            # Socket address (a tuple containing the IP address and port number)
+        ip_address_list = [
+            # we are fetching the ip address in our socket address returned above
+            ip[4][0]
+            for ip in ip_info
+        ]
 
-            ip_address_list = [
-                # we are fetching the ip address in our socket address returned above
-                ip[4][0]
-                for ip in ip_info
-            ]
+        ip = ipaddress.ip_address(ip_address_list[0])
+        logger.debug(ip)
 
-            ip = ipaddress.ip_address(ip_address_list[0])
-            logger.debug(ip)
+        if ip:
+            return ip
 
-            if ip:
-                return ip
-
-            raise ipaddress.AddressValueError(
-                f"Unable to convert domain to IP: {domain}"
-            )
-
-        except socket.gaierror as err:
-            logger.warning(f"Unable to lookup domain: {domain} - error: {err}")
+        raise ipaddress.AddressValueError(f"Unable to convert domain to IP: {domain}")
 
     def green_sitecheck_by_ip_range(self, domain, ip_address, ip_match):
         """
@@ -261,13 +256,21 @@ class GreenDomainChecker:
         the best matching IP range for the ip address it resolves to,
         or a 'grey' Sitecheck
         """
+        UNRESOLVED_ADDRESS = "0.0.0.0"
 
         if carbon_txt_match := self.check_via_carbon_txt(domain):
             return self.green_sitecheck_by_carbontxt(domain, carbon_txt_match)
 
-        ip_address = self.convert_domain_to_ip(domain)
-
-        if not ip_address:
+        try:
+            ip_address = self.convert_domain_to_ip(domain)
+        except (ipaddress.AddressValueError, socket.gaierror):
+            ip_address = UNRESOLVED_ADDRESS
+            return self.grey_sitecheck(domain, ip_address)
+        except Exception as err:
+            logger.warning(
+                f"Unexpected exception looking up: {domain} - error was: {err}"
+            )
+            ip_address = UNRESOLVED_ADDRESS
             return self.grey_sitecheck(domain, ip_address)
 
         if ip_match := self.check_for_matching_ip_ranges(ip_address):
