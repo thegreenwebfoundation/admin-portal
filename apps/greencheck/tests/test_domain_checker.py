@@ -1,15 +1,13 @@
-from ipaddress import _IPAddressBase
+import ipaddress
 import logging
+from unittest import mock
+
 import pytest
 
-from conftest import hosting_provider
-
-
-from .. import legacy_workers
-from .. import domain_check
-from .. import models as gc_models
 from apps.accounts import models as ac_models
-from unittest import mock
+
+from .. import domain_check, legacy_workers
+from .. import models as gc_models
 
 pytestmark = pytest.mark.django_db
 
@@ -32,6 +30,9 @@ class TestDomainChecker:
         assert isinstance(res, legacy_workers.SiteCheck)
         assert res.ip in (green_ip.ip_start, green_ip.ip_end)
 
+    # this came out of a discussion with the folks at mythic beasts
+    # who have some ipv6 only domains. If we need to mock it in future,
+    # we can
     @pytest.mark.parametrize(
         "domain",
         [
@@ -144,7 +145,8 @@ class TestDomainCheckerOrderBySize:
         large_ip_range.save()
 
         ip_matches = gc_models.GreencheckIp.objects.filter(
-            ip_end__gte="127.0.1.2", ip_start__lte="127.0.1.2",
+            ip_end__gte="127.0.1.2",
+            ip_start__lte="127.0.1.2",
         )
 
         res = checker.order_ip_range_by_size(ip_matches)
@@ -249,13 +251,13 @@ class TestDomainCheckByCarbonTxt:
 
         # check that we get a response back and a grey result,
         # as there is no evidence left to support the green result
-        assert res.green == False
+        assert res.green is False
 
     def test_lookup_green_domain_with_no_ip_lookup(
         self, green_domain_factory, green_ip_factory, mocker, checker
     ):
         """"""
-        green_ip = green_ip_factory.create()
+        green_ip_factory.create()
 
         # mock our request to avoid the network call
         # mocker.patch(
@@ -281,4 +283,4 @@ class TestDomainCheckByCarbonTxt:
         site_logger.log_sitecheck_to_database(res)
         # check that we get a response back and a grey result,
         # as there is no evidence left to support the green result
-        assert res.green == False
+        assert res.green is False
