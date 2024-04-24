@@ -32,6 +32,18 @@ class TestDomainChecker:
         assert isinstance(res, legacy_workers.SiteCheck)
         assert res.ip in (green_ip.ip_start, green_ip.ip_end)
 
+    @pytest.mark.parametrize(
+        "domain", ["ipv6.api.mythic-beasts.com", "ipv4.api.mythic-beasts.com"]
+    )
+    def test_domain_to_ip_supports_ipv4_and_ipv6(self, checker, domain):
+        """
+        When we check a a domain that resolves to an IPv6 address
+        Do we get the appropriate response back?
+        """
+        res = checker.check_domain(domain)
+
+        assert res.ip is not None and res.ip != "None"
+
     def test_with_green_domain_by_asn(self, green_asn, checker):
         """
         Given a matching ASN, do we return a green sitecheck?
