@@ -139,7 +139,7 @@ class ImporterCSVForm(forms.Form):
 
         uploaded_csv_string = self.cleaned_data["csv_file"].read().decode("utf-8")
         csv_file = io.StringIO(uploaded_csv_string)
-        importer = CSVImporter(self.cleaned_data["provider"])
+        importer = CSVImporter()
 
         importable_values = importer.fetch_data_from_source(csv_file)
 
@@ -167,7 +167,7 @@ class ImporterCSVForm(forms.Form):
 
         provider = self.cleaned_data["provider"]
 
-        self.importer.process_addresses(self.ip_ranges)
+        self.importer.process(provider, self.ip_ranges)
         self.processed_ips = self.importer.preview(provider, self.ip_ranges)
         return self.processed_ips
 
