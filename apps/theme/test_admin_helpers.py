@@ -34,9 +34,14 @@ class TestAdminHelper:
         assert mock_method.call_count == 1
 
     def test_link_to_ripe_stat_handles_empty(self, mocker):
-        mock_method = mocker.patch(
-            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip"
-        )
-        assert admin_helpers.link_to_ripe_stat(None) is None
-        # are we calling convert_domain_to_ip at all? We shouldn't be any more
-        assert mock_method.call_count == 0
+        result = admin_helpers.link_to_ripe_stat(None)
+        assert result == ""
+
+    def test_link_to_ripe_stat_handles_failing_lookup(self, mocker):
+        # Added to cover the case when there is a valid domain, but it doesn't
+        # resolve to an IP address. For more see the links below
+        # https://product-science.sentry.io/issues/5253649009/
+        # https://github.com/thegreenwebfoundation/admin-portal/pull/575
+
+        result = admin_helpers.link_to_ripe_stat("valid-but-not-resolving-to-ip.com")
+        assert result == ""
