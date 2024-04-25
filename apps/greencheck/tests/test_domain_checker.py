@@ -1,5 +1,6 @@
 import ipaddress
 import logging
+import socket
 from unittest import mock
 
 import pytest
@@ -53,15 +54,16 @@ class TestDomainChecker:
 
     @pytest.mark.parametrize(
         "domain",
-        ["defintelynotavaliddomain", "defintelynotavaliddomain.com"],
+        [
+            "defintely-not-a-valid-domain",
+            "valid-domain-but-not-resolving.com",
+        ],
     )
     def test_domain_to_ip_does_not_fail_silently(self, checker, domain):
         """
-        When we check a domain that does resolve, are we notified so we
-        can catch exception appropriately?
+        When we check a domain that does not resolve successfully, are we
+        notified so we can catch exception appropriately?
         """
-        import ipaddress
-        import socket
 
         with pytest.raises((ipaddress.AddressValueError, socket.gaierror)):
             checker.convert_domain_to_ip(domain)

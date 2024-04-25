@@ -1,10 +1,12 @@
 import logging
+import socket
 import urllib
 
-from apps.greencheck import domain_check
 from django import template
 from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
+
+from apps.greencheck import domain_check
 
 logger = logging.getLogger(__name__)
 register = template.Library()
@@ -30,15 +32,21 @@ def make_url(website_string: str) -> str:
 @register.simple_tag
 def link_to_ripe_stat(website_string: str) -> str:
     """
-    Add link to checker at stat.ripe.net for a domain
+    Add link to checker at stat.ripe.net for a domain.
+    Returns an empty string if the lookup does not work
     """
-    # check and return early we have nothing to check
-    if not website_string:
-        return
 
     url = make_url(website_string)
     domain = checker.validate_domain(url)
-    resolved_ip = checker.convert_domain_to_ip(domain)
+
+    try:
+        resolved_ip = checker.convert_domain_to_ip(domain)
+    except socket.gaierror as err:
+        logger.warning(f"Could not resolve domain {domain}: error was {err}")
+        resolved_ip = None
+    except Exception as err:
+        logger.exception(f"Unexpected error looking up {domain}: error was {err}")
+        resolved_ip = None
 
     if resolved_ip:
         return mark_safe(
@@ -48,6 +56,11 @@ def link_to_ripe_stat(website_string: str) -> str:
             f"Check domain against RIPE stats"
             f"</a>"
         )
+
+    # Return an empty string as a graceful fallback to avoid
+    # having `None` cast into a string saying "None"
+    # in our template
+    return ""
 
 
 @register.filter()
