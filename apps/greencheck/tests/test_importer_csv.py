@@ -1,35 +1,29 @@
-import pytest
 import pathlib
-import re
-import pandas as pd
 from io import StringIO
 
+import pytest
+from django.conf import settings
 from django.core.management import call_command
+
 from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.importers.importer_csv import CSVImporter
 
-from django.conf import settings
-
 
 @pytest.fixture
-def sample_data_raw():
-    """
-    Retrieve a locally saved sample of the population to use for this test
-    Return: CSV
-    """
+def test_csv_path() -> str:
     csv_path = (
         pathlib.Path(settings.ROOT)
         / "apps"
         / "greencheck"
         / "fixtures"
-        / "test_dataset_csv.csv"
+        / "test_dataset.csv"
     )
-    return pd.read_csv(csv_path, header=None)
+    return str(csv_path)
 
 
 @pytest.mark.django_db
 class TestCSVImporter:
-    def test_parse_to_list(self, sample_data_raw, hosting_provider: Hostingprovider):
+    def test_parse_to_list(self, test_csv_path, hosting_provider: Hostingprovider):
         """
         Test the parsing function.
         """
@@ -38,7 +32,8 @@ class TestCSVImporter:
         importer = CSVImporter()
 
         # Run parse list with sample data
-        list_of_addresses = importer.parse_to_list(sample_data_raw)
+        rows = importer.fetch_data_from_source(test_csv_path)
+        list_of_addresses = importer.parse_to_list(rows)
 
         # Test: resulting list contains some items
         assert len(list_of_addresses) > 0
@@ -57,14 +52,18 @@ class TestCSVImporter:
 
         # do we have an IP range in our list
         expected_ip_range = ("104.21.2.197", "104.21.2.199")
-        assert expected_ip_range in list_of_addresses
 
-    def test_process_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
+        expected_single_ip_range = ("104.21.2.197", "104.21.2.199")
+        assert expected_ip_range in list_of_addresses
+        assert expected_single_ip_range in list_of_addresses
+
+    def test_process_imports(self, test_csv_path, hosting_provider: Hostingprovider):
         hosting_provider.save()
         importer = CSVImporter()
 
         # Run parse list with sample data
-        list_of_addresses = importer.parse_to_list(sample_data_raw)
+        rows = importer.fetch_data_from_source(test_csv_path)
+        list_of_addresses = importer.parse_to_list(rows)
         created_networks = importer.process(
             provider=hosting_provider, list_of_networks=list_of_addresses
         )
@@ -73,7 +72,7 @@ class TestCSVImporter:
         created_green_ips = created_networks["created_green_ips"]
         created_green_asns = created_networks["created_asns"]
 
-        assert len(created_green_ips) == 2
+        assert len(created_green_ips) == 3
         assert len(created_green_asns) == 1
 
         # have we created the new Green ASN in the db?
@@ -88,7 +87,7 @@ class TestCSVImporter:
         for green_ip in created_green_ips:
             assert green_ip in green_ips
 
-    def test_preview_imports(self, sample_data_raw, hosting_provider: Hostingprovider):
+    def test_preview_imports(self, test_csv_path, hosting_provider: Hostingprovider):
         """
         Can we see a representation of the data we would import before
         we run the import it?
@@ -98,17 +97,18 @@ class TestCSVImporter:
         importer = CSVImporter()
 
         # Run parse list with sample data
-        list_of_addresses = importer.parse_to_list(sample_data_raw)
+        rows = importer.fetch_data_from_source(test_csv_path)
+        list_of_addresses = importer.parse_to_list(rows)
 
         preview = importer.preview(
             provider=hosting_provider, list_of_networks=list_of_addresses
         )
 
-        assert len(preview["green_ips"]) == 2
+        assert len(preview["green_ips"]) == 3
         assert len(preview["green_asns"]) == 1
 
     def test_view_processed_imports(
-        self, sample_data_raw, hosting_provider: Hostingprovider
+        self, test_csv_path, hosting_provider: Hostingprovider
     ):
         """
         Can we compare the state of an import to the networks already in the database
@@ -118,8 +118,8 @@ class TestCSVImporter:
         hosting_provider.save()
         importer = CSVImporter()
 
-        # Run parse list with sample data
-        list_of_addresses = importer.parse_to_list(sample_data_raw)
+        rows = importer.fetch_data_from_source(test_csv_path)
+        list_of_addresses = importer.parse_to_list(rows)
         # Run our import to save them to the database, simulating saving
         # via our the form
         created_networks = importer.process(
@@ -144,29 +144,37 @@ class TestCSVImporter:
             assert green_asn.id is not None
 
 
-# @pytest.mark.django_db
-# class TestCsvImportCommand:
-#     """
-#     This just tests that we have a management command that can run.
-#     """
+@pytest.mark.django_db
+class TestCSVImportCommand:
+    """
+    This tests that we have a management command that can run, and checks
+    for existence of the necessary command line args.
+    """
 
-#     def test_handle(self, mocker, sample_data_as_list):
-#         # mock the call to retrieve from source, to a locally stored
-#         # testing sample. By instead using the test sample,
-#         # we avoid unnecessary network requests.
+    def test_handle(self, hosting_provider, test_csv_path):
+        out = StringIO()
+        hosting_provider.save()
+        call_command(
+            "update_networks_in_db_csv", hosting_provider.id, test_csv_path, stdout=out
+        )
+        assert "Import Complete" in out.getvalue()
 
-#         # identify method we want to mock
-#         path_to_mock = (
-#             "apps.greencheck.importers.importer_csv."
-#             "CSVImporter.fetch_data_from_source"
-#         )
+    def test_handle_running_twice(self, hosting_provider, test_csv_path):
+        first_output = StringIO()
+        second_output = StringIO()
+        hosting_provider.save()
 
-#         # define a different return when the targeted mock
-#         # method is called
-#         mocker.patch(
-#             path_to_mock,
-#             return_value=sample_data_as_list,
-#         )
-
-#         # TODO: Do we need this call command?
-#         # call_command("update_networks_in_db_csv")
+        call_command(
+            "update_networks_in_db_csv",
+            hosting_provider.id,
+            test_csv_path,
+            stdout=first_output,
+        )
+        call_command(
+            "update_networks_in_db_csv",
+            hosting_provider.id,
+            test_csv_path,
+            stdout=second_output,
+        )
+        assert "Import Complete" in first_output.getvalue()
+        assert "Import Complete" in second_output.getvalue()
