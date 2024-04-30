@@ -108,7 +108,7 @@ class ApprovalMixin:
 class ImporterCSVForm(forms.Form):
     """
     A form for handling bulk IP range submissions in the django admin.
-    Uses the ImporterCSV class to handle imports
+    Uses the CSVImporter class to handle imports
     """
 
     provider = forms.ModelChoiceField(
@@ -132,7 +132,8 @@ class ImporterCSVForm(forms.Form):
 
     def initialize_importer(self):
         """
-        Clean our form, and return our importer with the
+        Clean our form, and return our importer with the preview data
+        available
         """
 
         self.is_valid()
@@ -141,10 +142,9 @@ class ImporterCSVForm(forms.Form):
         csv_file = io.StringIO(uploaded_csv_string)
         importer = CSVImporter()
 
-        importable_values = importer.fetch_data_from_source(csv_file)
+        rows_from_file = importer.fetch_data_from_source(csv_file)
 
-        self.ip_ranges = importable_values
-
+        self.ip_ranges = importer.parse_to_list(rows_from_file)
         self.importer = importer
         return importer
 
@@ -167,6 +167,7 @@ class ImporterCSVForm(forms.Form):
 
         provider = self.cleaned_data["provider"]
 
+        # breakpoint()
         self.importer.process(provider, self.ip_ranges)
         self.processed_ips = self.importer.preview(provider, self.ip_ranges)
         return self.processed_ips
@@ -187,8 +188,12 @@ class GreencheckAsnForm(ModelForm, ApprovalMixin):
         )
 
     def save(self, commit=True):
-        """ """
-        # Like the GreencheckIpForm, we non-staff user creates an ip, instead of saving
+        """
+        Like the GreencheckIpForm, when non-staff user creates an ip,
+        we save an approval record, and create the IP once it is approved.
+        When a staff user saves, we create it directly.
+        """
+
         self._save_approval()
         return super().save(commit=True)
 

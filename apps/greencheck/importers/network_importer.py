@@ -2,10 +2,15 @@ import ipaddress
 import logging
 from typing import Union
 
+from rich.logging import RichHandler
+
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.models import GreencheckASN, GreencheckIp
 
 logger = logging.getLogger(__name__)
+
+
+logger.addHandler(RichHandler())
 
 
 def is_ip_network(address: str) -> bool:
@@ -21,6 +26,7 @@ def is_ip_network(address: str) -> bool:
     if "/" not in address:
         return False
 
+    # breakpoint()
     try:
         ipaddress.ip_network(address)
         return True
@@ -28,23 +34,38 @@ def is_ip_network(address: str) -> bool:
         return False
 
 
+def ip_address_without_subnet_mask(address: str) -> str:
+    """
+    Accept an IP address, and return it without
+    the subnet mask if it was added
+    """
+    # sometimes IP addresses are provided including
+    # a network prefix, like /24
+    # We want to remove that
+
+    if "/" in address:
+        return address.split("/")[0]
+
+    # otherwise return our address as normal
+    return address
+
+
 def is_ip_range(address: Union[str, tuple]) -> bool:
     """
     Check if "address" is a valid ip range.
     """
     # return early if not a tuple we can parse
-    if not isinstance(address, tuple):
+    if not isinstance(address, (tuple, list)):
         return False
 
+    first_ip, second_ip = address
+
     try:
-        first_ip = ipaddress.ip_address(address[0])
-        last_ip = ipaddress.ip_address(address[-1])
-        if first_ip and last_ip:
-            return True
+        return bool(ipaddress.ip_address(first_ip) and ipaddress.ip_address(second_ip))
 
     except ValueError as ex:
-        logger.warn(
-            f"Could not extra an IP address pair from address: {address}. Error: {ex}"
+        logger.warning(
+            f"Could not extract an IP address pair from address: {address}. Error: {ex}"
         )
 
 
@@ -149,6 +170,7 @@ class NetworkImporter:
         # address in list_of_addresses:
         try:
             for address in list_of_addresses:
+                logger.warn(address)
                 if is_ip_range(address):
                     # address looks like an IPv4 or IPv6 range
                     green_ip, created = self.save_ip(address)
@@ -178,6 +200,8 @@ class NetworkImporter:
                     else:
                         green_asns.append(green_asn)
                     continue
+
+                logger.warn(f"Could not determine the type of address {address}")
             logger.info(
                 f"Processing complete. Created {len(created_asns)} ASNs, and "
                 f"{len(created_green_ips)} IP ranges. Updated {len(green_asns)} ASNs, "

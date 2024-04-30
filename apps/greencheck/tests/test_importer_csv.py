@@ -32,7 +32,8 @@ class TestCSVImporter:
         importer = CSVImporter()
 
         # Run parse list with sample data
-        rows = importer.fetch_data_from_source(test_csv_path)
+        opened_file = open(test_csv_path)
+        rows = importer.fetch_data_from_source(opened_file)
         list_of_addresses = importer.parse_to_list(rows)
 
         # Test: resulting list contains some items
@@ -62,7 +63,8 @@ class TestCSVImporter:
         importer = CSVImporter()
 
         # Run parse list with sample data
-        rows = importer.fetch_data_from_source(test_csv_path)
+        opened_file = open(test_csv_path)
+        rows = importer.fetch_data_from_source(opened_file)
         list_of_addresses = importer.parse_to_list(rows)
         created_networks = importer.process(
             provider=hosting_provider, list_of_networks=list_of_addresses
@@ -97,7 +99,8 @@ class TestCSVImporter:
         importer = CSVImporter()
 
         # Run parse list with sample data
-        rows = importer.fetch_data_from_source(test_csv_path)
+        opened_file = open(test_csv_path)
+        rows = importer.fetch_data_from_source(opened_file)
         list_of_addresses = importer.parse_to_list(rows)
 
         preview = importer.preview(
@@ -117,17 +120,15 @@ class TestCSVImporter:
         # Initialize Csv importer
         hosting_provider.save()
         importer = CSVImporter()
-
-        rows = importer.fetch_data_from_source(test_csv_path)
+        opened_file = open(test_csv_path)
+        rows = importer.fetch_data_from_source(opened_file)
         list_of_addresses = importer.parse_to_list(rows)
         # Run our import to save them to the database, simulating saving
         # via our the form
-        created_networks = importer.process(
-            provider=hosting_provider, list_of_networks=list_of_addresses
-        )
+        importer.process(provider=hosting_provider, list_of_networks=list_of_addresses)
+
         # Generate a view of the data, to check if we are fetching from
         # the database now
-
         preview = importer.preview(
             provider=hosting_provider, list_of_networks=list_of_addresses
         )

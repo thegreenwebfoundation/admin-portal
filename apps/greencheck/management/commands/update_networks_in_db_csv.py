@@ -19,13 +19,12 @@ class Command(BaseCommand):
         parser.add_argument("csv-path", type=str, help="Path to the required csv file")
 
     def handle(self, *args, **options):
-
         hosting_provider = Hostingprovider.objects.get(pk=options["provider"])
         path = options["csv-path"]
 
         importer = CSVImporter()
-        # rows = ImporterCSV.(hosting_provider, path)
-        rows = importer.fetch_data_from_source(path)
+        opened_file = open(path)
+        rows = importer.fetch_data_from_source(opened_file)
         list_of_addresses = importer.parse_to_list(rows)
 
         logger.info(f"Adding ip addresses for {hosting_provider}")
@@ -38,16 +37,10 @@ class Command(BaseCommand):
 
         self.stdout.write(
             (
-                f"Import Complete. "
+                f"Import Complete for provider {hosting_provider.name }. "
                 f"Added {len(created_green_ips)} green IPs, "
                 f"and {len(created_green_asns)} green ASNs. "
-                f"Provider {hosting_provider.name } now has {len(green_ips)} updated green IPs, "
-                f"and {len(green_asns)} updated green ASNs."
+                f"Updated {len(green_ips)} green IPs, "
+                f"and {len(green_asns)} green ASNs."
             )
         )
-
-
-# {'green_ips': [],
-#  'green_asns': [],
-#  'created_asns': [<GreencheckASN: Amazon US West - 234 - Active>],
-#  'created_green_ips': [<GreencheckIp: 104.21.2.0 - 104.21.2.255>, <GreencheckIp: 104.21.2.197 - 104.21.2.199>, <GreencheckIp: 104.21.2.197 - 104.21.2.197>]}
