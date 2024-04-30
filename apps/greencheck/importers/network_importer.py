@@ -80,7 +80,7 @@ def is_asn(address: Union[str, tuple]) -> bool:
             int(as_number)
             return True
         except Exception as ex:
-            logger.warn(
+            logger.warning(
                 f"Unable to turn find AS number in AS: {address}, exception was: {ex}"
             )
 
@@ -164,7 +164,7 @@ class NetworkImporter:
         # address in list_of_addresses:
         try:
             for address in list_of_addresses:
-                logger.warn(address)
+
                 if is_ip_range(address):
                     # address looks like an IPv4 or IPv6 range
                     green_ip, created = self.save_ip(address)
@@ -195,7 +195,7 @@ class NetworkImporter:
                         green_asns.append(green_asn)
                     continue
 
-                logger.warn(f"Could not determine the type of address {address}")
+                logger.warning(f"Could not determine the type of address {address}")
             logger.info(
                 f"Processing complete. Created {len(created_asns)} ASNs, and "
                 f"{len(created_green_ips)} IP ranges. Updated {len(green_asns)} ASNs, "
@@ -208,7 +208,7 @@ class NetworkImporter:
                 "created_green_ips": created_green_ips,
             }
         except ValueError:
-            logger.warn("An error occurred while adding new entries")
+            logger.warning("An error occurred while adding new entries")
             return {
                 "green_ips": green_ips,
                 "green_asns": green_asns,

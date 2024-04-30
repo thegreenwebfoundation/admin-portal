@@ -49,9 +49,10 @@ class TestImporterCSVForm:
         form.save()
 
         assert len(form.ip_ranges) == 5
+        # we want to make sure we haven't actually imported yet
         hosting_provider.refresh_from_db()
-        assert hosting_provider.greencheckip_set.all().count() == 4
-        assert hosting_provider.greencheckasn_set.all().count() == 1
+        assert hosting_provider.greencheckip_set.all().count() == 0
+        assert hosting_provider.greencheckasn_set.all().count() == 0
 
     def test_form_importer_imports_when_preview_disabled(
         self, db, hosting_provider, importer_form_csv_file
@@ -74,6 +75,6 @@ class TestImporterCSVForm:
 
         assert len(form.ip_ranges) == 5
         hosting_provider.refresh_from_db()
-        # breakpoint()
-        assert hosting_provider.greencheckip_set.all().count() > 0
-        assert hosting_provider.greencheckasn_set.all().count() > 0
+
+        assert hosting_provider.greencheckip_set.all().count() == 4
+        assert hosting_provider.greencheckasn_set.all().count() == 1
