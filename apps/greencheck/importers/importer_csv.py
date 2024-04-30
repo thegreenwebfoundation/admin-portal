@@ -1,8 +1,7 @@
+import csv
 import ipaddress
 import logging
 from typing import List, Tuple, Union
-import csv
-
 
 from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.importers.importer_interface import ImporterProtocol
@@ -11,17 +10,15 @@ from apps.greencheck.importers.network_importer import (
     is_asn,
     is_ip_network,
     is_ip_range,
+    ip_address_without_subnet_mask,
 )
 from apps.greencheck.models import GreencheckASN, GreencheckIp
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class NoProviderException(Exception):
-    pass
-
-
-class MissingPath(Exception):
     pass
 
 
@@ -37,44 +34,43 @@ class CSVImporter:
         network_importer.deactivate_ips()
         return network_importer.process_addresses(list_of_networks)
 
-    def fetch_data_from_source(cls, file_like_object) -> List:
+    def fetch_data_from_source(cls, file_like_object) -> List[List]:
         """
         Return a list of the valid values from the provided CSV
         for importing
         """
         row_list = []
-        with open(file_like_object, "r") as csvfile:
-
-            rows = csv.reader(csvfile)
-            for row in rows:
-                row_list.append(row)
+        csvfile = csv.reader(file_like_object)
+        for row in csvfile:
+            row_list.append(row)
 
         return row_list
 
     def parse_to_list(self, raw_data) -> List[Union[str, Tuple]]:
         """
-        Accept a list of vlaues return a flattened list
+        Accept a list of values, and return a flattened list
         of ip ranges, or importable IP networks, or AS numbers
         """
 
+        # breakpoint()
         imported_networks = {"asns": [], "ip_networks": [], "ip_ranges": []}
 
         for row in raw_data:
-            import rich
 
             # skip empty rows
             if not row:
                 continue
 
-            rich.print(row[0])
+            logger.debug(f"Processing row: {row}")
             # try read the IP Network
-            if is_ip_network(row[0]):
+            if is_ip_network(row[0].strip()):
                 logger.info(f"IP Network found. Adding {row[0]}")
                 imported_networks["ip_networks"].append(row[0])
                 continue
 
             # try for an ASN
             if is_asn(row[0]):
+                logger.info(f"ASN found. Adding {row[0]}")
                 imported_networks["asns"].append(row[0])
                 continue
 
@@ -85,12 +81,21 @@ class CSVImporter:
             else:
                 second_ip = None
 
+            # for a sole IP address on a row, set the second_ip to the same
+            # as the first ip, so we can treat it as a range of length 1.
             if not second_ip:
                 second_ip = first_ip
+
+            if "/" in first_ip:
+                first_ip = ip_address_without_subnet_mask(first_ip)
+
+            if "/" in second_ip:
+                second_ip = ip_address_without_subnet_mask(second_ip)
 
             ip_range_found = is_ip_range((first_ip, second_ip))
 
             if ip_range_found:
+                logger.info(f"IP Range found. Adding {row[0]}")
                 imported_networks["ip_ranges"].append((first_ip, second_ip))
                 continue
 
@@ -103,7 +108,7 @@ class CSVImporter:
             *imported_networks["ip_networks"],
             *imported_networks["ip_ranges"],
         ]
-        # breakpoint()
+
         return flattened_network_list
 
     def preview(
