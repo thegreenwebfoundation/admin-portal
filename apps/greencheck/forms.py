@@ -160,16 +160,23 @@ class ImporterCSVForm(forms.Form):
         return ips
 
     def save(self):
-        """Save our list of IP ranges to the database"""
+        """
+        Save our list of IP ranges to the database if we are NOT
+        showing a preview.
+        """
         if self.importer is None:
             self.initialize_importer()
         logger.info("Skipping preview, running import")
 
         provider = self.cleaned_data["provider"]
 
-        # breakpoint()
-        self.importer.process(provider, self.ip_ranges)
-        self.processed_ips = self.importer.preview(provider, self.ip_ranges)
+        # skip preview, and run the import
+        if self.cleaned_data["skip_preview"] is True:
+            self.processed_ips = self.importer.process(provider, self.ip_ranges)
+        # otherwise show the import
+        else:
+            self.processed_ips = self.importer.preview(provider, self.ip_ranges)
+
         return self.processed_ips
 
 

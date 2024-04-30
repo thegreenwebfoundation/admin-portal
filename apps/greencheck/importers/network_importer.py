@@ -2,15 +2,10 @@ import ipaddress
 import logging
 from typing import Union
 
-from rich.logging import RichHandler
-
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.models import GreencheckASN, GreencheckIp
 
 logger = logging.getLogger(__name__)
-
-
-logger.addHandler(RichHandler())
 
 
 def is_ip_network(address: str) -> bool:
@@ -21,12 +16,11 @@ def is_ip_network(address: str) -> bool:
     we want to raise an exception rather than try to fix
     """
 
-    # exit early if we do not have  slash dividing
-    # the network address / etwork prefix
+    # exit early if we do not have slash dividing
+    # the network address / network prefix
     if "/" not in address:
         return False
 
-    # breakpoint()
     try:
         ipaddress.ip_network(address)
         return True

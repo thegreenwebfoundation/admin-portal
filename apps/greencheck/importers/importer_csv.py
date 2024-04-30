@@ -15,7 +15,6 @@ from apps.greencheck.importers.network_importer import (
 from apps.greencheck.models import GreencheckASN, GreencheckIp
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class NoProviderException(Exception):
