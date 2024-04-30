@@ -1,8 +1,8 @@
 import ipaddress
 import logging
 from typing import List, Tuple, Union
+import csv
 
-import pandas as pd
 
 from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.importers.importer_interface import ImporterProtocol
@@ -21,6 +21,10 @@ class NoProviderException(Exception):
     pass
 
 
+class MissingPath(Exception):
+    pass
+
+
 class CSVImporter:
     def __init__(self):
         self.processed_ips = []
@@ -33,23 +37,36 @@ class CSVImporter:
         network_importer.deactivate_ips()
         return network_importer.process_addresses(list_of_networks)
 
-    def fetch_data_from_source(cls, filepath_or_buffer) -> List:
+    def fetch_data_from_source(cls, file_like_object) -> List:
         """
         Return a list of the valid values from the provided CSV
         for importing
         """
-        raw_data = pd.read_csv(filepath_or_buffer, header=None)
+        row_list = []
+        with open(file_like_object, "r") as csvfile:
 
-        return cls.parse_to_list(raw_data)
+            rows = csv.reader(csvfile)
+            for row in rows:
+                row_list.append(row)
 
-    def parse_to_list(self, raw_data: pd.DataFrame) -> List[Union[str, Tuple]]:
+        return row_list
+
+    def parse_to_list(self, raw_data) -> List[Union[str, Tuple]]:
         """
-        Parse the provided pandas DataFrame, and return a flattened list
+        Accept a list of vlaues return a flattened list
         of ip ranges, or importable IP networks, or AS numbers
         """
-        rows = raw_data.values
+
         imported_networks = {"asns": [], "ip_networks": [], "ip_ranges": []}
-        for row in rows:
+
+        for row in raw_data:
+            import rich
+
+            # skip empty rows
+            if not row:
+                continue
+
+            rich.print(row[0])
             # try read the IP Network
             if is_ip_network(row[0]):
                 logger.info(f"IP Network found. Adding {row[0]}")
@@ -63,12 +80,18 @@ class CSVImporter:
 
             # finally, try to parse out an IP Range
             first_ip = row[0].strip()
-            null_second_column = pd.isnull(row[1])
-            last_ip = None if null_second_column else row[1].strip()
-            ip_range_found = is_ip_range((first_ip, last_ip))
+            if len(row) > 1:
+                second_ip = row[1].strip()
+            else:
+                second_ip = None
+
+            if not second_ip:
+                second_ip = first_ip
+
+            ip_range_found = is_ip_range((first_ip, second_ip))
 
             if ip_range_found:
-                imported_networks["ip_ranges"].append((first_ip, last_ip))
+                imported_networks["ip_ranges"].append((first_ip, second_ip))
                 continue
 
             logger.warn(
@@ -80,7 +103,7 @@ class CSVImporter:
             *imported_networks["ip_networks"],
             *imported_networks["ip_ranges"],
         ]
-
+        # breakpoint()
         return flattened_network_list
 
     def preview(
