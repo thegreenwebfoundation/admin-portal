@@ -34,8 +34,14 @@ def ip_address_without_subnet_mask(address: str) -> str:
     the subnet mask if it was added
     """
     # sometimes IP addresses are provided including
-    # a network prefix, like /24
-    # We want to remove that
+    # a network prefix, like 123.123.123.123/24.
+    # Python rejects these as invalid IP addresses, because
+    # adding the /24 prefix means this could be any address
+    # from 123.123.123.0 or 123.123.123.255
+    #
+    # We currently assume that if someone is providing a full
+    # address like this PLUS a prefix, they mean the ip address,
+    # not the whole network
 
     if "/" in address:
         return address.split("/")[0]
