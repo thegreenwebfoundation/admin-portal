@@ -51,7 +51,6 @@ class CSVImporter:
         of ip ranges, or importable IP networks, or AS numbers
         """
 
-        # breakpoint()
         imported_networks = {"asns": [], "ip_networks": [], "ip_ranges": []}
 
         for row in raw_data:
@@ -98,7 +97,7 @@ class CSVImporter:
                 imported_networks["ip_ranges"].append((first_ip, second_ip))
                 continue
 
-            logger.warn(
+            logger.warning(
                 f"No valid networks or IP ranges identified in row {row}  Not importing"
             )
 

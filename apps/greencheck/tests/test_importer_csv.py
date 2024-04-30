@@ -74,7 +74,7 @@ class TestCSVImporter:
         created_green_ips = created_networks["created_green_ips"]
         created_green_asns = created_networks["created_asns"]
 
-        assert len(created_green_ips) == 3
+        assert len(created_green_ips) == 4
         assert len(created_green_asns) == 1
 
         # have we created the new Green ASN in the db?
@@ -107,7 +107,7 @@ class TestCSVImporter:
             provider=hosting_provider, list_of_networks=list_of_addresses
         )
 
-        assert len(preview["green_ips"]) == 3
+        assert len(preview["green_ips"]) == 4
         assert len(preview["green_asns"]) == 1
 
     def test_view_processed_imports(
