@@ -36,6 +36,7 @@ from apps.greencheck.factories import (
 )
 
 from .. import models, views
+from apps.accounts.factories import SupportingEvidenceFactory
 
 faker = Faker()
 
@@ -809,6 +810,119 @@ def test_approve_creates_evidence_documents():
     assert evidence_with_file.type == ev2.type
     assert evidence_with_file.valid_from == today
     assert evidence_with_file.valid_to == a_year_from_now
+
+
+@freeze_time("Feb 15th, 2023")
+@pytest.mark.django_db
+def test_approve_creates_new_evidence_when_existing_evidence_updated(
+    hosting_provider_with_sample_user,
+):
+    """
+    When a user updates an existing piece of evidence by changing the attached evidence 
+    in the verification wizard, we should create a new piece of evidence, 
+    rather than updating the existing one.
+    See trello card: https://trello.com/c/1Q6Z2Q8V
+    """
+    # given: a provider request with multiple locations, IP ranges, ASNs, evidence and consent
+    provider = hosting_provider_with_sample_user
+    pr = ProviderRequestFactory.create(provider=provider)
+    ProviderRequestLocationFactory.create(request=pr)
+
+    # and: a piece of evidence that is already associated with the provider
+    initial_evidence_description = faker.text().encode()
+    initial_evidence_upload = SimpleUploadedFile(
+        name=faker.file_name(), content=initial_evidence_description
+    )
+    provider_evidence = SupportingEvidenceFactory.create(
+        attachment=initial_evidence_upload,
+        type="Annual Report",
+        hostingprovider=hosting_provider_with_sample_user,
+        public=True,
+    )
+
+    # and: new evidence in the provider request, one of which with the same name
+    # as the existing evidence, but a different attachment
+    updated_evidence_upload = SimpleUploadedFile(
+        name=faker.file_name(), content=faker.text().encode()
+    )
+
+    ev1 = ProviderRequestEvidenceFactory.create(request=pr)
+    ev2 = ProviderRequestEvidenceFactory.create(
+        request=pr,
+        link=None,
+        title=provider_evidence.title,
+        type=provider_evidence.type,
+        public=provider_evidence.public,
+        file=updated_evidence_upload,
+    )
+
+    # given: we are frozen in time
+    today = date(2023, 2, 15)
+    a_year_from_now = date(2024, 2, 15)
+
+    # when: the request is approved, returning our provider
+
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+    supporting_docs = hp.supporting_documents.all()
+    # and the previous evidence with the same name should also be visible
+    assert provider_evidence in supporting_docs
+    assert len(supporting_docs) == 3
+
+
+@freeze_time("Feb 15th, 2023")
+@pytest.mark.django_db
+def test_approve_skips_duplicate_evidence_when_existing_evidence_updated(
+    hosting_provider_with_sample_user,
+):
+    """
+    When a user updates an existing piece of evidence by changing the attached evidence,
+    we should create a new piece of evidence, rather than updating the existing one.
+    See trello card: https://trello.com/c/1Q6Z2Q8V
+    And issue
+
+    """
+    # given: a provider request with multiple locations, IP ranges, ASNs, evidence and consent
+    provider = hosting_provider_with_sample_user
+    pr = ProviderRequestFactory.create(provider=provider)
+    ProviderRequestLocationFactory.create(request=pr)
+
+    # and: a piece of evidence that is already associated with the provider
+    initial_evidence_description = faker.text().encode()
+    initial_evidence_upload = SimpleUploadedFile(
+        name=faker.file_name(), content=initial_evidence_description
+    )
+    provider_evidence = SupportingEvidenceFactory.create(
+        attachment=initial_evidence_upload,
+        type="Annual Report",
+        hostingprovider=hosting_provider_with_sample_user,
+        public=True,
+    )
+
+    ev1 = ProviderRequestEvidenceFactory.create(request=pr)
+    ev2 = ProviderRequestEvidenceFactory.create(
+        request=pr,
+        link=None,
+        title=provider_evidence.title,
+        type=provider_evidence.type,
+        public=provider_evidence.public,
+        file=initial_evidence_upload,
+    )
+
+    # given: we are frozen in time
+    today = date(2023, 2, 15)
+    a_year_from_now = date(2024, 2, 15)
+
+    # when: the request is approved, returning our provider
+
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+    supporting_docs = hp.supporting_documents.all()
+    # and the previous evidence with the same name should also be visible
+    assert provider_evidence in supporting_docs
+    assert len(supporting_docs) == 2
+
+
 
 
 @pytest.mark.django_db
@@ -1947,8 +2061,16 @@ def test_request_from_host_provider_finishes_in_sensible_time():
 @pytest.mark.parametrize(
     "provider_exists, email_copy, email_subject_copy",
     (
-        (True, "taking the time to update", "Update to the Green Web Dataset has been approved"),
-        (False, "taking the time to submit", "Verification request to the Green Web Dataset is approved"),
+        (
+            True,
+            "taking the time to update",
+            "Update to the Green Web Dataset has been approved",
+        ),
+        (
+            False,
+            "taking the time to submit",
+            "Verification request to the Green Web Dataset is approved",
+        ),
     ),
 )
 @override_flag("provider_request", active=True)
@@ -2023,8 +2145,16 @@ def test_email_sent_on_approval(
 @pytest.mark.parametrize(
     "provider_exists, email_copy, email_subject_copy",
     (
-        (True, "taking the time to update", "Update to the Green Web Dataset has been approved"),
-        (False, "taking the time to submit", "Verification request to the Green Web Dataset is approved"),
+        (
+            True,
+            "taking the time to update",
+            "Update to the Green Web Dataset has been approved",
+        ),
+        (
+            False,
+            "taking the time to submit",
+            "Verification request to the Green Web Dataset is approved",
+        ),
     ),
 )
 @override_flag("provider_request", active=True)
