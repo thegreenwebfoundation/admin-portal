@@ -39,6 +39,14 @@ from .. import models, views
 from apps.accounts.factories import SupportingEvidenceFactory
 
 faker = Faker()
+import logging  # noqa
+
+# TODO: remove when merging in PR
+from rich.logging import RichHandler  # noqa
+
+logger = logging.getLogger(__name__)  # noqa
+logger.addHandler(RichHandler())
+logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
@@ -818,8 +826,8 @@ def test_approve_creates_new_evidence_when_existing_evidence_updated(
     hosting_provider_with_sample_user,
 ):
     """
-    When a user updates an existing piece of evidence by changing the attached evidence 
-    in the verification wizard, we should create a new piece of evidence, 
+    When a user updates an existing piece of evidence by changing the attached evidence
+    in the verification wizard, we should create a new piece of evidence,
     rather than updating the existing one.
     See trello card: https://trello.com/c/1Q6Z2Q8V
     """
@@ -829,9 +837,8 @@ def test_approve_creates_new_evidence_when_existing_evidence_updated(
     ProviderRequestLocationFactory.create(request=pr)
 
     # and: a piece of evidence that is already associated with the provider
-    initial_evidence_description = faker.text().encode()
     initial_evidence_upload = SimpleUploadedFile(
-        name=faker.file_name(), content=initial_evidence_description
+        name=faker.file_name(), content=faker.text().encode()
     )
     provider_evidence = SupportingEvidenceFactory.create(
         attachment=initial_evidence_upload,
@@ -840,7 +847,7 @@ def test_approve_creates_new_evidence_when_existing_evidence_updated(
         public=True,
     )
 
-    # and: new evidence in the provider request, one of which with the same name
+    # and: new evidence in the provider request, one of which has the same name
     # as the existing evidence, but a different attachment
     updated_evidence_upload = SimpleUploadedFile(
         name=faker.file_name(), content=faker.text().encode()
@@ -861,13 +868,13 @@ def test_approve_creates_new_evidence_when_existing_evidence_updated(
     a_year_from_now = date(2024, 2, 15)
 
     # when: the request is approved, returning our provider
-
     result = pr.approve()
     hp = models.Hostingprovider.objects.get(id=result.id)
     supporting_docs = hp.supporting_documents.all()
-    # and the previous evidence with the same name should also be visible
-    assert provider_evidence in supporting_docs
-    assert len(supporting_docs) == 3
+
+    # then: the previous evidence with the same name should also be visible
+    assert provider_evidence not in supporting_docs
+    assert len(supporting_docs) == 2
 
 
 @freeze_time("Feb 15th, 2023")
@@ -919,10 +926,10 @@ def test_approve_skips_duplicate_evidence_when_existing_evidence_updated(
     hp = models.Hostingprovider.objects.get(id=result.id)
     supporting_docs = hp.supporting_documents.all()
     # and the previous evidence with the same name should also be visible
-    assert provider_evidence in supporting_docs
     assert len(supporting_docs) == 2
+    assert provider_evidence in supporting_docs
 
-
+    # and the provider evidence should have the
 
 
 @pytest.mark.django_db
@@ -1814,6 +1821,9 @@ def test_saving_changes_to_hp_with_new_verification_request(
     )
     asn = GreenASNFactory.create(hostingprovider=hp)
 
+    logger.debug(ev1)
+    logger.debug(ev2)
+
     # given: URL of the edit view of the existing HP
     edit_url = urls.reverse("provider_edit", args=[str(hp.id)])
 
@@ -1866,7 +1876,7 @@ def test_saving_changes_to_hp_with_new_verification_request(
         "provider_request_wizard_view-current_step": "3",
         "3-TOTAL_FORMS": 2,
         "3-INITIAL_FORMS": 0,
-        # first an evisting piece of evidence from ev1
+        # first an existing piece of evidence from ev1
         "3-0-title": ev1.title,
         "3-0-link": ev1.url,
         "3-0-file": "",

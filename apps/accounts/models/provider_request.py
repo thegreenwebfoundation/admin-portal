@@ -293,12 +293,11 @@ class ProviderRequest(TimeStampedModel):
             )
 
         # fetch our archived documents - we want to compare the submitted evidence against these
-        # so we know which ones to make visible again, and which ones to leave archived because
-        # they are duplicates
+        # so we know which ones to make visible again, and which ones to leave archived
         archived_documents = HostingProviderSupportingDocument.objects_all.filter(
             archived=True, hostingprovider=hp
         )
-        archived_doc_ids = [doc.id for doc in archived_documents]
+        archived_doc_ids = []
 
         def is_already_uploaded(evidence: ProviderRequestEvidence) -> Union[int, None]:
             """
@@ -306,6 +305,8 @@ class ProviderRequest(TimeStampedModel):
             returning the if of the match if so
             """
             for doc in archived_documents:
+                logger.debug(evidence)
+                logger.debug(doc)
                 if evidence.has_content_match(doc):
                     return doc.id
             return None
@@ -322,8 +323,9 @@ class ProviderRequest(TimeStampedModel):
             if archived_document_match := is_already_uploaded(evidence):
 
                 logger.debug(
-                    f"Skipping evidence: {evidence} because it's already uploaded as doc id: {archived_document_match}"
+                    f"Marking evidence: {evidence} to be unarchived, because it is a match for doc id: {archived_document_match}"
                 )
+                archived_doc_ids.append(archived_document_match)
                 # # remove the id from the list of archived documents
                 # archived_doc_ids = [
                 #     doc_id
@@ -351,7 +353,7 @@ class ProviderRequest(TimeStampedModel):
                 f"Created supporting doc: {supporting_doc} for evidence: {evidence}"
             )
 
-        # Now we have filtered out duplicates, and create new supporting documents
+        # Now we have filtered out duplicates, and created new supporting documents
         # for new evidence. We restore the visibility of the remaining archived documents
         # by unarchiving them.
         [
@@ -456,18 +458,18 @@ class ProviderRequestEvidence(models.Model):
         Check if an evidence is functionally equivalent to an existing supporting document.
 
         Two pieces of evidence are considered equivalent if they have the same
-        title, type, and public status, and attachment content
+        title, type, and public status, link or attachment content
         """
         content_match = False
 
-        if self.file:
+        if self.file and other_doc.attachment:
             self.file.seek(0)
             file_contents = self.file.read()
             other_doc.attachment.seek(0)
             other_doc_contents = other_doc.attachment.read()
             content_match = file_contents == other_doc_contents
 
-        if self.link:
+        if self.link and other_doc.url:
             content_match = self.link == other_doc.url
 
         return (
