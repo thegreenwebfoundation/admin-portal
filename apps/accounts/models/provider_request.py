@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Union
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -21,6 +21,15 @@ from .hosting import (
     HostingProviderSupportingDocument,
     Service,
 )
+
+import logging  # noqa
+
+# TODO: remove when merging in PR
+from rich.logging import RichHandler  # noqa
+
+logger = logging.getLogger(__name__)  # noqa
+logger.addHandler(RichHandler())
+logger.setLevel(logging.DEBUG)
 
 
 class ProviderRequestStatus(models.TextChoices):
@@ -198,9 +207,10 @@ class ProviderRequest(TimeStampedModel):
             # delete related objects, they will be recreated with recent data
             hp.services.clear()
 
-            # TODO: we currently do not log to djanog admin any changes to a
-            # provider if their IPs, ASNs or evidence have changed as a result
-            # of this approval workflow. We had this in the django admin and it
+            # TODO: we currently do not log any changes to a
+            # provider in django admin if their IPs, ASNs or evidence have changed
+            # as a result of this approval workflow.
+            # We had this in the django admin and it
             # was very handy.
             # We need to make a decision about whether we want to log these
             # changes here or not.
@@ -282,26 +292,50 @@ class ProviderRequest(TimeStampedModel):
                 hostingprovider=hp,
             )
 
+        # fetch our archived documents - we want to compare the submitted evidence against these
+        # so we know which ones to make visible again, and which ones to leave archived because
+        # they are duplicates
+        archived_documents = HostingProviderSupportingDocument.objects_all.filter(
+            archived=True, hostingprovider=hp
+        )
+        archived_doc_ids = [doc.id for doc in archived_documents]
+
+        def is_already_uploaded(evidence: ProviderRequestEvidence) -> Union[int, None]:
+            """
+            Check if the evidence is a content match for any of the archived documents
+            returning the if of the match if so
+            """
+            for doc in archived_documents:
+                if evidence.has_content_match(doc):
+                    return doc.id
+            return None
+
         # create related objects: supporting documents
         for evidence in self.providerrequestevidence_set.all():
+            logger.debug(f"checking for matching evidence for: {evidence}")
+
             # AbstractSupportingDocument does not accept null values for `url`
             # and `attachment` fields
             url = evidence.link or ""
             attachment = evidence.file or ""
 
-            # check for the existence of archived evidence. Unarchive if found, like we do
-            # for ASNs and ips
-            if archived_evidence := HostingProviderSupportingDocument.objects_all.filter(
-                hostingprovider=hp,
-                title=evidence.title,
-                archived=True,
-                type=evidence.type,
-                public=evidence.public,
-            ):
-                [archived_ev.unarchive() for archived_ev in archived_evidence]
+            if archived_document_match := is_already_uploaded(evidence):
+
+                logger.debug(
+                    f"Skipping evidence: {evidence} because it's already uploaded as doc id: {archived_document_match}"
+                )
+                # # remove the id from the list of archived documents
+                # archived_doc_ids = [
+                #     doc_id
+                #     for doc_id in archived_doc_ids
+                #     if doc_id != archived_document_match
+                # ]
+
+                # exit the loop early - this was a duplicate of content that will be
+                # made visible again when we unarchive it
                 continue
 
-            HostingProviderSupportingDocument.objects.create(
+            supporting_doc = HostingProviderSupportingDocument.objects.create(
                 hostingprovider=hp,
                 title=evidence.title,
                 attachment=attachment,
@@ -313,6 +347,19 @@ class ProviderRequest(TimeStampedModel):
                 type=evidence.type,
                 public=evidence.public,
             )
+            logger.debug(
+                f"Created supporting doc: {supporting_doc} for evidence: {evidence}"
+            )
+
+        # Now we have filtered out duplicates, and create new supporting documents
+        # for new evidence. We restore the visibility of the remaining archived documents
+        # by unarchiving them.
+        [
+            doc.unarchive()
+            for doc in HostingProviderSupportingDocument.objects_all.filter(
+                id__in=archived_doc_ids
+            )
+        ]
 
         # change status of the request
         self.status = ProviderRequestStatus.APPROVED
@@ -403,3 +450,29 @@ class ProviderRequestEvidence(models.Model):
             raise ValidationError(f"{reason}, you haven't submitted either.")
         if self.link and bool(self.file):
             raise ValidationError(f"{reason}, you've attempted to submit both.")
+
+    def has_content_match(self, other_doc: "HostingProviderSupportingDocument") -> bool:
+        """
+        Check if an evidence is functionally equivalent to an existing supporting document.
+
+        Two pieces of evidence are considered equivalent if they have the same
+        title, type, and public status, and attachment content
+        """
+        content_match = False
+
+        if self.file:
+            self.file.seek(0)
+            file_contents = self.file.read()
+            other_doc.attachment.seek(0)
+            other_doc_contents = other_doc.attachment.read()
+            content_match = file_contents == other_doc_contents
+
+        if self.link:
+            content_match = self.link == other_doc.url
+
+        return (
+            self.title == other_doc.title
+            and self.type == other_doc.type
+            and self.public == other_doc.public
+            and content_match
+        )
