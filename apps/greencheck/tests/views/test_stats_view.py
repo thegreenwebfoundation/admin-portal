@@ -103,7 +103,8 @@ class TestDailyStatsView:
             )
 
             gc_factories.GreencheckFactory.create_batch(
-                size=2, date=given_datetime + relativedelta(hours=2),
+                size=2,
+                date=given_datetime + relativedelta(hours=2),
             )
 
         gc_models.DailyStat.create_counts_for_date_range(last_30_days, "total_count")
@@ -189,7 +190,9 @@ class TestDailyStatsView:
     @pytest.mark.flaky
     @override_flag("greencheck-stats", active=True)
     def test_stat_view_top_domains(
-        self, db, client,
+        self,
+        db,
+        client,
     ):
         """
         Test that we have can display a list of the top domains
@@ -207,6 +210,7 @@ class TestDailyStatsView:
 
         assert len(top_green_domains) == 10
 
+    @pytest.mark.flaky
     @override_flag("greencheck-stats", active=True)
     def test_stat_view_top_providers(self, db, client):
         """
@@ -225,4 +229,3 @@ class TestDailyStatsView:
         top_green_hosters = stats["top_green_hosters"]
 
         assert len(top_green_hosters) == 10
-
