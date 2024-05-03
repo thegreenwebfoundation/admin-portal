@@ -34,7 +34,7 @@ marimo = "*"
 django-upgrade = "*"
 
 [packages]
-django = { extras = ["bcrypt"], version = "~=4.2" }
+django = { extras = ["bcrypt"], version = "~=5.0" }
 django-anymail = { extras = ["mailgun"], version = "*" }
 django-countries = "*"
 django-environ = "==0.4.5"
