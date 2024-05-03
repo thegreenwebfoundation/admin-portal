@@ -7,6 +7,8 @@ from ipaddress import ip_address
 import pytest
 from django import urls
 from django.conf import settings
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import ValidationError
@@ -339,6 +341,15 @@ def test_wizard_view_happy_path(
     # then: the status is set to PENDING_REVIEW
     created_pr = models.ProviderRequest.objects.get(id=pr.id)
     assert created_pr.status == models.ProviderRequestStatus.PENDING_REVIEW
+
+    # and: we have logged the creation in the history for this provider request
+    # to give us an audit trail
+    log_message = LogEntry.objects.get(object_id=created_pr.id)
+
+    assert log_message.user == user
+    assert log_message.action_flag == ADDITION
+    assert ContentType.objects.get_for_model(pr).pk == log_message.content_type_id
+    assert log_message.change_message == "Provider request created for review"
 
 
 def _create_provider_request(client, form_data) -> HttpResponse:
@@ -2228,3 +2239,64 @@ def test_email_request_email_confirmation_is_sent(
     # And does the html as well?
     html_content = email.alternatives[0][0]
     assert email_copy in html_content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "staff_action,expected_status",
+    (
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+        ("removed", "Removed"),
+        ("open", "Changes Requested"),
+    ),
+)
+@override_flag("provider_request", active=True)
+def test_staff_review_is_logged(
+    hosting_provider_with_sample_user,
+    greenweb_staff_user,
+    provider_request_factory,
+    rf,
+    staff_action,
+    expected_status,
+):
+    """
+    When a staff member reviews a provider request, and rejects, approves or
+    otherwise makes a decision, about the validity we should see this logged
+    in the audit log
+    """
+
+    # Given: a provider request created by a hosting provider
+    pr = provider_request_factory.create(provider=hosting_provider_with_sample_user)
+    ProviderRequestLocationFactory.create(request=pr)
+
+    # And: a staff user logged into the admin, viewing the verification request
+    pr_admin = ac_admin.ProviderRequest(
+        models.ProviderRequest, admin_site.greenweb_admin
+    )
+    admin_update_path = reverse(
+        "greenweb_admin:accounts_providerrequest_change", args=[pr.id]
+    )
+    req = rf.get(admin_update_path)
+    req.user = greenweb_staff_user
+
+    # we need to add a session middleware to the request
+    # without this attempts to place a message in the request
+    # for the staff user will fail in this test
+    middleware = SessionMiddleware()
+    middleware.process_request(req)
+    messages = FallbackStorage(req)
+    req._messages = messages
+
+    queryset = models.ProviderRequest.objects.filter(id=pr.id)
+
+    # When: the staff member makes a decision on the request's validity
+    getattr(pr_admin, f"mark_{staff_action}")(req, queryset)
+
+    # Then: we should see the entry in the audit log for the request
+    log_message = LogEntry.objects.get(object_id=pr.id)
+
+    assert ContentType.objects.get_for_model(pr).pk == log_message.content_type_id
+    assert log_message.user == greenweb_staff_user
+    assert log_message.action_flag == CHANGE
+    assert log_message.change_message == expected_status
