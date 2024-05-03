@@ -1,4 +1,5 @@
 import io
+import logging
 import random
 from datetime import date, datetime
 from ipaddress import ip_address
@@ -38,9 +39,7 @@ from apps.greencheck.factories import (
 from .. import models, views
 
 faker = Faker()
-import logging  # noqa
 
-# TODO: remove when merging in PR
 
 logger = logging.getLogger(__name__)  # noqa
 
