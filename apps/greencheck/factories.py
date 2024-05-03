@@ -36,7 +36,7 @@ class SiteCheckFactory(factory.Factory):
     green = False
     hosting_provider_id = 595
     checked_at = facfuzzy.FuzzyDateTime(
-        datetime.datetime(2009, 1, 1, tzinfo=timezone.utc)
+        datetime.datetime(2009, 1, 1, tzinfo=datetime.timezone.utc)
     )
     match_type = None
     match_ip_range = None
@@ -66,7 +66,7 @@ class ServiceFactory(dj_factory.DjangoModelFactory):
 class GreencheckFactory(dj_factory.DjangoModelFactory):
     hostingprovider = factory.Faker("random_int")
     greencheck_ip = factory.Faker("random_int")
-    date = facfuzzy.FuzzyDateTime(datetime.datetime(2009, 1, 1, tzinfo=timezone.utc))
+    date = facfuzzy.FuzzyDateTime(datetime.datetime(2009, 1, 1, tzinfo=datetime.timezone.utc))
     green = "no"
     ip = factory.Faker("ipv4")
     tld = factory.Faker("tld")
