@@ -576,6 +576,7 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
     # provider is visible by default
     # appropriate tag is added
     assert hp.showonwebsite is True
+    assert hp.archived is False
     assert "up-to-date" in hp.staff_labels.slugs()
     # "other-none" is the label condition check for
     # when someone is just trying to get a site marked
