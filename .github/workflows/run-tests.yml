@@ -62,7 +62,8 @@ jobs:
 
       - name: Run tests
         run: |
-          dotenv -f .env.test run -- pytest
+          source .venv/bin/activate
+          .venv/bin/dotenv -f .env.test run -- pytest
         env:
           DOMAIN_SNAPSHOT_BUCKET: ${{ secrets.TESTING_DOMAIN_SNAPSHOT_BUCKET }}
           DATABASE_URL_READ_ONLY: ${{ secrets.TESTING_DATABASE_URL_READ_ONLY }}
