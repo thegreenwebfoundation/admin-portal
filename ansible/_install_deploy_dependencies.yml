@@ -1,8 +1,8 @@
 ---
 - name: Set up venv for pipenv to use. this is needed for the step below to work
-  # without creating the venv in .env, pipenv can't find the version
+  # without creating the venv in .venv, pipenv can't find the version
   # of python or pip to use, and errors out
-  ansible.builtin.command: "python -m venv .venv"
+  ansible.builtin.command: "python -m pipenv --python /usr/bin/python3.11"
   args:
     chdir: "{{ project_root }}/current"
   changed_when: false
