@@ -36,17 +36,13 @@ from apps.greencheck.factories import (
 )
 
 from .. import models, views
-from apps.accounts.factories import SupportingEvidenceFactory
 
 faker = Faker()
 import logging  # noqa
 
 # TODO: remove when merging in PR
-from rich.logging import RichHandler  # noqa
 
 logger = logging.getLogger(__name__)  # noqa
-logger.addHandler(RichHandler())
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
