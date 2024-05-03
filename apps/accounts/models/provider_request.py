@@ -231,6 +231,9 @@ class ProviderRequest(TimeStampedModel):
         hp.request = self
         hp.created_by = self.created_by
 
+        # if we have approved a submission from a provider
+        hp.archived = False
+
         # set services (https://django-taggit.readthedocs.io/en/latest/api.html)
         hp.services.set(list(self.services.all()))
         hp.staff_labels.add("up-to-date")
