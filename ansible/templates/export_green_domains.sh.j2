@@ -10,4 +10,5 @@ set -euo pipefail
 cd {{ project_root }}/current/
 
 # run the domains export and upload to object storage
-python -m pipenv run ./manage.py dump_green_domains --upload
+source .venv/bin/activate
+dotenv run -- python ./manage.py dump_green_domains --upload

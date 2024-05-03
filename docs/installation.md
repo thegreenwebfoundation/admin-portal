@@ -26,19 +26,27 @@ sudo apt install python3 python3-dev build-essential libmariadb3 libmariadb-dev
 
 __Note__ In the context of development, it is recommended to manage Python versions using [`pyenv`](https://github.com/pyenv/pyenv) instead of relying on the version shipped in the operating system.
 
-__Note__ Currently Python version 3.8.5 is used on production.
+__Note__ Currently Python version 3.11.9 is used on production.
 
 ### Setup
 Before following the following list, make sure you are in the root directory (workspace/admin-portal).
+
 1. Make sure you have the right Python version installed: `python --version`
-2. Install a package named `pipenv` with `pip`: `python -m pip install pipenv`.
-3. Once installed, use this command to install all project packages: `pipenv install --dev`. The project packages are defined in `Pipfile`, and the `--dev` option installs both: develop and default packages.
-4. You can activate the virtual environment created for you by `pipenv` by running the command: `pipenv shell`.
-5. As a final step, make sure to copy the content of `.env.test` to `.env` and add the necessary credentials.<br>
+2. Create a virtual environment: `python -m venv .venv`
+3. Activate the virtual environment created for you: `source .venv/bin/activate`
+4. Install a package named `uv` with `pip`: `python -m pip install uv`.
+5. Once installed, use this command to install all project packages: `uv pip install -r `. The project packages are defined in `requirements.dev.generated.txt`.
+5. As a final step, make sure to copy the content of `.env.test` to `.env` and add the necessary credentials.
 
 __Note__ that this project relies on object storage. In production this is needed to store static files, but in development it is not required.
 
-By default `pipenv` loads the content of the `.env` file.<br>
+By default `dotenv run` loads the content of the `.env` files before the next command, so 
+
+```
+dotenv run -- my-command
+```
+
+Will run my-command with all the environment variables in .env set.
 
 ## Working with email
 

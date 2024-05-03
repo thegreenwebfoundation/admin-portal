@@ -16,9 +16,10 @@ While the Green Web Foundation offers a self-service way to maintain up to date 
 These can be run on the command line using the following commands
 
 ```
-pipnev run ./manage.py update_networks_in_db_amazon
-pipnev run ./manage.py update_networks_in_db_google
-pipnev run ./manage.py update_networks_in_db_microsoft
+source .venv/bin/activate
+dotenv run -- ./manage.py update_networks_in_db_amazon
+dotenv run -- ./manage.py update_networks_in_db_google
+dotenv run -- ./manage.py update_networks_in_db_microsoft
 ```
 
 Look in the `import_ips_for_large_providers.sh.j2` file to see the specific shell script run each week, and the `setup_cronjobs.yml` ansible playbook to see the specific tasks used to set up a a server to run these on a recurring schedule.
@@ -52,13 +53,13 @@ We use the yaml folded scalar literal to make the formatting easier to read, alo
 If you wanted to check that a cronjob is set up on the necessary server, you would run the following ansible command, passing in the correct inventory file to tell ansible which set of servers to connect to, and passing in `--check`` to see what changes might take effect:
 
 ```
-pipenv run ansible-playbook -i ansible/inventories/prod.yml ansible/setup_cronjobs.yml --check
+dotenv run -- ansible-playbook -i ansible/inventories/prod.yml ansible/setup_cronjobs.yml --check
 ```
 
 To run the actual command, and update the cronjobs, you would run the same command, without the `--check` flag.
 
 ```
-pipenv run ansible-playbook -i ansible/inventories/prod.yml ansible/setup_cronjobs.yml
+dotenv run -- ansible-playbook -i ansible/inventories/prod.yml ansible/setup_cronjobs.yml
 ```
 
 ### Daily Green Domain Exports
@@ -70,14 +71,14 @@ These are intended for cases when hitting an external API is either impractical,
 This export is normally run with the following django management command.
 
 ```
-pipenv run ./manage.py dump_green_domains
+dotenv run --  ./manage.py dump_green_domains
 ```
 
 To upload the database snapshot to object storage, pass long the `--upload` flag.
 
 
 ```
-pipenv run ./manage.py dump_green_domains --upload
+dotenv run -- ./manage.py dump_green_domains --upload
 ```
 
 This is currently set to run every day, but historically, this job not run consistently every single day.

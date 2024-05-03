@@ -71,6 +71,6 @@
   when: install_system_reqs is true
   tags: [python]
 
-- name: Install pipenv libraries
-  ansible.builtin.command: "python -m pip install pipenv wheel"
+- name: Install libraries for handling dependencies
+  ansible.builtin.command: "python3.11 -m pip install uv wheel"
   when: install_system_reqs is true

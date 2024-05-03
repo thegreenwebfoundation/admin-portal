@@ -6,10 +6,10 @@ venv:
 
 ## Installing
 release:
-	PIPENV_DOTENV_LOCATION=.env.prod pipenv run sentry-cli releases new -p admin-portal $(shell sentry-cli releases propose-version)
-	PIPENV_DOTENV_LOCATION=.env.prod pipenv run sentry-cli releases set-commits --auto $(shell sentry-cli releases propose-version)
-	PIPENV_DOTENV_LOCATION=.env.prod pipenv run ansible-playbook ansible/deploy.yml -i ansible/inventories/prod.yml
-	PIPENV_DOTENV_LOCATION=.env.prod pipenv run sentry-cli releases finalize $(shell sentry-cli releases propose-version)
+	dotenv -f env.prod run -- sentry-cli releases new -p admin-portal $(shell sentry-cli releases propose-version)
+	dotenv -f env.prod run -- sentry-cli releases set-commits --auto $(shell sentry-cli releases propose-version)
+	dotenv -f env.prod run -- ansible-playbook ansible/deploy.yml -i ansible/inventories/prod.yml
+	dotenv -f env.prod run -- sentry-cli releases finalize $(shell sentry-cli releases propose-version)
 
 dev.createsuperuser:
 	python ./manage.py createsuperuser --username admin --email admin@admin.commits --noinput
@@ -51,16 +51,6 @@ test:
 
 test.only:
 	pytest -s --create-db -m only -v  --ds=greenweb.settings.testing
-
-flake:
-	flake8 ./greenweb ./apps ./*.py --count --statistics
-black:
-	black ./greenweb ./apps ./*.py $(ARGS)
-
-black.check:
-	@ARGS="--check --color --diff" make black
-
-ci: | black.check flake
 
 # Build the documentation using Sphinx
 docs:

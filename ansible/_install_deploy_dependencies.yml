@@ -1,36 +1,32 @@
 ---
-- name: Set up venv for pipenv to use. this is needed for the step below to work
-  # without creating the venv in .venv, pipenv can't find the version
-  # of python or pip to use, and errors out
-  ansible.builtin.command: "python -m pipenv --python /usr/bin/python3.11"
+- name: Set up a virtual environment for this project
+  ansible.builtin.command: "python3.11 -m venv .venv"
   args:
     chdir: "{{ project_root }}/current"
   changed_when: false
 
-- name: Install latest version of pipenv
-  ansible.builtin.pip:
-    name: pipenv
-    virtualenv: "{{ project_root }}/current/.venv"
-
-- name: Install python dependencies with pipenv
-  ansible.builtin.command: "python -m pipenv sync" # noqa no-changed-when
+- name: Install python dependencies with uv
+  ansible.builtin.shell: |
+    source .venv/bin/activate
+    python3.11 -m pip install -r requirements/requirements.linux.generated.txt
   args:
     chdir: "{{ project_root }}/current"
-  environment:
-    # make sure we install in the project root.
-    # this way when we clear up old releases we also
-    # remove the deps.
-    # using env vars triggers the 'schema[playbook]', hence the noqa
-    PIPENV_VENV_IN_PROJECT: "1" # noqa schema[playbook]
+    executable: "/usr/bin/bash"
 
 - name: Update node deps for building tailwind
-  ansible.builtin.command: "python -m pipenv run ./manage.py tailwind update"
+  ansible.builtin.shell: |
+    source .venv/bin/activate
+    dotenv run -- python3.11 ./manage.py tailwind update
   args:
     chdir: "{{ project_root }}/current"
+    executable: "/usr/bin/bash"
   when: update_front_end_deps is true
 
 - name: Install node deps for building tailwind
-  ansible.builtin.command: "python -m pipenv run ./manage.py tailwind install"
+  ansible.builtin.shell: |
+    source .venv/bin/activate
+    dotenv run -- python3.11 ./manage.py tailwind install
   args:
+    executable: "/usr/bin/bash"
     chdir: "{{ project_root }}/current"
   changed_when: false

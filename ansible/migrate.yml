@@ -1,12 +1,15 @@
 ---
-  - name: Deploy the TGWF django admin
-    hosts:
-      - all
-    remote_user: "deploy"
-    become: no
+- name: Deploy the TGWF django admin
+  hosts:
+    - all
+  remote_user: "deploy"
+  become: no
 
-    tasks:
-      - name: run migration
-        shell: "pipenv run ./manage.py migrate"
-        args:
-          chdir: "{{ project_root }}/current"
+  tasks:
+    - name: run migration
+      shell: |
+        source .venv/bin/activate
+        dotenv run -- ./manage.py migrate
+      args:
+        chdir: "{{ project_root }}/current"
+        executable: "/usr/bin/bash"

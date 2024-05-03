@@ -7,6 +7,9 @@
 
   tasks:
     - name: run management task to create domains snapshot
-      shell: "pipenv run ./manage.py dump_green_domains --upload"
+      shell: |
+        source .venv/bin/acticate
+        dotenv run -- ./manage.py dump_green_domains --upload
       args:
         chdir: "{{ project_root }}/current"
+        executable: "/usr/bin/bash"
