@@ -87,7 +87,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "taggit",
     "taggit_labels",
-    "taggit_serializer",
     "waffle",
     "django_filters",
     "django_admin_multiple_choice_list_filter",

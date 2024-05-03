@@ -2,6 +2,8 @@ import ipaddress
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from taggit import serializers as tag_serializers
+
 from apps.accounts.models import (
     Hostingprovider,
     HostingProviderSupportingDocument,
@@ -9,11 +11,7 @@ from apps.accounts.models import (
 )
 from apps.greencheck.models.checks import CO2Intensity
 
-from .models import GreencheckIp, GreenDomain, GreencheckASN
-
-# from taggit_serializer import serializers as tag_serializer
-from taggit import serializers as tag_serializers
-
+from .models import GreencheckASN, GreencheckIp, GreenDomain
 
 HIGHEST_ASN_POSSIBLE = 4294967295
 LOWEST_ASN_POSSIBLE = 1
