@@ -967,6 +967,9 @@ class HostingAdmin(
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
     @admin.display(
+        description="Send email"
+    )
+    @admin.display(
         description="Import IP Ranges from a CSV file"
     )
     @mark_safe
@@ -979,7 +982,6 @@ class HostingAdmin(
         link = f'<a href="{url}" class="sendEmail">Send email</a>'
         return link
 
-    send_button.short_description = "Send email"
 
     @admin.display(
         description="Support Messages"
