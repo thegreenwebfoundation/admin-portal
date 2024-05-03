@@ -57,11 +57,12 @@ jobs:
         # when deploying versus running tests
         # if: steps.cache-pipenv.outputs.cache-hit != 'true'
         run: |
-          uv pip install -r requirements/requirements.dev.generated.txt
+          uv venv
+          uv pip install -r requirements/requirements.linux.generated.txt
 
       - name: Run tests
         run: |
-          dotenv -f env.test run -- pytest
+          dotenv -f .env.test run -- pytest
         env:
           DOMAIN_SNAPSHOT_BUCKET: ${{ secrets.TESTING_DOMAIN_SNAPSHOT_BUCKET }}
           DATABASE_URL_READ_ONLY: ${{ secrets.TESTING_DATABASE_URL_READ_ONLY }}
