@@ -7,7 +7,9 @@ from dal_select2 import views as dal_select2_views
 from django import template as dj_template
 from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.admin.models import CHANGE
 from django.contrib.auth.admin import Group, GroupAdmin, UserAdmin
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.db import models
@@ -1448,6 +1450,25 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             template_html="emails/verification_request_approved.html",
         )
 
+    def log_message(
+        self,
+        provider_request: ProviderRequest,
+        request: HttpRequest,
+        message_type: int,
+        message: str,
+    ):
+        """
+        Log the approval, rejection or otherwise of a provider request
+        """
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=ContentType.objects.get_for_model(provider_request).pk,
+            object_id=provider_request.pk,
+            object_repr=str(provider_request),
+            action_flag=message_type,
+            change_message=message,
+        )
+
     @admin.action(description="Approve", permissions=["change"])
     def mark_approved(self, request, queryset):
         for provider_request in queryset:
@@ -1456,6 +1477,8 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
                 # so we can send the appropriate email
                 existing_provider = provider_request.provider
                 hp = provider_request.approve()
+                self.log_message(provider_request, request, CHANGE, "Approved")
+
                 hp_href = reverse(
                     "greenweb_admin:accounts_hostingprovider_change", args=[hp.id]
                 )
@@ -1482,6 +1505,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         for provider_request in queryset:
             provider_request.status = ProviderRequestStatus.REJECTED.value
             provider_request.save()
+            self.log_message(provider_request, request, CHANGE, "Rejected")
 
             message = mark_safe(
                 f"""
@@ -1504,6 +1528,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         for provider_request in queryset:
             provider_request.status = ProviderRequestStatus.REMOVED.value
             provider_request.save()
+            self.log_message(provider_request, request, CHANGE, "Removed")
 
             message = mark_safe(
                 f"""
@@ -1522,6 +1547,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         for provider_request in queryset:
             provider_request.status = ProviderRequestStatus.OPEN.value
             provider_request.save()
+            self.log_message(provider_request, request, CHANGE, "Changes Requested")
 
             message = mark_safe(
                 f"""

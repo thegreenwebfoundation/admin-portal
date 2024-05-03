@@ -5,8 +5,11 @@ import waffle
 from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin.models import LogEntry, ADDITION
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import DefaultStorage
 from django.db.models.query import QuerySet
@@ -52,6 +55,7 @@ from .models import (
 )
 from .permissions import manage_provider
 from .utils import send_email
+from django.http import HttpRequest
 
 logger = logging.getLogger(__name__)
 
@@ -279,6 +283,26 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         Steps.PREVIEW.value: "provider_registration/preview.html",
     }
 
+    def log_creation(
+        self,
+        provider_request: ProviderRequest,
+        request: HttpRequest,
+        message_type: int = ADDITION,
+        message: str = "Provider request created for review",
+    ):
+        """
+        Log the creation of a new ProviderRequest instance
+        """
+
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=ContentType.objects.get_for_model(provider_request).pk,
+            object_id=provider_request.pk,
+            object_repr=str(provider_request),
+            action_flag=ADDITION,
+            change_message=message,
+        )
+
     def dispatch(self, request, *args, **kwargs):
         """
         This view is re-used for 3 different use cases:
@@ -452,6 +476,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
         pr.status = ProviderRequestStatus.PENDING_REVIEW.value
         pr.save()
 
+        # log the creation in the history of this request so we have an accessble audit trail
+        self.log_creation(pr, self.request)
+
         # send an email notification to the author and green web staff
         self._send_notification_email(pr)
 
@@ -548,14 +575,14 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
 
         # For a new provider request, use this subject line
         subject = (
-                f"Your Green Web Dataset verification request: "
-                f"{mark_safe(provider_request.name)}"
+            f"Your Green Web Dataset verification request: "
+            f"{mark_safe(provider_request.name)}"
         )
-        
+
         if provider_request.provider:
             ctx["provider"] = provider_request.provider
             # For an update to an existing provider, use this subject line
-            subject=(
+            subject = (
                 f"Your Green Web Dataset update request: "
                 f"{mark_safe(provider_request.name)}"
             )
