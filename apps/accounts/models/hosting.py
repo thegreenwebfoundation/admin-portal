@@ -12,7 +12,7 @@ from anymail.message import AnymailMessage
 from django.template.loader import render_to_string
 from taggit.managers import TaggableManager
 from taggit import models as tag_models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import get_users_with_perms
 
 from urllib.parse import urlparse

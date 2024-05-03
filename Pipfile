@@ -31,6 +31,7 @@ myst-parser = "==0.18.0"
 ansible-lint = "*"
 django-browser-reload = "*"
 marimo = "*"
+django-upgrade = "*"
 
 [packages]
 django = { extras = ["bcrypt"], version = "~=3.2" }

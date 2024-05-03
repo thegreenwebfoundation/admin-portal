@@ -19,6 +19,9 @@ from .models import GreencheckIp, GreencheckIpApprove, GreenDomain
 
 
 class ApprovalFieldMixin:
+    @admin.display(
+        description="Decide"
+    )
     @mark_safe
     def approval(self, obj):
         if obj._meta.model_name == "greencheckasnapprove":
@@ -51,7 +54,6 @@ class ApprovalFieldMixin:
             return "Action taken"
         return link
 
-    approval.short_description = "Decide"
 
 
 class GreencheckAsnInline(admin.TabularInline):
@@ -282,6 +284,9 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
 
         return qs
 
+    @admin.display(
+        description="Link to Hostingprovider"
+    )
     @mark_safe
     def link(self, obj):
         url = reverse_admin_name(
@@ -289,7 +294,6 @@ class GreencheckIpApproveAdmin(admin.ModelAdmin):
         )
         return '<a href="{}">Link to {}</a>'.format(url, obj.hostingprovider.name)
 
-    link.short_description = "Link to Hostingprovider"
 
 
 @admin.register(models.GreencheckASNapprove, site=greenweb_admin)
@@ -316,6 +320,9 @@ class GreencheckASNApprove(admin.ModelAdmin):
 
         return qs
 
+    @admin.display(
+        description="Link to Hostingprovider"
+    )
     @mark_safe
     def link(self, obj):
         url = reverse_admin_name(
@@ -323,7 +330,6 @@ class GreencheckASNApprove(admin.ModelAdmin):
         )
         return '<a href="{}">Link to {}</a>'.format(url, obj.hostingprovider.name)
 
-    link.short_description = "Link to Hostingprovider"
 
 
 @admin.register(models.GreenDomain, site=greenweb_admin)
