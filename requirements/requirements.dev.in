@@ -1,0 +1,29 @@
+-r requirements.in
+django-debug-toolbar
+pylint
+pylint-django
+coverage
+flake8
+ipython
+ipdb
+pytest
+pytest-django
+pytest-cov
+pytest-xdist
+pytest-mock
+pytest-factoryboy
+hypothesis
+faker
+black
+factory_boy
+sphinx
+sphinx-autobuild
+sphinxcontrib-mermaid
+# furo, myst-parser need to be pinned because
+# an underlying dependency, docutils needs a specific version of sphinx
+furo==2022.4.7
+myst-parser==0.18.0
+ansible-lint
+django-browser-reload
+marimo
+django-upgrade
