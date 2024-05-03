@@ -30,65 +30,6 @@ class SupportingEvidenceFactory(dj_factory.DjangoModelFactory):
         model = ac_models.HostingProviderSupportingDocument
 
 
-# class ProviderRequestFactory(dj_factory.DjangoModelFactory):
-#     """
-#     A provider request as if it had been created by a user going through
-#     our form wizard
-#     """
-
-#     name = factory.Faker("sentence")
-#     website = factory.Faker("url")
-#     description = factory.Faker("sentence", nb=10)
-#     status = factory.Faker(
-#         "random_element", elements=ac_models.ProviderRequestStatus.choices
-#     )
-
-#     # created_by = models.ForeignKey(
-#     #     settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
-#     # )
-#     # authorised_by_org = models.BooleanField()
-#     # services = TaggableManager(
-#     #     verbose_name="Services offered",
-#     #     help_text=(
-#     #         "Click the services that your organisation offers. These will be listed in"
-#     #         " the green web directory."
-#     #     ),
-#     #     blank=True,
-#     #     through=ProviderRequestService,
-#     # )
-#     @factory.post_generation
-#     def services(self, create, extracted, **kwargs):
-#         if not create:
-#             return
-
-#         if extracted:
-#             self.services.set(*extracted)
-
-#     # missing_network_explanation = models.TextField(
-#     #     verbose_name="Reason for no IP / AS data",
-#     #     help_text=(
-#     #         "If an organisation is not listing IP Ranges and AS numbers, "
-#     #         "we need a way to identify them in network lookups."
-#     #     ),
-#     #     blank=True,
-#     # )
-#     # location_import_required = models.BooleanField(default=False)
-#     # network_import_required = models.BooleanField(default=False)
-#     # data_processing_opt_in = models.BooleanField(
-#     #     default=False, verbose_name="Data processing consent"
-#     # )
-#     # newsletter_opt_in = models.BooleanField(
-#     #     default=False, verbose_name="Newsletter signup"
-#     # )
-#     # # if this field is set, approving a request will update the provider instead of creating a new one
-#     # provider = models.ForeignKey(
-#     #     to=Hostingprovider, on_delete=models.SET_NULL, null=True
-#     # )
-
-#     class Meta:
-#         model = ac_models.ProviderRequest
-
-
 class ProviderRequestFactory(factory.django.DjangoModelFactory):
     """
     By default ProviderRequestFactory() or ProviderRequestFactory.create()

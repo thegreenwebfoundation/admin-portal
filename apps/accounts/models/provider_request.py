@@ -1,3 +1,4 @@
+import logging  # noqa
 from datetime import date, datetime, timedelta
 from typing import Iterable, List, Tuple, Union
 
@@ -22,14 +23,7 @@ from .hosting import (
     Service,
 )
 
-import logging  # noqa
-
-# TODO: remove when merging in PR
-from rich.logging import RichHandler  # noqa
-
 logger = logging.getLogger(__name__)  # noqa
-logger.addHandler(RichHandler())
-logger.setLevel(logging.DEBUG)
 
 
 class ProviderRequestStatus(models.TextChoices):
@@ -292,8 +286,10 @@ class ProviderRequest(TimeStampedModel):
                 hostingprovider=hp,
             )
 
-        # fetch our archived documents - we want to compare the submitted evidence against these
-        # so we know which ones to make visible again, and which ones to leave archived
+        # Fetch our archived documents:
+        # We want to compare the submitted evidence against these
+        # so we know which ones to make visible again, and which
+        # ones to leave archived
         archived_documents = HostingProviderSupportingDocument.objects_all.filter(
             archived=True, hostingprovider=hp
         )
@@ -321,20 +317,17 @@ class ProviderRequest(TimeStampedModel):
             attachment = evidence.file or ""
 
             if archived_document_match := is_already_uploaded(evidence):
-
                 logger.debug(
-                    f"Marking evidence: {evidence} to be unarchived, because it is a match for doc id: {archived_document_match}"
+                    (
+                        f"Marking evidence: {evidence} to be unarchived, because "
+                        f"it is a match for doc id: {archived_document_match}"
+                    )
                 )
                 archived_doc_ids.append(archived_document_match)
-                # # remove the id from the list of archived documents
-                # archived_doc_ids = [
-                #     doc_id
-                #     for doc_id in archived_doc_ids
-                #     if doc_id != archived_document_match
-                # ]
 
-                # exit the loop early - this was a duplicate of content that will be
-                # made visible again when we unarchive it
+                # exit the loop early - this was a duplicate of content
+                # that will be made visible again when we unarchive it,
+                # so we don't need to create a new document
                 continue
 
             supporting_doc = HostingProviderSupportingDocument.objects.create(
@@ -353,9 +346,10 @@ class ProviderRequest(TimeStampedModel):
                 f"Created supporting doc: {supporting_doc} for evidence: {evidence}"
             )
 
-        # Now we have filtered out duplicates, and created new supporting documents
-        # for new evidence. We restore the visibility of the remaining archived documents
-        # by unarchiving them.
+        # At this point we have created new supporting documents for evidence we
+        # haven't seen before.
+        # We now want to restore the visibility of archived documents that were content
+        # matches for submitted evidence, by unarchiving them.
         [
             doc.unarchive()
             for doc in HostingProviderSupportingDocument.objects_all.filter(
