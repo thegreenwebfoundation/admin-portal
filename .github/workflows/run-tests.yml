@@ -12,7 +12,7 @@ jobs:
 
     services:
       mariadb:
-        image: mariadb:10.3
+        image: mariadb:10.11
         ports:
           - 3306:3306
         env:
@@ -29,15 +29,9 @@ jobs:
           - 5672:5672
         options: '--hostname "rmq" --health-cmd "rabbitmqctl status" --health-interval 10s --health-timeout 10s --health-retries 3 --health-start-period 60s'
 
-      # redis
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.12]
 
     steps:
       - uses: actions/checkout@v4
