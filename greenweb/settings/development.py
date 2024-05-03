@@ -34,7 +34,12 @@ SITE_URL = "http://localhost:9000"
 
 MEDIA_ROOT = ROOT("media")
 MEDIA_URL = "/media/"
-DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-test"
-
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"

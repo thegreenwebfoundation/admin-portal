@@ -2131,7 +2131,8 @@ def test_email_sent_on_approval(
     # we need to add a session middleware to the request
     # without this attempts to place a message in the request
     # for the staff user will fail in this test
-    middleware = SessionMiddleware()
+    middleware = SessionMiddleware(lambda req: HttpResponse())
+
     middleware.process_request(req)
     messages = FallbackStorage(req)
     req._messages = messages
@@ -2215,7 +2216,7 @@ def test_email_request_email_confirmation_is_sent(
     # we need to add a session middleware to the request
     # without this attempts to place a message in the request
     # for the staff user will fail in this test
-    middleware = SessionMiddleware()
+    middleware = SessionMiddleware(lambda req: HttpResponse())
     middleware.process_request(req)
     messages = FallbackStorage(req)
     req._messages = messages
@@ -2283,7 +2284,7 @@ def test_staff_review_is_logged(
     # we need to add a session middleware to the request
     # without this attempts to place a message in the request
     # for the staff user will fail in this test
-    middleware = SessionMiddleware()
+    middleware = SessionMiddleware(lambda req: HttpResponse())
     middleware.process_request(req)
     messages = FallbackStorage(req)
     req._messages = messages

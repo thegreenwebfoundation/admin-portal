@@ -11,7 +11,8 @@ from apps.greencheck.models.checks import CO2Intensity
 
 from .models import GreencheckIp, GreenDomain, GreencheckASN
 
-from taggit_serializer import serializers as tag_serializer
+# from taggit_serializer import serializers as tag_serializer
+from taggit import serializers as tag_serializers
 
 
 HIGHEST_ASN_POSSIBLE = 4294967295
@@ -139,13 +140,13 @@ class HostingDocumentSerializer(serializers.ModelSerializer):
 
 
 class HostingProviderSerializer(
-    tag_serializer.TaggitSerializer, serializers.ModelSerializer
+    tag_serializers.TaggitSerializer, serializers.ModelSerializer
 ):
     """The JSON serialised representation of a hosting provider"""
 
     supporting_documents = HostingDocumentSerializer(many=True, read_only=True)
 
-    services = tag_serializer.TagListSerializerField()
+    services = tag_serializers.TagListSerializerField()
 
     class Meta:
         model = Hostingprovider

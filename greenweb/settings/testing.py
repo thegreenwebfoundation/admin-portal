@@ -5,7 +5,14 @@ ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])  # noqa
 DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-test"
 
 # http://whitenoise.evans.io/en/stable/django.html#WHITENOISE_MANIFEST_STRICT
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # override settings, so we don't need to run rabbitmq in testing
 # For more, see https://github.com/Bogdanp/django_dramatiq#testing
