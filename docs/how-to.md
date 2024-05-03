@@ -18,7 +18,7 @@ Important: make sure to be outside of an enviroment (deactivate).
 
 #### Run all test until one fails
 ```
-pipenv run pytest -x
+dotenv run -- pytest -x
 ```
 
 ## Set up Gitpod environment

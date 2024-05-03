@@ -1,4 +1,8 @@
 # supervisor can only control processes it started itself.
 # So we need to use exec to replace the parent shell script process
-# that starts pipenv
-exec python -m pipenv run ./manage.py rundramatiq --threads {{ dramatiq_threads }} --processes {{ dramatiq_processes }} --queues default
+# that calls manage.py
+source .venv/bin/activate
+exec dotenv run -- ./manage.py rundramatiq \
+    --threads {{ dramatiq_threads }} \
+    --processes {{ dramatiq_processes }} \
+    --queues default

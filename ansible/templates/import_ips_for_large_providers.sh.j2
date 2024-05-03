@@ -10,6 +10,7 @@ set -euo pipefail
 cd {{ project_root }}/current/
 
 # run our ip imports
-python -m pipenv run ./manage.py update_networks_in_db_amazon
-python -m pipenv run ./manage.py update_networks_in_db_google
-python -m pipenv run ./manage.py update_networks_in_db_microsoft
+source .venv/bin/activate
+dotenv run -- ./manage.py update_networks_in_db_amazon
+dotenv run -- ./manage.py update_networks_in_db_google
+dotenv run -- ./manage.py update_networks_in_db_microsoft
