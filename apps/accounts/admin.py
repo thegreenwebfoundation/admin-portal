@@ -966,6 +966,9 @@ class HostingAdmin(
 
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
+    @admin.display(
+        description="Import IP Ranges from a CSV file"
+    )
     @mark_safe
     def send_button(self, obj):
         url = reverse_admin_name(
@@ -978,6 +981,9 @@ class HostingAdmin(
 
     send_button.short_description = "Send email"
 
+    @admin.display(
+        description="Support Messages"
+    )
     @mark_safe
     def preview_email_button(self, obj):
         url = reverse_admin_name(
@@ -988,7 +994,6 @@ class HostingAdmin(
         link = f'<a href="{url}" class="sendEmail">Compose message</a>'
         return link
 
-    preview_email_button.short_description = "Support Messages"
 
     @mark_safe
     def start_csv_import_button(self, obj):
@@ -1004,36 +1009,45 @@ class HostingAdmin(
         link = f'<a href="{url}" class="start_csv_import">Import IP Ranges from CSV</a>'
         return link
 
-    send_button.short_description = "Import IP Ranges from a CSV file"
 
+    @admin.display(
+        description="website"
+    )
     @mark_safe
     def html_website(self, obj):
         html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
         return html
 
-    html_website.short_description = "website"
 
+    @admin.display(
+        description="Number of IP ranges",
+        ordering="greencheckip__count",
+    )
     def ip_addresses(self, obj):
         return len(obj.greencheckip_set.all())
 
-    ip_addresses.short_description = "Number of IP ranges"
-    ip_addresses.admin_order_field = "greencheckip__count"
 
+    @admin.display(
+        description="country"
+    )
     def country_str(self, obj):
         return obj.country.code
 
-    country_str.short_description = "country"
 
+    @admin.display(
+        description="Certificates"
+    )
     def certificates_amount(self, obj):
         return len(obj.hostingprovider_certificates.all())
 
-    certificates_amount.short_description = "Certificates"
     # certificates_amount.admin_order_field = "hostingprovider_certificates__count"
 
+    @admin.display(
+        description="Datacenters"
+    )
     def datacenter_amount(self, obj):
         return len(obj.datacenter.all())
 
-    datacenter_amount.short_description = "Datacenters"
     # datacenter_amount.admin_order_field = "datacenter__count"
 
 
@@ -1215,39 +1229,51 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
             extra_context=extra_context,
         )
 
+    @admin.display(
+        description="website"
+    )
     @mark_safe
     def html_website(self, obj):
         html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
         return html
 
-    html_website.short_description = "website"
 
+    @admin.display(
+        description="country"
+    )
     def country_str(self, obj):
         return obj.country.code
 
-    country_str.short_description = "country"
 
+    @admin.display(
+        description="Show on website",
+        boolean=True,
+    )
     def show_website(self, obj):
         return obj.showonwebsite
 
-    show_website.short_description = "Show on website"
-    show_website.boolean = True
 
+    @admin.display(
+        description="Classifications"
+    )
     def classification_names(self, obj):
         classifications = [c.classification for c in obj.classifications.all()]
         return ", ".join(classifications)
 
-    classification_names.short_description = "Classifications"
 
+    @admin.display(
+        description="Certificates"
+    )
     def certificates_amount(self, obj):
         return len(obj.datacenter_certificates.all())
 
-    certificates_amount.short_description = "Certificates"
 
+    @admin.display(
+        description="Hosters"
+    )
     def hostingproviders_amount(self, obj):
         return len(obj.hostingproviders.all())
 
-    hostingproviders_amount.short_description = "Hosters"
 
 
 @admin.register(SupportMessage, site=greenweb_admin)
@@ -1348,7 +1374,7 @@ class ActionInChangeFormMixin(object):
             request, queryset
         )
         if isinstance(response, HttpResponseRedirect):
-            response["Location"] = request.META.get("HTTP_REFERER", response.url)
+            response["Location"] = request.headers.get("referer", response.url)
         return response
 
     def change_view(self, request, object_id, extra_context=None):

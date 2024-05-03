@@ -1,5 +1,5 @@
 from django.urls import path
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib.auth import views as auth_views
 from django.views.generic import RedirectView
 from django.views.generic.base import TemplateView
@@ -38,7 +38,7 @@ urlpatterns = [
         auth_views.LogoutView.as_view(template_name="auth/logout.html"),
         name="logout",
     ),
-    url(
+    re_path(
         r"accounts/activation/(?P<activation_key>[-:\w]+)/",
         UserActivationView.as_view(),
         name="activation",

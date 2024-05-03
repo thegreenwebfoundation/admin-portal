@@ -16,7 +16,7 @@ from django.db.models.query import QuerySet
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
 from django.views.generic import DetailView, ListView, UpdateView
 from django.views.generic.base import TemplateView
@@ -155,11 +155,11 @@ class UserActivationView(ActivationView):
             message = "Thanks, we've confirmed your email address. Now you can login with your username and password."
             messages.success(self.request, message)
             return HttpResponseRedirect(
-                force_text(self.get_success_url(activated_user))
+                force_str(self.get_success_url(activated_user))
             )
 
         messages.error(self.request, error_message)
-        return HttpResponseRedirect(force_text(self.get_success_url()))
+        return HttpResponseRedirect(force_str(self.get_success_url()))
 
 
 class UserUpdateView(UpdateView):
