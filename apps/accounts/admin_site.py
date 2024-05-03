@@ -234,8 +234,11 @@ class GreenWebAdmin(AdminSite):
         ]
         return patterns + urls
 
-    def get_app_list(self, request):
-        app_list = super().get_app_list(request)
+    def get_app_list(self, request, app_label=None):
+        app_list = super().get_app_list(request, app_label)
+
+        if app_label:
+            return app_list
 
         if flag_is_active(request, "provider_request"):
             verification_request_item = {
