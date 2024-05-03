@@ -34,11 +34,11 @@ marimo = "*"
 django-upgrade = "*"
 
 [packages]
-django = { extras = ["bcrypt"], version = "~=3.2" }
-django-anymail = { extras = ["mailgun"], version = "==7.0.0" }
+django = { extras = ["bcrypt"], version = "~=4.2" }
+django-anymail = { extras = ["mailgun"], version = "*" }
 django-countries = "*"
 django-environ = "==0.4.5"
-django-extensions = "==2.2.5"
+django-extensions = "*"
 django-model-utils = "*"
 django-mysql = "*"
 django-registration = "==3.1.2"
@@ -55,11 +55,11 @@ dramatiq = { extras = ["rabbitmq"], version = "*" }
 django-dramatiq = "==v0.10.0"
 phpserialize = "*"
 tld = "*"
-djangorestframework = "==3.13.1"
+djangorestframework = "*"
 djangorestframework-csv = "*"
 pyyaml = "*"
 uritemplate = "*"
-drf-yasg = "==1.21.3"
+drf-yasg = "*"
 boto3 = "*"
 awscli-plugin-endpoint = "*"
 awscli = "*"
@@ -75,11 +75,10 @@ django-widget-tweaks = "*"
 crispy-tailwind = "*"
 django-crispy-forms = "*"
 django-storages = "*"
-django-taggit-serializer = "*"
 # We need to stay at 3.5.1 until this issue is resolved or we
 # stop using the tag autocomplete widget in the hoster admin
 # https://github.com/yourlabs/django-autocomplete-light/issues/1195
-django-autocomplete-light = "==3.5.1"
+django-autocomplete-light = "*"
 markdown = "*"
 toml = "*"
 typing_extensions = "*"

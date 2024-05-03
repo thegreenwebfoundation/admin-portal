@@ -23,7 +23,14 @@ ALLOWED_HOSTS = [
 
 DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-live"
 # Used by django storages for storing files
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # Scaleway deets
 AWS_ACCESS_KEY_ID = env("OBJECT_STORAGE_ACCESS_KEY_ID")  # noqa
