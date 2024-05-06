@@ -6,11 +6,18 @@ all:
       dramatiq_threads: 2
       dramatiq_processes: 3
       sentry_sample_rate: 0
+      app_name: app1
+      gunicorn_workers: 4
+      gunicorn_threads: 1
+
     app2.thegreenwebfoundation.org:
       internal_ip: "10.0.0.4"
       dramatiq_threads: 2
       dramatiq_processes: 3
       sentry_sample_rate: 0
+      app_name: app2
+      gunicorn_workers: 4
+      gunicorn_threads: 1
     # TODO: once we have update the worker process names we can use app3 for serving production traffic
     # letting us decommission some of the older app servers
     app3.thegreenwebfoundation.org:
@@ -18,11 +25,17 @@ all:
       dramatiq_threads: 1
       dramatiq_processes: 1
       sentry_sample_rate: 1
+      app_name: app3
+      gunicorn_workers: 4
+      gunicorn_threads: 1
     app4.thegreenwebfoundation.org:
       internal_ip: "10.0.0.7"
       dramatiq_threads: 2
       dramatiq_processes: 3
       sentry_sample_rate: 0
+      app_name: app4
+      gunicorn_workers: 4
+      gunicorn_threads: 1
 
   vars:
     tgwf_stage: "prod"

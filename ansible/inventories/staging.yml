@@ -7,6 +7,9 @@ all:
       dramatiq_threads: 1
       dramatiq_processes: 1
       sentry_trace_rate: 1
+      app_name: "app-staging"
+      gunicorn_workers: 4
+      gunicorn_threads: 1
   vars:
     tgwf_stage: "staging"
     tgwf_domain_name: "admin-staging"
