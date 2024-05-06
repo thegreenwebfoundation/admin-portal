@@ -73,3 +73,16 @@ if SENTRY_DSN:
         # at least apologise about the broken site
         send_default_pii=True,
     )
+
+
+# Tell Django to look for the `HTTP_X_FORWARDED_PROTO` header, and if it sees it
+# assume that this was a secure request. Without this, Django sees a mismatch
+# between:
+# 1. the request coming in over HTTPS to Caddy, the reverse proxy in front of Django,
+# 2 -the request coming in over HTTP to Django, because Caddy is proxying over http
+# 'HTTP_X_FORWARDED_PROTO' is the name of the header that Caddy passes along, that we look for.
+# See more:
+# https://noumenal.es/notes/til/django/csrf-trusted-origins/
+# https://stackoverflow.com/questions/72584282/django-caddy-csrf-protection-issues
+# https://docs.djangoproject.com/en/4.2/ref/settings/#secure-proxy-ssl-header
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
