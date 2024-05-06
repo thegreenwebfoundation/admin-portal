@@ -24,7 +24,7 @@ all:
       internal_ip: "10.0.0.6"
       dramatiq_threads: 1
       dramatiq_processes: 1
-      sentry_sample_rate: 1
+      sentry_sample_rate: 0
       app_name: app3
       gunicorn_workers: 4
       gunicorn_threads: 1
