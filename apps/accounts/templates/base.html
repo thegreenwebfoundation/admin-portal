@@ -70,7 +70,12 @@
                             {% if request.user.is_authenticated %}
                                 <span>Hello {{ request.user.username }}</span>
                                 <span role="img" aria-label="waving hand">👋</span>
-                                <span class="pl-3"><a href="{% url 'logout' %}">Log out</a></span>
+                                <form class="inline" method="POST" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <span class="pl-3">
+                                    <button> Log out</button>
+                                </span>
+                                </form>
                             {% else %}
                                 <a href="{% url 'login' %}">Log in</a>
                             {% endif %}
