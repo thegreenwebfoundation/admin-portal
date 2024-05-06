@@ -2,8 +2,8 @@
 # So we need to use exec to replace the parent shell script process
 # that calls gunicorn
 source .venv/bin/activate
-dotenv run -- gunicorn greenweb.wsgi \
+exec dotenv run -- gunicorn greenweb.wsgi \
     --bind {{ internal_ip }}:{{ gunicorn_port }} \
     --timeout 300 \
     --config gunicorn.conf.py \
-    --statsd-host=10.0.0.2:9125 --statsd-prefix=member.app
+    --statsd-host=10.0.0.2:9125 --statsd-prefix=member.{{ app_name }}
