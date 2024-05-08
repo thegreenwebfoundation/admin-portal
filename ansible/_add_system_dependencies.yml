@@ -64,7 +64,6 @@
       - python3.11-venv
       - python3.11-dev
       - python-is-python3
-      # - supervisor
     state: present
     update_cache: true
   become: true

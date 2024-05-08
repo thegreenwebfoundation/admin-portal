@@ -32,8 +32,8 @@
     # create new dotenv file in shared directory (use when adding new env vars)
     update_dotenv: false
 
-    supervisor_restart: true
-    supervisor_user: "deploy"
+    service_restart: true
+    service_user: "deploy"
 
     # flag for deciding to compile assets or not
     # this is the slowest deploy step
@@ -67,19 +67,20 @@
       when: update_dotenv is true
       tags: [dotenv]
 
-    - name: Set up process management with supervisor
+    - name: Set up process management with systemd
       ansible.builtin.include_tasks: "_set_up_process_mgmt.yml"
       tags:
-        - supervisor
+        - systemd
+        - systemd
 
-    - name: Trigger restart for app with supervisor
-      ansible.builtin.supervisorctl:
-        name: "{{ supervisor_gunicorn_app }}"
+    - name: Trigger restart for app with systemd
+      ansible.builtin.service:
+        name: "{{ service_gunicorn_app }}"
         state: restarted
       become: true
-      when: supervisor_restart is true
+      when: service_restart is true
       tags:
-        - supervisor
+        - systemd
 
     - name: Reload nginx
       ansible.builtin.service:

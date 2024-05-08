@@ -1,7 +1,7 @@
 ---
 # shared steps for provisioning boxes, deploying and controlling
 # how web workers and queue workers are scaled
-- name: Set up script for running workers and gunicorn, via supervisor in project
+- name: Set up script for running workers and web app, via systemd in project
   ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
@@ -19,10 +19,10 @@
       }
   become: true
   tags:
-    - supervisor
+    - systemd
     - config
 
-- name: Set up supervisor entries for workers and web
+- name: Set up systemd entries for workers and web app
   ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
@@ -31,14 +31,14 @@
     mode: "0755"
   loop:
     - {
-        src: "supervisor.gunicorn.conf.j2",
-        dest: "/etc/supervisor/conf.d/{{ supervisor_gunicorn_app }}.conf",
+        src: "systemd.web-app.service.j2",
+        dest: "/etc/systemd/system/{{ service_gunicorn_app }}.service",
       }
     - {
-        src: "supervisor.worker.conf.j2",
-        dest: "/etc/supervisor/conf.d/{{ supervisor_worker_job }}.conf",
+        src: "systemd.worker.service.j2",
+        dest: "/etc/systemd/system/{{ service_worker_job }}.service",
       }
   become: true
   tags:
-    - supervisor
+    - systemd
     - config

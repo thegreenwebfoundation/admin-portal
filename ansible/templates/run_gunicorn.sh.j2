@@ -1,8 +1,11 @@
-# supervisor can only control processes it started itself.
-# So we need to use exec to replace the parent shell script process
-# that calls gunicorn
-source .venv/bin/activate
-exec dotenv run -- gunicorn greenweb.wsgi \
+#! /usr/bin/bash
+# {{ ansible_managed }}
+# Last run: {{ template_run_date }}
+
+
+# calling `exec` here means that systemd sends a KILL command to gunicorn when stopping or restarting
+# allowing for a graceful shutdown or reboot
+exec {{ project_root }}/current/.venv/bin/gunicorn greenweb.wsgi \
     --bind {{ internal_ip }}:{{ gunicorn_port }} \
     --timeout 300 \
     --config gunicorn.conf.py \

@@ -14,15 +14,15 @@
     preferred_state: started
 
   tasks:
-    - name: Set up process management with supervisor
+    - name: Set up process management with systemd
       ansible.builtin.include_tasks: "_set_up_process_mgmt.yml"
       tags:
-        - supervisor
+        - systemd
 
-    - name: Update django apps using supervisor
-      ansible.builtin.supervisorctl:
-        name: "{{ supervisor_gunicorn_app }}:"
+    - name: Update django apps using systemd
+      ansible.builtin.service:
+        name: "{{ service_gunicorn_app }}:"
         state: "{{ preferred_state }}"
       become: true
       tags:
-        - supervisor
+        - systemd

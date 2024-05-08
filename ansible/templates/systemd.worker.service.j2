@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# Last run: {{ template_run_date }}
+
+[Unit]
+Description=Greenweb Worker
+Documentation=https://greenweb.readthedocs.io/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart={{ project_root}}/current/run_worker.sh
+EnvironmentFile={{ project_root}}/current/.env
+WorkingDirectory={{ project_root}}/current/
+ExecReload=/bin/kill -s HUP $MAINPID
+User={{ service_user }}
+Group={{ service_user }}
+KillMode=process
+KillSignal=SIGTERM
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target

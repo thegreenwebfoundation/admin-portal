@@ -40,7 +40,7 @@ This project also uses libraries to allow the use the handy `aws` cli tool with 
 
 *Examples*
 
-_(These all assume you have `pipenv shell` to load the necessarty environment variables into your shell)_:
+_(These all assume you are running `dotenv run -- $COMMAND` to load the necessary environment variables into your shell)_:
 
 See the buckets you have access to:
 

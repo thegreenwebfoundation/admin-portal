@@ -229,19 +229,19 @@ Each new deploy using the `deploy.yml` ansible playbook deploys the version of t
 
 If you only want to scale the workers up and down, and don't want to run through the whole deployment process, updating just the processes is possible.
 
-You have two possible options - first pass the `supervisor` tag to the deploy script. This will only run the steps tagged with `supervisor` in the deploy playbook.
+You have two possible options - first pass the `systemd` tag to the deploy script. This will only run the steps tagged with `systemd` in the deploy playbook.
 
 ```
-ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml --tags supervisor
+ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml --tags systemd
 ```
 
 Alternatively, you can run the dedicated `scale-processes.yml` playbook. This includes the same tasks as are defined in the larger `deploy` playbook:
 
 ```
-ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml --tags supervisor
+ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml --tags systemd
 ```
 
-These playbooks template out new scripts that supervisor the installed process monitors use to run both the gunicorn web servers and dramatiq queue workers, then send a command to update stop, start or restart these processes.
+These playbooks template out new scripts that systemd uses to run both the gunicorn web servers and dramatiq queue workers, then send a command to update stop, start or restart these processes.
 
 
 **Further reading**
@@ -252,7 +252,7 @@ These playbooks template out new scripts that supervisor the installed process m
 
 ### Logging
 
-As mentioned before, we use supervisor to run our both our workers and web server processes. This means processes are restarted automatically for us, and logs are rotated for us.
+As mentioned before, we use systemd to run our both our workers and web server processes. This means processes are restarted automatically for us, and logs are rotated for us.
 
 ### Gunicorn logging
 

@@ -2,7 +2,7 @@
 
 # Create Python virtual environment if not yet created.
 venv:
-	test -d venv || python3 -m venv venv
+	test -d venv || python -m venv venv
 
 ## Installing
 release:
