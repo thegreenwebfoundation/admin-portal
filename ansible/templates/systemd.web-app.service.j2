@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# Last run: {{ template_run_date }}
+
+[Unit]
+Description=Greenweb Web App
+Documentation=https://greenweb.readthedocs.io/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart={{ project_root}}/current/run_gunicorn.sh
+ExecReload=/bin/kill -s HUP $MAINPID
+WorkingDirectory={{ project_root}}/current/
+EnvironmentFile={{ project_root}}/current/.env
+User={{ service_user }}
+Group={{ service_user }}
+KillMode=process
+KillSignal=SIGTERM
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target

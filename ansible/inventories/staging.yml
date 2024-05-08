@@ -16,8 +16,8 @@ all:
     project_root: "/var/www/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
     project_deploy_branch: "staging"
     ansible_user: "deploy"
-    supervisor_gunicorn_app: "web_{{ tgwf_stage }}"
-    supervisor_worker_job: "worker_{{ tgwf_stage }}"
+    service_gunicorn_app: "web_{{ tgwf_stage }}"
+    service_worker_job: "worker_{{ tgwf_stage }}"
 
   # you can set child groups too
   children:

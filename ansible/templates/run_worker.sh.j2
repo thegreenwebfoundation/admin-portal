@@ -1,8 +1,11 @@
-# supervisor can only control processes it started itself.
-# So we need to use exec to replace the parent shell script process
-# that calls manage.py
-source .venv/bin/activate
-exec dotenv run -- ./manage.py rundramatiq \
+#! /usr/bin/bash
+
+# {{ ansible_managed }}
+# Last run: {{ template_run_date }}
+
+# calling `exec` here means that systemd sends a KILL command to dramatiq when stopping or restarting
+# allowing for a graceful shutdown or reboot
+exec {{ project_root }}/current/.venv/bin/python ./manage.py rundramatiq \
     --threads {{ dramatiq_threads }} \
     --processes {{ dramatiq_processes }} \
     --queues default

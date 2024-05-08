@@ -26,12 +26,11 @@
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
     update_front_end_deps: true
-    # For triggering restarts with supervisor
-    supervisor_restart: true
-    supervisor_user: "deploy"
-    supervisor_gunicorn_app: "admin_web"
-    supervisor_worker_job: "admin_worker"
-
+    # For triggering restarts with systemd
+    service_restart: true
+    service_user: "deploy"
+    service_gunicorn_app: "admin_web"
+    service_worker_job: "admin_worker"
 
     # See "dramatiq_threads" and "dramatiq_processes"
     # in the inventory
@@ -53,10 +52,9 @@
 
     - name: Assemble assets and related files
       ansible.builtin.include_tasks: "_assemble_deploy_assets.yml"
-      when:
-        compile_assets is true
+      when: compile_assets is true
 
-    - name: Set up script for running workers and gunicorn, via supervisor
+    - name: Set up script for running workers and gunicorn, via systemd
       ansible.builtin.template:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"
@@ -64,31 +62,42 @@
         group: deploy
         mode: "0755"
       loop:
-        - { src: "run_worker.sh.j2", dest: "{{ project_root }}/current/run_worker.sh" }
-        - { src: "run_gunicorn.sh.j2", dest: "{{ project_root }}/current/run_gunicorn.sh" }
+        - {
+            src: "run_worker.sh.j2",
+            dest: "{{ project_root }}/current/run_worker.sh",
+          }
+        - {
+            src: "run_gunicorn.sh.j2",
+            dest: "{{ project_root }}/current/run_gunicorn.sh",
+          }
       become: true
       tags:
-        - supervisor
+        - systemd
 
+- name: Set up systemd entries for workers and web app
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: deploy
+    group: deploy
+    mode: "0755"
+  loop:
+    - {
+        src: "systemd.web-app.service.j2",
+        dest: "/etc/systemd/system/{{ service_gunicorn_app }}.service",
+      }
+    - {
+        src: "systemd.worker.service.j2",
+        dest: "/etc/systemd/system/{{ service_worker_job }}.service",
+      }
+  become: true
+  tags:
+    - systemd
+    - config
 
-    - name: Set up supervisor entries for workers and web
-      ansible.builtin.template:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        owner: deploy
-        group: deploy
-        mode: "0755"
-      loop:
-        - { src: "supervisor.gunicorn.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_web.conf" }
-        - { src: "supervisor.worker.conf.j2", dest: "/etc/supervisor/conf.d/{{ tgwf_domain_name }}_worker.conf" }
-      become: true
-      tags:
-        - supervisor
-
-
-    - name: Trigger restart for worker with supervisor
-      ansible.builtin.supervisorctl:
-        name: "{{ supervisor_worker_job }}:"
-        state: restarted
-      become: true
-      when: supervisor_restart is true
+- name: Trigger restart for worker with systemd
+  ansible.builtin.service:
+    name: "{{ service_worker_job }}:"
+    state: restarted
+  become: true
+  when: service_restart is true
