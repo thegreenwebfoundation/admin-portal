@@ -8,7 +8,8 @@
 - name: Install python dependencies with uv
   ansible.builtin.shell: |
     source .venv/bin/activate
-    python3.11 -m pip install -r requirements/requirements.linux.generated.txt
+    python3.11 -m pip install uv 
+    uv pip install -r requirements/requirements.linux.generated.txt
   args:
     chdir: "{{ project_root }}/current"
     executable: "/usr/bin/bash"
