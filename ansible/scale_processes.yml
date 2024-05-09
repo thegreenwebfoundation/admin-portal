@@ -20,7 +20,7 @@
         - systemd
 
     - name: Update django apps using systemd
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: "{{ service_gunicorn_app }}:"
         state: "{{ preferred_state }}"
       become: true

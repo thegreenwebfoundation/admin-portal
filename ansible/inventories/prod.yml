@@ -62,3 +62,14 @@ all:
       # precedence over the ones further 'upstream'
       # vars:
       #   some_var: value_here
+    # API servers are expected to serve the API traffic, which is the bulk of load
+    # we don't direct admin.TGWF to them
+    api_servers:
+      hosts:
+        app1.thegreenwebfoundation.org:
+        app2.thegreenwebfoundation.org:
+        app4.thegreenwebfoundation.org:
+    # the admin server also hosts the staging servers
+    admin_servers:
+      hosts:
+        app3.thegreenwebfoundation.org:

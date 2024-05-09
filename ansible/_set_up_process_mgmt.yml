@@ -42,3 +42,11 @@
   tags:
     - systemd
     - config
+
+- name: Reload systemd to pick up new changes
+  ansible.builtin.systemd:
+    daemon_reload: True
+  become: true
+  tags:
+    - systemd
+    - config
