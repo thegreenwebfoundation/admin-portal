@@ -164,7 +164,7 @@ djangorestframework==3.15.1
     #   drf-yasg
 djangorestframework-csv==3.0.2
 djangorestframework-jsonp==1.0.2
-dnspython==2.0.0
+dnspython==2.6.1
     # via ipwhois
 docutils==0.16
     # via
