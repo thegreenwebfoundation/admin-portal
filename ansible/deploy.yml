@@ -1,11 +1,15 @@
 ---
 - name: Deploy the TGWF django admin
   hosts:
-    # - app_servers
-    - app1.thegreenwebfoundation.org
-    - app2.thegreenwebfoundation.org
-    - app3.thegreenwebfoundation.org
-    - app4.thegreenwebfoundation.org
+    # - app1.thegreenwebfoundation.org
+    # - app2.thegreenwebfoundation.org
+    # - app3.thegreenwebfoundation.org
+    # - app4.thegreenwebfoundation.org
+    - app_servers
+    # api servers are app1, app2, and app4, mainly serving API traffic
+    # - api_servers
+    # admin server is app3, mainly serving member portal traffic
+    # - admin_servers
 
   remote_user: "deploy"
   become: false
@@ -71,10 +75,18 @@
       ansible.builtin.include_tasks: "_set_up_process_mgmt.yml"
       tags:
         - systemd
-        - systemd
+
+    - name: Query state of web app service
+      ansible.builtin.service_facts:
+      tags: [systemd-check]
+
+    - name: Show state of services
+      ansible.builtin.debug:
+        var: ansible_facts.services["{{ service_gunicorn_app }}.service"]
+      tags: [systemd-check]
 
     - name: Trigger restart for app with systemd
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: "{{ service_gunicorn_app }}"
         state: restarted
       become: true
