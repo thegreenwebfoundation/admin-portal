@@ -54,7 +54,7 @@ Access to the servers, and wider config maintained using a set of ansible script
 
 The chart below outlines a high level model of how different moving parts serve web requests.
 
-A request comes in, and normally a nginx either serves static files or reverse proxies the request to gunicorn, our django web server. Once the request reaches gunicorn, which is running at least one "worker" process, which actually services the request. Represented visually, it looks like so:
+A request comes in, and normally a caddy either serves static files or reverse proxies the request to gunicorn, our django web server. Once the request reaches gunicorn, which is running at least one "worker" process, which actually services the request. Represented visually, it looks like so:
 
 The simplest example
 
@@ -63,8 +63,8 @@ The simplest example
 flowchart LR
 
     request[http request]
-    request-->nginx
-    nginx-->master
+    request-->caddy
+    caddy-->master
     master
 
     subgraph gunicorn

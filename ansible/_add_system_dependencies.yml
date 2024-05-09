@@ -14,27 +14,12 @@
       - libmariadbclient-dev
       - libmariadb3
       - mariadb-client
-      # - mariadb-client-core
       - mariadb-common
-      # - mariadb-server-10.3
-      # - mariadb-server-core-10.3
-      # - redis-server
-      # - redis-tools
     state: present
     update_cache: true
   become: true
   when: install_system_reqs is true
   tags: [wip]
-
-- name: Install nginx for reverse proxying and serving static files
-  ansible.builtin.apt:
-    pkg:
-      - build-essential
-      - nginx
-    state: present
-    update_cache: true
-  become: true
-  when: use_nginx is true
 
 - name: Download node source script
   ansible.builtin.get_url:
