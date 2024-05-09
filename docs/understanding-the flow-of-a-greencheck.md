@@ -13,13 +13,13 @@ When a user carries out a greencheck for a specific site, or a third party uses 
 ```{mermaid}
 sequenceDiagram
 
-    Browser client->>+Nginx: Look up domain
-    Nginx->>+Django Web: Forward to a django web process
+    Browser client->>+Caddy: Look up domain
+    Caddy->>+Django Web: Forward to a django web process
     Django Web->>+Database: Look up domain
     Database->>-Django Web: Return lookup result
-    Django Web->>+Nginx: Return rendered result
+    Django Web->>+Caddy: Return rendered result
 
-    Nginx->>+Browser client: Present domain result
+    Caddy->>+Browser client: Present domain result
     Django Web->>+RabbitMQ: Queue domain for logging
 ```
 
@@ -56,14 +56,14 @@ The sequence flow diagram looks like so:
 ```{mermaid}
 sequenceDiagram
 
-    Browser client->>+Nginx: Send a request to check a website domain
-    Nginx->>+Django Web: Forward to a django web process
+    Browser client->>+Caddy: Send a request to check a website domain
+    Caddy->>+Django Web: Forward to a django web process
     Django Web->>+External Network: Look up domain
     External Network->>+Django Web: Return domain lookup
     Django Web->>+Database: Clear old cached domain lookup from database
-    Django Web->>+Nginx: Return rendered result
+    Django Web->>+Caddy: Return rendered result
 
-    Nginx->>+Browser client: Present result for website check
+    Caddy->>+Browser client: Present result for website check
     Django Web->>+RabbitMQ: Queue domain for logging
 
 ```

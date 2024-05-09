@@ -23,8 +23,6 @@
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
     update_front_end_deps: true
-    # set to true to update the nginx conf file for this app
-    setup_nginx: false
 
   tasks:
     - name: Set up most recent timestamps directories
@@ -39,28 +37,3 @@
     - name: Install all deploy dependencies
       ansible.builtin.include_tasks: "_install_deploy_dependencies.yml"
       when: install_system_reqs is true
-
-    - name: Set up nginx server entry
-      ansible.builtin.template:
-        src: "nginx.conf.j2"
-        dest: "/etc/nginx/sites-available/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        owner: deploy
-        group: deploy
-        mode: "0755"
-      become: true
-      when: setup_nginx is true
-
-    - name: Create a symbolic link to make nginx file appear in sites-enabled
-      ansible.builtin.file:
-        src: "/etc/nginx/sites-available/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        dest: "/etc/nginx/sites-enabled/{{ tgwf_domain_name }}.thegreenwebfoundation.org"
-        state: link
-      become: true
-      when: setup_nginx is true
-
-    - name: Reload nginx
-      ansible.builtin.service:
-        name: nginx
-        state: reloaded
-      become: true
-      when: setup_nginx is true
