@@ -1,4 +1,20 @@
-Dockerfile
-docker-compose*
-.vscode
-.git
+
+# ignore everything beginning with dot by default
+.*
+
+
+ansible*
+
+# any local data
+data*
+cruft
+docs
+
+
+# local dev
+media
+node_modules
+staticfiles
+
+
+!.dockerignore
