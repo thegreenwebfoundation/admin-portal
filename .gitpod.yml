@@ -73,3 +73,6 @@ vscode:
   extensions:
     - ms-python.python
     - eamodio.gitlens
+    - charliermarsh.ruff
+    - bibhasdn.django-html
+    - tomusher.djhtml-vscode
