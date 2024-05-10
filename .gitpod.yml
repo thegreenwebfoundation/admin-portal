@@ -1,32 +1,21 @@
 image:
   file: .gitpod.dockerfile
 
-github:
-  prebuilds:
-    # enable for the default branch (defaults to true)
-    master: true
-    # enable for all branches in this repo (defaults to false)
-    branches: true
-    # enable for pull requests coming from this repo (defaults to true)
-    pullRequests: true
-    # enable for pull requests coming from forks (defaults to false)
-    pullRequestsFromForks: true
-    # add a check to pull requests (defaults to true)
-    addCheck: true
-    # add a "Review in Gitpod" button as a comment to pull requests (defaults to false)
-    addComment: true
-    # add a "Review in Gitpod" button to the pull request's description (defaults to false)
-    addBadge: false
-
 # List the start up tasks. Learn more https://www.gitpod.io/docs/config-start-tasks/
 tasks:
   # set up python dependencies and database
   - name: main terminal
     init: |
       cp ./.env.gitpod ./.env
-      mysqladmin create greencheck
+      # upgrade pyenv to use recent version of python
+      cd /home/gitpod/.pyenv/plugins/python-build/../.. && git pull && cd -
+      pyenv install 3.11.9
+      pyenv global 3.11.9
+      python -m venv .venv
       source .venv/bin/activate
-      python -m pip install -r requirements/requirements.linux.generated.txt
+      mysqladmin create greencheck
+      python -m pip install --upgrade pip uv
+      uv pip install -r requirements/requirements.linux.generated.txt
       dotenv run -- ./manage.py migrate
       dotenv run -- ./manage.py tailwind install
       dotenv run -- ./manage.py tailwind build
