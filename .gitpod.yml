@@ -34,14 +34,12 @@ tasks:
     command: >
       docker run 
       --rm
-      --hostname green-mariadb
+      --hostname 
+      --env green-mariadb
+      --env MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=True
+      --env MARIADB_DATABASE=greencheck
       -p 3306:3306
       mariadb:10.11
-    env:
-      MARIADB_USER: deploy
-      MARIADB_PASSWORD: deploy
-      MARIADB_ROOT_PASSWORD: deploy
-      MARIADB_DATABASE: greencheck
 
   - name: mailhog
     command: >
