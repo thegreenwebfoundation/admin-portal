@@ -9,7 +9,6 @@ tasks:
       cp ./.env.gitpod ./.env
       python -m venv .venv
       source .venv/bin/activate
-      mysqladmin create greencheck
       python -m pip install --upgrade pip uv
       uv pip install -r requirements/requirements.linux.generated.txt
       dotenv run -- ./manage.py migrate
@@ -30,6 +29,19 @@ tasks:
       --privileged
       --name green-rabbit 
       rabbitmq:3.11
+
+  - name: mariadb
+    command: >
+      docker run 
+      --rm
+      --hostname green-mariadb
+      -p 3306:3306
+      mariadb:10.11
+    env:
+      MARIADB_USER: deploy
+      MARIADB_PASSWORD: deploy
+      MARIADB_ROOT_PASSWORD: deploy
+      MARIADB_DATABASE: greencheck
 
   - name: mailhog
     command: >
