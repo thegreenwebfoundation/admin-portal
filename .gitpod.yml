@@ -40,17 +40,6 @@ tasks:
       --name green-rabbit 
       rabbitmq:3.11
 
-  - name: mariadb
-    command: >
-      docker run 
-      --rm
-      --hostname 
-      --env green-mariadb
-      --env MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=True
-      --env MARIADB_DATABASE=greencheck
-      -p 3306:3306
-      mariadb:10.11
-
   - name: mailhog
     command: >
       docker run
