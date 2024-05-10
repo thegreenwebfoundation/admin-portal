@@ -7,10 +7,6 @@ tasks:
   - name: main terminal
     init: |
       cp ./.env.gitpod ./.env
-      # upgrade pyenv to use recent version of python
-      cd /home/gitpod/.pyenv/plugins/python-build/../.. && git pull && cd -
-      pyenv install 3.11.9
-      pyenv global 3.11.9
       python -m venv .venv
       source .venv/bin/activate
       mysqladmin create greencheck
