@@ -20,6 +20,16 @@ tasks:
       dotenv run -- ./manage.py collectstatic --no-input
     command: ls
 
+  - name: mariadb
+    command: >
+      docker run 
+      --rm
+      --hostname green-mariadb
+      --publish 3306:3306
+      --env MARIADB_DATABASE=greencheck
+      --env MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=True
+      mariadb:10.11
+
   - name: rabbitmq
     command: >
       docker run 
