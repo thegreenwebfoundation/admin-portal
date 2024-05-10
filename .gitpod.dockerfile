@@ -14,3 +14,8 @@ RUN sudo apt-get update  && sudo apt-get install rabbitmq-server -y --fix-missin
 # https://www.gitpod.io/docs/introduction/languages/python
 RUN pyenv install 3.11 \
     && pyenv global 3.11
+
+# install a copy of node js
+RUN wget https://deb.nodesource.com/setup_18.x -O /tmp/setup_18.x.sh
+RUN sudo bash /tmp/setup_18.x.sh
+RUN sudo apt-get install nodejs -y
