@@ -2,7 +2,6 @@
 # ignore everything beginning with dot by default
 .*
 
-
 ansible*
 
 # any local data
@@ -15,6 +14,3 @@ docs
 media
 node_modules
 staticfiles
-
-
-!.dockerignore
