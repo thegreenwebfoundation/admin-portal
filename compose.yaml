@@ -1,0 +1,37 @@
+
+services:
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=deploy
+      - MYSQL_DATABASE=greencheck
+      - MYSQL_USER=deploy
+      - MYSQL_PASSWORD=deploy
+    expose:
+      - 3306
+  rabbitmq:
+    image: rabbitmq:3.11
+    restart: always
+    expose:
+      - 5672
+    ports:
+      - 5672:5672
+  django:
+    env_file:
+    - path: ./.env.docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: greenweb-app
+    image: greenweb-app
+    expose:
+      - 9000
+    ports:
+      - 9000:9000
+    volumes:
+      - ./apps:/app/apps
+      - ./greenweb:/app/greenweb
+    restart: always
+    depends_on:
+      - db

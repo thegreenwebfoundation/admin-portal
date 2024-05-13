@@ -1,5 +1,14 @@
 FROM python:3.11 as production
 
+
+RUN apt-get update
+RUN apt-get upgrade --yes
+RUN apt-get install wget --no-install-recommends --yes
+RUN wget https://deb.nodesource.com/setup_18.x -O /tmp/setup_18.x.sh --no-check-certificate
+RUN bash /tmp/setup_18.x.sh
+RUN apt-get install nodejs --no-install-recommends --yes
+
+
 # Install dependencies in a virtualenv
 ENV VIRTUAL_ENV=/app/.venv
 
@@ -30,9 +39,6 @@ ENV PATH=$VIRTUAL_ENV/bin:$PATH \
 # server (Gunicorn). Heroku will ignore this.
 EXPOSE 9000
 
-# Don't use the root user as it's an anti-pattern and Heroku does not run
-# containers as root either.
-# https://devcenter.heroku.com/articles/container-registry-and-runtime#dockerfile-commands-and-runtime
 USER deploy
 
 # Install your app's Python requirements.
@@ -43,19 +49,19 @@ RUN python -m pip install uv wheel --upgrade
 # Copy application code.
 COPY --chown=deploy . .
 
+
 # install dependencies via UV
 RUN uv pip install -r requirements/requirements.linux.generated.txt 
 
-
 # set up front end pipeline
-RUN python./manage.py tailwind install
-RUN python./manage.py tailwind build
+RUN python ./manage.py tailwind install
+RUN python ./manage.py tailwind build
 
-# run npx rollup in correct directory
+# # # run npx rollup in correct directory
 RUN cd ./apps/theme/static_src/ && \
     npx rollup --config
 
-# TODO Collect static. This command will move static files from application
-# directories and "static_compiled" folder to the main static directory that
-# will be served by the WSGI server.
-# RUN SECRET_KEY=none python manage.py collectstatic --noinput --clear
+# # TODO Collect static. This command will move static files from application
+# # directories and "static_compiled" folder to the main static directory that
+# # will be served by the WSGI server.
+RUN python ./manage.py collectstatic --noinput --clear
