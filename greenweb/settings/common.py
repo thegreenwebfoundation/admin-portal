@@ -31,7 +31,6 @@ env = environ.Env(
         str,
         os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
     ),
-    REDIS_HOST=(str, "localhost"),
     # add for basicauth
     BASICAUTH_DISABLE=(bool, True),
     BASICAUTH_USER=(str, "staging_user"),
@@ -216,8 +215,8 @@ DATABASES = {
 EXPLORER_CONNECTIONS = {"Default": "read_only"}
 EXPLORER_DEFAULT_CONNECTION = "read_only"
 EXPLORER_AUTORUN_QUERY_WITH_PARAMS = False
-EXPLORER_PERMISSION_VIEW = lambda r: r.user.is_admin
-EXPLORER_PERMISSION_CHANGE = lambda r: r.user.is_admin
+EXPLORER_PERMISSION_VIEW = lambda r: r.user.is_admin  # noqa
+EXPLORER_PERMISSION_CHANGE = lambda r: r.user.is_admin  # noqa
 
 DATABASES["default"]["OPTIONS"] = {
     # Tell MySQLdb to connect with 'utf8mb4' character set
@@ -314,27 +313,25 @@ OBJECT_STORAGE_SECRET_ACCESS_KEY = env("OBJECT_STORAGE_SECRET_ACCESS_KEY")
 
 # Importer variables
 # Microsoft
-MICROSOFT_PROVIDER_ID = env("MICROSOFT_PROVIDER_ID")
+MICROSOFT_PROVIDER_ID = env("MICROSOFT_PROVIDER_ID", default=None)
 
 # Equinix
-EQUINIX_PROVIDER_ID = env("EQUINIX_PROVIDER_ID")
-EQUINIX_REMOTE_API_ENDPOINT = env("EQUINIX_REMOTE_API_ENDPOINT")
+EQUINIX_PROVIDER_ID = env("EQUINIX_PROVIDER_ID", default=None)
+EQUINIX_REMOTE_API_ENDPOINT = env("EQUINIX_REMOTE_API_ENDPOINT", default=None)
 
 # Amazon
-AMAZON_PROVIDER_ID = env("AMAZON_PROVIDER_ID")
-AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT")
+AMAZON_PROVIDER_ID = env("AMAZON_PROVIDER_ID", default=None)
+AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT", default=None)
 
 # Google
-GOOGLE_PROVIDER_ID = env("GOOGLE_PROVIDER_ID", default="595")
+GOOGLE_PROVIDER_ID = env("GOOGLE_PROVIDER_ID", default=None)
 GOOGLE_DATASET_ENDPOINT = env(
     "GOOGLE_DATASET_ENDPOINT", default="https://www.gstatic.com/ipranges/cloud.json"
 )
 
 
-RABBITMQ_URL = env("RABBITMQ_URL")
+RABBITMQ_URL = env("RABBITMQ_URL", default=None)
 
-# Redis
-REDIS_HOST = env("REDIS_HOST")
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
