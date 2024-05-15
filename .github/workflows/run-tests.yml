@@ -60,10 +60,9 @@ jobs:
           uv venv
           uv pip install -r requirements/requirements.linux.generated.txt
 
-      - name: Run tests
+      - name: Run tests, explictly using the python version of dotenv
         run: |
           source .venv/bin/activate
-          .venv/bin/dotenv -f .env.test run -- pytest
+          pytest
         env:
-          AWS_SHARED_CREDENTIALS_FILE: ${{ secrets.AWS_SHARED_CREDENTIALS_FILE }}
-          AWS_CONFIG_FILE: ${{ secrets.AWS_CONFIG_FILE }}
+          RUNNING_IN_CI: true
