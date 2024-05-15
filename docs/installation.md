@@ -6,6 +6,7 @@ In order to setup this project, we recommend following the guides from top to bo
 
 ---
 ## Development on a remote machine using Gitpod
+
 ### Why Gitpod
 This is the main supported approach for setting up a development environment. You can use other approaches, but we may not be able to provide as much support. Gitpod will spin and configure a development environment for you, to which you can connect either from your IDE or from the browser. By choosing this approach you don't have to manually install any dependencies.
  
@@ -20,13 +21,14 @@ In an isolated [virtual environment](https://docs.python.org/3/tutorial/venv.htm
 
 ### Prerequisites
 If you decide to go with this approach, you need to make sure you have the system dependencies installed. Use this command (if your OS uses `apt`) or equivalent for your operating system:
+
 ```
 sudo apt install python3 python3-dev build-essential libmariadb3 libmariadb-dev
 ```
 
 __Note__ In the context of development, it is recommended to manage Python versions using [`pyenv`](https://github.com/pyenv/pyenv) instead of relying on the version shipped in the operating system.
 
-__Note__ Currently Python version 3.11.9 is used on production.
+__Note__ Currently Python version 3.11.9 is used in production.
 
 ### Setup
 Before following the following list, make sure you are in the root directory (workspace/admin-portal).
@@ -51,3 +53,7 @@ Will run my-command with all the environment variables in .env set.
 ## Working with email
 
 This project has features that send email notifications to users. To test email functionality, this project uses [Mailhog](https://github.com/mailhog/MailHog). It's enabled by default in Gitpod environments, and you can access it on port 8025.
+
+## Working with Docker
+
+If you prefer working with docker, there are instructions for spinning up a local environment with `docker compose` and building docker images. See [working with docker](working-with-docker.md) for more.
