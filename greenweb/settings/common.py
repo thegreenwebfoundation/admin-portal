@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/dev/ref/settings/
 """
 
-import os
 import environ
 import pathlib
 from dramatiq import middleware as dramatiq_middleware
@@ -19,27 +18,42 @@ from dramatiq import middleware as dramatiq_middleware
 ROOT = environ.Path(__file__) - 3
 env = environ.Env(
     DEBUG=(bool, False),
-    SECRET_KEY=(str, os.getenv("SECRET_KEY")),
-    DATABASE_URL=(str, os.getenv("DATABASE_URL")),
-    DATABASE_URL_READ_ONLY=(str, os.getenv("DATABASE_URL_READ_ONLY")),
-    DOMAIN_SNAPSHOT_BUCKET=(str, os.getenv("DOMAIN_SNAPSHOT_BUCKET")),
-    # add for object storage
-    OBJECT_STORAGE_ENDPOINT=(str, os.getenv("OBJECT_STORAGE_ENDPOINT")),
-    OBJECT_STORAGE_REGION=(str, os.getenv("OBJECT_STORAGE_REGION")),
-    OBJECT_STORAGE_ACCESS_KEY_ID=(str, os.getenv("OBJECT_STORAGE_ACCESS_KEY_ID")),
+    SECRET_KEY=(str, "some-key"),
+    DJANGO_LOG_LEVEL=(str, "INFO"),
+    # databases
+    DATABASE_URL=(str, "sqlite:///db.sqlite3"),
+    DATABASE_URL_READ_ONLY=(str, "sqlite:///db.sqlite3"),
+    EXPLORER_TOKEN=(str, "some-token"),
+    # object storage
+    OBJECT_STORAGE_ENDPOINT=(str, "https://s3.nl-ams.scw.cloud"),
+    OBJECT_STORAGE_REGION=(str, "nl-ams"),
+    OBJECT_STORAGE_ACCESS_KEY_ID=(str, "xxxxxxxxxxxxxxxxxxxx"),
     OBJECT_STORAGE_SECRET_ACCESS_KEY=(
         str,
-        os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
+        "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     ),
-    # add for basicauth
+    DOMAIN_SNAPSHOT_BUCKET=(str, "tgwf-green-domains-dev"),
+    # basicauth for staging environments
     BASICAUTH_DISABLE=(bool, True),
     BASICAUTH_USER=(str, "staging_user"),
     BASICAUTH_PASSWORD=(str, "strong_password"),
-    API_URL=(str, os.getenv("API_URL")),
+    # Swagger API docs url
+    API_URL=(str, "https://greenweb.localhost"),
     TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS=(
         str,
-        os.getenv("TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS"),
+        "mail-to-board@localhost",
     ),
+    RABBITMQ_URL=(str, "amqp://USERNAME:PASSWORD@localhost:5672/"),
+    # cloud providers updated on cronjobs
+    GOOGLE_PROVIDER_ID=(int, 0),
+    GOOGLE_DATASET_ENDPOINT=(str, "https://www.gstatic.com/ipranges/cloud.json"),
+    MICROSOFT_PROVIDER_ID=(int, 0),
+    EQUINIX_PROVIDER_ID=(int, 0),
+    EQUINIX_REMOTE_API_ENDPOINT=(str, "https://domain/link/to/file.txt"),
+    AMAZON_PROVIDER_ID=(int, 0),
+    AMAZON_REMOTE_API_ENDPOINT=(str, "https://domain/link/to/file.json"),
+    MAXMIND_USER_ID=(str, "123456"),
+    MAXMIND_LICENCE_KEY=(str, "xxxxxxxxxxxxxxxx"),
 )
 
 # in some cases we don't have a .env file to work from - the environment
@@ -237,7 +251,7 @@ DATABASES["read_only"]["OPTIONS"] = {
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # only support API access with the sql explorer if we
 # explicitly set the token
-EXPLORER_TOKEN = os.getenv("EXPLORER_TOKEN")
+EXPLORER_TOKEN = env("EXPLORER_TOKEN")
 if EXPLORER_TOKEN:
     EXPLORER_TOKEN_AUTH_ENABLED = True
 
@@ -246,8 +260,8 @@ GEOIP_PATH = pathlib.Path(ROOT) / "data" / "GeoLite2-City.mmdb"
 GEOIP_PROVIDER_DOWNLOAD_URL = (
     "https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz"
 )
-GEOIP_USER = env("MAXMIND_USER_ID", default=None)
-GEOIP_PASSWORD = env("MAXMIND_LICENCE_KEY", default=None)
+GEOIP_USER = env("MAXMIND_USER_ID")
+GEOIP_PASSWORD = env("MAXMIND_LICENCE_KEY")
 
 # Allow requests from any origin, but only make the API urls available
 # CORS_URLS_REGEX = r"^/api/.*$"
@@ -319,24 +333,22 @@ OBJECT_STORAGE_SECRET_ACCESS_KEY = env("OBJECT_STORAGE_SECRET_ACCESS_KEY")
 
 # Importer variables
 # Microsoft
-MICROSOFT_PROVIDER_ID = env("MICROSOFT_PROVIDER_ID", default=None)
+MICROSOFT_PROVIDER_ID = env("MICROSOFT_PROVIDER_ID")
 
 # Equinix
-EQUINIX_PROVIDER_ID = env("EQUINIX_PROVIDER_ID", default=None)
-EQUINIX_REMOTE_API_ENDPOINT = env("EQUINIX_REMOTE_API_ENDPOINT", default=None)
+EQUINIX_PROVIDER_ID = env("EQUINIX_PROVIDER_ID")
+EQUINIX_REMOTE_API_ENDPOINT = env("EQUINIX_REMOTE_API_ENDPOINT")
 
 # Amazon
-AMAZON_PROVIDER_ID = env("AMAZON_PROVIDER_ID", default=None)
-AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT", default=None)
+AMAZON_PROVIDER_ID = env("AMAZON_PROVIDER_ID")
+AMAZON_REMOTE_API_ENDPOINT = env("AMAZON_REMOTE_API_ENDPOINT")
 
 # Google
-GOOGLE_PROVIDER_ID = env("GOOGLE_PROVIDER_ID", default=None)
-GOOGLE_DATASET_ENDPOINT = env(
-    "GOOGLE_DATASET_ENDPOINT", default="https://www.gstatic.com/ipranges/cloud.json"
-)
+GOOGLE_PROVIDER_ID = env("GOOGLE_PROVIDER_ID")
+GOOGLE_DATASET_ENDPOINT = env("GOOGLE_DATASET_ENDPOINT")
 
 
-RABBITMQ_URL = env("RABBITMQ_URL", default=None)
+RABBITMQ_URL = env("RABBITMQ_URL")
 
 
 REST_FRAMEWORK = {
@@ -380,7 +392,7 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": "INFO"},
     "handlers": {
         "console": {
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "level": env("DJANGO_LOG_LEVEL"),
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
