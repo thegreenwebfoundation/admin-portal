@@ -256,6 +256,4 @@ As mentioned before, we use systemd to run our both our workers and web server p
 
 ### Gunicorn logging
 
-By default, gunicorn, our web server logs at the `INFO` level. This means successful requests are not logged, and only errors (with the status code 5xx) or not found requests (4xx)  show up in logs.
-
 The logs on each app server are sent to our the Loki server on our monitoring node, accessible at https://grafana.greenweb.org. This allow for centralised querying of logs.

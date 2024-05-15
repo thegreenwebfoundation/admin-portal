@@ -1,5 +1,8 @@
 .PHONY: release venv
 
+# used for tagging our docker images
+TAG ?= $(shell echo $$APP_RELEASE)-$(shell git log -n 1 --format=%h)
+
 # Create Python virtual environment if not yet created.
 venv:
 	test -d .venv || python -m venv .venv
@@ -58,3 +61,12 @@ docs:
 # Build the documentation using Sphinx and keep updating it on every change
 docs.watch:
 	dotenv run -- sphinx-autobuild ./docs _build/
+
+# make a docker image for publishing to our registry
+docker.build:
+	docker build -t $(APP_NAME)
+
+# Push the current 
+docker.release:	
+	docker tag $(APP_NAME) $(DOCKER_REGISTRY):$(TAG)
+	docker push $(DOCKER_REGISTRY)/$(APP_NAME):$(TAG)
