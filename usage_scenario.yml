@@ -1,6 +1,6 @@
 ---
 name: Greencheck Test
-author: James Camilleri <jcamilleri@scottlogic.com>
+author: James Camilleri <jcamilleri@scottlogic.com>, Chris Adams <chris@greenweb.org>
 description: Scenario to test the Greencheck endpoint of the Green Web Foundation Greencheck API
 
 version: "3.5"
@@ -10,20 +10,24 @@ networks:
 
 services:
   mariadb:
-    image: mariadb:10.3
+    image: mariadb:10.11
     ports:
       - 3306:3306
-    env:
-      MYSQL_ROOT_PASSWORD: just-for-github-actions
-      MYSQL_DATABASE: greencheck
+    environment:
+      - MYSQL_ROOT_PASSWORD=deploy
+      - MYSQL_DATABASE=greencheck
+      - MYSQL_USER=deploy
+      - MYSQL_PASSWORD=deploy
+    # not sure which of these take precedence now
+    # env:
+    #   MYSQL_ROOT_PASSWORD: just-for-github-actions
+    #   MYSQL_DATABASE: greencheck
     networks:
       - greencheck-network
 
   rabbitmq:
-    image: rabbitmq:3.9
-    env:
-      RABBITMQ_USERNAME: "guest"
-      RABBITMQ_PASSWORD: "guest"
+    image: rabbitmq:3.11
+    restart: always
     ports:
       - 5672:5672
     options: '--hostname "rmq" --health-cmd "rabbitmqctl status" --health-interval 10s --health-timeout 10s --health-retries 3 --health-start-period 60s'
@@ -31,18 +35,19 @@ services:
       - greencheck-network
 
   django:
+    image: greenweb-app
     depends_on:
       - mariadb
+      - rabbitmq
     build:
       context: .
-      args:
-        PIPENV_CFG: --dev
-    command:
-      - cp -a . .
-      - python -m pip install --upgrade pipenv wheel
-      - pipenv install --deploy --dev --verbose
+      dockerfile: Dockerfile
+    env_file:
+      - path: ./.env.docker
     ports:
-      - "8000:8000"
+      - 9000:9000
+    expose:
+      - 9000
     restart: on-failure
     volumes:
       - .:/app
@@ -53,8 +58,9 @@ services:
 
   test-container:
     container_name: test-container
-    image: node 
-    depends_on: django
+    image: node
+    depends_on:
+      - django
     setup-commands:
       - cp ./green_metric_tests/greencheck_test.spec.js .
       - cp ./green_metric_tests/package.json .
@@ -62,17 +68,17 @@ services:
     networks:
       - greencheck-network
 
-  flow:
-    - name: Greencheck API Test
-      container: test-container
-      commands:
-        - type: console
-          command: npm test
-          note: Starting test
-          read-notes-stdout: true
-        - type: console
-          command: sleep 30
-          note: Idling
-        - type: console
-          command: npm test
-          note: Starting test again
+flow:
+  - name: Greencheck API Test
+    container: test-container
+    commands:
+      - type: console
+        command: npm test
+        note: Starting test
+        read-notes-stdout: true
+      - type: console
+        command: sleep 30
+        note: Idling
+      - type: console
+        command: npm test
+        note: Starting test again
