@@ -40,7 +40,7 @@ USER deploy
 RUN python -m venv $VIRTUAL_ENV
 
 # Add our python libraries for managing dependencies
-uv 0.1.43 is triggering bad certificate errors, so we pin to 0.1.39
+# uv 0.1.43 is triggering bad certificate errors, so we pin to 0.1.39
 RUN python -m pip install uv==0.1.39 wheel --upgrade
 
 # Copy application code, with dockerignore filtering out the stuff we don't want
