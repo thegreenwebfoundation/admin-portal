@@ -39,7 +39,7 @@ EXPOSE 9000
 USER deploy
 
 # Set up our virtual env directory
-RUN python -m venv $VIRTUAL_ENV
+RUN python -m venv /app/.venv
 
 # Add our python libraries for managing dependencies
 # uv 0.1.43 is triggering bad certificate errors, so we pin to 0.1.39
@@ -70,4 +70,4 @@ RUN python ./manage.py collectstatic --noinput --clear
 # Use the shell form of CMD, so we have access to our environment variables
 # $GUNICORN_CMD_ARGS allows us to add additional arguments to the gunicorn command
 
-CMD /bin/sh /app/venv/bin/gunicorn gunicorn greenweb.wsgi --bind $GUNICORN_BIND_IP:$PORT --config gunicorn.conf.py $GUNICORN_CMD_ARGS
+CMD /bin/sh /app/.venv/bin/gunicorn greenweb.wsgi --bind $GUNICORN_BIND_IP:$PORT --config gunicorn.conf.py $GUNICORN_CMD_ARGS
