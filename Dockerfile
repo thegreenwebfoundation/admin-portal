@@ -18,16 +18,18 @@ RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
 # Install dependencies in a virtualenv
-ENV VIRTUAL_ENV=/app/.venv
-RUN useradd deploy --create-home && mkdir /app $VIRTUAL_ENV && chown -R deploy /app $VIRTUAL_ENV
+# ENV VIRTUAL_ENV=/app/.venv
+
+RUN useradd deploy --create-home && mkdir /app /app/.venv && chown -R deploy /app /app/.venv
+# RUN useradd deploy --create-home && mkdir /app $VIRTUAL_ENV && chown -R deploy /app $VIRTUAL_ENV
 
 WORKDIR /app
 
 # Adding the virtual environment to the path saves us needing to 
 # run `source /app/.venv/bin/activate`, and adding python path
 # makes it easier to run manage.py commands
-ENV PATH=$VIRTUAL_ENV/bin:$PATH \
-    PYTHONPATH=/app
+# ENV PATH=$VIRTUAL_ENV/bin:$PATH \
+#     PYTHONPATH=/app
 
 # Default port exposed by this container
 EXPOSE 9000
@@ -67,4 +69,5 @@ RUN python ./manage.py collectstatic --noinput --clear
 
 # Use the shell form of CMD, so we have access to our environment variables
 # $GUNICORN_CMD_ARGS allows us to add additional arguments to the gunicorn command
-CMD gunicorn greenweb.wsgi --bind $GUNICORN_BIND_IP:$PORT --config gunicorn.conf.py $GUNICORN_CMD_ARGS
+
+CMD /bin/sh /app/venv/bin/gunicorn gunicorn greenweb.wsgi --bind $GUNICORN_BIND_IP:$PORT --config gunicorn.conf.py $GUNICORN_CMD_ARGS
