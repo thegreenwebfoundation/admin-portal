@@ -45,12 +45,14 @@ env = environ.Env(
     ),
     RABBITMQ_URL=(str, "amqp://USERNAME:PASSWORD@localhost:5672/"),
     # cloud providers updated on cronjobs
-    GOOGLE_PROVIDER_ID=(int, 0),
+    # we use very high numbers to minimise chance of collision
+    # with an actual provider id
+    GOOGLE_PROVIDER_ID=(int, 10000001),
     GOOGLE_DATASET_ENDPOINT=(str, "https://www.gstatic.com/ipranges/cloud.json"),
-    MICROSOFT_PROVIDER_ID=(int, 0),
-    EQUINIX_PROVIDER_ID=(int, 0),
+    MICROSOFT_PROVIDER_ID=(int, 1000002),
+    EQUINIX_PROVIDER_ID=(int, 1000003),
     EQUINIX_REMOTE_API_ENDPOINT=(str, "https://domain/link/to/file.txt"),
-    AMAZON_PROVIDER_ID=(int, 0),
+    AMAZON_PROVIDER_ID=(int, 1000004),
     AMAZON_REMOTE_API_ENDPOINT=(str, "https://domain/link/to/file.json"),
     MAXMIND_USER_ID=(str, "123456"),
     MAXMIND_LICENCE_KEY=(str, "xxxxxxxxxxxxxxxx"),
