@@ -6,6 +6,7 @@ RUN apt-get update
 # Install security updates:
 RUN apt-get upgrade --yes
 
+# Install nodejs, so we are able to generate our front end bundles with tailwind
 RUN curl https://deb.nodesource.com/setup_18.x > /tmp/setup_18.x.sh
 RUN bash /tmp/setup_18.x.sh
 RUN apt-get install nodejs --no-install-recommends --yes
@@ -55,7 +56,8 @@ RUN python ./manage.py tailwind build
 
 # Install the other node dependencies
 # TODO: we might not need node in production *at all* if we can generate 
-# the static files in the build step. Something to investigate
+# the static files in the build step. Investigate if this results 
+# in meaningful savings on the final image size
 WORKDIR /app
 RUN cd ./apps/theme/static_src/ && \
     npx rollup --config
