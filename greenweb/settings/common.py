@@ -42,7 +42,13 @@ env = environ.Env(
     ),
 )
 
-environ.Env.read_env(".env")  # Read .env
+# in some cases we don't have a .env file to work from - the environment
+# variables are provided via docker for example. So, we only try to load the
+# .env file if it exists.
+dotenv_file = pathlib.Path(ROOT) / ".env"
+if dotenv_file.exists():
+    environ.Env.read_env(".env")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/dev/howto/deployment/checklist/
