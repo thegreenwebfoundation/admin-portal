@@ -21,8 +21,15 @@ env = environ.Env(
     SECRET_KEY=(str, "some-key"),
     DJANGO_LOG_LEVEL=(str, "INFO"),
     # databases
-    DATABASE_URL=(str, "mysql://localhost:3306/greencheck"),
-    DATABASE_URL_READ_ONLY=(str, "mysql://localhost:3306/greencheck"),
+    # TODO: this is only added to debug a github action issue with failing tests
+    DATABASE_URL=(
+        str,
+        "mysql://root:just-for-github-actions@127.0.0.1:3306/greencheck",
+    ),
+    DATABASE_URL_READ_ONLY=(
+        str,
+        "mysql://root:just-for-github-actions@127.0.0.1:3306/greencheck",
+    ),
     EXPLORER_TOKEN=(str, "some-token"),
     # object storage
     OBJECT_STORAGE_ENDPOINT=(str, "https://s3.nl-ams.scw.cloud"),
