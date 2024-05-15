@@ -32,6 +32,7 @@ env = environ.Env(
         str,
         "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     ),
+    OBJECT_STORAGE_BUCKET_NAME=(str, "tgwf-green-domains-dev"),
     DOMAIN_SNAPSHOT_BUCKET=(str, "tgwf-green-domains-dev"),
     # basicauth for staging environments
     BASICAUTH_DISABLE=(bool, True),
