@@ -74,8 +74,8 @@ services:
     depends_on:
       - django
     setup-commands:
-      - cp ./green_metric_tests/greencheck_test.spec.js .
-      - cp ./green_metric_tests/package.json .
+      - cp /tmp/repo/green_metric_tests/greencheck_test.spec.js .
+      - cp /tmp/repo/green_metric_tests/package.json .
       - npm install
     networks:
       - greencheck-network
