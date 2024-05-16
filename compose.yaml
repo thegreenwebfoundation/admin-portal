@@ -1,6 +1,6 @@
 
 services:
-  db:
+  mariadb:
     image: mariadb:10.11
     restart: always
     environment:

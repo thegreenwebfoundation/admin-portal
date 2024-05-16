@@ -18,10 +18,6 @@ services:
       - MYSQL_DATABASE=greencheck
       - MYSQL_USER=deploy
       - MYSQL_PASSWORD=deploy
-    # not sure which of these take precedence now
-    # env:
-    #   MYSQL_ROOT_PASSWORD: just-for-github-actions
-    #   MYSQL_DATABASE: greencheck
     networks:
       - greencheck-network
 
@@ -45,13 +41,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+
+    # if we need to inspect the container, and make changes between runs
+    # mounting the volumes below allows for change to the most commonly
+    # changed files without needing to rebuild the container
+    # volumes:
+    #   - ./apps:/app/apps
+    #   - ./greenweb:/app/greenweb
+    # we use sleep 5 as a hack to wait for the database to be ready
+    setup-commands:
+      - sleep 5
+      - python manage.py migrate
+      - python manage.py collectstatic --noinput
     environment:
       - PORT=9000
       - GUNICORN_BIND_IP=0.0.0.0
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
-      - DATABASE_URL=mysql://deploy:deploy@db:3306/greencheck
-      - DATABASE_URL_READ_ONLY=mysql://deploy:deploy@db:3306/greencheck
+      - DATABASE_URL=mysql://deploy:deploy@mariadb:3306/greencheck
+      - DATABASE_URL_READ_ONLY=mysql://deploy:deploy@mariadb:3306/greencheck
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - DJANGO_SETTINGS_MODULE=greenweb.settings.development
     ports:
@@ -85,11 +93,15 @@ flow:
     container: test-container
     commands:
       - type: console
+        # this should trigger a http request to an API endpoint of http://django:9000, which should be the greencheck API
         command: npm test
         note: Starting test
         read-notes-stdout: true
+        stdin_open: true
+        log-stdout: true
+        log-stderr: true
+        tty: true
       - type: console
-        command: sleep 30
         note: Idling
       - type: console
         command: npm test
