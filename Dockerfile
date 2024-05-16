@@ -17,7 +17,7 @@ RUN apt-get clean
 # Delete index files we don't need anymore:
 RUN rm -rf /var/lib/apt/lists/*
 
-# Install dependencies in a virtualenv
+# Declare the path for our virtual environment
 ENV VIRTUAL_ENV=/app/.venv
 
 # RUN useradd deploy --create-home && mkdir /app /app/.venv && chown -R deploy /app /app/.venv
@@ -39,7 +39,7 @@ EXPOSE 9000
 USER deploy
 
 # Set up our virtual env directory
-RUN python -m venv /app/.venv
+RUN python -m venv $VIRTUAL_ENV
 
 # Add our python libraries for managing dependencies
 # uv 0.1.43 is triggering bad certificate errors, so we pin to 0.1.39

@@ -39,14 +39,13 @@ services:
     depends_on:
       - mariadb
       - rabbitmq
+    # if we have the greenweb-app container built, commenting out the lines below
+    # means we can use the image we've already built rather than needing to take a
+    # few minutes each time to build it fresh again
     build:
       context: .
       dockerfile: Dockerfile
-    # command: "gunicorn greenweb.wsgi --bind $GUNICORN_BIND_IP:$PORT --config gunicorn.conf.py $GUNICORN_CMD_ARGS"
     environment:
-      - VIRTUAL_ENV=/app/.venv
-      - PYTHONPATH=/app
-      - PATH=/app/.venv/bin:$PATH
       - PORT=9000
       - GUNICORN_BIND_IP=0.0.0.0
       - PYTHONDONTWRITEBYTECODE=1
@@ -57,11 +56,11 @@ services:
       - DJANGO_SETTINGS_MODULE=greenweb.settings.development
     ports:
       - 9000:9000
-    expose:
-      - 9000
+    # uncomment this be able to send requests to the django container
+    # from outside the docker network
+    # expose:
+    #   - 9000
     # restart: on-failure
-    volumes:
-      - .:/app
     stdin_open: true
     log-stdout: true
     log-stderr: true
