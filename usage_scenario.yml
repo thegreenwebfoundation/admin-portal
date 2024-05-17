@@ -87,11 +87,12 @@ services:
       - greencheck-network
 
 flow:
+  # this should trigger a http request to an API endpoint
+  # of http://django:9000, simulating a greencheck lookup
   - name: Greencheck API Test
     container: test-container
     commands:
       - type: console
-        # this should trigger a http request to an API endpoint of http://django:9000, which should be the greencheck API
         command: npm test
         note: Starting test
         read-notes-stdout: true
