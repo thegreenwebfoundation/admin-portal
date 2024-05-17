@@ -1,0 +1,16 @@
+{
+    "name": "green_metric_tests",
+    "version": "1.0.0",
+    "description": "Integration tests for the Greencheck API, intended for use with the Green Metrics Tool from Green Code Berlin. (https://www.green-coding.io/projects/green-metrics-tool/)",
+    "main": "index.js",
+    "scripts": {
+      "test": "mocha '/*.spec.js'"
+    },
+    "author": "James Camilleri",
+    "license": "SEE LICENSE IN ../LICENCE",
+    "dependencies": {
+      "chai": "^4.2.0",
+      "mocha": "^10.4.0",
+      "supertest": "^7.0.0"
+    }
+  }

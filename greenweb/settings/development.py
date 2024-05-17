@@ -5,7 +5,10 @@ DEBUG = True
 INTERNAL_IPS = ["127.0.0.1"]
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS += [ip[:-1] + "1" for ip in ips]
-ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])  # noqa
+
+# django is added to allow for the app to server requests in a
+# docker compose environment, or in green metrics tool
+ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "django"])  # noqa
 
 INSTALLED_APPS.append("debug_toolbar")  # noqa
 

@@ -17,8 +17,10 @@ RUN apt-get clean
 # Delete index files we don't need anymore:
 RUN rm -rf /var/lib/apt/lists/*
 
-# Install dependencies in a virtualenv
+# Declare the path for our virtual environment
 ENV VIRTUAL_ENV=/app/.venv
+
+# RUN useradd deploy --create-home && mkdir /app /app/.venv && chown -R deploy /app /app/.venv
 RUN useradd deploy --create-home && mkdir /app $VIRTUAL_ENV && chown -R deploy /app $VIRTUAL_ENV
 
 WORKDIR /app
@@ -40,15 +42,15 @@ USER deploy
 RUN python -m venv $VIRTUAL_ENV
 
 # Add our python libraries for managing dependencies
-uv 0.1.43 is triggering bad certificate errors, so we pin to 0.1.39
+# uv 0.1.43 is triggering bad certificate errors, so we pin to 0.1.39
 RUN python -m pip install uv==0.1.39 wheel --upgrade
 
 # Copy application code, with dockerignore filtering out the stuff we don't want
 # from our final build artefact
 COPY --chown=deploy . .
 
-# Install dependencies via uv
-RUN uv pip install -r requirements/requirements.linux.generated.txt 
+# Install dependencies via uv into /app/.venv/
+RUN python -m pip install -r requirements/requirements.linux.generated.txt 
 
 # Set up front end pipeline
 RUN python ./manage.py tailwind install
@@ -67,4 +69,7 @@ RUN python ./manage.py collectstatic --noinput --clear
 
 # Use the shell form of CMD, so we have access to our environment variables
 # $GUNICORN_CMD_ARGS allows us to add additional arguments to the gunicorn command
-CMD gunicorn greenweb.wsgi --bind $GUNICORN_BIND_IP:$PORT --config gunicorn.conf.py $GUNICORN_CMD_ARGS
+
+
+
+CMD /app/.venv/bin/gunicorn greenweb.wsgi --bind $GUNICORN_BIND_IP:$PORT --config gunicorn.conf.py $GUNICORN_CMD_ARGS

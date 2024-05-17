@@ -1,6 +1,6 @@
 
 services:
-  db:
+  mariadb:
     image: mariadb:10.11
     restart: always
     environment:
@@ -18,8 +18,18 @@ services:
     ports:
       - 5672:5672
   django:
-    env_file:
-    - path: ./.env.docker
+    # uncomment to pass in your own .env file instead of using the environment variables below
+    # env_file:
+    # - path: ./.env.docker
+    environment:
+      - PORT=9000
+      - GUNICORN_BIND_IP=0.0.0.0
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=mysql://deploy:deploy@mariadb:3306/greencheck
+      - DATABASE_URL_READ_ONLY=mysql://deploy:deploy@mariadb:3306/greencheck
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - DJANGO_SETTINGS_MODULE=greenweb.settings.development
     build:
       context: .
       dockerfile: Dockerfile
@@ -34,5 +44,5 @@ services:
       - ./greenweb:/app/greenweb
     restart: always
     depends_on:
-      - db
+      - mariadb
       - rabbitmq

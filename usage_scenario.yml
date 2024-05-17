@@ -1,0 +1,106 @@
+---
+name: Greencheck Test
+author: James Camilleri <jcamilleri@scottlogic.com>, Chris Adams <chris@greenweb.org>
+description: Scenario to test the Greencheck endpoint of the Green Web Foundation Greencheck API
+
+version: "3.5"
+
+networks:
+  greencheck-network:
+
+services:
+  mariadb:
+    image: mariadb:10.11
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=deploy
+      - MYSQL_DATABASE=greencheck
+      - MYSQL_USER=deploy
+      - MYSQL_PASSWORD=deploy
+    networks:
+      - greencheck-network
+
+  rabbitmq:
+    image: rabbitmq:3.11
+    restart: always
+    ports:
+      - 5672:5672
+    options: '--hostname "rmq" --health-cmd "rabbitmqctl status" --health-interval 10s --health-timeout 10s --health-retries 3 --health-start-period 60s'
+    networks:
+      - greencheck-network
+
+  django:
+    image: greenweb-app
+    depends_on:
+      - mariadb
+      - rabbitmq
+    # if we have the greenweb-app container built, commenting out the lines below
+    # means we can use the image we've already built rather than needing to take a
+    # few minutes each time to build it fresh again
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # if we need to inspect the container, and make changes between runs
+    # mounting the volumes below allows for change to the most commonly
+    # changed files without needing to rebuild the container
+    # volumes:
+    #   - ./apps:/app/apps
+    #   - ./greenweb:/app/greenweb
+    # we use sleep 5 as a hack to wait for the database to be ready
+    setup-commands:
+      - sleep 5
+      - python manage.py migrate
+      - python manage.py collectstatic --noinput
+    environment:
+      - PORT=9000
+      - GUNICORN_BIND_IP=0.0.0.0
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=mysql://deploy:deploy@mariadb:3306/greencheck
+      - DATABASE_URL_READ_ONLY=mysql://deploy:deploy@mariadb:3306/greencheck
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - DJANGO_SETTINGS_MODULE=greenweb.settings.development
+    ports:
+      - 9000:9000
+    # uncomment this be able to send requests to the django container
+    # from outside the docker network
+    # expose:
+    #   - 9000
+    # restart: on-failure
+    log-stdout: true
+    log-stderr: true
+    networks:
+      - greencheck-network
+
+  test-container:
+    container_name: test-container
+    image: node
+    depends_on:
+      - django
+    setup-commands:
+      - cp /tmp/repo/green_metric_tests/greencheck_test.spec.js .
+      - cp /tmp/repo/green_metric_tests/package.json .
+      - npm install
+    networks:
+      - greencheck-network
+
+flow:
+  # this should trigger a http request to an API endpoint
+  # of http://django:9000, simulating a greencheck lookup
+  - name: Greencheck API Test
+    container: test-container
+    commands:
+      - type: console
+        command: npm test
+        note: Starting test
+        read-notes-stdout: true
+        log-stdout: true
+        log-stderr: true
+      - type: console
+        note: Idling
+        command: sleep 30
+      - type: console
+        command: npm test
+        note: Starting test again

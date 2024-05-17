@@ -2,6 +2,15 @@ from .common import *  # noqa
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
+import environ
+
+
+prod_env = environ.Env(
+    SENTRY_DSN=(str, ""),
+    SENTRY_ENVIRONMENT=(str, "production"),
+    SENTRY_RELEASE=(str, "provider-portal@1.4.x"),
+    SENTRY_SAMPLE_RATE=(str, 0),
+)
 
 ANYMAIL = {
     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),  # noqa
@@ -42,9 +51,9 @@ AWS_S3_ENDPOINT_URL = env("OBJECT_STORAGE_ENDPOINT")  # noqa
 AWS_S3_FILE_OVERWRITE = False
 
 # report when things asplode
-SENTRY_DSN = os.environ.get("SENTRY_DSN", False)  # noqa
-SENTRY_ENVIRONMENT = os.environ.get("SENTRY_ENVIRONMENT", "production")  # noqa
-SENTRY_RELEASE = os.environ.get("SENTRY_RELEASE", "provider-portal@1.4.x")  # noqa
+SENTRY_DSN = prod_env("SENTRY_DSN")
+SENTRY_ENVIRONMENT = prod_env("SENTRY_ENVIRONMENT")
+SENTRY_RELEASE = prod_env("SENTRY_RELEASE")
 
 # Set to a value between 0 for 0% of request and
 # 1.0 to capture 100% of requests and annotate
@@ -56,7 +65,7 @@ SENTRY_RELEASE = os.environ.get("SENTRY_RELEASE", "provider-portal@1.4.x")  # no
 # For more:
 # https://docs.sentry.io/platforms/python/guides/django/
 # https://docs.sentry.io/platforms/python/guides/django/performance/
-sentry_sample_rate = os.environ.get("SENTRY_SAMPLE_RATE", 0)  # noqa
+sentry_sample_rate = prod_env("SENTRY_SAMPLE_RATE")
 
 if SENTRY_DSN:
     sentry_sdk.init(
