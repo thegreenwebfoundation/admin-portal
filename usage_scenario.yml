@@ -99,6 +99,7 @@ flow:
         log-stderr: true
       - type: console
         note: Idling
+        command: sleep 30
       - type: console
         command: npm test
         note: Starting test again
