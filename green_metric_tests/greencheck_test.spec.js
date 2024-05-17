@@ -3,7 +3,8 @@ const expect = require('chai').expect;
 
 describe('Greencheck API', () => {
   it('Has the correct URL property', () => {
-    request('https://django:9000')
+    // 
+    request('http://django:9000')
       .get('/greencheck/climateaction.tech')
       .expect(200)
       .expect('Content-Type', 'application/json')
