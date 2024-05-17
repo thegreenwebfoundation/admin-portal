@@ -69,10 +69,8 @@ services:
     # expose:
     #   - 9000
     # restart: on-failure
-    stdin_open: true
     log-stdout: true
     log-stderr: true
-    tty: true
     networks:
       - greencheck-network
 
@@ -97,10 +95,8 @@ flow:
         command: npm test
         note: Starting test
         read-notes-stdout: true
-        stdin_open: true
         log-stdout: true
         log-stderr: true
-        tty: true
       - type: console
         note: Idling
       - type: console
