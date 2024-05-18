@@ -34,16 +34,43 @@ jobs:
         python-version: [3.11]
 
     steps:
+      - name: Eco CI Energy Estimation - Initialize
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        with:
+          task: start-measurement
+          company-uuid: "7f1d34f0-7666-4378-8d8f-d37cced7ccb0"
+          project-uuid: "a9946d61-149b-4757-99e5-aaac24acf289"
+        continue-on-error: true
+
       - uses: actions/checkout@v4
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        with:
+          task: get-measurement
+          label: 'checkout'
+        continue-on-error: true
 
       - name: Use Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        with:
+          task: get-measurement
+          label: 'setup-python'
+        continue-on-error: true
+
       - name: Install tooling for managing dependencies
         run: |
           python -m pip install --upgrade uv wheel
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        with:
+          task: get-measurement
+          label: 'pip install uv wheel'
+        continue-on-error: true
 
       # - name: Set up a cache-key for installations of dependencies, in .venv
       #   id: cache-venv
@@ -59,6 +86,12 @@ jobs:
         run: |
           uv venv
           uv pip install -r requirements/requirements.linux.generated.txt
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        with:
+          task: get-measurement
+          label: 'pip install requirements'
+        continue-on-error: true
 
       - name: Run tests
         run: |
@@ -80,3 +113,17 @@ jobs:
           EQUINIX_REMOTE_API_ENDPOINT: ${{ secrets.EQUINIX_REMOTE_API_ENDPOINT }}
           AWS_SHARED_CREDENTIALS_FILE: ${{ secrets.AWS_SHARED_CREDENTIALS_FILE }}
           AWS_CONFIG_FILE: ${{ secrets.AWS_CONFIG_FILE }}
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        with:
+          task: get-measurement
+          label: 'pytest'
+        continue-on-error: true
+
+      - name: Eco CI Energy Estimation - End Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        with:
+          task: display-results
+          pr-comment: true
+          send-data: true
+        continue-on-error: true
