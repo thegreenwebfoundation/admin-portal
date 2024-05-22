@@ -86,6 +86,16 @@ services:
     networks:
       - greencheck-network
 
+  load-test-container:
+    container_name: load-test-container
+    image: grafana/k6
+    depends_on:
+      - django
+    setup-commands:
+      - cp /tmp/repo/green_metric_tests/greencheck_api_loadtest.js .
+    networks:
+      - greencheck-network
+
 flow:
   # this should trigger a http request to an API endpoint
   # of http://django:9000, simulating a greencheck lookup
@@ -104,3 +114,12 @@ flow:
       - type: console
         command: npm test
         note: Starting test again
+  - name: Greencheck API Load Test
+    container: load-test-container
+    commands:
+      - type: console
+        note: Starting load test
+        read-notes-stdout: true
+        log-stdout: true
+        log-stderr: true
+        command: k6 run --iterations 10 greencheck-api-loadtest.js
