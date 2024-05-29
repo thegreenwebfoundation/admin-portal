@@ -721,10 +721,10 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
                 ],
             }
             if hp_provider_request:
-                network_dict["missing_network_explanation"] = (
-                    hp_provider_request.missing_network_explanation
-                )
-
+                network_dict["extra"] = {
+                    "network_import_required": hp_provider_request.network_import_required,
+                    "missing_network_explanation": hp_provider_request.missing_network_explanation,
+                }
             return network_dict
 
         try:
