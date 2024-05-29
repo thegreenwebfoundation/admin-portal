@@ -95,7 +95,20 @@
 
 		{% endif %}
 
+		{% flag "hide_old_admin" %}
+		<h3 class="text-xl pt-10">Other actions</h3>
+		
+		<p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:password_change' %}" class="text-neutral-500">Update your password</a></p>
+
+		<p class="text-neutral-500 mt-8"><a href="{% url 'green_urls_redirect' %}" class="text-neutral-500">See our list of downloadable green domain dataset snapshots</a></p>
+
+		<p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:check_url' %}" class="text-neutral-500">Try an extended green check for troubleshooting with support staff</a></p>
+
+		{% else %}
+
 		<p class="text-neutral-500 mt-8">Looking for the <a href="{% url 'greenweb_admin:index' %}" class="text-neutral-500">old style admin screens</a>?</p>
+
+		{% endflag %}
 
 	</div>
 
