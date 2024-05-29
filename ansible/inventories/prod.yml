@@ -8,7 +8,7 @@ all:
       sentry_sample_rate: 0
       app_name: app1
       gunicorn_workers: 4
-      gunicorn_threads: 1
+      gunicorn_threads: 2
 
     app2.thegreenwebfoundation.org:
       internal_ip: "10.0.0.4"
@@ -17,7 +17,7 @@ all:
       sentry_sample_rate: 0
       app_name: app2
       gunicorn_workers: 4
-      gunicorn_threads: 1
+      gunicorn_threads: 2
     # TODO: once we have update the worker process names we can use app3 for serving production traffic
     # letting us decommission some of the older app servers
     app3.thegreenwebfoundation.org:
@@ -27,7 +27,7 @@ all:
       sentry_sample_rate: 0
       app_name: app3
       gunicorn_workers: 4
-      gunicorn_threads: 1
+      gunicorn_threads: 2
     app4.thegreenwebfoundation.org:
       internal_ip: "10.0.0.7"
       dramatiq_threads: 2
@@ -35,7 +35,15 @@ all:
       sentry_sample_rate: 0
       app_name: app4
       gunicorn_workers: 4
-      gunicorn_threads: 1
+      gunicorn_threads: 2
+    app5.thegreenwebfoundation.org:
+      internal_ip: "10.0.0.3"
+      dramatiq_threads: 2
+      dramatiq_processes: 3
+      sentry_sample_rate: 0
+      app_name: app5
+      gunicorn_workers: 4
+      gunicorn_threads: 2
 
   vars:
     tgwf_stage: "prod"
@@ -58,6 +66,7 @@ all:
         app2.thegreenwebfoundation.org:
         app3.thegreenwebfoundation.org:
         app4.thegreenwebfoundation.org:
+        app5.thegreenwebfoundation.org:
       # within the child group can define new vars which take
       # precedence over the ones further 'upstream'
       # vars:
@@ -68,8 +77,9 @@ all:
       hosts:
         app1.thegreenwebfoundation.org:
         app2.thegreenwebfoundation.org:
+        app3.thegreenwebfoundation.org:
         app4.thegreenwebfoundation.org:
     # the admin server also hosts the staging servers
     admin_servers:
       hosts:
-        app3.thegreenwebfoundation.org:
+        app5.thegreenwebfoundation.org:
