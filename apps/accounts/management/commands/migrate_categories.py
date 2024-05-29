@@ -14,7 +14,7 @@ SERVICE_NAMES = [
     ("Storage: Block Storage", "block-storage"),
     ("Network: Content Delivery Networks", "content-delivery-network"),
     ("Platform: Platform As A Service", "platform-as-a-service"),
-    ("Platform: Managed Wordpress Hosting", "managed-wordpress-hosting"),
+    ("Platform: Managed WordPress Hosting", "managed-wordpress-hosting"),
 ]
 
 # the mappings we need to migrate them across
