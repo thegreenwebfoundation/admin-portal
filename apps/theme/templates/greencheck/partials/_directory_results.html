@@ -53,13 +53,6 @@
                             {% for service in obj.services.all %}
                                 <li class="service-label inline-block">{{ service.name }}</li>
                             {% endfor %}
-
-                            {% comment %}
-									Every host in our directory used to at least offer shared hosting.
-									Below is a placeholder to see how it would look with live data.
-									{% else %}
-									<li class="service-label inline-block">Compute: Shared Hosting for Websites</li>
-								{% endcomment %}
                         </ul>
                     {% endif %}
 
