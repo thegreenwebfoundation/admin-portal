@@ -17,9 +17,9 @@ After logging into Gitpod or creating an account we recommend also installing th
 
 2. After Gitpod is finished preparing the environment, it will open the workspace. Close any unnecessary terminal windows. To open a new fresh terminal window press ```Ctrl + ` ```.
 
-3. In almost all cases, you will need to have a _virtual environment_ set up so that the necessary commands for Django and other libraries are available to you. You can enter a virtual environment by typing `source .venv/bin/activate` from the the project root (i.e. `/workspace/admin-portal/`). You can tell you're a virtual environment - because your prompt will change from `gitpod /workspace/admin-portal (BRANCH_NAME) $` to `(.venv) gitpod /workspace/admin-portal (BRANCH_NAME) $`. Want more? [Learn more about virtual environments for python](https://realpython.com/python-virtual-environments-a-primer/)
+3. In almost all cases, you will need to have a _virtual environment_ set up so that the necessary commands for Django and other libraries are available to you. You can enter a virtual environment by typing `source .venv/bin/activate` from the the project root (i.e. `/workspace/admin-portal/`). You can tell you're a virtual environment - because your prompt will change from `gitpod /workspace/admin-portal (BRANCH_NAME) $` to `(.venv) gitpod /workspace/admin-portal (BRANCH_NAME) $`. Want more? [Learn more about virtual environments for python](https://realpython.com/python-virtual-environments-a-primer/).
 
-4. There is a makefile set up to allow easy access to common tasks, like running a development server, spinning up tailwind for front end development, creating a superuser and so on. There is tab-completion set up for github - to see the options available, type `make` and hit tab. You should see output like below:
+4. There is a makefile set up, to allow easy access to common tasks like running a development server, spinning up tailwind for front end development, creating a superuser and so on. There is tab-completion set up in Gitpod - so to see the options available, type `make` and hit tab in a new terminal. You should see output like below:
 
 ```
 (.venv) gitpod /workspace/admin-portal (BRANCH_NAME) $ make 
