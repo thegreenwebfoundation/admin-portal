@@ -2,6 +2,7 @@
 /* 0.1 BASE SIZED TEXT FIELDS     */
 
 /* Styles for forms that are laid out as tables */
+/* 1. GENERAL gwf-form           */
 /* 1. GENERAL form_table         */
 /* 2. NETWORK FOOTPRINT TABLE    */
 /* 3. CONSENT TABLE              */
@@ -23,6 +24,9 @@
 .errorlist li {
 	@apply mb-4;
 }
+.errorlist li:last-of-type {
+	@apply mb-0;
+}
 
 .helptext {
 	@apply text-base;
@@ -42,10 +46,77 @@
 	@apply w-full;
 }
 
+/* **************************** */
+/* 1. GENERAL gwf-form          */
+.gwf-form {
+	@apply my-8;	
+}
+.gwf-form > div {
+	@apply flex;
+	@apply flex-col;
+	@apply items-start;
+	@apply py-8;
+	@apply border-b-0;
+}
+.gwf-form > div > * {
+	@apply w-full;
+}
+/* .form__table td {
+	@apply flex;
+	@apply flex-col;
+	@apply pl-0;
+} */
+.gwf-form label {
+	@apply block;
+	@apply text-left;
+}
+.gwf-form .helptext {
+	/* @apply order-first; */
+	@apply pb-6;
+}
+.gwf-form .nav-buttons {
+	@apply block;
+	@apply py-0;
+}
+.gwf-form .nav-buttons > * {
+	@apply w-auto;
+}
+.gwf-form ul {
+	@apply my-0;
+	@apply list-none;
+	@apply pl-0;
+}
+.gwf-form li {
+	@apply pl-0;
+}
+.gwf-form fieldset {
+	@apply flex;
+	@apply flex-col;
+	@apply items-start;
+}
+.gwf-form fieldset .errorlist {
+	@apply -order-2;
+}
+
+/* table[class^="form__table--"] tbody {
+	@apply flex;
+	@apply gap-8;
+}
+table[class^="form__table--"] tbody > * {
+	@apply py-0;
+	@apply w-1/5;
+}
+/* Typically within the th element */
+/*table[class^="form__table--"] label {
+	@apply text-sm;
+	@apply uppercase;
+	@apply font-normal;
+} */
 
 /* **************************** */
 /* 1. GENERAL form_table        */
-.form__table {
+
+/* .form__table {
 	@apply my-8;
 }
 .form__table tr {
@@ -57,9 +128,9 @@
 }
 .form__table tr > * {
 	@apply w-full;
-}
+} */
 
-.form__table td {
+/* .form__table td {
 	@apply flex;
 	@apply flex-col;
 	@apply pl-0;
@@ -67,21 +138,21 @@
 .form__table label {
 	@apply block;
 	@apply text-left;
-}
-.form__table span.helptext {
+} */
+/* .form__table span.helptext {
 	@apply order-first;
 	@apply pb-6;
-}
-.form__table ul {
+} */
+/* .form__table ul {
 	@apply my-0;
 	@apply list-none;
 	@apply pl-0;
-}
-.form__table .errorlist {
+} */
+/* .form__table .errorlist {
 	@apply order-2;
-}
+} */
 
-table[class^="form__table--"] tbody {
+/* table[class^="form__table--"] tbody {
 	@apply flex;
 	@apply gap-8;
 }
@@ -90,23 +161,34 @@ table[class^="form__table--"] tbody > * {
 	@apply w-1/5;
 }
 /* Typically within the th element */
-table[class^="form__table--"] label {
+/*table[class^="form__table--"] label {
 	@apply text-sm;
 	@apply uppercase;
 	@apply font-normal;
-}
+} */
 
 
 /* 2. NETWORK FOOTPRINT TABLE   */
 .form__table--network tbody {
+	@apply flex;
 	@apply flex-wrap;
-	@apply 2xl:flex-nowrap;
+	@apply gap-x-8;
+	@apply xl:flex-nowrap;
 }
 .form__table--network tbody > tr {
 	@apply w-auto;
+	@apply border-0;
+}
+.form__table--network tbody th {
+	@apply w-16;
+}
+.form__table--network tbody td {
+	@apply w-52;
 }
 .form__table--network label {
-	@apply mb-1;
+	@apply mb-0;
+	@apply pb-0;
+	@apply text-med;
 }
 
 /* 3. CONSENT TABLE               */

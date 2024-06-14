@@ -1,6 +1,13 @@
-label {
+label,
+legend {
 	@apply text-4xl;
 	@apply text-black;
+	@apply leading-normal;
+	@apply pb-4;
+}
+fieldset label {
+	@apply text-base;
+	@apply uppercase;
 }
 
 [type="text"],
@@ -37,10 +44,4 @@ textarea {
 [type="checkbox"]:checked, 
 [type="radio"]:checked {
 	@apply bg-black;
-}
-
-/* Form layouts specific to Django HTML output */
-form li label {
-	@apply text-base;
-	@apply uppercase;
 }

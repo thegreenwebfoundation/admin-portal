@@ -15,12 +15,12 @@
 {% endblock %}
 
 {% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post" action="" class="form__table">
+    <form enctype="multipart/form-data" method="post" action="" class="gwf-form">
 {% else %}
-    <form method="post" action="" class="form__table">
+    <form method="post" action="" class="gwf-form">
 {% endif %}
 {% csrf_token %}
-<table>
+<table class="my-0">
 {{ wizard.management_form }}
 {% if wizard.form.forms %}
     {{ wizard.form.management_form }}
@@ -35,7 +35,7 @@
 <input class="btn" type="submit" value="{% trans "next" %}"/>
 
 {% if wizard.steps.prev %}
-<div class="">
+<div class="nav-buttons">
 	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
 	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
 </div>
