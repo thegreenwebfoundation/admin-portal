@@ -58,11 +58,9 @@
 		{% endcomment %}
 		{% if wizard.form.non_field_errors %}
 			<div class="prose my-10 mx-auto">
-				<div class="convenient-form bg-neutral-50 rounded-xl px-4 ">
-					<div class="form__basetext-fields form--location lg:flex lg:flex-wrap">
-						<div class="w-full">
-							{{ wizard.form.non_field_errors}}
-						</div>
+				<div class="convenient-form bg-neutral-50 rounded-xl border border-purple px-4">
+					<div class="w-full">
+						{{ wizard.form.non_field_errors}}
 					</div>
 				</div>
 			</div>
@@ -101,7 +99,7 @@
 			<input class="btn mt-8" type="submit" value="{% trans 'next' %}" />
 
 			{% if wizard.steps.prev %}
-			<div>
+			<div class="nav-buttons">
 				<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
 				<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
 			</div>
