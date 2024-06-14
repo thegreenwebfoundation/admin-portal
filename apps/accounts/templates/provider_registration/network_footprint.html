@@ -100,7 +100,7 @@
       <h3 class="text-3xl mt-0">Identify this provider by IP range</h3>
       <p>You can submit one or more IP ranges which will be used to identify any websites running on this provider.</p>
 
-      <p class="font-bold">Notes:</p>
+      <p class="font-bold mb-0">Notes:</p>
       <ul class="!pl-4">
         <li class="list-disc">IPv4 and IPv6 formats are supported</li>
         <li class="list-disc">To add a single IP address, put the same address in both the START and END fields</li>
@@ -119,7 +119,7 @@
         {% endfor %}
       </div>
 
-      <div class="my-12">
+      <div class="mt-12">
         <input class="btn btn-white"  type="button" id="add-form-button-ips" value="Add an IP range">
       </div>
 
@@ -152,7 +152,7 @@
           {% endfor %}
         </div>
 
-        <div class="my-12">
+        <div class="mt-12">
           <input class="btn btn-white" type="button" id="add-form-button-asns" value="Add an AS number">
         </div>
 
@@ -180,8 +180,6 @@
 
         {{ wizard.form.extra.missing_network_explanation.as_widget }}
 
-
-
         <div class="mt-8">
 
           <label class="text-med" for="{{ wizard.form.extra.network_import_required.id_for_label }}">
@@ -202,7 +200,7 @@
       <input class="btn !w-auto" type="submit" value="{% trans "next" %}" />
 
       {% if wizard.steps.prev %}
-        <div>
+        <div class="nav-buttons">
           <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
           <button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
         </div>

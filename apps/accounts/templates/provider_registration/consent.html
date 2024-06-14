@@ -15,14 +15,14 @@
 	{% endblock %}
 
 	{% if form.is_multipart %}
-		<form enctype="multipart/form-data" method="post" action="" class="form__table form__table--consent">
+		<form enctype="multipart/form-data" method="post" action="" class="gwf-form form__consent">
 	{% else %}
-		<form method="post" action="" class="form__table form__table--consent max-w-4xl">
+		<form method="post" action="" class="gwf-form form__consent max-w-4xl">
 	{% endif %}
 	
 		{% csrf_token %}
 
-		<table class="">
+		<table class="m-0">
 			{{ wizard.management_form }}
 			
 			{% if wizard.form.forms %}
@@ -38,7 +38,7 @@
 		<input class="btn" type="submit" value="{% trans " next" %}" />
 
 		{% if wizard.steps.prev %}
-			<div class="">
+			<div class="nav-buttons">
 				<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
 				<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
 			</div>
