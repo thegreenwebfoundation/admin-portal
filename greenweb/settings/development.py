@@ -5,7 +5,10 @@ DEBUG = True
 INTERNAL_IPS = ["127.0.0.1"]
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS += [ip[:-1] + "1" for ip in ips]
-ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])  # noqa
+
+# we add gitpod.io to support their ephemeral dev environments
+# add others as we need them
+ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", ".gitpod.io"])  # noqa
 
 INSTALLED_APPS.append("debug_toolbar")  # noqa
 
