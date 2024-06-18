@@ -41,16 +41,17 @@ jobs:
 
     steps:
       - name: Eco CI Energy Estimation - Initialize
-        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: start-measurement
           company-uuid: "7f1d34f0-7666-4378-8d8f-d37cced7ccb0"
           project-uuid: "a9946d61-149b-4757-99e5-aaac24acf289"
+          machine-uuid: "90a9ec92-0884-43bc-8b98-9a7885864307"
         continue-on-error: true
 
       - uses: actions/checkout@v4
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
           label: 'checkout'
@@ -62,7 +63,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
           label: 'setup-python'
@@ -72,7 +73,7 @@ jobs:
         run: |
           python -m pip install --upgrade uv wheel
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
           label: 'pip install uv wheel'
@@ -93,7 +94,7 @@ jobs:
           uv venv
           uv pip install -r requirements/requirements.linux.generated.txt
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
           label: 'pip install requirements'
@@ -120,14 +121,14 @@ jobs:
           AWS_SHARED_CREDENTIALS_FILE: ${{ secrets.AWS_SHARED_CREDENTIALS_FILE }}
           AWS_CONFIG_FILE: ${{ secrets.AWS_CONFIG_FILE }}
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
           label: 'pytest'
         continue-on-error: true
 
       - name: Eco CI Energy Estimation - End Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@main
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: display-results
           pr-comment: true
