@@ -3,8 +3,13 @@ name: Run tests
 on:
   push:
     paths-ignore:
-      - '**.md'
-      - '.gitignore'
+      - "**.md"
+      - ".gitignore"
+  # make our tests run when we have external PRs
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - ".gitignore"
 
 defaults:
   run:
@@ -54,7 +59,7 @@ jobs:
         uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
-          label: 'checkout'
+          label: "checkout"
         continue-on-error: true
 
       - name: Use Python ${{ matrix.python-version }}
@@ -66,7 +71,7 @@ jobs:
         uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
-          label: 'setup-python'
+          label: "setup-python"
         continue-on-error: true
 
       - name: Install tooling for managing dependencies
@@ -76,7 +81,7 @@ jobs:
         uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
-          label: 'pip install uv wheel'
+          label: "pip install uv wheel"
         continue-on-error: true
 
       # - name: Set up a cache-key for installations of dependencies, in .venv
@@ -97,7 +102,7 @@ jobs:
         uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
-          label: 'pip install requirements'
+          label: "pip install requirements"
         continue-on-error: true
 
       - name: Run tests
@@ -124,7 +129,7 @@ jobs:
         uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
           task: get-measurement
-          label: 'pytest'
+          label: "pytest"
         continue-on-error: true
 
       - name: Eco CI Energy Estimation - End Measurement
