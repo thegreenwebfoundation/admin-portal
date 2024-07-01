@@ -335,6 +335,9 @@ GOOGLE_DATASET_ENDPOINT = env(
     "GOOGLE_DATASET_ENDPOINT", default="https://www.gstatic.com/ipranges/cloud.json"
 )
 
+CLOUDFLARE_PROVIDER_ID = env("CLOUDFLARE_PROVIDER_ID", default=None)
+CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4 = env("CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4", default="https://www.cloudflare.com/ips-v4/")
+CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6 = env("CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6", default="https://www.cloudflare.com/ips-v6/")
 
 RABBITMQ_URL = env("RABBITMQ_URL", default=None)
 
