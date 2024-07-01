@@ -1,4 +1,4 @@
 -i https://pypi.org/simple
-myst-parser==0.18.0
-furo==2022.6.21
-sphinxcontrib-mermaid==0.7.1
+myst-parser
+furo
+sphinxcontrib-mermaid
