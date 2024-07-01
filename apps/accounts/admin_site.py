@@ -238,21 +238,21 @@ class GreenWebAdmin(AdminSite):
         if app_label:
             return app_list
 
-        if flag_is_active(request, "provider_request"):
-            verification_request_item = {
-                "name": "New provider portal",
-                "app_label": "greencheck",
-                "app_url": reverse("provider_portal_home"),
-                "models": [
-                    {
-                        "name": "Move to a new version of provider portal",
-                        "object_name": "greencheck_url",
-                        "admin_url": reverse("provider_portal_home"),
-                        "view_only": True,
-                    }
-                ],
-            }
-            app_list.insert(0, verification_request_item)
+        
+        verification_request_item = {
+            "name": "New provider portal",
+            "app_label": "greencheck",
+            "app_url": reverse("provider_portal_home"),
+            "models": [
+                {
+                    "name": "Move to a new version of provider portal",
+                    "object_name": "greencheck_url",
+                    "admin_url": reverse("provider_portal_home"),
+                    "view_only": True,
+                }
+            ],
+        }
+        app_list.insert(0, verification_request_item)
 
         app_list += [
             {
