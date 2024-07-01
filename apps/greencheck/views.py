@@ -14,6 +14,8 @@ from django.views.generic.base import TemplateView
 
 import django_filters
 
+from waffle.mixins import WaffleFlagMixin
+
 from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.models.checks import GreenDomain
 from apps.greencheck.models.stats import DailyStat
@@ -59,8 +61,9 @@ class GreenUrlsView(TemplateView):
         return context
 
 
-class GreencheckStatsView(TemplateView):
+class GreencheckStatsView(WaffleFlagMixin, TemplateView):
     template_name = "greencheck/stats_index.html"
+    waffle_flag = "greencheck-stats"
 
     def _get_headline_counts(self, daily_stat_queryset=None):
         """

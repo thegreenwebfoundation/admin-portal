@@ -13,7 +13,6 @@ from django import urls
 from django.core import management
 from django.utils import timezone
 from dramatiq.brokers import stub
-from waffle.testutils import override_flag
 
 from ....accounts import models as ac_models
 from ... import choices as gc_choices
