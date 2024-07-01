@@ -58,6 +58,23 @@ SENTRY_RELEASE = os.environ.get("SENTRY_RELEASE", "provider-portal@1.4.x")  # no
 # https://docs.sentry.io/platforms/python/guides/django/performance/
 sentry_sample_rate = os.environ.get("SENTRY_SAMPLE_RATE", 0)  # noqa
 
+
+def filter_sentry(event, hint):
+    """
+    Filter out noisy errors from pika, the underlying 
+    rabbitmq library that we know are caught by Dramatiq and retried
+    """
+
+    if 'logger' in event and event['logger'] in [
+        'pika.adapters.blocking_connection',
+        'pika.adapters.base_connection',
+        'pika.adapters.utils.io_services_utils'
+    ]:
+        return None
+
+    return event
+
+
 if SENTRY_DSN:
     sentry_sdk.init(
         # set our identifying credentials
@@ -72,6 +89,7 @@ if SENTRY_DSN:
         # to see who is having a bad day, so we can contact them and
         # at least apologise about the broken site
         send_default_pii=True,
+        before_send=filter_sentry,
     )
 
 
