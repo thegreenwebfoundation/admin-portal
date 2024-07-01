@@ -51,12 +51,13 @@ class CloudflareImporter:
                 if not line:
                     continue
 
-                # (i.e. ip with subnet
+                # only return AS networks and IP networks
                 if line.startswith("AS") or line[0].isdigit():
                     list_of_ips.append(line)
             return list_of_ips
-        except Exception:
-            logger.exception("Something really unexpected happened. Aborting")
+        except Exception as err:
+            logger.warning("Unexpected error raised")
+            logger.warning(err)
 
 
 assert isinstance(CloudflareImporter(), ImporterProtocol)
