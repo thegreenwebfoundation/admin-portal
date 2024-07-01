@@ -254,7 +254,6 @@ def test_staff_can_access_admin(greenweb_staff_user, client):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_detail_view_accessible_by_creator(client):
     # given: provider request exists
     pr = ProviderRequestFactory.create()
@@ -269,7 +268,6 @@ def test_detail_view_accessible_by_creator(client):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_detail_view_accessible_by_admin(client, greenweb_staff_user):
     # given: provider request exists
     pr = ProviderRequestFactory.create()
@@ -284,7 +282,6 @@ def test_detail_view_accessible_by_admin(client, greenweb_staff_user):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_detail_view_forbidden_for_others(client, user):
     # given: provider request exists
     pr = ProviderRequestFactory.create()
@@ -298,7 +295,6 @@ def test_detail_view_forbidden_for_others(client, user):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_wizard_view_happy_path(
     user,
     client,
@@ -364,7 +360,6 @@ def _create_provider_request(client, form_data) -> HttpResponse:
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_wizard_sends_email_on_submission(
     user,
     client,
@@ -940,7 +935,6 @@ def test_approve_skips_duplicate_evidence_when_existing_evidence_updated(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_wizard_view_with_just_network_explanation(
     user,
     client,
@@ -983,7 +977,6 @@ def test_wizard_view_with_just_network_explanation(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_wizard_records_if_location_import_needed(
     user,
     client,
@@ -1025,7 +1018,6 @@ def test_wizard_records_if_location_import_needed(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_new_submission_doesnt_modify_available_services(
     user,
     client,
@@ -1065,7 +1057,6 @@ def test_new_submission_doesnt_modify_available_services(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_edit_view_accessible_by_creator(client):
     # given: an open provider request
     pr = ProviderRequestFactory.create()
@@ -1079,7 +1070,6 @@ def test_edit_view_accessible_by_creator(client):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_edit_view_accessible_by_admin(client, greenweb_staff_user):
     # given: an open provider request
     pr = ProviderRequestFactory.create()
@@ -1093,7 +1083,6 @@ def test_edit_view_accessible_by_admin(client, greenweb_staff_user):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_edit_view_inaccessible_by_other_users(client, user):
     # given: an open provider request
     pr = ProviderRequestFactory.create()
@@ -1107,7 +1096,6 @@ def test_edit_view_inaccessible_by_other_users(client, user):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 @pytest.mark.parametrize(
     "request_status,status_code",
     [
@@ -1130,7 +1118,6 @@ def test_edit_view_accessible_for_given_status(client, request_status, status_co
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_edit_view_displays_form_with_prepopulated_data(client):
     # given: an open provider request
     pr = ProviderRequestFactory.create()
@@ -1154,7 +1141,6 @@ def test_edit_view_displays_form_with_prepopulated_data(client):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_editing_pr_updates_original_submission(
     client,
     wizard_form_org_details_data,
@@ -1339,7 +1325,6 @@ def test_editing_pr_updates_original_submission(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_provider_edit_view_accessible_by_user_with_required_perms(
     client, hosting_provider_with_sample_user, sample_hoster_user
 ):
@@ -1355,7 +1340,6 @@ def test_provider_edit_view_accessible_by_user_with_required_perms(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_provider_edit_view_accessible_by_admins(
     client, hosting_provider_with_sample_user, greenweb_staff_user
 ):
@@ -1371,7 +1355,6 @@ def test_provider_edit_view_accessible_by_admins(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_provider_edit_view_inaccessible_by_unauthorized_users(
     client, hosting_provider_with_sample_user
 ):
@@ -1390,7 +1373,6 @@ def test_provider_edit_view_inaccessible_by_unauthorized_users(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_edit_view_inaccessible_for_nonexistent_provider(client, greenweb_staff_user):
     client.force_login(greenweb_staff_user)
     response = client.get(urls.reverse("provider_edit", args=[str(123456)]))
@@ -1400,7 +1382,6 @@ def test_edit_view_inaccessible_for_nonexistent_provider(client, greenweb_staff_
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_editing_hp_creates_new_verification_request(
     client,
     hosting_provider_with_sample_user,
@@ -1578,7 +1559,6 @@ def test_editing_hp_creates_new_verification_request(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_saving_changes_to_verification_request_from_hp_via_wizard(
     client,
     hosting_provider_with_sample_user,
@@ -1795,7 +1775,6 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_saving_changes_to_hp_with_new_verification_request(
     client,
     hosting_provider_with_sample_user,
@@ -2090,7 +2069,6 @@ def test_request_from_host_provider_finishes_in_sensible_time():
         ),
     ),
 )
-@override_flag("provider_request", active=True)
 def test_email_sent_on_approval(
     hosting_provider_with_sample_user,
     greenweb_staff_user,
@@ -2175,7 +2153,6 @@ def test_email_sent_on_approval(
         ),
     ),
 )
-@override_flag("provider_request", active=True)
 def test_email_request_email_confirmation_is_sent(
     hosting_provider_with_sample_user,
     greenweb_staff_user,
@@ -2252,7 +2229,6 @@ def test_email_request_email_confirmation_is_sent(
         ("open", "Changes Requested"),
     ),
 )
-@override_flag("provider_request", active=True)
 def test_staff_review_is_logged(
     hosting_provider_with_sample_user,
     greenweb_staff_user,
