@@ -12,8 +12,7 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import render
 from django.urls import path, reverse
 from django.views.generic.edit import FormView
-from waffle import flag_is_active
-from waffle.mixins import WaffleFlagMixin
+
 
 from apps.greencheck.views import GreenUrlsView
 
@@ -89,11 +88,10 @@ class CarbonTxtForm(forms.Form):
                     )
 
 
-class CarbonTxtCheckView(LoginRequiredMixin, WaffleFlagMixin, FormView):
+class CarbonTxtCheckView(LoginRequiredMixin, FormView):
     template_name = "carbon_txt_preview.html"
     form_class = CarbonTxtForm
     success_url = "/admin/carbon-txt-preview"
-    waffle_flag = "carbon_txt_preview"
 
     def form_valid(self, form):
         """Show the valid"""

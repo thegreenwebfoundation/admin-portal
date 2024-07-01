@@ -3,13 +3,12 @@ from ..models import ProviderRequestStatus
 from ..factories import ProviderRequestFactory, ProviderRequestLocationFactory
 from django.test import RequestFactory
 from django.urls import reverse
-from waffle.testutils import override_flag
+
 
 import pytest
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_provider_portal_home_view_displays_only_authored_requests(client):
     # given: 3 provider requests exist, created by different users
     pr1 = ProviderRequestFactory.create()
@@ -30,7 +29,6 @@ def test_provider_portal_home_view_displays_only_authored_requests(client):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_provider_portal_home_view_returns_only_unapproved_requests(client):
     # given: 1 pending verification request
     pr1 = ProviderRequestFactory.create(status=ProviderRequestStatus.PENDING_REVIEW)
@@ -56,7 +54,6 @@ def test_provider_portal_home_view_returns_only_unapproved_requests(client):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_provider_portal_home_view_filters_out_removed_requests(client):
     # given: 1 removed verification request
     removed_request = ProviderRequestFactory.create(
@@ -84,7 +81,6 @@ def test_provider_portal_home_view_filters_out_removed_requests(client):
 
 
 @pytest.mark.django_db
-@override_flag("provider_request", active=True)
 def test_provider_portal_home_view_items_sorted_by_name(client):
     # given: 3 pending verification requests
     pr1 = ProviderRequestFactory.create(status=ProviderRequestStatus.PENDING_REVIEW)

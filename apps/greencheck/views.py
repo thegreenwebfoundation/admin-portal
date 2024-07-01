@@ -2,7 +2,6 @@ import collections
 import typing
 from datetime import date, timedelta
 
-import waffle
 from dateutil.relativedelta import relativedelta
 from django.db.models import Sum
 from django.http import HttpResponseRedirect
@@ -14,7 +13,6 @@ from django.views.decorators.cache import cache_page
 from django.views.generic.base import TemplateView
 
 import django_filters
-from waffle.mixins import WaffleFlagMixin
 
 from apps.accounts.models.hosting import Hostingprovider
 from apps.greencheck.models.checks import GreenDomain
@@ -61,9 +59,8 @@ class GreenUrlsView(TemplateView):
         return context
 
 
-class GreencheckStatsView(WaffleFlagMixin, TemplateView):
+class GreencheckStatsView(TemplateView):
     template_name = "greencheck/stats_index.html"
-    waffle_flag = "greencheck-stats"
 
     def _get_headline_counts(self, daily_stat_queryset=None):
         """
@@ -235,13 +232,12 @@ class ProviderFilter(django_filters.FilterSet):
         fields = ["services", "country"]
 
 
-class DirectoryView(WaffleFlagMixin, TemplateView):
+class DirectoryView(TemplateView):
     """
     A view for filtering our list of providers by various criteria
     """
 
     template_name = "greencheck/directory_index.html"
-    waffle_flag = "directory_listing"
 
     def get_context_data(self, *args, **kwargs):
         """

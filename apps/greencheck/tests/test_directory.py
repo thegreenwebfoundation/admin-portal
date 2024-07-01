@@ -5,7 +5,6 @@ import pytest
 
 
 @pytest.mark.django_db
-@override_flag("directory_listing", active=True)
 def test_directory(client):
     """
     Confirm that the directory view is accessible when our flag is active
@@ -18,7 +17,6 @@ def test_directory(client):
 
 
 @pytest.mark.django_db
-@override_flag("directory_listing", active=True)
 def test_ordering_of_providers_in_directory(client, hosting_provider_factory):
     """
     Check that providers are listed in order of the name of their
@@ -39,7 +37,6 @@ def test_ordering_of_providers_in_directory(client, hosting_provider_factory):
 
 
 @pytest.mark.django_db
-@override_flag("directory_listing", active=True)
 def test_templates_in_filter_view(client, hosting_provider_factory):
     """
     Check that we include the no_directoru results in our template
@@ -61,7 +58,6 @@ def test_templates_in_filter_view(client, hosting_provider_factory):
 
 
 @pytest.mark.django_db
-@override_flag("directory_listing", active=True)
 def test_fallback_when_no_filter_view_has_no_results(client, hosting_provider_factory):
     """
     Check that we include the no_directoru results in our template

@@ -1,7 +1,6 @@
 import logging
 from enum import Enum
 
-import waffle
 from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
@@ -31,7 +30,6 @@ from django_registration.forms import (
     RegistrationFormUniqueEmail,
 )
 from formtools.wizard.views import SessionWizardView
-from waffle.mixins import WaffleFlagMixin
 
 from .forms import (
     ConsentForm,
@@ -62,13 +60,6 @@ logger = logging.getLogger(__name__)
 
 class DashboardView(TemplateView):
     template_name = "dashboard.html"
-
-    def get(self, request, *args, **kwargs):
-        if waffle.flag_is_active(request, "dashboard"):
-            return super().get(request, args, kwargs)
-        else:
-            return HttpResponseRedirect(reverse("provider_portal_home"))
-
 
 class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -176,7 +167,7 @@ class UserUpdateView(UpdateView):
         return super().get(request, args, kwargs)
 
 
-class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
+class ProviderPortalHomeView(LoginRequiredMixin, ListView):
     """
     Home page of the Provider Portal:
     - used by external (non-staff) users to access a list of requests they submitted,
@@ -185,7 +176,6 @@ class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
     """
 
     template_name = "provider_portal/home.html"
-    waffle_flag = "provider_request"
     model = ProviderRequest
 
     def get_queryset(self) -> "dict[str, QuerySet[ProviderRequest]]":
@@ -211,7 +201,7 @@ class ProviderPortalHomeView(LoginRequiredMixin, WaffleFlagMixin, ListView):
         }
 
 
-class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView):
+class ProviderRequestDetailView(LoginRequiredMixin, DetailView):
     """
     Detail view for ProviderRequests:
     - used by external (non-staff) users to view a summary of a single request they submitted,
@@ -220,7 +210,6 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
     """  # noqa
 
     template_name = "provider_portal/request_detail.html"
-    waffle_flag = "provider_request"
     model = ProviderRequest
 
     def get_queryset(self) -> "QuerySet[ProviderRequest]":
@@ -233,7 +222,7 @@ class ProviderRequestDetailView(LoginRequiredMixin, WaffleFlagMixin, DetailView)
         return ProviderRequest.objects.filter(created_by=self.request.user)
 
 
-class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWizardView):
+class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
     """
     Multi-step registration for providers.
     - uses `django-formtools` SessionWizardView to display
@@ -241,8 +230,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, WaffleFlagMixin, SessionWiza
     - requires the flag `provider_request` enabled to access the view,
 
     """
-
-    waffle_flag = "provider_request"
     file_storage = DefaultStorage()
 
     class Steps(Enum):
