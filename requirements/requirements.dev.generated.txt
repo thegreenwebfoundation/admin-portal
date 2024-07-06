@@ -58,7 +58,7 @@ bracex==2.4
     # via wcmatch
 brotli==1.1.0
     # via whitenoise
-certifi==2024.2.2
+certifi==2024.7.4
     # via
     #   requests
     #   sentry-sdk
