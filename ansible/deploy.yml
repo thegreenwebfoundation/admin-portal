@@ -5,7 +5,9 @@
     # - app2.thegreenwebfoundation.org
     # - app3.thegreenwebfoundation.org
     # - app4.thegreenwebfoundation.org
-    - app_servers
+    # - app5.thegreenwebfoundation.org
+
+    # - app_servers
     # api servers are app1, app2, and app4, mainly serving API traffic
     # - api_servers
     # admin server is app3, mainly serving member portal traffic
