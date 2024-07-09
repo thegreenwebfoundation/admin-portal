@@ -59,7 +59,17 @@ logger = logging.getLogger(__name__)
 
 
 class DashboardView(TemplateView):
+    """
+    This dashboard view was what people would see when signing into the admin.
+    We currently redirect to the provider portal home page as at present,we 
+    only really logged in activity by users who work for the providers in our system.
+    """
     template_name = "dashboard.html"
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponseRedirect(reverse("provider_portal_home"))
+        
+    
 
 class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
     def get_queryset(self):
