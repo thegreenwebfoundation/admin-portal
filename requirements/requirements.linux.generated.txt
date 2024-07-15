@@ -403,7 +403,7 @@ s3transfer==0.10.1
     #   awscli
     #   boto3
 sentry-sdk==2.0.1
-setuptools==69.5.1
+setuptools==70.0.0
     # via geoip2
 six==1.16.0
     # via
