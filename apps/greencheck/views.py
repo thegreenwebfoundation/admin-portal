@@ -248,7 +248,10 @@ class DirectoryView(TemplateView):
         of providers
         """
 
-        queryset = Hostingprovider.objects.filter(showonwebsite=True).prefetch_related(
+        queryset = Hostingprovider.objects.filter(
+            showonwebsite=True,
+            archived=False
+        ).prefetch_related(
             "services"
         )
 
