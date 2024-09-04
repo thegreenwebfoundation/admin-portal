@@ -85,7 +85,7 @@ confusable-homoglyphs==3.3.1
 coverage==7.5.0
     # via pytest-cov
 crispy-tailwind==1.0.3
-cryptography==42.0.5
+cryptography==43.0.1
     # via ansible-core
 dateutils==0.6.12
 db-to-sqlite==1.5
