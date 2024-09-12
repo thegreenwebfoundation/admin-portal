@@ -11,6 +11,10 @@
 
       <h1 class="text-6xl mb-0"><span class="uppercase">Summary of request</h1>
 
+        <div class="alert__warning">
+          <p>Due to limited staff availability, we will not be reviewing & processing verification requests or updates until October 2nd, 2024.</p>
+        </div>
+
         <p>Submitted on: {{ object.modified }}</p>
 
 		{% if object.status|lower == "more info required" %}
