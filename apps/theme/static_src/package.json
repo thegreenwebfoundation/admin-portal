@@ -30,7 +30,7 @@
     "chart.js": "^3.2.1",
     "daisyui": "^2.45.0",
     "debug": "^4.3.1",
-    "rollup": "^2.47.0",
+    "rollup": "^3.29.5",
     "rollup-plugin-terser": "^7.0.2"
   }
 }
