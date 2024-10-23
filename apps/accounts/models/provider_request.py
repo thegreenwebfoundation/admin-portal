@@ -23,6 +23,8 @@ from .hosting import (
     Service,
 )
 
+import ipaddress
+
 logger = logging.getLogger(__name__)  # noqa
 
 
@@ -407,6 +409,23 @@ class ProviderRequestIPRange(models.Model):
     def __str__(self) -> str:
         return f"{self.start} - {self.end}"
 
+    def ip_range_size(self) -> int:
+        """
+        Return the size of the IP range, based on the start and end ip address.
+        """
+        if not self.start or not self.end:
+            return 0
+
+        # Convert string IP addresses to IP address objects
+        start_ip = ipaddress.ip_address(self.start)
+        end_ip = ipaddress.ip_address(self.end)
+
+        # Calculate the difference and add 1 (if start and end IP addresses are the same, we still want it to show as 1)
+        return int(end_ip) - int(start_ip) + 1
+
+    # Add a short description for the admin
+    ip_range_size.short_description = "IP Range Size"
+
     def clean(self) -> None:
         """
         Validates an IP range.
@@ -419,7 +438,12 @@ class ProviderRequestIPRange(models.Model):
         according to the ModelForm validation logic.
         """
         if self.start and self.end:
-            validate_ip_range(self.start, self.end)
+            try:
+                validate_ip_range(self.start, self.end)
+            except ValueError as e:
+                raise ValidationError({"start": e})
+            except TypeError as e:
+                raise ValidationError({"Mismatching IP ranges": e})
 
 
 class ProviderRequestEvidence(models.Model):
