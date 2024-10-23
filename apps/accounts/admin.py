@@ -1350,6 +1350,9 @@ class ProviderRequestIPRangeInline(AdminOnlyTabularInline):
     model = ProviderRequestIPRange
     extra = 0
 
+    readonly_fields = ["ip_range_size"]
+    fields = ["start", "end", "ip_range_size"]
+
 
 class ProviderRequestEvidenceInline(AdminOnlyTabularInline):
     model = ProviderRequestEvidence
