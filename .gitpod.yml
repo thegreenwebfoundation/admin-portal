@@ -6,6 +6,7 @@ tasks:
   # set up python dependencies and database
   - name: main terminal
     init: |
+      curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /home/gitpod/.local/bin/
       cp ./.env.gitpod ./.env
       python -m venv .venv
       source .venv/bin/activate
