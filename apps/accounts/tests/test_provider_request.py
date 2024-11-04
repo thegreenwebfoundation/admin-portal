@@ -191,13 +191,6 @@ def wizard_form_preview():
 
 
 @pytest.fixture()
-def mock_open(mocker):
-    file_mock = mocker.patch("builtins.open")
-    file_mock.return_value = io.StringIO("file contents")
-    return file_mock
-
-
-@pytest.fixture()
 def fake_evidence():
     """
     Returns a file-like object with fake content
@@ -214,7 +207,7 @@ def fake_evidence():
         {
             "title": "this one has both: link and a file",
             "link": "www.example.com",
-            "file": File(file="cert.pdf"),
+            "file": File(file=io.BytesIO(faker.text().encode()), name=faker.file_name()),
             "type": models.EvidenceType.CERTIFICATE,
         },
         {
@@ -224,9 +217,10 @@ def fake_evidence():
     ],
     ids=["both_file_and_link", "neither_file_nor_link"],
 )
-def test_evidence_validation_fails(evidence_data, mock_open):
-    evidence_data["request"] = ProviderRequestFactory.create()
+def test_evidence_validation_fails(evidence_data):
 
+    evidence_data["request"] = ProviderRequestFactory.create()
+    
     evidence = models.ProviderRequestEvidence.objects.create(**evidence_data)
 
     with pytest.raises(ValidationError):
