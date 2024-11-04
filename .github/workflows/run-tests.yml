@@ -97,7 +97,7 @@ jobs:
         # if: steps.cache-pipenv.outputs.cache-hit != 'true'
         run: |
           uv venv
-          uv pip install -r requirements/requirements.linux.generated.txt
+          uv sync
       - name: Eco CI Energy Estimation - Get Measurement
         uses: green-coding-solutions/eco-ci-energy-estimation@v4.0-rc3
         with:
