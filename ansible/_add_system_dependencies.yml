@@ -41,11 +41,11 @@
   when: install_node is true
   tags: [fnm-install]
 
-- name:
-  ansible.builtin.debug:
-    var: fnm_installed
-  when: install_node is true
-  tags: [fnm-install]
+# - name:
+#   ansible.builtin.debug:
+#     var: fnm_installed
+#   when: install_node is true
+#   tags: [fnm-install]
 
 - name: Download FNM install (Fast Node Manager) script
   ansible.builtin.get_url:

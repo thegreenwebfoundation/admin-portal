@@ -25,10 +25,55 @@
     # is a workaround
     update_front_end_deps: true
 
+    project_git_repo: "git@github.com:thegreenwebfoundation/admin-portal.git"
+    project_deploy_strategy: git
+    project_version: "{{ project_deploy_branch }}"
+    project_local_path: "../"
+    project_unwanted_items:
+      - .git
+    project_finalize: true
+
+    # set these to decide about setting up a folder structure as if we are deploying
+    deploy_project: true
+    update_symlinks: true
+
   tasks:
     - name: Set up most recent timestamps directories
       ansible.builtin.include_tasks: "_create_deployment_directories.yml"
       when: create_deployment_dirs is true
+
+    - name: Run the deploy steps to check out the project repo
+      ansible.builtin.include_role:
+        name: f500.project_deploy
+      when: deploy_project is defined and deploy_project is true
+
+    - name: Link .env to shared directory
+      ansible.builtin.file:
+        src: "{{ project_root }}/shared/.env"
+        dest: "{{ project_root }}/current/.env"
+        state: link
+      when: update_symlinks is true
+
+    - name: Link ./media to shared ./media directory
+      ansible.builtin.file:
+        src: "{{ project_root }}/shared/media"
+        dest: "{{ project_root }}/current/media"
+        state: link
+      when: update_symlinks is true
+
+    - name: Link ./data to shared ./data directory
+      ansible.builtin.file:
+        src: "{{ project_root }}/shared/data"
+        dest: "{{ project_root }}/current/data"
+        state: link
+      when: update_symlinks is true
+
+    - name: Link to .aws.credentials in shared directory
+      ansible.builtin.file:
+        src: "{{ project_root }}/shared/.aws.credentials"
+        dest: "{{ project_root }}/current/.aws.credentials"
+        state: link
+      when: update_symlinks is true
 
     - name: Install all system dependencies
       ansible.builtin.include_tasks: "_add_system_dependencies.yml"

@@ -29,7 +29,7 @@
     group: deploy
   become: true
 
-- name: Move .aws.credentials file to the deploy directory for using with aws cli
+- name: Move .aws.credentials file to shared directory
   ansible.builtin.template:
     src: "templates/dotaws.credentials.j2"
     dest: "{{ project_root }}/shared/.aws.credentials"
