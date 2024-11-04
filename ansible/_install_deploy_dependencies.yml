@@ -1,33 +1,32 @@
 ---
 - name: Set up a virtual environment for this project
-  ansible.builtin.command: "python3.11 -m venv .venv"
+  ansible.builtin.command: /home/deploy/.cargo/bin/uv venv
   args:
     chdir: "{{ project_root }}/current"
   changed_when: false
+  tags: [uv]
 
 - name: Install python dependencies with uv
-  ansible.builtin.shell: |
-    source .venv/bin/activate
-    python3.11 -m pip install uv 
-    uv pip install -r requirements/requirements.linux.generated.txt
+  ansible.builtin.shell: /home/deploy/.cargo/bin/uv sync
   args:
     chdir: "{{ project_root }}/current"
     executable: "/usr/bin/bash"
+  tags: [uv]
 
 - name: Update node deps for building tailwind
   ansible.builtin.shell: |
-    source .venv/bin/activate
-    dotenv run -- python3.11 ./manage.py tailwind update
+    /home/deploy/.cargo/bin/uv run dotenv run -- ./manage.py tailwind update
   args:
     chdir: "{{ project_root }}/current"
     executable: "/usr/bin/bash"
   when: update_front_end_deps is true
+  tags: [uv]
 
 - name: Install node deps for building tailwind
   ansible.builtin.shell: |
-    source .venv/bin/activate
-    dotenv run -- python3.11 ./manage.py tailwind install
+    /home/deploy/.cargo/bin/uv run dotenv run -- ./manage.py tailwind install
   args:
     executable: "/usr/bin/bash"
     chdir: "{{ project_root }}/current"
   changed_when: false
+  tags: [uv]
