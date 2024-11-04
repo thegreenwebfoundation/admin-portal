@@ -1,8 +1,7 @@
 import logging
 
 from django.conf import settings
-from django.contrib.gis.geoip2 import GeoIP2
-from django.contrib.gis.geoip2.base import GeoIP2Exception
+from django.contrib.gis.geoip2 import GeoIP2, GeoIP2Exception
 from drf_yasg.utils import swagger_auto_schema
 from geoip2 import errors
 from rest_framework import permissions, views
