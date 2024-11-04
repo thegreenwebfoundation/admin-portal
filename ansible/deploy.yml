@@ -54,6 +54,7 @@
 
     - name: Install dependencies for python and js
       ansible.builtin.include_tasks: "_install_deploy_dependencies.yml"
+      tags: [uv, uv-install]
 
     - name: Assemble assets and related files
       ansible.builtin.include_tasks: "_assemble_deploy_assets.yml"

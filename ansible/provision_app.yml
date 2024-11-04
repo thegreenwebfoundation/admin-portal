@@ -19,6 +19,7 @@
     install_system_reqs: true
     # decide about installing a recent version of node
     install_node: true
+    install_uv: true
     # run an update of our front dependencies as part of the deploy. This is better
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
@@ -32,7 +33,7 @@
     - name: Install all system dependencies
       ansible.builtin.include_tasks: "_add_system_dependencies.yml"
       when: install_system_reqs is true
-      tags: [python]
+      tags: [python, fnm-install, uv-install]
 
     - name: Install all deploy dependencies
       ansible.builtin.include_tasks: "_install_deploy_dependencies.yml"

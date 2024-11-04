@@ -6,6 +6,19 @@
   become: true
   tags: [python]
 
+- name: Install python libraries
+  ansible.builtin.apt:
+    pkg:
+      - python3.12
+      - python3.12-venv
+      - python3.12-dev
+      - python-is-python3
+    state: present
+    update_cache: true
+  become: true
+  when: install_system_reqs is true
+  tags: [python]
+
 - name: Install mariadb libraries for python
   ansible.builtin.apt:
     pkg:
@@ -19,42 +32,65 @@
     update_cache: true
   become: true
   when: install_system_reqs is true
-  tags: [wip]
+  tags: [mariadb]
 
-- name: Download node source script
+- name: Check if FNM is already installed
+  ansible.builtin.stat:
+    path: "/home/deploy/.local/share/fnm/fnm"
+  register: fnm_installed
+  when: install_node is true
+  tags: [fnm-install]
+
+- name:
+  ansible.builtin.debug:
+    var: fnm_installed
+  when: install_node is true
+  tags: [fnm-install]
+
+- name: Download FNM install (Fast Node Manager) script
   ansible.builtin.get_url:
-    url: "https://deb.nodesource.com/setup_18.x"
-    dest: "/tmp/setup_18.x.sh"
+    url: "https://fnm.vercel.app/install"
+    dest: "/tmp/fnm.install.sh"
     mode: "0755"
-  when: install_node is true
+  when: install_node is true and fnm_installed.stat.exists is false
+  tags: [fnm-install]
 
-- name: Run node installer as root
-  ansible.builtin.command: "bash /tmp/setup_18.x.sh"
-  when: install_node is true
-  become: true
+- name: Run FNM install script
+  ansible.builtin.command: "bash /tmp/fnm.install.sh"
+  when: install_node is true and fnm_installed.stat.exists is false
+  tags: [fnm-install]
 
+  # FNM relies on a set of environment variables to be set in the shell.
+  # So we call fnm
 - name: Install node and npm
-  ansible.builtin.apt:
-    pkg:
-      - nodejs
-    state: present
-    update_cache: true
-  become: true
-  when: install_node is true
+  ansible.builtin.shell: |
+    set -o pipefail
+    eval "$(fnm env)"
+    fnm use --install-if-missing 22
+  args:
+    executable: "/usr/bin/bash"
+  # set the PATH to include the fnm binary
+  environment:
+    PATH: "/home/deploy/.local/share/fnm/:{{  ansible_env.PATH }}"
+  when: install_node is true and fnm_installed.stat.exists is true
+  tags: [fnm-install]
 
-- name: Install python libraries
-  ansible.builtin.apt:
-    pkg:
-      - python3.11
-      - python3.11-venv
-      - python3.11-dev
-      - python-is-python3
-    state: present
-    update_cache: true
-  become: true
-  when: install_system_reqs is true
-  tags: [python]
+- name: Download uv install script
+  ansible.builtin.get_url:
+    url: "https://astral.sh/uv/install.sh"
+    dest: "/tmp/uv.install.sh"
+    mode: "0755"
+  when: install_uv is true
+  tags: [uv-install]
 
-- name: Install libraries for handling dependencies
-  ansible.builtin.command: "python3.11 -m pip install uv wheel"
+- name: Check if uv is already installed
+  ansible.builtin.stat:
+    path: "/home/deploy/.cargo/bin/uv"
+  register: uv_installed
+  when: install_uv is true
+  tags: [uv-install]
+
+- name: Install uv for managing python dependencies
+  ansible.builtin.shell: "bash /tmp/uv.install.sh"
   when: install_system_reqs is true
+  tags: [uv-install]
