@@ -10,7 +10,7 @@ tasks:
       python -m venv .venv
       source .venv/bin/activate
       python -m pip install --upgrade pip uv
-      uv pip install -r requirements/requirements.linux.generated.txt
+      uv sync
       dotenv run -- ./manage.py migrate
       dotenv run -- ./manage.py tailwind install
       dotenv run -- ./manage.py tailwind build
