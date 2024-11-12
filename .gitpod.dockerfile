@@ -22,3 +22,7 @@ RUN pyenv install 3.11 \
 RUN wget https://deb.nodesource.com/setup_18.x -O /tmp/setup_18.x.sh
 RUN sudo bash /tmp/setup_18.x.sh
 RUN sudo apt-get install -y nodejs
+
+# install uv
+# https://docs.astral.sh/uv/getting-started/installation/
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
