@@ -93,7 +93,7 @@ class TestCarbonTxtAPI:
         """
         Check that our preview is now behind a flag
         """
-        with override_flag("carbon-txt-preview", active=active):
+        with override_flag("carbon_txt_preview", active=active):
             url_path = reverse("greenweb_admin:carbon_txt_preview")
             response = client.get(url_path, follow=True)
             assert response.status_code == status_code
