@@ -92,7 +92,7 @@ class CarbonTxtCheckView(WaffleFlagMixin, LoginRequiredMixin, FormView):
     template_name = "carbon_txt_preview.html"
     form_class = CarbonTxtForm
     success_url = "/admin/carbon-txt-preview"
-    waffle_flag = "carbon-txt-preview"
+    waffle_flag = "carbon_txt_preview"
 
     def form_valid(self, form):
         """Show the valid"""
