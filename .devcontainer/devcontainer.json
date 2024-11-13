@@ -3,5 +3,17 @@
   "features": {
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
     "ghcr.io/eitsupi/devcontainer-features/just:0": {}
+  },
+  "customizations": {
+    "codespaces": {},
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "eamodio.gitlens",
+        "charliermarsh.ruff",
+        "bibhasdn.django-html",
+        "tomusher.djhtml-vscode",
+      ]
+    }
   }
 }
