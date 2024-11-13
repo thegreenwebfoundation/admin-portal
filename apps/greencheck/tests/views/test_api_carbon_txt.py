@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 rf = APIRequestFactory()
 
+from waffle.testutils import override_flag
+
 
 @pytest.fixture
 def carbon_txt_string():
@@ -83,6 +85,18 @@ class TestCarbonTxtAPI:
         response = view_func(request)
 
         assert response.status_code == 200
+
+    @pytest.mark.parametrize("active,status_code", [(True, 200), (False, 404)])
+    def test_carbon_txt_preview_behind_flag(
+        self, db, settings, client, active, status_code
+    ):
+        """
+        Check that our preview is now behind a flag
+        """
+        with override_flag("carbon-txt-preview", active=active):
+            url_path = reverse("greenweb_admin:carbon_txt_preview")
+            response = client.get(url_path, follow=True)
+            assert response.status_code == status_code
 
 
 class TestProviderSharedSecretAPI:
