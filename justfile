@@ -22,6 +22,10 @@ dev_createsuperuser:
 dev_runserver:
     uv run dotenv run -- python manage.py runserver
 
+# Run a django management command in the development environment.
+dev_manage *options:
+    uv run dotenv run -- python manage.py {{ options }}
+
 # Start the tailwind watcher - this will re-run tailwind to generate css as code is changed.
 dev_tailwind_start:
     uv run dotenv run -- python manage.py tailwind start
@@ -47,10 +51,14 @@ data_analysis_repo:
         git clone https://github.com/thegreenwebfoundation/data-analysis.git
     fi
 
-# Start a Marimo notebook session.
-notebook_gitpod: data_analysis_repo
+# Start a Marimo notebook session from a starter notebook
+data_marimo_starter *options: data_analysis_repo
 	# set up our start notebook with django initialised ready for queries
-	uv run dotenv run -- marimo edit data-analysis/starter-notebook.py
+	uv run dotenv run -- marimo edit data-analysis/starter-notebook.py {{ options }}
+
+# Run Marimo notebook session
+data_marimo *options: data_analysis_repo
+    uv run dotenv run -- marimo {{ options }}
 
 # Run the django tests (with pytest), creating a test database using the `testing` settings.
 test *options:
