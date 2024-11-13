@@ -5,11 +5,17 @@ on:
     paths-ignore:
       - "**.md"
       - ".gitignore"
+      - "justfile"
+      - .devcontainer/**
+      - ansible/**
   # make our tests run when we have external PRs
   pull_request:
     paths-ignore:
       - "**.md"
       - ".gitignore"
+      - "justfile"
+      - .devcontainer/**
+      - ansible/**
 
 defaults:
   run:
