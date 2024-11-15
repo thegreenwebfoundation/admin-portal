@@ -192,8 +192,3 @@ class GreenDomainFactory(dj_factory.DjangoModelFactory):
     class Meta:
         model = GreenDomain
         django_get_or_create = ("url",)
-
-
-class DailyStatFactory(dj_factory.DjangoModelFactory):
-    class Meta:
-        model = gc_models.DailyStat

@@ -17,7 +17,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
-from django.views.generic import DetailView, ListView, UpdateView
+from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 from django_registration import signals, validators
 from django_registration.backends.activation.views import (
@@ -39,7 +39,6 @@ from .forms import (
     OrgDetailsForm,
     PreviewForm,
     ServicesForm,
-    UserUpdateForm,
 )
 from .models import (
     Hostingprovider,
