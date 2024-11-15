@@ -23,7 +23,7 @@ import ipwhois
 import tld
 from django.utils import timezone
 from ipwhois.asn import IPASN
-from ipwhois.exceptions import IPDefinedError
+from ipwhois.exceptions import IPDefinedError, ASNParseError
 from ipwhois.net import Net
 
 from .choices import GreenlistChoice
@@ -309,7 +309,10 @@ class GreenDomainChecker:
 
         try:
             asn_result = self.asn_from_ip(ip_address)
-        except IPDefinedError:
+        except (ASNParseError, IPDefinedError) as ex:
+            logger.warning(
+                f"Unable to parse ASN for IP: {ip_address} - error type: {type(ex).__name__} {ex}"
+            )
             return False
         except Exception as err:
             logger.exception(err)
