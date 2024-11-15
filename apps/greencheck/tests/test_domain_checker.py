@@ -104,19 +104,32 @@ class TestDomainChecker:
         assert isinstance(res, legacy_workers.SiteCheck)
         assert res.hosting_provider_id == green_asn.hostingprovider.id
 
-    def test_asn_from_ip_fails_gracefully_with_bad_asn_lookup(self, checker, caplog):
+    @pytest.mark.parametrize(
+        "error_type",
+        (
+            domain_check.ASNLookupError,
+            domain_check.ASNParseError,
+            domain_check.ASNRegistryError,
+            domain_check.ASNOriginLookupError,
+            domain_check.IPDefinedError,
+        ),
+    )
+    def test_asn_from_ip_fails_gracefully_with_bad_asn_lookup(
+        self, checker, caplog, error_type
+    ):
         """
         Sometimes calling lookup() on an IP address raises a ASNParseError.
         Do we catch this exception and log it?
         """
 
-        checker.asn_from_ip = mock.MagicMock(side_effect=domain_check.ASNParseError)
+        checker.asn_from_ip = mock.MagicMock(side_effect=error_type)
         with caplog.at_level(logging.WARNING):
             res = checker.check_for_matching_asn("23.32.24.203")
 
         assert res is False
         logged_error = caplog.text
-        assert "ASNParseError" in logged_error
+
+        assert error_type.__name__ in logged_error
 
     def test_with_green_domain_by_non_resolving_asn(self, green_asn, checker):
         """
