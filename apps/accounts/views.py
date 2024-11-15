@@ -163,20 +163,6 @@ class UserActivationView(ActivationView):
         return HttpResponseRedirect(force_str(self.get_success_url()))
 
 
-class UserUpdateView(UpdateView):
-    """
-    A view for allowing users to edit basic details, and control
-    notification settings
-    """
-
-    model = User
-    form_class = UserUpdateForm
-
-    def get(self, request, *args, **kwargs):
-        """Handle GET requests: instantiate a blank version of the form."""
-        return super().get(request, args, kwargs)
-
-
 class ProviderPortalHomeView(LoginRequiredMixin, ListView):
     """
     Home page of the Provider Portal:
