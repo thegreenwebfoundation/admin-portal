@@ -1,8 +1,46 @@
 {
   "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "dockerComposeFile": "codespaces-compose.yml",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "service": "app",
   "features": {
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
     "ghcr.io/eitsupi/devcontainer-features/just:0": {}
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "forwardPorts": [
+    8000,
+    6379,
+    5672,
+    3306,
+    8025,
+    1025
+  ],
+  "portsAttributes": {
+    "8000": {
+      "label": "Django App",
+      "onAutoForward": "ignore"
+    },
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "ignore"
+    },
+    "5672": {
+      "label": "RabbitMQ",
+      "onAutoForward": "ignore"
+    },
+    "3306": {
+      "label": "MariaDB",
+      "onAutoForward": "ignore"
+    },
+    "8025": {
+      "label": "Mailhog Web",
+      "onAutoForward": "ignore"
+    },
+    "1025": {
+      "label": "Mailhog SMTP",
+      "onAutoForward": "ignore"
+    }
   },
   "customizations": {
     "codespaces": {},

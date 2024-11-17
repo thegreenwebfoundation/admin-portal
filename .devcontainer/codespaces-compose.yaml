@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ..
+    image: mcr.microsoft.com/devcontainers/universal:2
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    network_mode: service:mariadb
+
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: greencheck
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "true"
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.11
+    hostname: green-rabbit
+    privileged: true
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog
+    restart: unless-stopped
