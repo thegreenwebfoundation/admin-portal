@@ -235,6 +235,7 @@ class OrgDetailsForm(forms.ModelForm):
             " in search results."
         ),
         widget=forms.widgets.Textarea,
+        max_length=1000,
     )
     authorised_by_org = forms.TypedChoiceField(
         label="Do you work for this organisation?",
