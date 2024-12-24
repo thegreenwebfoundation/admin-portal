@@ -26,7 +26,7 @@ class CarbonTxtParser:
     """
     A parser for reading carbon.txt files and turning them into domain objects
     we can use for updating information about provider organisations in
-    the green web database.
+    the Green Web Dataset.
     """
 
     def _create_provider(self, provider_dict: dict, provider_set: Set) -> List:

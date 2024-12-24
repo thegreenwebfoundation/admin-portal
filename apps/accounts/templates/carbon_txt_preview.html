@@ -91,11 +91,11 @@
 
         {% if preview.upstream %}
           <p>
-            We were able to find the following upstream providers in the green web database
+            We were able to find the following upstream providers in the Green Web Dataset
           </p>
         {% else %}
           <p>
-            Sorry, we could not find any of the named upstream providers in the green web database.
+            Sorry, we could not find any of the named upstream providers in the Green Web Dataset.
           </p>
         {% endif %}
 
@@ -117,7 +117,7 @@
 
         {% if preview.not_registered.providers %}
 
-          <p>The following upstream providers are not currently registered in the green web database:</p>
+          <p>The following upstream providers are not currently registered in the Green Web Dataset:</p>
 
           <ul>
             {% for domain, provider in preview.not_registered.providers.items %}
