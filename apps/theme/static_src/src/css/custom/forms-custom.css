@@ -1,6 +1,6 @@
 /* 0.  GENERAL CUSTOM FORM STYLES */
-/* 0.1 ERROR LIST                 */ 
-/* 0.2 HELPTEXT                   */ 
+/* 0.1 ERROR LIST                 */
+/* 0.2 HELPTEXT                   */
 /* 0.3 BASE SIZED TEXT FIELDS     */
 
 /* General form layout */
@@ -12,211 +12,209 @@
 /* Styles for forms that are laid out as tables */
 /* 2. NETWORK FOOTPRINT TABLE    */
 
-
 /* **************************** */
-
 
 /* 0. GENERAL CUSTOM FORM STYLES */
 
-/* 0.1 ERROR LIST                */ 
+/* 0.1 ERROR LIST                */
 .errorlist {
-	@apply text-purple;
+  @apply text-purple;
 }
 .errorlist + input,
 .errorlist + select {
-	@apply border-purple;
+  @apply border-purple;
 }
 ul.errorlist {
-	@apply mb-4;
-	@apply list-none;
-	@apply pl-0;
+  @apply mb-4;
+  @apply list-none;
+  @apply pl-0;
 }
 .errorlist li {
-	@apply mb-4;
-	@apply pl-0;
+  @apply mb-4;
+  @apply pl-0;
 }
 .errorlist li:last-of-type {
-	@apply mb-0;
+  @apply mb-0;
 }
 
-/* 0.2 HELPTEXT                   */ 
+/* 0.2 HELPTEXT                   */
 .helptext {
-	@apply text-base;
+  @apply text-base;
 }
 
 /* 0.3 BASE SIZED TEXT FIELDS     */
 .form__basetext-fields .form__row {
-	@apply my-6;
+  @apply my-6;
 }
 .form__basetext-fields label {
-	@apply text-base;
-	@apply font-bold;
+  @apply text-base;
+  @apply font-bold;
 }
 .form__basetext-fields input[type="text"],
 .form__basetext-fields input[type="password"] {
-	@apply w-full;
+  @apply w-full;
 }
 
 /* **************************** */
 
 /* 1.  DEFAULT gwf-form          */
 .gwf-form {
-	@apply mt-8;	
+  @apply mt-8;
 }
 .gwf-form > div {
-	@apply flex;
-	@apply flex-col;
-	@apply items-start;
-	@apply py-8;
-	@apply border-b-0;
+  @apply flex;
+  @apply flex-col;
+  @apply items-start;
+  @apply py-8;
+  @apply border-b-0;
 }
 .gwf-form > div > * {
-	@apply w-full;
+  @apply w-full;
 }
 .gwf-form label {
-	@apply block;
-	@apply text-left;
+  @apply block;
+  @apply text-left;
 }
 .gwf-form .helptext {
-	@apply pb-6;
+  @apply pb-6;
 }
 .gwf-form .nav-buttons {
-	@apply block;
-	@apply py-0;
+  @apply block;
+  @apply py-0;
 }
 .gwf-form .nav-buttons > * {
-	@apply w-auto;
+  @apply w-auto;
 }
 
 /* 11. EVIDENCE FORM              */
 .form__evidence .convenient-form {
-	@apply md:flex;
-	@apply flex-wrap;
+  @apply md:flex;
+  @apply flex-wrap;
 }
 .form__evidence .convenient-form > * {
-	@apply w-full;
-	@apply px-8;
-	@apply pt-6;
+  @apply w-full;
+  @apply px-8;
+  @apply pt-6;
 }
 .form__evidence .form__evidence--field-type,
 .form__evidence .form__evidence--field-title,
 .form__evidence .form__evidence--field-link,
 .form__evidence .form__evidence--field-file {
-	@apply md:w-1/2;
+  @apply md:w-1/2;
 }
 .form__evidence input[type="button"] {
-	@apply w-auto;
+  @apply w-auto;
 }
 .form__evidence--field .helptext {
-	@apply mb-4;
+  @apply mb-4;
 }
 .form__evidence--field select,
 .form__evidence--field input[type="text"],
 .form__evidence--field input[type="url"] {
-	@apply w-full;
+  @apply w-full;
 }
 .form__evidence--field label {
-	@apply sr-only;
-	@apply text-base;
+  @apply sr-only;
+  @apply text-base;
 }
 .form__evidence--field-public {
-	@apply flex;
-	@apply items-center;
+  @apply flex;
+  @apply items-center;
 }
 .form__evidence--field-public .helptext {
-	@apply mb-0;
+  @apply mb-0;
 }
 .form__evidence--field-public input[type="checkbox"] {
-	@apply order-first;
-	@apply mb-0;
+  @apply order-first;
+  @apply mb-0;
 }
 .form__evidence--field-id,
 .form__evidence--field-DELETE {
-	@apply mb-0;
-	@apply !pt-0;
+  @apply mb-0;
+  @apply !pt-0;
 }
 
 /* 12. CONSENT TABLE               */
 .form__consent > div {
-	@apply relative;
+  @apply relative;
 }
 .form__consent label {
-	@apply w-auto;
-	@apply ml-16;
-	@apply text-xl;
-	@apply lg:text-2xl;
+  @apply w-auto;
+  @apply ml-16;
+  @apply text-xl;
+  @apply lg:text-2xl;
 }
 .form__consent > div input {
-	@apply absolute;
-	@apply top-10;
-	width: 2rem;
-	height: 2rem;
-	@apply border-2;
+  @apply absolute;
+  @apply top-10;
+  width: 2rem;
+  height: 2rem;
+  @apply border-2;
 }
 .form__consent .helptext {
-	@apply ml-16;
+  @apply ml-16;
 }
 
 /* 13. DIRECTORY FORMS           */
 .form__directory label {
-	@apply block;
-	@apply text-white;
-	@apply text-base;
+  @apply block;
+  @apply text-white;
+  @apply text-base;
 }
 .form__directory select {
-	@apply text-white;
-	@apply sm:text-2xl;
-	@apply bg-neutral-900;
-	@apply border-green;
-	@apply h-16;
+  @apply text-white;
+  @apply sm:text-2xl;
+  @apply bg-neutral-900;
+  @apply border-green;
+  @apply h-16;
 
-	background-image:
-		linear-gradient(45deg, transparent 50%, white 50%),
-    	linear-gradient(135deg, white 50%, transparent 50%);
-	background-position:
-		calc(100% - 24px) calc(1em + 6px),
-		calc(100% - 16px) calc(1em + 6px);
-	background-size:
-		8px 8px,
-		8px 8px;
-	background-repeat: no-repeat;
+  background-image: linear-gradient(45deg, transparent 50%, white 50%),
+    linear-gradient(135deg, white 50%, transparent 50%);
+  background-position: calc(100% - 24px) calc(1em + 6px),
+    calc(100% - 16px) calc(1em + 6px);
+  background-size: 8px 8px, 8px 8px;
+  background-repeat: no-repeat;
 }
 .form__directory select:focus {
-	/* @apply border-neutral-400; */
+  /* @apply border-neutral-400; */
 }
 .form__directory p {
-	@apply lg:col-span-2;
+  @apply lg:col-span-2;
 }
-
 
 /* **************************** */
 
 /* 2. NETWORK FOOTPRINT TABLE   */
 .form__table--network tbody {
-	@apply flex;
-	@apply flex-wrap;
-	@apply gap-x-8;
+  @apply flex;
+  @apply flex-wrap;
+  @apply gap-x-8;
 }
 .form__table--network tbody > tr {
-	@apply w-auto;
-	@apply border-0;
+  @apply w-auto;
+  @apply border-0;
 }
 /* Targetting the errors list, which won't have a th before the td */
-.form__table--network tbody > tr >td:first-child {
-	@apply w-full;
-	@apply p-0;
+.form__table--network tbody > tr > td:first-child {
+  @apply w-full;
+  @apply p-0;
 }
 .form__table--network tbody .errorlist {
-	@apply my-0;
+  @apply my-0;
 }
 .form__table--network tbody th {
-	@apply w-16;
+  @apply w-16;
 }
 .form__table--network tbody td {
-	@apply w-52;
+  @apply w-52;
 }
 .form__table--network label {
-	@apply mb-0;
-	@apply pb-0;
-	@apply text-med;
+  @apply mb-0;
+  @apply pb-0;
+  @apply text-med;
+}
+
+/* Scrolling overflow for file inputs with long filenames */
+.form__evidence--field-file:has(input[type="file"]) {
+  overflow: auto;
 }
