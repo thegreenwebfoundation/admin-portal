@@ -1,4 +1,4 @@
-Dear member of The Green Web Foundation,
+Dear member of Green Web Foundation,
 
 Thank you for the contributions that you've made in the past to our hosting database. We are contacting you now because we need you to do something to be able to access the database in the future. After eight years of good service, the administration system behind our database needed an upgrade. The good news is that the upgrade succeeded. However, due to a new password hashing algorithm, we are obliged to ask all members to reset their password.
 
@@ -8,4 +8,4 @@ Feel free to contact us at support@thegreenwebfoundation.org at any time if you 
 
 Thanks in advance for your help!
 With best regards,
-The Green Web Foundation team
+Green Web Foundation team

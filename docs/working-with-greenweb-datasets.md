@@ -1,6 +1,6 @@
 # Working with the Green Web Open Data
 
-Every day The Green Web Foundation publishes a dataset of green domain names, and who hosts them. We call this the `url2green` dataset, and it is available at [datasets.thegreenwebfoundation.org](https://datasets.thegreenwebfoundation.org)
+Every day the Green Web Foundation publishes a dataset of green domain names, and who hosts them. We call this the `url2green` dataset, and it is available at [datasets.thegreenwebfoundation.org](https://datasets.thegreenwebfoundation.org)
 
 This data closely follows the data available over the Green Web API, and generally speaking, analysis you might use the green web API for, you can use the published datasets for, without needing to hit the API for each check.
 

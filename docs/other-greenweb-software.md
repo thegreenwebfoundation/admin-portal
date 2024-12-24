@@ -1,6 +1,6 @@
 # Other Green Web software
 
-While the main admin-portal repository holds the code for serving the main API and administration platform, The Green Web Foundation actively maintains a some other open source software.
+While the main admin-portal repository holds the code for serving the main API and administration platform, the Green Web Foundation actively maintains a some other open source software.
 
 Unless otherwise mentioned all the software listed below is open source, and usually released under the [permissive Apache 2.0 license](https://choosealicense.com/licenses/apache-2.0/).
 
@@ -22,7 +22,6 @@ The Green Web grid intensity libraries help developers and designers build digit
 Because the mix of fuels powering the grid will be different depending when and where you run your code, you can influence the carbon intensity of the code you write by moving it through time and space - either by making it run when the grid is greener, or making it run where it's greener, like a CDN running on green power.
 
 These libraries offer a consistent API to for consuming freely available open data, or remote API services to provide the signals needed to make a responsive system.
-
 
 - For javascript please see [our grid intensity github repository][grid-intensity-js]
 - For golang, please see our [grid-intensity-go][], and [grid-intensity-exporter][] libraries.

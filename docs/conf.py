@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "Green Web Foundation Platform"
-copyright = "2021 CC-BY-SA, The Green Web Foundation"
+copyright = "2021 CC-BY-SA, Green Web Foundation"
 author = (
     "Chris Adams, Arend Jan Tetteroo, Rene Post, Roald Teunissen, Jonathan Sundqvist"
 )
