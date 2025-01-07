@@ -225,22 +225,23 @@ class OrgDetailsForm(forms.ModelForm):
     )
     website = forms.URLField(
         max_length=255,
-        label="What is your primary website?",
+        label="What is your organisation's primary website?",
         help_text="Add the full URL - please include the https:// part.",
     )
     description = forms.CharField(
-        label="How do you describe this organisation?",
+        label="How do you describe your organisation?",
         help_text=(
             "Add a single paragraph about your organisation, as you would expect to see"
             " in search results."
         ),
         widget=forms.widgets.Textarea,
+        max_length=1000,
     )
     authorised_by_org = forms.TypedChoiceField(
-        label="Do you work for this organisation?",
+        label="Do you work for the organisation seeking verification?",
         help_text=(
             "We ask this so we know whether you are speaking on behalf of the"
-            " organisation or not. It's still ok to submit info if you don't work for"
+            " organisation seeking verification or not. It's still ok to submit info if you don't work for"
             " them, but we need to know, so we don't misrepresent anything."
         ),
         widget=forms.RadioSelect,
@@ -248,8 +249,8 @@ class OrgDetailsForm(forms.ModelForm):
             (
                 "True",
                 (
-                    "Yes, I work for the organisation and am authorised to speak on"
-                    " behalf of it"
+                    "Yes, I work for the organisation seeking verification. I am authorised to speak on"
+                    " its behalf."
                 ),
             ),
             (

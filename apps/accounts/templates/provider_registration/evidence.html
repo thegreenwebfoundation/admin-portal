@@ -149,3 +149,16 @@
 
 </form>
 {% endblock %}
+
+
+<script>
+	// A workaround to limit the file input types to PDF and images.
+	function limitFileInputType() {
+		const fileInputs = document.querySelectorAll('input[type="file"]');
+		fileInputs.forEach((fileInput) => {
+			fileInput.accept = 'application/pdf, image/*';
+		});
+	}
+
+	window.addEventListener('load', limitFileInputType);
+</script>

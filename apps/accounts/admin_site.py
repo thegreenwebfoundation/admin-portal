@@ -207,8 +207,8 @@ class GreenWebAdmin(AdminSite):
     # This is a standard authentication form that allows non-staff users
     login_form = AuthenticationForm
     index_template = "admin_index.html"
-    site_header = "The Green Web Foundation Administration Site"
-    index_title = "The Green Web Foundation Administration Site"
+    site_header = "Green Web Foundation Administration Site"
+    index_title = "Green Web Foundation Administration Site"
     login_template = "auth/login.html"
     logout_template = "auth/logout.html"
 

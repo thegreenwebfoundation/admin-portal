@@ -25,7 +25,7 @@ For now, we have placed {{ host.name }} on the list of green hosters that need t
 Thanks for your help in keeping the Green Web Directory up-to-date! We’re experiencing significant growth in the number of checks against the database, currently over 7 million per day and counting, so it does make sense!
 
 With best regards,
-The Green Web Foundation Support Team
+Green Web Foundation Support Team
 
 [1]: https://www.thegreenwebfoundation.org
 [2]: https://admin.thegreenwebfoundation.org
@@ -48,7 +48,7 @@ Is it possible to refer us to a valid certificate awarded to yourself or the com
 Thanks for your help in keeping the Green Web Directory up-to-date! We’re experiencing significant growth in the number of checks against the database, currently over 7 million per day and counting, so it does make sense!
 
 With best regards,
-The Green Web Foundation Support Team
+Green Web Foundation Support Team
 
 [1] https://www.thegreenwebfoundation.org/
 

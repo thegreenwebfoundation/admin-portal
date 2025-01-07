@@ -4,14 +4,13 @@ The Green Web Foundation platform relies on a number of regular tasks run by scr
 
 To make it easier to maintain and track configuration drift (i.e. small changes in leading to unexpected behaviour), these are kept in source control as role and playbooks in Ansible.
 
-
 ```{admonition} Draft
 A number of these cronjobs were set up manually before by green web foundation staff. As these jobs are moved under configuration management in source code they will be added to the documentation here.
 ```
 
 ### Weekly imports
 
-While the Green Web Foundation offers a self-service way to maintain up to date lists of IP ranges and AS numbers, historically we maintained a set of automated importers of IP ranges for a small number of large providers of hosted services. These providers who publish their IP ranges in a machine-readable format at public endpoints our systems can access, then import into the corresponding provider's lists of AS numbers and IP ranges. 
+While the Green Web Foundation offers a self-service way to maintain up to date lists of IP ranges and AS numbers, historically we maintained a set of automated importers of IP ranges for a small number of large providers of hosted services. These providers who publish their IP ranges in a machine-readable format at public endpoints our systems can access, then import into the corresponding provider's lists of AS numbers and IP ranges.
 
 These can be run on the command line using the following commands
 
@@ -26,7 +25,7 @@ Look in the `import_ips_for_large_providers.sh.j2` file to see the specific shel
 
 #### Defining the cronjob
 
-Using 
+Using
 
 ```yaml
 - name: Ensure job to run IP hyperscaler importers is present
@@ -75,7 +74,6 @@ dotenv run --  ./manage.py dump_green_domains
 ```
 
 To upload the database snapshot to object storage, pass long the `--upload` flag.
-
 
 ```
 dotenv run -- ./manage.py dump_green_domains --upload
