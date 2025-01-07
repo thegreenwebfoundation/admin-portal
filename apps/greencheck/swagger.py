@@ -18,7 +18,7 @@ _spec_renderers = tuple(renderer.with_validators([]) for renderer in SPEC_RENDER
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Welcome to Green Web Foundation Partner API ",
+        title="Welcome to the Green Web Foundation Partner API ",
         description=(
             "Use this API to update information about the digital "
             "infrastructure you are using, services you provide to "

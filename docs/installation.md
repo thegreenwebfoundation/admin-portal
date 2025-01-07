@@ -1,6 +1,6 @@
 # Installation
 
-This installation shows you how to setup the Admin Portal of Green Web Foundation.
+This installation shows you how to setup the Admin Portal of the Green Web Foundation.
 
 In order to setup this project, we recommend following the guides from top to bottom. Skipping some topics might result in missing crucial steps for the project to work.
 

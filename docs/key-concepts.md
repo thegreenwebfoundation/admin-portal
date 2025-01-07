@@ -1,6 +1,6 @@
 # Key concepts
 
-Green Web Foundation offers an API to provide any IP address or domain, and get back a 'green' result indicating that the site or digital service appears to be running on digital powered by green energy, and we have found evidence to support this claim or a 'grey' result where no evidence was found for green energy.
+The Green Web Foundation offers an API to provide any IP address or domain, and get back a 'green' result indicating that the site or digital service appears to be running on digital powered by green energy, and we have found evidence to support this claim or a 'grey' result where no evidence was found for green energy.
 
 Where the providers of service have provided information into the public domain, we make links to this supporting evidence, as well as further information describing the kind of service it is.
 
