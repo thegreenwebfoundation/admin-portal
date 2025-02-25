@@ -197,15 +197,12 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
             if not via_carbon_txt:
                 self.clear_from_caches(domain)
-
-            if http_response := self.build_response_from_full_network_lookup(domain):
+        else:
+            # Try the database green domain cache table first:
+            if http_response := self.build_response_from_database_lookup(domain):
                 return http_response
 
-        # Try the database green domain cache table first:
-        if http_response := self.build_response_from_database_lookup(domain):
-            return http_response
-
-        # not in cache table cache, try full lookup using network
+        # not in cache table cache (or skipped), try full lookup using network
         if http_response := self.build_response_from_full_network_lookup(domain):
             return http_response
 
