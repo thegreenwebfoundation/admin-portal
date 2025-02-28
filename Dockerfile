@@ -47,7 +47,7 @@ RUN python -m pip install uv wheel --upgrade
 COPY --chown=deploy . .
 
 # Install dependencies via uv
-RUN uv pip install -r requirements/requirements.linux.generated.txt 
+RUN uv sync
 
 # Set up front end pipeline
 RUN python ./manage.py tailwind install
