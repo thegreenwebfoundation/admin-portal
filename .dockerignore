@@ -1,6 +1,7 @@
 
 # ignore everything beginning with dot by default
 .*
+!.env.docker
 
 ansible*
 

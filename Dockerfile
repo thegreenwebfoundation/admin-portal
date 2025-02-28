@@ -53,6 +53,8 @@ RUN uv sync
 # from our final build artefact
 COPY --chown=deploy . .
 
+# Copy envfile to the correct location.
+COPY --chown=deploy .env.docker .env
 
 # Set up front end pipeline
 RUN python ./manage.py tailwind install
