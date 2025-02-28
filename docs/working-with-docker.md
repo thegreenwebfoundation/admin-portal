@@ -1,5 +1,14 @@
 # Working with Docker
 
+
+```{admonition} Under (re-)construction
+:class: warning
+
+Docker set up for this project isn't working at present - sorry about that. [See issue #635 for more](https://github.com/thegreenwebfoundation/admin-portal/pull/635)
+
+```
+
+
 We use Docker to create packaged versions of the platform for use where a dockerised version of this code base is expected.
 
 The key scenarios we would use this would be
