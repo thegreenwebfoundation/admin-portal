@@ -57,8 +57,8 @@ COPY --chown=deploy . .
 COPY --chown=deploy .env.docker .env
 
 # Set up front end pipeline
-RUN python ./manage.py tailwind install
-RUN python ./manage.py tailwind build
+RUN dotenv run -- python ./manage.py tailwind install
+RUN dotenv run -- python ./manage.py tailwind build
 
 # Install the other node dependencies
 # TODO: we might not need node in production *at all* if we can generate 
@@ -69,7 +69,7 @@ RUN cd ./apps/theme/static_src/ && \
     npx rollup --config
 
 # Collect static files
-RUN python ./manage.py collectstatic --noinput --clear
+RUN dotenv run -- python ./manage.py collectstatic --noinput --clear
 
 # Use the shell form of CMD, so we have access to our environment variables
 # $GUNICORN_CMD_ARGS allows us to add additional arguments to the gunicorn command
