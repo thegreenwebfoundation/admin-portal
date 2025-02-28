@@ -1,4 +1,4 @@
-FROM python:3.11 as production
+FROM python:3.11 AS production
 
 # Update the package listing, so we know what packages exist
 RUN apt-get update
