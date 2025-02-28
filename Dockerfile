@@ -42,12 +42,17 @@ RUN python -m venv $VIRTUAL_ENV
 # Add our python libraries for managing dependencies
 RUN python -m pip install uv wheel --upgrade
 
+# Copy just the pyproject.toml for uv sync.
+# That way, the next step can be cached until pyproject.toml changes.
+COPY --chown=deploy ./pyproject.toml ./pyproject.toml
+
+# Install dependencies via uv
+RUN uv sync
+
 # Copy application code, with dockerignore filtering out the stuff we don't want
 # from our final build artefact
 COPY --chown=deploy . .
 
-# Install dependencies via uv
-RUN uv sync
 
 # Set up front end pipeline
 RUN python ./manage.py tailwind install
