@@ -1,0 +1,20 @@
+services:
+  main:
+      # we use the default codespaces image. this likely requires an x86
+      # processor, so might not work on arm machines
+      image: "mcr.microsoft.com/devcontainers/universal:2"
+      
+      # copied 
+      volumes:
+        - ../..:/workspaces:cached
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=deploy
+      - MYSQL_DATABASE=greencheck
+      - MYSQL_USER=deploy
+      - MYSQL_PASSWORD=deploy
+  rabbitmq:
+    image: rabbitmq:3.11
+    restart: unless-stopped
