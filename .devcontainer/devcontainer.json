@@ -1,5 +1,26 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "dockerComposeFile": "codespaces-compose.yaml",
+  "service": "main",
+  "runServices": [
+    "db",
+    "rabbitmq"
+  ],
+  "portsAttributes": {
+    "8000": {
+      "label": "Application",
+    },
+    "3306": {
+      "label": "MariaDB",
+    },
+    "5672": {
+      "label": "RabbiMQ"
+    }
+  },
+  "forwardPorts": [
+    8000,
+    3306,
+    5672
+  ],
   "features": {
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
     "ghcr.io/eitsupi/devcontainer-features/just:0": {}
