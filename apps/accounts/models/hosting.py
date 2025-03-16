@@ -317,9 +317,6 @@ class DomainHash(TimeStampedModel):
     def __str__(self):
         return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
 
-    class Meta:
-        db_table = "domain_hashes"
-
 
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
