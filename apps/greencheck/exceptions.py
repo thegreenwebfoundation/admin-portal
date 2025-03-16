@@ -13,3 +13,10 @@ class NoSharedSecret(NotFound):
 
 class CarbonTxtFileNotFound(Exception):
     pass
+
+
+class NoMatchingDomainHash(NotFound):
+    """
+    An exception raised when we try to fetch a shared secret for a provider
+    but no shared secret has been set.
+    """
