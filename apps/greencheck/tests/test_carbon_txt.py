@@ -59,6 +59,7 @@ def minimal_carbon_txt_org():
     """  # noqa
 
 
+@pytest.mark.skip("carbon.txt validation logic is in an external library now")
 class TestCarbonTxtParser:
     """
     First tests to check that we can parse the carbon.txt file
@@ -294,6 +295,7 @@ class TestCarbonTxtParser:
         assert res.green is True
         assert res.hosted_by_id == provider.id
 
+    @pytest.mark.skip(reason="pending, this is in the external validator now")
     def test_delegate_domain_lookup_to_dns_txt_record(
         self, db, hosting_provider_factory, green_domain_factory, minimal_carbon_txt_org
     ):
@@ -428,7 +430,6 @@ class TestCarbonTxtParser:
     def test_mark_http_via_override_green_with_domain_hash(
         self, db, hosting_provider_factory, green_domain_factory
     ):
-
         # Given: a provider at one domain serving files on behalf of another org
         # on a different domain
         hosted_domain = "https://hosted.carbontxt.org/carbon.txt"
