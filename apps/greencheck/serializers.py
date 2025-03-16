@@ -8,6 +8,7 @@ from apps.accounts.models import (
     Hostingprovider,
     HostingProviderSupportingDocument,
     ProviderSharedSecret,
+    DomainHash,
 )
 from apps.greencheck.models.checks import CO2Intensity
 
@@ -230,4 +231,16 @@ class ProviderSharedSecretSerializer(serializers.ModelSerializer):
         model = ProviderSharedSecret
         fields = [
             "body",
+        ]
+
+
+class DomainHashSerializer(serializers.ModelSerializer):
+    domain_hash = serializers.CharField(source="hash")  # Map 'hash' to 'domain_hash'
+
+    class Meta:
+        model = DomainHash
+        fields = [
+            "domain_hash",
+            "domain",
+            "created",
         ]
