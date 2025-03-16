@@ -8,10 +8,14 @@ from rest_framework import permissions, views
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.response import Response
 
-from apps.accounts.models import Hostingprovider
+from apps.accounts.models import Hostingprovider, DomainHash
 from apps.greencheck.models.checks import CO2Intensity
 
-from ..serializers import CO2IntensitySerializer, ProviderSharedSecretSerializer
+from ..serializers import (
+    CO2IntensitySerializer,
+    ProviderSharedSecretSerializer,
+    DomainHashSerializer,
+)
 from . import exceptions
 from .permissions import UserManagesHostingProvider
 
@@ -126,3 +130,69 @@ class ProviderSharedSecretView(views.APIView):
         serialized = ProviderSharedSecretSerializer(provider.shared_secret)
 
         return Response(serialized.data)
+
+
+class DomainHashView(views.APIView):
+    """
+    A view to handle the creation and retrieval of domain hashes
+    for a given provider and domain. Domain hashes are used to
+    uniquely identify a domain associated with a hosting provider.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = DomainHashSerializer
+
+    @swagger_auto_schema(tags=["Domain Hash"])
+    def post(self, request, format=None):
+        """
+        Handle POST requests to create or retrieve a domain hash.
+
+        If a domain hash already exists for the given provider and domain,
+        it retrieves the latest one. Otherwise, it creates a new domain hash.
+
+        The provider can either be explicitly provided in the request data
+        or inferred from the authenticated user's hosting providers.
+
+        Args:
+            request: The HTTP request object containing the domain and provider.
+            format: The format of the response (optional).
+
+        Returns:
+            A Response object containing the serialized domain hash.
+        """
+        # Get the provider from the request data or fallback to the user's first hosting provider
+        provider = request.data.get("provider")
+        if not provider:
+            provider = request.user.hosting_providers.first()
+
+        # Get the domain from the request data
+        domain = request.data.get("domain")
+        if not domain:
+            raise exceptions.MissingDomain
+
+        # Check if a domain hash already exists for the given provider and domain
+        provider_domain_hash_matches = DomainHash.objects.filter(
+            domain=domain, provider=provider
+        ).order_by("-created")
+
+        if provider_domain_hash_matches.exists():
+            # Use the most recently created domain hash if it exists
+            domain_hash = provider_domain_hash_matches.first()
+        else:
+            # Otherwise create a new domain hash
+            domain_hash = provider.create_domain_hash(domain=domain, user=request.user)
+
+        # Serialize the domain hash and return it in the response
+        serialized = DomainHashSerializer(domain_hash)
+
+        return Response(serialized.data)
+
+
+class DomainClaimView(views.APIView):
+    """
+    A view to handle domain claims by hosting providers.
+    This view ensures that only authenticated users who manage
+    a hosting provider can claim a domain.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, UserManagesHostingProvider]
