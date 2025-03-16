@@ -564,7 +564,7 @@ class Hostingprovider(models.Model):
         the added label
         """
 
-        # we already have the label, do nothing an return early
+        # we already have the label, do nothing and return early
         if self.is_awaiting_review:
             return None
 
