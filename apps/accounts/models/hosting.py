@@ -14,7 +14,7 @@ from taggit.managers import TaggableManager
 from taggit import models as tag_models
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import get_users_with_perms
-
+from django.core.exceptions import PermissionDenied, ValidationError
 from urllib.parse import urlparse
 
 from model_utils.models import TimeStampedModel
@@ -40,6 +40,15 @@ logger = logging.getLogger(__name__)
 GREEN_VIA_CARBON_TXT = f"green:{GreenlistChoice.CARBONTXT.value}"
 AWAITING_REVIEW_STRING = "Awaiting Review"
 AWAITING_REVIEW_SLUG = "awaiting-review"
+
+
+# this allows us to identify:
+# 1. the issuer of the hash (i.e. Green Web Foundation)
+# 2. the version of the algorithm used to create the hash
+# if we update the algorithm in the future, we would increment
+# the version. This also allows for quickly identifing key info
+# about the hash
+DOMAIN_HASH_ISSUER_ID = "GWF-01"
 
 
 class Datacenter(models.Model):
@@ -238,6 +247,79 @@ class ProviderService(tag_models.TaggedItemBase):
     )
 
 
+class DomainHash(TimeStampedModel):
+    """
+    A domain hash is unique to a combination of a domain and a provider.
+    It is used to verify that a domain is hosted by a provider, and referred to when
+    the platform is looking up a specific domain to see if a provider has control over it.
+    """
+
+    domain = models.CharField(max_length=255)
+    hash = models.CharField(max_length=255)
+    provider = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    def clean(self):
+        """
+        Validate the domain using GreenDomainChecker.
+        """
+
+        # we have to import here to avoid a circular import
+        from ...greencheck.domain_check import GreenDomainChecker
+
+        checker = GreenDomainChecker()
+
+        if not checker.validate_domain(self.domain):
+            raise ValidationError({"domain": "Invalid domain provided"})
+
+    def save(self, *args, **kwargs):
+        """
+        Generate a hash before saving.
+        """
+        if not self.hash:
+            if not self.provider.shared_secret:
+                raise NoSharedSecret
+
+            self.hash = self.generate_hash()
+        super().save(*args, **kwargs)
+
+    def generate_hash(self) -> str:
+        """
+        Generates a SHA-256 hash based on the domain and the provider's shared secret.
+
+        Returns:
+            str: The generated hash in hexadecimal format.
+
+        Raises:
+            NoSharedSecret: If the provider does not have a shared secret.
+        """
+        """"""
+        if not self.provider.shared_secret:
+            raise NoSharedSecret
+
+        hash_object = hashlib.sha256(
+            f"{self.domain}{self.provider.shared_secret.body}".encode("utf-8")
+        )
+        # we want to be able to identify hashes by their issuer, so we prefix
+        # it with a string denoting the issuer and the version of the algo used
+        # to make the hash
+        domain_hash_prefix = DOMAIN_HASH_ISSUER_ID
+        return f"{domain_hash_prefix}-{hash_object.hexdigest()}"
+
+    def __str__(self):
+        return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
+
+    class Meta:
+        db_table = "domain_hashes"
+
+
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
@@ -419,6 +501,59 @@ class Hostingprovider(models.Model):
             body=f"GWF-{rand_string[4:]}", provider=self
         )
         shared_secret.save()
+
+        return shared_secret.body
+
+    def create_domain_hash(self, domain: str, user: "User") -> str:
+        """
+        Create a domain hash for the given provider using the latest shared secret.
+
+        Args:
+            domain (str): The domain to create a hash for.
+            user (User): The user creating the hash.
+
+        Returns:
+            str: The generated domain hash.
+
+        Raises:
+            NoSharedSecret: If the provider does not have a shared secret.
+            ValueError: If no user is associated with the provider.
+            PermissionDenied: If the user does not have permission to update the provider.
+        """
+        if not user:
+            raise ValueError(
+                "A user must be associated with the provider to create a domain hash."
+            )
+
+        # check if the user has permission to update this provider
+
+        if user not in self.users:
+            raise PermissionDenied(
+                "User does not have permission to update this provider"
+            )
+
+        if not self.shared_secret:
+            raise NoSharedSecret
+
+        # check for dupes so we won't end up with loads
+        matching_provider_domains = self.domainhash_set.filter(domain=domain)
+        domain_hash = DomainHash(domain=domain, provider=self, created_by=user)
+
+        # we check for duplicates, based on the string value
+
+        # TODO: look into making this a database constraint instead
+        # i.e. unique on domain, provider, and shared secret in use.
+        if matching_provider_domains:
+            domain_hash.hash = domain_hash.generate_hash()
+            for existing_hash in matching_provider_domains:
+                if str(existing_hash) == str(domain_hash):
+                    raise ValueError(
+                        "Domain hash already exists for this domain and provider"
+                    )
+
+        domain_hash.clean()
+        domain_hash.save()
+        return domain_hash
 
     def label_as_awaiting_review(self, notify_admins=False):
         """
