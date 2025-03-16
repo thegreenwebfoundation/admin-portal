@@ -197,7 +197,7 @@ class GreencheckIp(mu_models.TimeStampedModel):
 
     def archive(self) -> "GreencheckIp":
         """
-        Mark a GreencheckIp as inactive, as a softer alternative to deletion, 
+        Mark a GreencheckIp as inactive, as a softer alternative to deletion,
         returning the Greencheck IP for further processing.
         """
         self.active = False
@@ -206,7 +206,7 @@ class GreencheckIp(mu_models.TimeStampedModel):
 
     def unarchive(self) -> "GreencheckIp":
         """
-        Mark a GreencheckIp as inactive, as a softer alternative to deletion, 
+        Mark a GreencheckIp as inactive, as a softer alternative to deletion,
         returning the Greencheck IP for further processing.
         """
         self.active = True
@@ -398,7 +398,7 @@ class GreencheckASN(mu_models.TimeStampedModel):
 
     def archive(self) -> "GreencheckASN":
         """
-        Mark a GreencheckASN as inactive, as a softer alternative to deletion, 
+        Mark a GreencheckASN as inactive, as a softer alternative to deletion,
         returning the Greencheck ASN for further processing.
         """
         self.active = False
@@ -407,7 +407,7 @@ class GreencheckASN(mu_models.TimeStampedModel):
 
     def unarchive(self) -> "GreencheckASN":
         """
-        Mark a GreencheckASN as inactive, as a softer alternative to deletion, 
+        Mark a GreencheckASN as inactive, as a softer alternative to deletion,
         returning the Greencheck ASN for further processing.
         """
         self.active = True
@@ -578,6 +578,26 @@ class GreenDomain(models.Model):
             modified=timezone.now(),
             green=True,
         )
+
+    @classmethod
+    def claim_via_carbon_txt(cls, domain):
+        """
+        Accept a domain, and try verifying it with the carbon.txt validator.
+
+        We use the carbon.txt validator library to look up the domain, and
+        if there is the matching
+        domain we were expecting, we create the domain as "green domain" associated
+        with the provider that initially requested the domain hash.
+        """
+
+        # first of all, if there is no domain hash for the domain exit early - there is no
+        # point in trying to claim a domain hash for a domain that no provider has requested
+        # a domain hash for.
+        domain_hash = ac_models.DomainHash.objects.filter(domain=domain)
+        from ..exceptions import NoMatchingDomainHash
+
+        if not domain_hash:
+            raise NoMatchingDomainHash
 
     # Queries
     @property
