@@ -1,35 +1,36 @@
-import logging
+import datetime
 import hashlib
+import logging
 import secrets
 import typing
-import datetime
-from django.db import models
-from django.conf import settings
-from django_countries.fields import CountryField
-from django.urls import reverse
-from django_mysql.models import EnumField
-from anymail.message import AnymailMessage
-from django.template.loader import render_to_string
-from taggit.managers import TaggableManager
-from taggit import models as tag_models
-from django.utils.translation import gettext_lazy as _
-from guardian.shortcuts import get_users_with_perms
-from django.core.exceptions import PermissionDenied, ValidationError
 from urllib.parse import urlparse
 
+from anymail.message import AnymailMessage
+from django.conf import settings
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import models
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+from django_countries.fields import CountryField
+from django_mysql.models import EnumField
+from guardian.shortcuts import get_users_with_perms
 from model_utils.models import TimeStampedModel
+from taggit import models as tag_models
+from taggit.managers import TaggableManager
 
-from .choices import (
-    EnergyType,
-    CoolingChoice,
-    ModelType,
-    TempType,
-    ClassificationChoice,
-    PartnerChoice,
-)
-from ..permissions import manage_provider, manage_datacenter
-from apps.greencheck.choices import StatusApproval, GreenlistChoice
+from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
+
+from ..permissions import manage_datacenter, manage_provider
+from .choices import (
+    ClassificationChoice,
+    CoolingChoice,
+    EnergyType,
+    ModelType,
+    PartnerChoice,
+    TempType,
+)
 
 # import apps.greencheck.models as gc_models
 
