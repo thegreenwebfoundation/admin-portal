@@ -59,8 +59,5 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={
-                "db_table": "domain_hashes",
-            },
         ),
     ]
