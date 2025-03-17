@@ -18,7 +18,7 @@ import logging
 import socket
 import typing
 import urllib
-
+import dns.resolver
 import httpx
 
 import ipwhois
@@ -422,16 +422,42 @@ class GreenDomainChecker:
 
         for url_path in default_paths:
             uri = urlparse(f"https://{domain}{url_path}")
-            response = httpx.head(uri.geturl())
+            try:
+                response = httpx.head(uri.geturl())
 
-            if "via" in response.headers:
-                via_header = response.headers.get("via")
-                # exit the function as soon as we see our first valid via header
-                if "carbon.txt" in via_header:
-                    return via_header
+                if "via" in response.headers:
+                    via_header = response.headers.get("via")
+                    # exit the function as soon as we see our first valid via header
+                    if "carbon.txt" in via_header:
+                        return via_header
+            except httpx.TimeoutException:
+                pass
 
         return False
 
     def _lookup_domain_hash_with_dns(self, domain):
-        # TODO: implement DNS lookup behaviour
+        # look for a TXT record on the domain first
+        # if there is a valid TXT record on it, return
+        # the hash and delegated url
+        try:
+            answers = dns.resolver.resolve(domain, "TXT")
+
+            for answer in answers:
+                txt_record = answer.to_text().strip('"')
+                if txt_record.startswith("carbon-txt"):
+                    # pull out our url to check
+                    _, txt_record_body = txt_record.split("=")
+
+                    if txt_record_body:
+                        return txt_record_body
+        except dns.resolver.NoAnswer:
+            logger.info("No result from TXT lookup")
+            return False
+        except dns.resolver.NXDOMAIN as ex:
+            logger.info(f"No result from TXT lookup: {ex.msg}")
+            return False
+        except Exception as ex:
+            logger.exception(f"New exception: {ex}")
+            return False
+
         return False
