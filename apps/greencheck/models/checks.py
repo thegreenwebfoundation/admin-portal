@@ -4,6 +4,8 @@ import logging
 import typing
 from dataclasses import dataclass
 
+import httpx
+
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core import exceptions, validators
@@ -593,11 +595,25 @@ class GreenDomain(models.Model):
         # first of all, if there is no domain hash for the domain exit early - there is no
         # point in trying to claim a domain hash for a domain that no provider has requested
         # a domain hash for.
+        from ..domain_check import GreenDomainChecker
+
+        checker = GreenDomainChecker()
+
         domain_hash = ac_models.DomainHash.objects.filter(domain=domain)
         from ..exceptions import NoMatchingDomainHash
 
         if not domain_hash:
             raise NoMatchingDomainHash
+
+        # if we have a domain hash for the domain, choose the most recent one, so we can compare it to
+        # what we find on a domain
+        domain_hash = domain_hash.order_by("-created").first()
+
+        matched_hash = checker.verify_domain_hash(domain, domain_hash=domain_hash.hash)
+
+        if matched_hash:
+            provider = domain_hash.provider
+            return cls.create_for_provider(domain, provider)
 
     # Queries
     @property

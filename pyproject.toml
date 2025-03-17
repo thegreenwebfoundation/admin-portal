@@ -70,6 +70,8 @@ dependencies = [
     "django-guardian>=2.4.0",
     "drf-api-logger>=1.1.16",
     "urllib3>=2.2.3",
+    "httpx>=0.28.1",
+    "pytest-httpx>=0.35.0",
 ]
 
 [tool.uv]
