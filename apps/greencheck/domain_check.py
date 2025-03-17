@@ -19,6 +19,8 @@ import socket
 import typing
 import urllib
 
+import httpx
+
 import ipwhois
 import tld
 from django.utils import timezone
@@ -36,6 +38,7 @@ from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
 
 logger = logging.getLogger(__name__)
+from urllib.parse import ParseResult, urlparse
 
 
 class GreenDomainChecker:
@@ -392,3 +395,43 @@ class GreenDomainChecker:
 
         # sort to return the smallest first
         return [obj["ip_range"] for obj in ascending_ip_ranges]
+
+    def verify_domain_hash(self, domain: str, domain_hash: str):
+        # try a DNS lookup first
+        if fetched_hash := self._lookup_domain_hash_with_dns(domain):
+            carbon_txt_url, hash, *rest = fetched_hash.split(" ")
+            if hash == domain_hash:
+                return True
+
+        # then try a via header lookup
+        if fetched_hash := self._lookup_domain_hash_with_via_header(domain):
+            carbon_txt_url, hash, *rest = fetched_hash.split(" ")
+            if hash == domain_hash:
+                return True
+
+        # otherwise if we have no matching domain hash, we return our False result
+        return False
+
+    def _lookup_domain_hash_with_via_header(self, domain):
+        """
+        Send a request to the domain provided, looking for a carbon.txt file in the
+        default well-known locations. Return the domain_hash if found.
+        """
+
+        default_paths = ["/carbon.txt", "/.well-known/carbon.txt"]
+
+        for url_path in default_paths:
+            uri = urlparse(f"https://{domain}{url_path}")
+            response = httpx.head(uri.geturl())
+
+            if "via" in response.headers:
+                via_header = response.headers.get("via")
+                # exit the function as soon as we see our first valid via header
+                if "carbon.txt" in via_header:
+                    return via_header
+
+        return False
+
+    def _lookup_domain_hash_with_dns(self, domain):
+        # TODO: implement DNS lookup behaviour
+        return False
