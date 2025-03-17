@@ -18,19 +18,20 @@ import logging
 import socket
 import typing
 import urllib
+from urllib.parse import urlparse
+
 import dns.resolver
 import httpx
-
 import ipwhois
 import tld
 from django.utils import timezone
 from ipwhois.asn import IPASN
 from ipwhois.exceptions import (
-    IPDefinedError,
+    ASNLookupError,
+    ASNOriginLookupError,
     ASNParseError,
     ASNRegistryError,
-    ASNOriginLookupError,
-    ASNLookupError,
+    IPDefinedError,
 )
 from ipwhois.net import Net
 
@@ -38,7 +39,6 @@ from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
 
 logger = logging.getLogger(__name__)
-from urllib.parse import ParseResult, urlparse
 
 
 class GreenDomainChecker:
@@ -445,7 +445,9 @@ class GreenDomainChecker:
             for answer in answers:
                 txt_record = answer.to_text().strip('"')
                 if txt_record.startswith("carbon-txt"):
-                    # pull out our url to check
+                    # pull our the value from the TXT record, i.e.
+                    # the bit after `carbon-txt=`:
+                    # carbon-txt="<PATH_TO_CARBON_TXT_FILE> <HASH>"
                     _, txt_record_body = txt_record.split("=")
 
                     if txt_record_body:

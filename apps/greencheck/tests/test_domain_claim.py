@@ -2,8 +2,6 @@ import pytest
 
 from apps.greencheck.exceptions import NoMatchingDomainHash
 from apps.greencheck.models import GreenDomain
-from apps.accounts.models import DomainHash
-from pytest_httpx import HTTPXMock
 
 
 class TestGreenDomainClaim:
@@ -44,7 +42,7 @@ class TestGreenDomainClaim:
             domain_hash = provider.create_domain_hash(hosted_site, user_with_provider)
 
             httpx_mock.add_response(
-                url=f"https://example.com/carbon.txt",
+                url="https://example.com/carbon.txt",
                 headers={"Via": f"{managed_service}/carbon.txt {domain_hash.hash}"},
             )
 
@@ -58,14 +56,12 @@ class TestGreenDomainClaim:
             is successful.
             """
 
-            # Given: a hosted service that operates multiple domains
-            managed_service = "managed-service.com"
+            # Given: a managed service that operates multiple domains
+            provider = user_with_provider.hosting_providers.first()
+            provider.refresh_shared_secret()
 
             # Given: a website operated by the managing service above
             hosted_site = "delegating-with-txt-record.carbontxt.org"
-
-            provider = user_with_provider.hosting_providers.first()
-            provider.refresh_shared_secret()
 
             # And: the website has been associated with the provider
             domain_hash = provider.create_domain_hash(hosted_site, user_with_provider)
