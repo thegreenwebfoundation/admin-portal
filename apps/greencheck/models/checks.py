@@ -4,8 +4,6 @@ import logging
 import typing
 from dataclasses import dataclass
 
-import httpx
-
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core import exceptions, validators
@@ -17,6 +15,7 @@ from django.utils.text import capfirst
 from django_mysql import models as dj_mysql_models
 from django_mysql import models as mysql_models
 from model_utils import models as mu_models
+
 from apps.greencheck.validators import validate_ip_range
 
 from ...accounts import models as ac_models

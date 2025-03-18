@@ -1,5 +1,5 @@
 import pytest
-from apps.accounts.models import DomainHash
+
 from apps.greencheck.models import GreenDomain
 
 
