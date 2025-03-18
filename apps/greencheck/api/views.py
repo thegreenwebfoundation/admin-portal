@@ -8,17 +8,16 @@ from rest_framework import permissions, views
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.response import Response
 
-from apps.accounts.models import Hostingprovider, DomainHash
+from apps.accounts.models import DomainHash
 from apps.greencheck.models.checks import CO2Intensity, GreenDomain
 
 from ..serializers import (
     CO2IntensitySerializer,
-    ProviderSharedSecretSerializer,
-    DomainHashSerializer,
     DomainClaimSerializer,
+    DomainHashSerializer,
+    ProviderSharedSecretSerializer,
 )
 from . import exceptions
-from .permissions import UserManagesHostingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -200,7 +199,6 @@ class DomainClaimView(views.APIView):
     """
 
     permission_classes = [permissions.IsAuthenticated]
-
     serializer_class = DomainClaimSerializer
 
     @swagger_auto_schema(tags=["Domain Claim"])
@@ -210,8 +208,8 @@ class DomainClaimView(views.APIView):
         # try to claim the domain, and raise the exception if not
         result = GreenDomain.claim_via_carbon_txt(domain)
 
-        # our serializer serves the 'claimed' result if
-        # we have GreenDomain entry otherwise 'not'
+        # our serializer serves the 'claimed' result if we have
+        # GreenDomain entry, otherwise 'unclaimed'
         if not result:
             # for historical reasons, the domain is listed as url in
             # the GreenDomain model

@@ -5,10 +5,10 @@ from rest_framework.validators import UniqueValidator
 from taggit import serializers as tag_serializers
 
 from apps.accounts.models import (
+    DomainHash,
     Hostingprovider,
     HostingProviderSupportingDocument,
     ProviderSharedSecret,
-    DomainHash,
 )
 from apps.greencheck.models.checks import CO2Intensity
 
