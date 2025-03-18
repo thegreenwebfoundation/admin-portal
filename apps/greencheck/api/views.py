@@ -8,16 +8,16 @@ from rest_framework import permissions, views
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.response import Response
 
-from apps.accounts.models import Hostingprovider, DomainHash
-from apps.greencheck.models.checks import CO2Intensity
+from apps.accounts.models import DomainHash
+from apps.greencheck.models.checks import CO2Intensity, GreenDomain
 
 from ..serializers import (
     CO2IntensitySerializer,
-    ProviderSharedSecretSerializer,
+    DomainClaimSerializer,
     DomainHashSerializer,
+    ProviderSharedSecretSerializer,
 )
 from . import exceptions
-from .permissions import UserManagesHostingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +168,10 @@ class DomainHashView(views.APIView):
         # Get the domain from the request data
         domain = request.data.get("domain")
         if not domain:
-            raise exceptions.MissingDomain
+            # Raise a bad request - we need a domain at the very least
+            raise exceptions.BadRequest(
+                "A domain must be provided request a domain hash for it."
+            )
 
         # Check if a domain hash already exists for the given provider and domain
         provider_domain_hash_matches = DomainHash.objects.filter(
@@ -195,4 +198,23 @@ class DomainClaimView(views.APIView):
     a hosting provider can claim a domain.
     """
 
-    permission_classes = [permissions.IsAuthenticated, UserManagesHostingProvider]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = DomainClaimSerializer
+
+    @swagger_auto_schema(tags=["Domain Claim"])
+    def post(self, request, format=None):
+        domain = request.data.get("domain")
+
+        # try to claim the domain, and raise the exception if not
+        result = GreenDomain.claim_via_carbon_txt(domain)
+
+        # our serializer serves the 'claimed' result if we have
+        # GreenDomain entry, otherwise 'unclaimed'
+        if not result:
+            # for historical reasons, the domain is listed as url in
+            # the GreenDomain model
+            serialized = DomainClaimSerializer(GreenDomain(url=domain))
+        else:
+            serialized = DomainClaimSerializer(result)
+
+        return Response(serialized.data)

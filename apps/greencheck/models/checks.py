@@ -15,6 +15,7 @@ from django.utils.text import capfirst
 from django_mysql import models as dj_mysql_models
 from django_mysql import models as mysql_models
 from model_utils import models as mu_models
+
 from apps.greencheck.validators import validate_ip_range
 
 from ...accounts import models as ac_models
@@ -197,7 +198,7 @@ class GreencheckIp(mu_models.TimeStampedModel):
 
     def archive(self) -> "GreencheckIp":
         """
-        Mark a GreencheckIp as inactive, as a softer alternative to deletion, 
+        Mark a GreencheckIp as inactive, as a softer alternative to deletion,
         returning the Greencheck IP for further processing.
         """
         self.active = False
@@ -206,7 +207,7 @@ class GreencheckIp(mu_models.TimeStampedModel):
 
     def unarchive(self) -> "GreencheckIp":
         """
-        Mark a GreencheckIp as inactive, as a softer alternative to deletion, 
+        Mark a GreencheckIp as inactive, as a softer alternative to deletion,
         returning the Greencheck IP for further processing.
         """
         self.active = True
@@ -398,7 +399,7 @@ class GreencheckASN(mu_models.TimeStampedModel):
 
     def archive(self) -> "GreencheckASN":
         """
-        Mark a GreencheckASN as inactive, as a softer alternative to deletion, 
+        Mark a GreencheckASN as inactive, as a softer alternative to deletion,
         returning the Greencheck ASN for further processing.
         """
         self.active = False
@@ -407,7 +408,7 @@ class GreencheckASN(mu_models.TimeStampedModel):
 
     def unarchive(self) -> "GreencheckASN":
         """
-        Mark a GreencheckASN as inactive, as a softer alternative to deletion, 
+        Mark a GreencheckASN as inactive, as a softer alternative to deletion,
         returning the Greencheck ASN for further processing.
         """
         self.active = True
@@ -500,6 +501,10 @@ class GreenDomain(models.Model):
     green = models.BooleanField()
     modified = models.DateTimeField()
 
+    # TODO consider updating Green Domain to support creation date
+    # like so. this would allow us to set a TTL on them and so on
+    # created_at = models.DateTimeField(blank=True, null=True)
+
     def __str__(self):
         return f"{self.url} - {self.modified}"
 
@@ -510,6 +515,7 @@ class GreenDomain(models.Model):
         Create a new green domain for the domain passed in,  and allocate
         it  to the given provider.
         """
+
         dom = GreenDomain(
             green=True,
             url=domain,
@@ -578,6 +584,49 @@ class GreenDomain(models.Model):
             modified=timezone.now(),
             green=True,
         )
+
+    @classmethod
+    def claim_via_carbon_txt(cls, domain):
+        """
+        Accept a domain, and try verifying it with the carbon.txt validator.
+
+        We use the carbon.txt validator library to look up the domain, and
+        if there is the matching
+        domain we were expecting, we create the domain as "green domain" associated
+        with the provider that initially requested the domain hash.
+        """
+
+        # first of all, if there is no domain hash for the domain exit early - there is no
+        # point in trying to claim a domain hash for a domain that no provider has requested
+        # a domain hash for.
+        from ..domain_check import GreenDomainChecker
+
+        checker = GreenDomainChecker()
+
+        domain_hash = ac_models.DomainHash.objects.filter(domain=domain)
+        from ..exceptions import NoMatchingDomainHash
+
+        if not domain_hash:
+            raise NoMatchingDomainHash
+
+        # if we have a domain hash for the domain, choose the most recent one, so we can compare it to
+        # what we find on a domain
+        domain_hash = domain_hash.order_by("-created").first()
+
+        matched_hash = checker.verify_domain_hash(domain, domain_hash=domain_hash.hash)
+
+        # We don't want to create duplicate domains for the same provider.
+        # If a domain already exists for the provider, we should return it instead,
+        # of creating a new domain
+        if matched_hash:
+            provider = domain_hash.provider
+
+            if existing_domain := GreenDomain.objects.filter(
+                url=domain, hosted_by_id=provider.id
+            ):
+                return existing_domain.first()
+
+            return cls.create_for_provider(domain, provider)
 
     # Queries
     @property

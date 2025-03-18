@@ -18,17 +18,20 @@ import logging
 import socket
 import typing
 import urllib
+from urllib.parse import urlparse
 
+import dns.resolver
+import httpx
 import ipwhois
 import tld
 from django.utils import timezone
 from ipwhois.asn import IPASN
 from ipwhois.exceptions import (
-    IPDefinedError,
+    ASNLookupError,
+    ASNOriginLookupError,
     ASNParseError,
     ASNRegistryError,
-    ASNOriginLookupError,
-    ASNLookupError,
+    IPDefinedError,
 )
 from ipwhois.net import Net
 
@@ -392,3 +395,71 @@ class GreenDomainChecker:
 
         # sort to return the smallest first
         return [obj["ip_range"] for obj in ascending_ip_ranges]
+
+    def verify_domain_hash(self, domain: str, domain_hash: str):
+        # try a DNS lookup first
+        if fetched_hash := self._lookup_domain_hash_with_dns(domain):
+            carbon_txt_url, hash, *rest = fetched_hash.split(" ")
+            if hash == domain_hash:
+                return True
+
+        # then try a via header lookup
+        if fetched_hash := self._lookup_domain_hash_with_via_header(domain):
+            carbon_txt_url, hash, *rest = fetched_hash.split(" ")
+            if hash == domain_hash:
+                return True
+
+        # otherwise if we have no matching domain hash, we return our False result
+        return False
+
+    def _lookup_domain_hash_with_via_header(self, domain):
+        """
+        Send a request to the domain provided, looking for a carbon.txt file in the
+        default well-known locations. Return the domain_hash if found.
+        """
+
+        default_paths = ["/carbon.txt", "/.well-known/carbon.txt"]
+
+        for url_path in default_paths:
+            uri = urlparse(f"https://{domain}{url_path}")
+            try:
+                response = httpx.head(uri.geturl())
+
+                if "via" in response.headers:
+                    via_header = response.headers.get("via")
+                    # exit the function as soon as we see our first valid via header
+                    if "carbon.txt" in via_header:
+                        return via_header
+            except httpx.TimeoutException:
+                pass
+
+        return False
+
+    def _lookup_domain_hash_with_dns(self, domain):
+        # look for a TXT record on the domain first
+        # if there is a valid TXT record on it, return
+        # the hash and delegated url
+        try:
+            answers = dns.resolver.resolve(domain, "TXT")
+
+            for answer in answers:
+                txt_record = answer.to_text().strip('"')
+                if txt_record.startswith("carbon-txt"):
+                    # pull our the value from the TXT record, i.e.
+                    # the bit after `carbon-txt=`:
+                    # carbon-txt="<PATH_TO_CARBON_TXT_FILE> <HASH>"
+                    _, txt_record_body = txt_record.split("=")
+
+                    if txt_record_body:
+                        return txt_record_body
+        except dns.resolver.NoAnswer:
+            logger.info("No result from TXT lookup")
+            return False
+        except dns.resolver.NXDOMAIN as ex:
+            logger.info(f"No result from TXT lookup: {ex.msg}")
+            return False
+        except Exception as ex:
+            logger.exception(f"New exception: {ex}")
+            return False
+
+        return False
