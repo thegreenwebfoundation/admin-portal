@@ -235,7 +235,8 @@ class ProviderSharedSecretSerializer(serializers.ModelSerializer):
 
 
 class DomainHashSerializer(serializers.ModelSerializer):
-    domain_hash = serializers.CharField(source="hash")  # Map 'hash' to 'domain_hash'
+    # Map 'hash' to 'domain_hash'
+    domain_hash = serializers.CharField(source="hash")
 
     class Meta:
         model = DomainHash
@@ -243,4 +244,39 @@ class DomainHashSerializer(serializers.ModelSerializer):
             "domain_hash",
             "domain",
             "created",
+        ]
+
+
+class DomainClaimSerializer(serializers.ModelSerializer):
+    """
+    A Domain Claims represents a domain that has been ver
+    """
+
+    domain = serializers.CharField(source="url")
+    provider = serializers.CharField(source="hosted_by")
+    provider_id = serializers.IntegerField(source="hosted_by_id")
+    provider_website = serializers.CharField(source="hosted_by_website")
+    # used to determine the status dynamically based on if a GreeenDomain
+    # object is a 'real' one retrieved from the database. If so it counts
+    # as claimed.
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, obj):
+        """
+        Determine the status of the domain claim.
+        If the object is a valid GreenDomain instance, return 'claimed'.
+        Otherwise, return 'unclaimed'.
+        """
+        return "claimed" if obj.pk else "unclaimed"
+
+    class Meta:
+        model = GreenDomain
+        fields = [
+            "domain",
+            "provider",
+            "provider_id",
+            "provider_website",
+            "status",
+            # TODO serve "created_at" field so people can see
+            # when a domain was created
         ]

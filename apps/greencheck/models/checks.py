@@ -502,6 +502,10 @@ class GreenDomain(models.Model):
     green = models.BooleanField()
     modified = models.DateTimeField()
 
+    # TODO consider updating Green Domain to support creation date
+    # like so. this would allow us to set a TTL on them and so on
+    # created_at = models.DateTimeField(blank=True, null=True)
+
     def __str__(self):
         return f"{self.url} - {self.modified}"
 
@@ -512,6 +516,7 @@ class GreenDomain(models.Model):
         Create a new green domain for the domain passed in,  and allocate
         it  to the given provider.
         """
+
         dom = GreenDomain(
             green=True,
             url=domain,
@@ -611,8 +616,17 @@ class GreenDomain(models.Model):
 
         matched_hash = checker.verify_domain_hash(domain, domain_hash=domain_hash.hash)
 
+        # We don't want to create duplicate domains for the same provider.
+        # If a domain already exists for the provider, we should return it instead,
+        # of creating a new domain
         if matched_hash:
             provider = domain_hash.provider
+
+            if existing_domain := GreenDomain.objects.filter(
+                url=domain, hosted_by_id=provider.id
+            ):
+                return existing_domain.first()
+
             return cls.create_for_provider(domain, provider)
 
     # Queries
