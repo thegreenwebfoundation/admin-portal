@@ -5,7 +5,7 @@ from apps.greencheck.models import GreenDomain
 
 class TestDomainclaimForProvider:
     """
-    Tests fo the domain claim APOI endpoint, to allow a domain to be 'claimed'
+    Tests for the domain claim API endpoint, to allow a domain to be 'claimed'
     by a Provider that has already created a domain hash.
     """
 
@@ -87,6 +87,7 @@ class TestDomainclaimForProvider:
             assert resp_data["provider_website"] == provider.website
             assert resp_data["status"] == "claimed"
 
+        # And: we should not have any duplicate domains created in our table
         assert GreenDomain.objects.filter(hosted_by_id=provider.id).count() == 1
 
     @pytest.mark.skip(reason="Not implemented")
@@ -98,4 +99,8 @@ class TestDomainclaimForProvider:
         When a different provider is able to demonstrate control over a domain
         we reallocate the domain to them.
         """
+
+        # Ideally this would rely on us being able to order green domains by
+        # created date. That would leave us with an audit trail of claimed domains
+        # rather than overwiting them with the most recent claim.
         pass
