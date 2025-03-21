@@ -119,11 +119,11 @@ urlpatterns += [
         api_views.DomainHashView.as_view(),
         name="carbon-txt-domain-hash",
     ),
-    # path(
-    #     "api/v3/domain_claim/",
-    #     api_views.DomainClaimView.as_view(),
-    #     name="carbon-txt-shared-secret",
-    # ),
+    path(
+        "api/v3/domain_claim/",
+        api_views.DomainClaimView.as_view(),
+        name="carbon-txt-domain-claim",
+    ),
     path(
         "api/v3/greencheckimage/<url>",
         image_views.greencheck_image,
