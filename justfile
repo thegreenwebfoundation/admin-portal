@@ -6,7 +6,7 @@ _default:
 # used for tagging our docker images.
 TAG := `echo $$APP_RELEASE-$(git log -n 1 --format=%h)`
 
-## Deploy a new release to production. This will not work in a Github Codespace, as it relies on staff SSH keys for deployment. 
+## Deploy a new release to production. This will not work in a Github Codespace, as it relies on staff SSH keys for deployment.
 release:
     uv run sentry-cli releases new -p admin-portal `sentry-cli releases propose-version`
     uv run sentry-cli releases set-commits --auto `sentry-cli releases propose-version`
@@ -18,7 +18,7 @@ _dev_setup_local_users:
     uv run python ./manage.py createsuperuser --username admin --email admin@admin.com --noinput
     uv run python ./manage.py set_fake_passwords
 
-# Run the django database migrations 
+# Run the django database migrations
 _dev_setup_migrations:
     uv run python manage.py migrate
 
@@ -47,10 +47,10 @@ dev_test_only *options:
     uv run pytest -s --create-db --looponfail -m only -v --ds=greenweb.settings.testing {{ options }}
 
 # Set up a development environment inside Github Codespaces
-dev_setup_codespaces: _dev_setup_migrations _dev_tailwind_install _dev_setup_local_users 
+dev_setup_codespaces: _dev_setup_migrations _dev_tailwind_install _dev_setup_local_users
     uv run python manage.py tailwind build
     cd ./apps/theme/static_src/ && npx rollup --config
-    uv run python manage.py collectstatic --no-input    
+    uv run python manage.py collectstatic --no-input
     echo "all set up. run 'just dev_runserver' to start a server, and in another terminal "
 
 # # Set up the github repo for data analysis against the Green Web Platform database. Will not work inside a Github Codespace
@@ -99,3 +99,6 @@ docker_build:
 docker_release:
     docker tag $(APP_NAME) $(DOCKER_REGISTRY):$(TAG)
     docker push $(DOCKER_REGISTRY)/$(APP_NAME):$(TAG)
+
+test_term:
+    echo $TERM

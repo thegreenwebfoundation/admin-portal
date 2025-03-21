@@ -25,6 +25,7 @@ from django.utils.safestring import mark_safe
 
 User = get_user_model()
 
+
 class AlwaysChangedModelFormMixin:
     """
     A mixin for ModelForms that makes sure that a form with this Mixin
@@ -38,7 +39,6 @@ class AlwaysChangedModelFormMixin:
         Always returns True, so that the form is always marked as changed.
         """
         return True
-
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -776,3 +776,28 @@ class PreviewForm(forms.Form):
     """
 
     pass
+
+
+class LinkedDomainFormStep0(forms.ModelForm):
+    """
+    First step of the Domain Linking process.
+    there is currently only one form as the second step just uses
+    the dummy PreviewForm with a custom template.
+    """
+
+    primary = forms.TypedChoiceField(
+        label="Is this your primary domain?",
+        help_text=(
+            "Select this option if this domain represents your own hosting provider "
+            "itself, rather than a customer or some other entity."
+        ),
+       coerce=lambda x: x == 'True',
+       choices=((True, 'This is my primary domain'), (False, 'This is the domain of a customer or some other entity.')),
+       required=True,
+       widget=forms.RadioSelect
+    )
+
+    class Meta:
+        model = ac_models.LinkedDomain
+        fields = ["domain", "primary"]
+

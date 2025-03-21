@@ -37,6 +37,7 @@ from ipwhois.net import Net
 
 from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
+from ..accounts.models import LinkedDomain, LinkedDomainState
 
 logger = logging.getLogger(__name__)
 
@@ -222,32 +223,31 @@ class GreenDomainChecker:
             checked_at=timezone.now(),
         )
 
-    def check_via_carbon_txt(self, domain):
+    def check_via_linked_domain(self, domain):
         """
-        Check against existing set of providers with info
-        provided via carbon.txt.
+        Check against domains linked by providers using carbon.txt
         """
         try:
-            green_domain = GreenDomain.objects.get(url=domain)
-            provider = green_domain.hosting_provider
-            if provider and provider.counts_as_green():
-                return green_domain
-        except GreenDomain.DoesNotExist:
+            linked_domain = LinkedDomain.objects.get(domain=domain, state=LinkedDomainState.APPROVED)
+            provider = linked_domain.provider
+            if provider and provider.counts_as_green:
+                return linked_domain
+        except LinkedDomain.DoesNotExist:
             return None
 
-    def green_sitecheck_by_carbontxt(
-        self, domain: str, matching_green_domain: GreenDomain
+    def green_sitecheck_by_linked_domain(
+        self, domain: str, matching_linked_domain: LinkedDomain
     ):
         """
         Return a green site check, based the information we
-        are showing via a carbon.txt lookup
+        are showing via linked domains for a provider
         """
         return SiteCheck(
             url=domain,
             ip=None,
             data=True,
             green=True,
-            hosting_provider_id=matching_green_domain.hosted_by_id,
+            hosting_provider_id=matching_linked_domain.provider_id,
             # NOTE: we use WHOIS for now, as a way to decouple
             # an expensive and risky migration from the rest of
             # this carbon.txt work. See this issue for more:
@@ -267,8 +267,8 @@ class GreenDomainChecker:
         """
         UNRESOLVED_ADDRESS = "0.0.0.0"
 
-        if carbon_txt_match := self.check_via_carbon_txt(domain):
-            return self.green_sitecheck_by_carbontxt(domain, carbon_txt_match)
+        if linked_domain := self.check_via_linked_domain(domain):
+            return self.green_sitecheck_by_linked_domain(domain, linked_domain)
 
         try:
             ip_address = self.convert_domain_to_ip(domain)
@@ -396,79 +396,3 @@ class GreenDomainChecker:
         # sort to return the smallest first
         return [obj["ip_range"] for obj in ascending_ip_ranges]
 
-    def verify_domain_hash(self, domain: str, domain_hash: str):
-        # try a DNS lookup first
-        if fetched_hash := self._lookup_domain_hash_with_dns(domain):
-            carbon_txt_url, hash, *rest = fetched_hash.split(" ")
-            if hash == domain_hash:
-                return True
-
-        # then try a via header lookup
-        if fetched_hash := self._lookup_domain_hash_with_via_header(domain):
-            carbon_txt_url, hash, *rest = fetched_hash.split(" ")
-            if hash == domain_hash:
-                return True
-
-        # otherwise if we have no matching domain hash, we return our False result
-        return False
-
-    def _lookup_domain_hash_with_via_header(self, domain):
-        """
-        Send a request to the domain provided, looking for a carbon.txt file in the
-        default well-known locations. Return the domain_hash if found.
-        """
-
-        default_paths = ["/carbon.txt", "/.well-known/carbon.txt"]
-
-        for url_path in default_paths:
-            uri = urlparse(f"https://{domain}{url_path}")
-            try:
-                response = httpx.head(uri.geturl())
-
-                if "via" in response.headers:
-                    via_header = response.headers.get("via")
-                    # exit the function as soon as we see our first valid via header
-                    if "carbon.txt" in via_header:
-                        return via_header
-            except httpx.TimeoutException as ex:
-                logger.warning(f"Timeout fetching: {uri.geturl()}. Error was: {ex}")
-            except httpx.ConnectError as ex:
-                logger.warning(
-                    f"Connection error fetching: {uri.geturl()}. Error was: {ex}"
-                )
-            # lay down the 'tarp' for any other errors
-            except Exception as ex:
-                logger.exception(
-                    f"Unexpected error fetching: {uri.geturl()}. Error was: {ex}"
-                )
-
-        return False
-
-    def _lookup_domain_hash_with_dns(self, domain):
-        # look for a TXT record on the domain first
-        # if there is a valid TXT record on it, return
-        # the hash and delegated url
-        try:
-            answers = dns.resolver.resolve(domain, "TXT")
-
-            for answer in answers:
-                txt_record = answer.to_text().strip('"')
-                if txt_record.startswith("carbon-txt"):
-                    # pull our the value from the TXT record, i.e.
-                    # the bit after `carbon-txt=`:
-                    # carbon-txt="<PATH_TO_CARBON_TXT_FILE> <HASH>"
-                    _, txt_record_body = txt_record.split("=")
-
-                    if txt_record_body:
-                        return txt_record_body
-        except dns.resolver.NoAnswer:
-            logger.info("No result from TXT lookup")
-            return False
-        except dns.resolver.NXDOMAIN as ex:
-            logger.info(f"No result from TXT lookup: {ex.msg}")
-            return False
-        except Exception as ex:
-            logger.exception(f"New exception: {ex}")
-            return False
-
-        return False

@@ -157,14 +157,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         """
         Clear any trace of a domain from local caches.
         """
-
-        # we don't delete entries that have been updated
-        # via a carbon.txt file, but we need to check it exists first
         if fetched_domain := gc_models.GreenDomain.objects.filter(url=domain).first():
-            #
-            if fetched_domain.hosting_provider.counts_as_green():
-                return
-
             fetched_domain.delete()
 
     def retrieve(self, request, *args, **kwargs):

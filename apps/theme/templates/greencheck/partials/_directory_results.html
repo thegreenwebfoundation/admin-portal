@@ -78,8 +78,8 @@
                         </details>
                     {% endif %}
 
-                    {% if obj.carbon_txt_url %}
-                      {% include "greencheck/partials/_directory_carbon_txt_badge.html" with carbon_txt_url=obj.carbon_txt_url %}
+                    {% if obj.primary_linked_domain %}
+                      {% include "greencheck/partials/_directory_carbon_txt_badge.html" with domain=obj.primary_linked_domain.domain %}
                     {% endif %}
                 </div>
 

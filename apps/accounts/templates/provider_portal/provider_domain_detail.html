@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+
+
+
+{% block content %}
+<div class="container mx-auto prose">
+
+  {% block header_section %}
+    <header class="">
+      <p class="mb-6 text-sm text-green"><a href="{% url 'provider-domain-index' object.provider.id %}" class="text-neutral-500">&lt;Back to linked domains</a></p>
+
+      <h1 class="text-6xl mb-0"><span class="uppercase">Linked Domain</h1>
+      <h2 class="mt-4">
+        {{object.domain}}
+        <span class="ml-4 px-2 py-1 rounded text-ml border
+          {% if object.state == "Approved" %}
+          bg-green-100 text-green-800 border-green-800
+          {% else %}
+          bg-yellow-100 text-yellow-800 border-yellow-800
+          {% endif %}
+        ">{{object.state}}</span>
+      </h2>
+      </header>
+  {% endblock %}
+
+  <article>
+  <div class="flex prose">
+    <img class="pr-4 my-0 mr-2" width="75" height="75" src="{% static 'img/carbontxt-logo.svg' %}" alt="carbon.txt logo"/>
+    <h4 class="text-bold">carbon.txt</h4>
+  </div>
+  <div class="prose mx-auto mt-8">
+    {%if object.state == "Approved" %}
+    <p>✔️  This domain has succesfully been verified with carbon.txt.</p>
+    {% elif object.state == "Pending review" %}
+    <p>⏳ We are reviewing the carbon.txt for this domain, and will be in touch shortly.</p>
+    {% endif %}
+
+    {% if object.primary %}
+      <p>This is the <strong>primary</strong> domain for your provider, meaning it represents the provider itself, not a customer.</p>
+    {% endif %}
+  </div>
+  <div class="prose mx-auto mt-8 border-t-2 border-black ">
+    <a href="{% url "provider-domain-delete" object.provider_id object.domain %}" class="mt-8 w-full btn btn-white text-xs ">❌ Unlink this domain from this provider</a>
+  </div>
+  </article>
+
+</div>
+{% endblock %}

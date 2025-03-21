@@ -1,13 +1,17 @@
 from urllib.parse import urlencode
 from django.urls import reverse
 from django.apps import apps
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 
 from anymail.message import AnymailMessage
 from .models import Service
 
 import smtplib
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -68,3 +72,20 @@ def send_email(address, subject, context, template_txt, template_html=None, bcc=
         )
     except Exception:
         logger.exception("Unexpected fatal error sending email: {err}")
+
+def validate_carbon_txt_for_domain(domain, timeout=3):
+    try:
+        response = requests.post(settings.CARBON_TXT_VALIDATOR_API_ENDPOINT, json={ "domain": domain }, timeout=timeout)
+    except requests.exceptions.RequestException as e:
+        raise ValidationError(f"Error validating carbon.txt: {e.__doc__}")
+    json = response.json()
+    success = json["success"]
+    if not success:
+        message = ", ".join(json.get("errors", []))
+        details_url = f"{settings.CARBON_TXT_VALIDATOR_UI_URL}?auto=true&domain={domain}"
+        full_message = (
+            f"Error fetching carbon.txt: {message}."
+            f"<br /><a class=\"text-purple\" href=\"{details_url}\" target=\"_blank\">More details (opens in new tab)</a>."
+        )
+        raise ValidationError(mark_safe(full_message))
+

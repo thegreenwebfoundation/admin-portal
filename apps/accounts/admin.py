@@ -73,6 +73,7 @@ from .models import (
     SupportMessage,
     User,
     VerificationBasis,
+    LinkedDomain,
 )
 from .permissions import manage_datacenter, manage_provider
 from .utils import get_admin_name, reverse_admin_name, send_email
@@ -862,7 +863,6 @@ class HostingAdmin(
                         "showonwebsite",
                         "customer",
                     ),
-                    ("carbon_txt_url",),
                     ("partner", "model"),
                     ("staff_labels",),
                     ("email_template", "preview_email_button"),
@@ -1287,6 +1287,12 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
     def hostingproviders_amount(self, obj):
         return len(obj.hostingproviders.all())
 
+
+@admin.register(LinkedDomain, site=greenweb_admin)
+class LinkedDomainAdmin(admin.ModelAdmin):
+    list_display = ("domain", "created", "provider")
+    search_fields = ("domain",)
+    ordering = ("domain",)
 
 
 @admin.register(SupportMessage, site=greenweb_admin)

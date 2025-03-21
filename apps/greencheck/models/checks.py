@@ -20,7 +20,6 @@ from apps.greencheck.validators import validate_ip_range
 
 from ...accounts import models as ac_models
 from .. import choices as gc_choices
-from ..exceptions import NoMatchingDomainHash
 
 logger = logging.getLogger(__name__)
 
@@ -585,54 +584,6 @@ class GreenDomain(models.Model):
             modified=timezone.now(),
             green=True,
         )
-
-    @classmethod
-    def claim_via_carbon_txt(cls, domain, provider: ac_models.Hostingprovider):
-        """
-        Accept a domain, and try verifying it with the carbon.txt validator.
-
-        We use the carbon.txt validator library to look up the domain, and
-        if there is the matching
-        domain we were expecting, we create the domain as "green domain" associated
-        with the provider that initially requested the domain hash.
-        """
-
-        # first of all, if there is no domain hash for the domain exit early - there is no
-        # point in trying to claim a domain hash for a domain that no provider has requested
-        # a domain hash for.
-        from ..domain_check import GreenDomainChecker
-
-        checker = GreenDomainChecker()
-
-        # we need to filter by domain AND provider, becauase if two providers
-        # both try to claim a domain, we can end up allocating it to the
-        # wrong provider if we don't filter by both
-        domain_hash = ac_models.DomainHash.objects.filter(
-            domain=domain, provider=provider
-        )
-
-        if not domain_hash:
-            raise NoMatchingDomainHash
-
-        # if we have a domain hash for the domain, choose the most recent one,
-        # so we can compare it to what we find on a domain
-        domain_hash = domain_hash.order_by("-created").first()
-
-        matched_hash = checker.verify_domain_hash(domain, domain_hash=domain_hash.hash)
-
-        # We don't want to create duplicate domains for the same provider.
-        # If a domain already exists for the provider, we should return it instead,
-        # of creating a new domain
-        if matched_hash:
-            provider = domain_hash.provider
-
-            if existing_domain := GreenDomain.objects.filter(
-                url=domain, hosted_by_id=provider.id
-            ):
-                return existing_domain.first()
-
-            return cls.create_for_provider(domain, provider)
-
     # Queries
     @property
     def hosting_provider(self) -> typing.Union[ac_models.Hostingprovider, None]:
@@ -657,19 +608,17 @@ class GreenDomain(models.Model):
             return None
 
     @property
-    def added_via_carbontxt(self) -> typing.Union[ac_models.Hostingprovider, None]:
+    def added_via_carbontxt(self) -> bool:
         """
         Return True if this domain is linked to a provider via a
-        carbon.txt lookup, otherwise False
+        linked domain, otherwise return false.
         """
         provider = self.hosting_provider
 
         if provider:
             # when we add a domain using a carbon.txt lookup, we add a
             # special label tag "green:carbontxt"
-            return "green:carbontxt" in provider.staff_labels.names()
-
-        return False
+            return provider.linked_domain_for(self.url)
 
     @classmethod
     def check_for_domain(cls, domain, skip_cache=False):

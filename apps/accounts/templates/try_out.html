@@ -19,7 +19,7 @@
       <p>This domain pointed to IP address <code>{{ ip_lookup }}</code>. This returned a <strong>{{ green_status}}</strong> result in our records.</p>
 
       {% if carbon_txt %}
-        <p>This shows as a green result via a carbon.txt lookup, pointing to
+        <p>This shows as a green result via a carbon.txt linked domain, pointing to
 
           {% if request.user.is_admin %}
             <a href="{% url 'greenweb_admin:accounts_hostingprovider_change' provider.id %}">

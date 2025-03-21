@@ -19,8 +19,90 @@ logger = logging.getLogger(__name__)
 def checker():
     return domain_check.GreenDomainChecker()
 
-
 class TestDomainChecker:
+    def test_with_green_domain_by_linked_domain_and_green_provider(self, hosting_provider_factory, checker):
+        """
+        A valid hosting provider and linked domain produce a green result
+        """
+
+        #GIVEN a provider which is shown on the website and not archived
+        #AND an approved LinkedDomain for that provider
+        provider = hosting_provider_factory.create(country="DE", showonwebsite=True, archived=False)
+        ac_models.LinkedDomain(
+            provider_id=provider.pk,
+            domain="example.com",
+            state=ac_models.LinkedDomainState.APPROVED,
+            primary=True
+        ).save()
+        # WHEN I perform a domain check for the linkeddomain
+        res = checker.check_domain("example.com")
+        # THEN the result is green
+        assert res.green
+
+    def test_with_grey_domain_by_linked_domain_and_hidden_provider(self, hosting_provider_factory, checker):
+        """
+        A hidden hosting provider with a linked domain produces a grey result
+        """
+
+        #GIVEN a provider which is not shown on the website
+        #AND an approved LinkedDomain for that provider
+        provider = hosting_provider_factory.create(country="DE", showonwebsite=False, archived=False)
+        ac_models.LinkedDomain(
+            provider_id=provider.pk,
+            domain="example.com",
+            state=ac_models.LinkedDomainState.APPROVED,
+            primary=True
+        ).save()
+
+        # WHEN I perform a domain check for the linkeddomain
+        res = checker.check_domain("example.com")
+
+        # THEN the result is grey
+        assert not res.green
+
+    def test_with_grey_domain_by_linked_domain_and_archived_provider(self, hosting_provider_factory, checker):
+        """
+        An archived hosting provider with a linked domain produces a grey result
+        """
+
+        #GIVEN a provider which is archived
+        #AND an approved LinkedDomain for that provider
+        provider = hosting_provider_factory.create(country="DE", showonwebsite=True, archived=True)
+        ac_models.LinkedDomain(
+            provider_id=provider.pk,
+            domain="example.com",
+            state=ac_models.LinkedDomainState.APPROVED,
+            primary=True
+        ).save()
+
+        # WHEN I perform a domain check for the linkeddomain
+        res = checker.check_domain("example.com")
+
+        # THEN the result is grey
+        assert not res.green
+
+    def test_with_grey_domain_by_pending_linked_domain(self, hosting_provider_factory, checker):
+        """
+            A green provider with a pending linked domain produces a grey result
+        """
+
+        #GIVEN a provider which is valid and green
+        #AND an pending LinkedDomain for that provider
+        provider = hosting_provider_factory.create(country="DE", showonwebsite=True, archived=False)
+        ac_models.LinkedDomain(
+            provider_id=provider.pk,
+            domain="example.com",
+            state=ac_models.LinkedDomainState.PENDING_REVIEW,
+            primary=True
+        ).save()
+
+        # WHEN I perform a domain check for the linkeddomain
+        res = checker.check_domain("example.com")
+
+        # THEN the result is grey
+        assert not res.green
+
+
     def test_with_green_domain_by_ip(self, green_ip, checker):
         """
         Given a matching IP, do we return a green sitecheck?

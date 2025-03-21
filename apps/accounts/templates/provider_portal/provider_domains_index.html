@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="container mx-auto prose">
+
+  {% block header_section %}
+    <header class="">
+      <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt;Back to provider portal</a></p>
+
+      <h1 class="text-6xl mb-0"><span class="uppercase">Linked Domains</h1>
+      <h2 class="mt-4">
+        Provider: {{provider.name}}
+      </h2>
+      </header>
+  {% endblock %}
+
+
+  <article>
+    <div class="mt-8">
+
+
+
+
+      <p class="prose italic pb-3">These are the domains associated with the provider {{provider.name}}  - verifying allows us to ensure that you are corrrectly identified as the hosting provider for them in the <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank">Green Web Check</a> tool.</p>
+
+
+      <div class="">
+        {% if object_list|length > 0 %}
+        <div class="py-3 md:items-center ">
+          {% for obj in object_list %}
+            <div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2 flex justify-between gap-4">
+            <div class="py-6 pr-6">
+              <p class="my-0">
+                <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="font-semibold text-xl no-underline hover:underline">
+                {{ obj.domain }}
+                </a>
+              </p>
+              <p class="my-0" >
+              {% if obj.primary %}
+                Primary domain,
+              {% endif %}
+              {{obj.state}}
+              </p>
+            </div>
+
+            <div class="text-right pr-3">
+              <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="btn btn-white text-xs">Details</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+			{% if object_list|length == 0 %}
+        <p>You don't yet have any linked domains!</p>
+        <a href="{% url "provider-domain-create" provider.id %}" class="w-full btn"><span class="text-xs">Link and verify a domain</span></a>
+      {% else %}
+			  <p><a href="{% url "provider-domain-create" provider.id %}">Link and verify another domain</a></p>
+      {% endif %}
+  </article>
+
+</div>
+{% endblock %}
+
