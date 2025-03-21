@@ -13,6 +13,9 @@ from apps.accounts.views import (
     ProviderRequestDetailView,
     ProviderRequestWizardView,
     ProviderAutocompleteView,
+    DomainHashHomeView,
+    DomainHashCreateView,
+    DomainHashDetailView,
 )
 
 urlpatterns = [
@@ -150,5 +153,25 @@ urlpatterns = [
         "before-starting/",
         TemplateView.as_view(template_name="provider_portal/before_starting.html"),
         name="before-starting",
+    ),
+    path(
+        "domain-hash/",
+        DomainHashHomeView.as_view(),
+        name="provider-hash-index",
+    ),
+    path(
+        "domain-hash/new/",
+        DomainHashCreateView.as_view(),
+        name="provider-hash-create",
+    ),
+    path(
+        "domain-hash/detail/<int:pk>/",
+        DomainHashDetailView.as_view(),
+        name="provider-hash-detail",
+    ),
+    path(
+        "domain-claim/",
+        ProviderPortalHomeView.as_view(),
+        name="provider_domain_claim",
     ),
 ]
