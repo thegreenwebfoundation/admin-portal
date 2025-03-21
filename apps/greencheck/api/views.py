@@ -205,6 +205,8 @@ class DomainClaimView(views.APIView):
     def post(self, request, format=None):
         domain = request.data.get("domain")
 
+        # we need the to
+
         # try to claim the domain, and raise the exception if not
         result = GreenDomain.claim_via_carbon_txt(domain)
 
