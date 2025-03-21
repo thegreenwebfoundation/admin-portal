@@ -23,7 +23,7 @@ from model_utils.models import TimeStampedModel
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
 from ...permissions import manage_provider
-from ..choices import (ModelType, PartnerChoice)
+from ..choices import ModelType, PartnerChoice
 from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, Label
 
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ AWAITING_REVIEW_SLUG = "awaiting-review"
 # about the hash
 DOMAIN_HASH_ISSUER_ID = "GWF-01"
 
+
 class ProviderLabel(tag_models.TaggedItemBase):
     """
     A different through model for listing internally facing tags,
@@ -59,6 +60,7 @@ class ProviderLabel(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
+
 
 class Service(tag_models.TagBase):
     """
@@ -154,6 +156,79 @@ class ProviderVerificationBasis(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
+
+class DomainHash(TimeStampedModel):
+    """
+    A domain hash is unique to a combination of a domain and a provider.
+    It is used to verify that a domain is hosted by a provider, and referred to when
+    the platform is looking up a specific domain to see if a provider has control over it.
+    """
+
+    domain = models.CharField(max_length=255)
+    hash = models.CharField(max_length=255)
+    provider = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    def clean(self):
+        """
+        Validate the domain using GreenDomainChecker.
+        """
+
+        # we have to import here to avoid a circular import
+        from ...greencheck.domain_check import GreenDomainChecker
+
+        checker = GreenDomainChecker()
+
+        if not checker.validate_domain(self.domain):
+            raise ValidationError({"domain": "Invalid domain provided"})
+
+    def save(self, *args, **kwargs):
+        """
+        Generate a hash before saving.
+        """
+        if not self.hash:
+            if not self.provider.shared_secret:
+                raise NoSharedSecret
+
+            self.hash = self.generate_hash()
+        super().save(*args, **kwargs)
+
+    def generate_hash(self) -> str:
+        """
+        Generates a SHA-256 hash based on the domain and the provider's shared secret.
+
+        Returns:
+            str: The generated hash in hexadecimal format.
+
+        Raises:
+            NoSharedSecret: If the provider does not have a shared secret.
+        """
+        """"""
+        if not self.provider.shared_secret:
+            raise NoSharedSecret
+
+        hash_object = hashlib.sha256(
+            f"{self.domain}{self.provider.shared_secret.body}".encode("utf-8")
+        )
+        # we want to be able to identify hashes by their issuer, so we prefix
+        # it with a string denoting the issuer and the version of the algo used
+        # to make the hash
+        domain_hash_prefix = DOMAIN_HASH_ISSUER_ID
+        return f"{domain_hash_prefix}-{hash_object.hexdigest()}"
+
+    def __str__(self):
+        return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
+
+    class Meta:
+        verbose_name_plural = "Domain Hashes"
+
 
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
@@ -620,6 +695,7 @@ class HostingProviderNote(AbstractNote):
 
     provider = models.ForeignKey(Hostingprovider, null=True, on_delete=models.PROTECT)
 
+
 class NonArchivedEvidenceManager(models.Manager):
     """
     A custom manager to filter out archived items of supporting evidence
@@ -686,6 +762,7 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
 
         return self.url
 
+
 class HostingCommunication(TimeStampedModel):
     template = models.CharField(max_length=128)
     hostingprovider = models.ForeignKey(
@@ -694,6 +771,7 @@ class HostingCommunication(TimeStampedModel):
     # a store of the outbound messages we send, so we have a record
     # for future reference
     message_content = models.TextField(blank=True)
+
 
 class HostingproviderCertificate(Certificate):
     hostingprovider = models.ForeignKey(
@@ -725,6 +803,7 @@ class HostingproviderStats(models.Model):
     class Meta:
         db_table = "hostingproviders_stats"
         # managed = False
+
 
 class DomainHash(TimeStampedModel):
     """
@@ -794,5 +873,3 @@ class DomainHash(TimeStampedModel):
 
     def __str__(self):
         return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
-
-
