@@ -1,12 +1,13 @@
 services:
   main:
-      # we use the default codespaces image. this likely requires an x86
-      # processor, so might not work on arm machines
-      image: "mcr.microsoft.com/devcontainers/universal:2"
-      
-      # copied 
-      volumes:
-        - ../..:/workspaces:cached
+    # we use the default codespaces image. this likely requires an x86
+    # processor, so might not work on arm machines
+    image: "mcr.microsoft.com/devcontainers/universal:2"
+  
+    volumes:
+      - ../..:/workspaces:cached
+    ports:
+      - "8000:8000"
   db:
     image: mariadb:10.11
     restart: unless-stopped
@@ -16,13 +17,9 @@ services:
       - MYSQL_USER=deploy
       - MYSQL_PASSWORD=deploy
     ports:
-      - 3306:3306
-    # expose:
-    #   - 3306
+      - "3306:3306"
   rabbitmq:
     image: rabbitmq:3.11
     restart: unless-stopped
-    # expose:
-    #   - 5672
     ports:
-      - 5672:5672
+      - "5672:5672"
