@@ -15,6 +15,14 @@ services:
       - MYSQL_DATABASE=greencheck
       - MYSQL_USER=deploy
       - MYSQL_PASSWORD=deploy
+    ports:
+      - 3306:3306
+    # expose:
+    #   - 3306
   rabbitmq:
     image: rabbitmq:3.11
     restart: unless-stopped
+    # expose:
+    #   - 5672
+    ports:
+      - 5672:5672
