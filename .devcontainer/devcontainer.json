@@ -12,18 +12,19 @@
   ],
   "portsAttributes": {
     "8000": {
-      "label": "Application",
-      "requireLocalPort": true
+      "label": "Application"
     },
     "3306": {
       "label": "MariaDB",
-      "requireLocalPort": true
+      "onAutoForward": "notify"
     },
     "5672": {
       "label": "RabbitMQ",
-      "requireLocalPort": true
+      "onAutoForward": "notify"
     }
   },
+  "postCreateCommand": "cp .env.devcontainer .env || echo '.env.devcontainer not found'",
+  "updateContentCommand": "cp .env.devcontainer .env || echo '.env.devcontainer not found'",
   "features": {
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
     "ghcr.io/eitsupi/devcontainer-features/just:0": {}
@@ -36,7 +37,7 @@
         "eamodio.gitlens",
         "charliermarsh.ruff",
         "bibhasdn.django-html",
-        "tomusher.djhtml-vscode",
+        "tomusher.djhtml-vscode"
       ]
     }
   }
