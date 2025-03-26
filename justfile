@@ -20,7 +20,7 @@ dev_createsuperuser:
 
 # Run a django development server that reloads when codes is changed.
 dev_runserver:
-    uv run python manage.py runserver
+    uv run python manage.py runserver 0.0.0.0:$PORT
 
 # Run a django management command in the development environment.
 dev_manage *options:
