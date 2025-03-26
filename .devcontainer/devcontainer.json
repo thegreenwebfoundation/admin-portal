@@ -23,8 +23,8 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "cp .env.devcontainer .env || echo '.env.devcontainer not found'",
-  "updateContentCommand": "cp .env.devcontainer .env || echo '.env.devcontainer not found'",
+  "postCreateCommand": "cp .env.devcontainer .env && just dev_setup_codespaces || echo '.env.devcontainer not found'",
+  "updateContentCommand": "cp .env.devcontainer .env && just dev_setup_codespaces || echo '.env.devcontainer not found'",
   "features": {
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
     "ghcr.io/eitsupi/devcontainer-features/just:0": {}
