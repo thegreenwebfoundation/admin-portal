@@ -67,8 +67,13 @@ data_marimo_starter *options: _data_analysis_repo
 	# set up our start notebook with django initialised ready for queries
 	uv run marimo edit data-analysis/starter-notebook.py {{ options }}
 
+<<<<<<< Updated upstream
 # Run Marimo notebook session. This will not work inside a Github Codespace
 data_marimo *options: _data_analysis_repo
+=======
+# Run Marimo notebook session
+data_marimo *options: data_analysis_repo
+>>>>>>> Stashed changes
     uv run marimo {{ options }}
 
 # Run the django tests (with pytest), creating a test database using the `testing` settings.
