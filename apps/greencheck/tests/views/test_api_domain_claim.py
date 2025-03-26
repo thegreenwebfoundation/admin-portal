@@ -25,7 +25,7 @@ class TestDomainclaimForProvider:
 
         domain_hash = provider.create_domain_hash(domain, user_with_provider)
 
-        payload = {"domain": domain}
+        payload = {"domain": domain, "provider": provider.id}
 
         mocker.patch(
             "apps.greencheck.domain_check.GreenDomainChecker._lookup_domain_hash_with_dns",
