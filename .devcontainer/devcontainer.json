@@ -7,18 +7,18 @@
   ],
   "forwardPorts": [
     8000,
-    3306,
-    5672
+    13306,
+    15672
   ],
   "portsAttributes": {
     "8000": {
       "label": "Application"
     },
-    "3306": {
+    "13306": {
       "label": "MariaDB",
       "onAutoForward": "notify"
     },
-    "5672": {
+    "15672": {
       "label": "RabbitMQ",
       "onAutoForward": "notify"
     }

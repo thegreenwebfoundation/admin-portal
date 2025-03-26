@@ -7,7 +7,7 @@ services:
     volumes:
       - ../..:/workspaces:cached
     ports:
-      - "8000:8000"
+      - "8000:8000"  # Map container port 8000 to host port 8000
   db:
     image: mariadb:10.11
     restart: unless-stopped
@@ -17,9 +17,9 @@ services:
       - MYSQL_USER=deploy
       - MYSQL_PASSWORD=deploy
     ports:
-      - "3306:3306"
+      - "13306:3306"  # Map container port 3306 to host port 13306
   rabbitmq:
     image: rabbitmq:3.11
     restart: unless-stopped
     ports:
-      - "5672:5672"
+      - "15672:5672"  # Map container port 5672 to host port 15672
