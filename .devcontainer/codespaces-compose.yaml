@@ -8,6 +8,13 @@ services:
       - ../..:/workspaces:cached
     ports:
       - "8000:8000"  # Map container port 8000 to host port 8000
+
+  # we map host ports to higher numbers than usual because we do not know
+  # what ports are already in use on the host machine. 
+  # If a user already uses MySQL, or RabbitMQ, then the codespace 
+  # can fail in difficult to debug ways.
+  # For more, see this
+  # https://containers.dev/guide/dockerfile#docker-compose
   db:
     image: mariadb:10.11
     restart: unless-stopped
