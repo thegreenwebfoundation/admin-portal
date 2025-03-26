@@ -1,5 +1,7 @@
 import pytest
+from guardian.shortcuts import assign_perm
 
+from apps.accounts.permissions import manage_provider
 from apps.greencheck.models import GreenDomain
 
 
@@ -61,7 +63,7 @@ class TestDomainclaimForProvider:
 
         domain_hash = provider.create_domain_hash(domain, user_with_provider)
 
-        payload = {"domain": domain}
+        payload = {"domain": domain, "provider": provider.id}
 
         mocker.patch(
             "apps.greencheck.domain_check.GreenDomainChecker._lookup_domain_hash_with_dns",
@@ -90,17 +92,60 @@ class TestDomainclaimForProvider:
         # And: we should not have any duplicate domains created in our table
         assert GreenDomain.objects.filter(hosted_by_id=provider.id).count() == 1
 
-    @pytest.mark.skip(reason="Not implemented")
     @pytest.mark.django_db
-    def test_domain_claim_for_an_already_claimed_domain_by_a_provider(
-        self, client, user_with_provider, mocker
+    def test_domain_claim_for_domain_being_transferred(
+        self,
+        client,
+        provider_groups,
+        user_with_provider,
+        mocker,
+        hosting_provider_factory,
+        user_factory,
     ):
         """
         When a different provider is able to demonstrate control over a domain
         we reallocate the domain to them.
         """
 
-        # Ideally this would rely on us being able to order green domains by
-        # created date. That would leave us with an audit trail of claimed domains
-        # rather than overwiting them with the most recent claim.
-        pass
+        # Given: A logged-in user associated with a hosting provider
+        client.force_login(user_with_provider)
+        provider = user_with_provider.hosting_providers.first()
+        provider.refresh_shared_secret()
+
+        # And: a new user managing a new provider that the website is
+        # being transferred to
+        new_provider_user = user_factory.create()
+        new_provider = hosting_provider_factory.create(created_by=new_provider_user)
+        new_provider.refresh_shared_secret()
+
+        assign_perm(manage_provider.codename, new_provider_user, new_provider)
+
+        # When: providers have requested a domain hash
+        domain = "being-transferred.example.com"
+        domain_hash = provider.create_domain_hash(domain, user_with_provider)
+        new_domain_hash = new_provider.create_domain_hash(domain, new_provider_user)
+
+        # Setup the mock to return different hashes for successive calls
+        dns_lookup_mock = mocker.patch(
+            "apps.greencheck.domain_check.GreenDomainChecker._lookup_domain_hash_with_dns"
+        )
+        dns_lookup_mock.side_effect = [
+            f"{domain}/carbon.txt {domain_hash.hash}",
+            f"{domain}/carbon.txt {new_domain_hash.hash}",
+        ]
+
+        # And: the first domain hash has been successfully with the first provider
+        resp = GreenDomain.claim_via_carbon_txt(domain, provider)
+        assert resp in GreenDomain.objects.filter(url=domain)
+        assert resp.hosted_by == provider.name
+
+        # When: the new provider tries to claim the same domain, and has
+        # put their new domain hash on the domain
+        resp2 = GreenDomain.claim_via_carbon_txt(domain, new_provider)
+
+        # Then: the domain should be transferred to the new provider
+        assert resp2 in GreenDomain.objects.filter(url=domain)
+        assert resp2.hosted_by == new_provider.name
+
+        # Verify the mock was called twice with different return values
+        assert dns_lookup_mock.call_count == 2

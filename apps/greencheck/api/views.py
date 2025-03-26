@@ -204,9 +204,7 @@ class DomainClaimView(views.APIView):
     @swagger_auto_schema(tags=["Domain Claim"])
     def post(self, request, format=None):
         domain = request.data.get("domain")
-
         provider_id = request.data.get("provider")
-
         provider = Hostingprovider.objects.get(id=provider_id)
 
         # try to claim the domain, and raise the exception if not

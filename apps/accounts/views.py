@@ -17,8 +17,10 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, CreateView
 from django.views.generic.base import TemplateView
+from django.views.generic.edit import ModelFormMixin
+
 from django_registration import signals, validators
 from django_registration.backends.activation.views import (
     ActivationView,
@@ -39,6 +41,7 @@ from .forms import (
     OrgDetailsForm,
     PreviewForm,
     ServicesForm,
+    DomainHashForm,
 )
 from .models import (
     Hostingprovider,
@@ -49,6 +52,7 @@ from .models import (
     ProviderRequestIPRange,
     ProviderRequestStatus,
     User,
+    DomainHash,
 )
 from .permissions import manage_provider
 from .utils import send_email
@@ -60,15 +64,15 @@ logger = logging.getLogger(__name__)
 class DashboardView(TemplateView):
     """
     This dashboard view was what people would see when signing into the admin.
-    We currently redirect to the provider portal home page as at present,we 
+    We currently redirect to the provider portal home page as at present,we
     only really logged in activity by users who work for the providers in our system.
     """
+
     template_name = "dashboard.html"
 
     def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(reverse("provider_portal_home"))
-        
-    
+
 
 class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -154,12 +158,58 @@ class UserActivationView(ActivationView):
             )
             message = "Thanks, we've confirmed your email address. Now you can login with your username and password."
             messages.success(self.request, message)
-            return HttpResponseRedirect(
-                force_str(self.get_success_url(activated_user))
-            )
+            return HttpResponseRedirect(force_str(self.get_success_url(activated_user)))
 
         messages.error(self.request, error_message)
         return HttpResponseRedirect(force_str(self.get_success_url()))
+
+
+class DomainHashHomeView(LoginRequiredMixin, ListView):
+    """
+    Domain hash home page:
+    - used by external (non-staff) users to see a list of domain hashes they have created,
+    - renders the list of domain hashes a HTML template,
+    - requires the flag `domain_hash` enabled for the user (otherwise returns 404).
+    """
+
+    template_name = "provider_portal/domain_hash_index.html"
+    model = DomainHash
+
+    def get_queryset(self):
+        # TODO we want to allow users to see their own domain hashes, and
+
+        return self.model.objects.filter(
+            provider__in=[
+                prov.id
+                for prov in self.request.user.hosting_providers_explicit_perms.all()
+            ]
+        )
+
+    def get(self, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        import ipdb
+
+        return self.render_to_response(context)
+
+
+class DomainHashCreateView(LoginRequiredMixin, CreateView):
+    template_name = "provider_portal/domain_hash_new.html"
+    form_class = DomainHashForm
+    model = DomainHash
+
+
+class DomainHashDetailView(LoginRequiredMixin, DetailView):
+    template_name = "provider_portal/domain_hash_detail.html"
+    model = DomainHash
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        import ipdb
+
+        # ipdb.set_trace()
+        return self.render_to_response(context)
 
 
 class ProviderPortalHomeView(LoginRequiredMixin, ListView):
@@ -225,6 +275,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
     - requires the flag `provider_request` enabled to access the view,
 
     """
+
     file_storage = DefaultStorage()
 
     class Steps(Enum):
@@ -655,7 +706,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             hp_provider_request = hosting_provider.request
 
             if hp_provider_request:
-
                 locations = hp_provider_request.providerrequestlocation_set.all()
                 # return only the locations that are associated with the request
                 return [
@@ -675,7 +725,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             ]
 
         def _org_details_initial_data(hosting_provider: Hostingprovider):
-
             initial_org_dict = {
                 "name": hosting_provider.name,
                 "website": hosting_provider.website,
@@ -689,7 +738,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             return initial_org_dict
 
         def _network_footprint_initial_data(hosting_provider: Hostingprovider):
-
             hp_provider_request = hosting_provider.request
             network_dict = {
                 # TODO: all IP ranges / ASNs or only active ones?
