@@ -8,7 +8,7 @@ from rest_framework import permissions, views
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.response import Response
 
-from apps.accounts.models import DomainHash
+from apps.accounts.models import DomainHash, Hostingprovider
 from apps.greencheck.models.checks import CO2Intensity, GreenDomain
 
 from ..serializers import (
@@ -205,8 +205,12 @@ class DomainClaimView(views.APIView):
     def post(self, request, format=None):
         domain = request.data.get("domain")
 
+        provider_id = request.data.get("provider")
+
+        provider = Hostingprovider.objects.get(id=provider_id)
+
         # try to claim the domain, and raise the exception if not
-        result = GreenDomain.claim_via_carbon_txt(domain)
+        result = GreenDomain.claim_via_carbon_txt(domain, provider)
 
         # our serializer serves the 'claimed' result if we have
         # GreenDomain entry, otherwise 'unclaimed'

@@ -25,7 +25,7 @@ class TestGreenDomainClaim:
             domain_name = "example.com"
 
             with pytest.raises(NoMatchingDomainHash):
-                GreenDomain.claim_via_carbon_txt(domain_name)
+                GreenDomain.claim_via_carbon_txt(domain_name, provider=None)
 
         def test_claim_domain_with_via_header(self, user_with_provider, httpx_mock):
             """
@@ -46,7 +46,7 @@ class TestGreenDomainClaim:
                 headers={"Via": f"{managed_service}/carbon.txt {domain_hash.hash}"},
             )
 
-            resp = GreenDomain.claim_via_carbon_txt(hosted_site)
+            resp = GreenDomain.claim_via_carbon_txt(hosted_site, provider)
 
             assert resp in GreenDomain.objects.filter(hosted_by_id=provider.id)
 
@@ -75,7 +75,7 @@ class TestGreenDomainClaim:
 
             # When: the managing service posts a request to verify the domain hash
             # has been added to the domain's DNS record
-            resp = GreenDomain.claim_via_carbon_txt(hosted_site)
+            resp = GreenDomain.claim_via_carbon_txt(hosted_site, provider)
 
             # Then: the domain show up as associated with the managed service provider
             assert resp in GreenDomain.objects.filter(hosted_by_id=provider.id)

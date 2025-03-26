@@ -571,7 +571,7 @@ class GreenDomain(models.Model):
             )
         except ac_models.Hostingprovider.DoesNotExist:
             logger.warning(
-                ("We expected to find a provider for this sitecheck, " "But didn't. ")
+                ("We expected to find a provider for this sitecheck, But didn't. ")
             )
             return cls.grey_result(domain=sitecheck.url)
 
@@ -586,7 +586,7 @@ class GreenDomain(models.Model):
         )
 
     @classmethod
-    def claim_via_carbon_txt(cls, domain):
+    def claim_via_carbon_txt(cls, domain, provider: ac_models.Hostingprovider):
         """
         Accept a domain, and try verifying it with the carbon.txt validator.
 
@@ -603,7 +603,10 @@ class GreenDomain(models.Model):
 
         checker = GreenDomainChecker()
 
-        domain_hash = ac_models.DomainHash.objects.filter(domain=domain)
+        domain_hash = ac_models.DomainHash.objects.filter(
+            domain=domain, provider=provider
+        )
+
         from ..exceptions import NoMatchingDomainHash
 
         if not domain_hash:
