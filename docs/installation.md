@@ -13,7 +13,7 @@ This project uses Github Codespaces to provide managed, hosted development envir
 You can work in a browser or use a local editor like VS Code, or Vim to connect to the managed environment.
 
 
-### Setting up a Gitpod Codespace
+### Setting up a Github Codespace
 
 1. Go to our [Github repository](https://github.com/thegreenwebfoundation/admin-portal) and click on the **Code** button and then the **Codespaces** tab.
 
