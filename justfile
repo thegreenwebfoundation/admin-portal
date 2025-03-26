@@ -42,6 +42,16 @@ dev_test:
 dev_test_only:
     uv run pytest -s --create-db --looponfail -m only -v --ds=greenweb.settings.testing
 
+dev_setup_migrations:
+    uv run python manage.py migrate
+
+# set up 
+dev_setup_codespaces: dev_setup_migrations dev_tailwind_install dev_createsuperuser 
+    uv run python manage.py tailwind build
+    cd ./apps/theme/static_src/ && npx rollup --config
+    uv run python manage.py collectstatic --no-input    
+    echo "all set up. run 'just dev_runserver' to start a server, and in another terminal "
+
 # # Set up the github repo for data analysis against the Green Web Platform database.
 data_analysis_repo:
     #!/usr/bin/env bash
@@ -68,6 +78,7 @@ test *options:
 test_only:
     uv run pytest -s --create-db -m only -v --ds=greenweb.settings.testing
 
+# Run a command with 'uv' set up and just setting up the environment variables
 run *options:
     uv run  {{ options }}
 
