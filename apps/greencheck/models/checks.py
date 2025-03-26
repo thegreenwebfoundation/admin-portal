@@ -20,6 +20,7 @@ from apps.greencheck.validators import validate_ip_range
 
 from ...accounts import models as ac_models
 from .. import choices as gc_choices
+from ..exceptions import NoMatchingDomainHash
 
 logger = logging.getLogger(__name__)
 
@@ -603,17 +604,18 @@ class GreenDomain(models.Model):
 
         checker = GreenDomainChecker()
 
+        # we need to filter by domain AND provider, becauase if two providers
+        # both try to claim a domain, we can end up allocating it to the
+        # wrong provider if we don't filter by both
         domain_hash = ac_models.DomainHash.objects.filter(
             domain=domain, provider=provider
         )
 
-        from ..exceptions import NoMatchingDomainHash
-
         if not domain_hash:
             raise NoMatchingDomainHash
 
-        # if we have a domain hash for the domain, choose the most recent one, so we can compare it to
-        # what we find on a domain
+        # if we have a domain hash for the domain, choose the most recent one,
+        # so we can compare it to what we find on a domain
         domain_hash = domain_hash.order_by("-created").first()
 
         matched_hash = checker.verify_domain_hash(domain, domain_hash=domain_hash.hash)

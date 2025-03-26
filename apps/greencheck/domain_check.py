@@ -430,8 +430,17 @@ class GreenDomainChecker:
                     # exit the function as soon as we see our first valid via header
                     if "carbon.txt" in via_header:
                         return via_header
-            except httpx.TimeoutException:
-                pass
+            except httpx.TimeoutException as ex:
+                logger.warning(f"Timeout fetching: {uri.geturl()}. Error was: {ex}")
+            except httpx.ConnectError as ex:
+                logger.warning(
+                    f"Connection error fetching: {uri.geturl()}. Error was: {ex}"
+                )
+            # lay down the 'tarp' for any other errors
+            except Exception as ex:
+                logger.exception(
+                    f"Unexpected error fetching: {uri.geturl()}. Error was: {ex}"
+                )
 
         return False
 
