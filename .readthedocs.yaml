@@ -8,3 +8,8 @@ python:
   # add our extra requirements so we can use markdown
   install:
     - requirements: docs/requirements.txt
+
+# build the docs with sphinx
+# https://about.readthedocs.com/blog/2024/12/deprecate-config-files-without-sphinx-or-mkdocs-config/
+sphinx:
+  configuration: docs/conf.py
