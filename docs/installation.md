@@ -66,6 +66,14 @@ We recommend and support `uv`, because it helps address many of the common issue
 
 We recommend `just`, as it offers a maintainable way to document and automate common tasks during development. It is both well documented, and actively maintained, and has good support for the use of `.env` files to keep credentials and secrets out of source control.
 
+## Working locally with devpod
+
+Github codespaces uses the open devcontainer standard for configuration, which means you can also run the application anywhere else which supports it. [devpod](https://devpod.sh/) is an application which allows you to run devcontainers on your local machine using docker, and allows us to easily set up an environment for local development. With devpod installed, from the command line you can run:
+
+`devpod-cli up .`
+
+A vscode window will open in your browser, from where you can run `just run_devserver` in a terminal, as described above in the "Github codespaces" section.
+
 ### Installing just and installing uv
 
 You can install uv with a single one-line command on most systems:
