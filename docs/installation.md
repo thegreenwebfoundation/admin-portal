@@ -8,7 +8,7 @@ This installation shows you how to setup the Admin Portal of the Green Web Found
 
 ### Why Github Codespaces
 
-This project uses Github Codespaces to provide managed, hosted development environments on Github, using the [devcontainer.json](https://containers.dev/) standard. This means you don't need to install project dependencies on your local computer if you don't want to. 
+This project uses Github Codespaces to provide managed, hosted development environments on Github, using the [devcontainer.json](https://containers.dev/) standard. This means you don't need to install project dependencies on your local computer if you don't want to.
 
 You can work in a browser or use a local editor like VS Code, or Vim to connect to the managed environment.
 
@@ -20,7 +20,7 @@ You can work in a browser or use a local editor like VS Code, or Vim to connect 
 ![Github Codespaces button](img/screenshot-codespaces-button.png)
 
 
-2. Next, either choose the **+** icon, to create a workspace on the default master branch with the default machine type to run code in, or the "three dots" icon to bring up the option of **New with Options**. 
+2. Next, either choose the **+** icon, to create a workspace on the default master branch with the default machine type to run code in, or the "three dots" icon to bring up the option of **New with Options**.
 
 ![Github Codespaces create or new with options](img/screenshot-codespaces-option-for-setup.png)
 
@@ -31,7 +31,7 @@ You can work in a browser or use a local editor like VS Code, or Vim to connect 
 
 4. Selecting your machine will either set up a new browser tab with your environment booting up or VS code locally to work in. The first step of creating an codespace can take a few minutes - be ready to get a hot drink.
 
-5. Once an environment is set up, you should have a terminal available. Type `just` in the terminal to see your options. 
+5. Once an environment is set up, you should have a terminal available. Type `just` in the terminal to see your options.
 
 ![Github Codespaces 'just' options ](img/screenshot-codespaces-just-options.png)
 
@@ -41,7 +41,7 @@ You can work in a browser or use a local editor like VS Code, or Vim to connect 
 
 ### Sharing a view of your environent
 
-Github codespaces allow you to share access to your codespace with other collaborators, or showing your running code, bu sharing it 
+Github codespaces allow you to share access to your codespace with other collaborators, or showing your running code, bu sharing it
 
 - Github documentation on [How to share access to your codespace for pairing and collaboration](https://docs.github.com/en/codespaces/developing-in-a-codespace/working-collaboratively-in-a-codespace)
 
@@ -54,9 +54,9 @@ Github codespaces allow you to share access to your codespace with other collabo
 
 ---
 
-## Development on a local machine 
+## Development on a local machine
 
-The admin-portal project uses the Pyproject format to track software library dependencies, so should work with most python tools for managing dependencies, like `pip`. 
+The admin-portal project uses the Pyproject format to track software library dependencies, so should work with most python tools for managing dependencies, like `pip`.
 
 ## The supported approach - using `uv` and `just`
 
@@ -85,16 +85,70 @@ curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -
 
 ### Installing system dependencies
 
-The admin-portal requires a recent version of python, a database compatible with Maria 11, (Mysql can work, but we not actively supported ), and a message queue, currently RabbitMQ. You will need to install these, or run RabbitMQ or Maria DB as a service. There is a docker compose file if you do not want to install them locally.
+The admin-portal requires a recent version of python, a database compatible with Maria 11, (Mysql can work, but we not actively supported ), and a message queue, currently RabbitMQ. To install these on a debian or ubuntu-like system:
 
 ```
 sudo apt install python3 python3-dev build-essential libmariadb3 libmariadb-dev
 ```
 
+#### Running system dependencies with docker compose
+
+Alternatively, you can run MariaDB and RabbitMQ in docker containers, and the django application on your local machine. You will need [Docker](https://www.docker.com/) installed, then simply run:
+
+```
+docker compose -f .devcontainer/codespaces-compose.yaml up db rabbitmq
+```
+
+MySQL is forwarded to local port `13306`, and RabbitMQ to `15672`, so use these values in your env file.
+Use `127.0.0.1` as your database host - our docker compose configuration forwards the port to the local host, but `localhost` is a "special" hostname in mysql which makes the application attempt to connect through a socket, and will fail. We also use the `root` user here as running the tests needs the `CREATE` database permission, which our `deploy` user does not have.
+
+``
+DATABASE_URL=mysql://root:deploy@127.0.0.1:13306/greencheck
+DATABASE_URL_READ_ONLY=mysql://root:deploy@127.0.0.1:13306/greencheck
+RABBITMQ_URL=amqp://guest:guest@localhost:15672/
+``
+
 #### Object storage for accessing static files in staging and production
 
 This project relies on object storage in staging and production, to provide redundant storage of upload files. Files are stored with Scaleway object storage. The supported tool for accessing files is [Minio Client](https://min.io/docs/minio/linux/reference/minio-mc.html). Consult the Minio documentation for setting it up to access Green Web object storage where required.
 
+### Running the application locally
+
+The first time you run the application locally, there's a few extra steps you'll need to go through to set up the database, admin user and static assets.
+
+First, ensure you have a local `.env` file: copy `env.sample` and adjust as appropriate.
+
+Then run outstanding database migrations:
+
+```shell
+just dev_manage migrate
+```
+
+Install JS and CSS dependencies and build static assets:
+```shell
+just dev_manage tailwind install && \
+just dev_manage tailwind build && \
+just dev_manage collectstatic
+```
+
+Create a superuser account (enter your details when prompted):
+```shell
+just dev_manage createsuperuser
+```
+
+Finally, you can run the development server:
+
+```shell
+just dev_runserver
+```
+
+Now is also a good time to run the tests, to make sure everything is working as expected!
+
+```shell
+just test
+```
+
+You should see the web application running on port 9000 by default, or whatever port is set in your `.env` file.
 
 ### Working with common tasks
 
@@ -139,7 +193,6 @@ docker run --rm -p 18025:8025 -p 1025:1025 mailhog/mailhog
 ```
 
 You should then be able to access the mailhog testing inbox at 127.0.0.1:18025
-
 
 ## Working with Docker
 
