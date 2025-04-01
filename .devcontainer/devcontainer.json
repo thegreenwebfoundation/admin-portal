@@ -8,9 +8,14 @@
   "forwardPorts": [
     8000,
     13306,
-    15672
+    15672,
+    2222,
   ],
   "portsAttributes": {
+    "2222": {
+      "label": "SSH"
+    },
+
     "8000": {
       "label": "Application"
     },
@@ -27,7 +32,12 @@
   "updateContentCommand": "cp .env.devcontainer .env && just dev_setup_codespaces || echo '.env.devcontainer not found'",
   "features": {
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
-    "ghcr.io/eitsupi/devcontainer-features/just:0": {}
+    "ghcr.io/eitsupi/devcontainer-features/just:0": {},
+    "ghcr.io/devcontainers/features/sshd:1": {},
+    "ghcr.io/devcontainers-extra/features/vscode-server:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "latest"
+    }
   },
   "customizations": {
     "codespaces": {},

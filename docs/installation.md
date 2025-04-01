@@ -68,8 +68,6 @@ We recommend `just`, as it offers a maintainable way to document and automate co
 
 ## Working locally with devpod
 
-**Note: Local development with devpod currently only works on Intel x86 architecture machines (so not Macs with Apple Silicon)**
-
 Github codespaces uses the open devcontainer standard for configuration, which means you can also run the application anywhere else which supports it. [devpod](https://devpod.sh/) is an application which allows you to run devcontainers on your local machine using docker, and allows us to easily set up an environment for local development.
 
 First install [devpod](https://devpod.sh) and [Docker](https://docker.io), then setup devpod to use docker:
@@ -78,7 +76,13 @@ First install [devpod](https://devpod.sh) and [Docker](https://docker.io), then 
 devpod-cli provider add docker && devpod-cli provider use docker
 ```
 
-Then, with devpod installed, from the command line you can run:
+We also need to set a devpod option to not kill long-running processes, so that the server is left running:
+
+```shell
+devpod-cli context set-options -o EXIT_AFTER_TIMEOUT=false
+```
+
+Then, from the command line you can run:
 
 `devpod-cli up .`
 
