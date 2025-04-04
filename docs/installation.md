@@ -68,7 +68,9 @@ We recommend `just`, as it offers a maintainable way to document and automate co
 
 ## Working locally with devpod
 
-Github codespaces uses the open devcontainer standard for configuration, which means you can also run the application anywhere else which supports it. [devpod](https://devpod.sh/) is an application which allows you to run devcontainers on your local machine using docker, and allows us to easily set up an environment for local development.
+**Warning: local development with devpod is currently experimental - the supported environments for local development are with `uv` and a locally installed python, or with Github codespaces**.
+
+Github codespaces uses the open devcontainer standard for configuration, which (in principle) means you can also run the application anywhere else which supports it. [devpod](https://devpod.sh/) is an application which allows you to run devcontainers on your local machine using docker, and allows us to easily set up an environment for local development. However, there's an important caveat - in order to make sure our development container is compatible with non x86 architectures (like, for instance, recnet Macs), we need to use a different base image than the one we use on github spaces. Therefore, we provide a separate "local development" devcontainer config at `.devcontainer/devpod.devcontainer.json`.
 
 First install [devpod](https://devpod.sh) and [Docker](https://docker.io), then setup devpod to use docker:
 
@@ -84,9 +86,17 @@ devpod-cli context set-options -o EXIT_AFTER_TIMEOUT=false
 
 Then, from the command line you can run:
 
-`devpod-cli up .`
+`devpod-cli up . --devcontainer-path .devcontainer/devpod.devcontainer.json `
 
-A vscode window will open in your browser, from where you can run `just run_devserver` in a terminal, as described above in the "Github codespaces" section.
+A vscode window will open in your browser, but there's a couple of caveats, compared to the easier "Github codespaces" version above.
+
+First, you'll need to run the setup script yourself, which installs tailwind, collects static assets, and runs dabase migrations:
+
+Open a terminal in vscode, and run: `just dev_setup_codespaces`.
+
+You may see "setting locale failed" warnings appear in the terminal - these can be safely ignored, but can be suppressed by using `zsh` instead of `bash` as your shell.
+
+from here on you can run `just run_devserver` in a terminal, as described above in the "Github codespaces" section.
 
 ### Installing just and installing uv
 
