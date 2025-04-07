@@ -1,5 +1,5 @@
 {
-  "dockerComposeFile": "codespaces-compose.yaml",
+  "dockerComposeFile": "devpod-compose.yaml",
   "service": "main",
   "runServices": [
     "db",
