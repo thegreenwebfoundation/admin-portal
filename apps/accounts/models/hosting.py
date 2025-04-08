@@ -374,6 +374,7 @@ class Hostingprovider(models.Model):
     )
     showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
     website = models.URLField(max_length=255)
+    carbon_txt_url = models.URLField(max_length=255, null=True, blank=True)
     datacenter = models.ManyToManyField(
         "Datacenter",
         through="HostingproviderDatacenter",

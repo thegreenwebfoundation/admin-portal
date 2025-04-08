@@ -852,6 +852,7 @@ class HostingAdmin(
                         "showonwebsite",
                         "customer",
                     ),
+                    ("carbon_txt_url",),
                     ("partner", "model"),
                     ("staff_labels",),
                     ("email_template", "preview_email_button"),

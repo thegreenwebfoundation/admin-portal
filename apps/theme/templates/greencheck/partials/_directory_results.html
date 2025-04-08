@@ -78,28 +78,31 @@
                         </details>
                     {% endif %}
 
+                    {% if obj.carbon_txt_url %}
+                      {% include "greencheck/partials/_directory_carbon_txt_badge.html" with carbon_txt_url=obj.carbon_txt_url %}
+                    {% endif %}
                 </div>
 
                 <details class="">
                     <summary class="text-right text-sm text-neutral-400">Think this data could be improved?</summary>
 
                     <p class="max-w-xs md:max-w-md text-sm text-justify ml-auto mr-0 mt-2 text-neutral-400">
-                        We work with hosting providers to ensure the data shown here is correct 
-                        on submission, refreshed at least annually and made public. But like any dataset, 
-                        this data requires tending. 
-                         <a target="_blank" rel="noopener noreferrer" 
+                        We work with hosting providers to ensure the data shown here is correct
+                        on submission, refreshed at least annually and made public. But like any dataset,
+                        this data requires tending.
+                         <a target="_blank" rel="noopener noreferrer"
                          href="https://www.thegreenwebfoundation.org/support/i-think-theres-an-error-in-the-green-web-dataset-what-can-i-do/">
                          It can become incorrect</a> over time. That's when a little people power makes all the difference!</p>
 
                     <p class="max-w-xs md:max-w-md text-sm text-justify ml-auto mr-0 mt-2 text-neutral-400">
-                        <span class="text-neutral-500">Customers of this provider</span> - 
+                        <span class="text-neutral-500">Customers of this provider</span> -
                         a request coming from a customer to update the information visible here usually carries more weight than one coming from us.
                         Use our
                         <a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/sample-emails/">
                             sample emails</a> to start a conversation.</p>
 
                     <p class="max-w-xs md:max-w-md text-sm text-justify ml-auto mr-0 mt-2 text-neutral-400">
-                        <span class="text-neutral-500">Provider staff</span> - 
+                        <span class="text-neutral-500">Provider staff</span> -
                         <a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/support-form/?wpf2192_9=Update a listing in the Green Web Directory">
                             submit a correction</a>.</p>
 
