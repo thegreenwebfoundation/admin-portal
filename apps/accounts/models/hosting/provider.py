@@ -4,8 +4,8 @@ import logging
 import secrets
 import typing
 from urllib.parse import urlparse
-
 from anymail.message import AnymailMessage
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models
@@ -15,30 +15,21 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from django_mysql.models import EnumField
 from guardian.shortcuts import get_users_with_perms
-from model_utils.models import TimeStampedModel
 from taggit import models as tag_models
 from taggit.managers import TaggableManager
-
+from model_utils.models import TimeStampedModel
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
-
-from ..permissions import manage_datacenter, manage_provider
-from .choices import (
-    ClassificationChoice,
-    CoolingChoice,
-    EnergyType,
-    ModelType,
-    PartnerChoice,
-    TempType,
-)
-
-# import apps.greencheck.models as gc_models
-
+from ...permissions import manage_provider
+from ..choices import (ModelType, PartnerChoice)
+from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, Label
 
 logger = logging.getLogger(__name__)
 
 
 GREEN_VIA_CARBON_TXT = f"green:{GreenlistChoice.CARBONTXT.value}"
+
+
 AWAITING_REVIEW_STRING = "Awaiting Review"
 AWAITING_REVIEW_SLUG = "awaiting-review"
 
@@ -50,154 +41,6 @@ AWAITING_REVIEW_SLUG = "awaiting-review"
 # the version. This also allows for quickly identifing key info
 # about the hash
 DOMAIN_HASH_ISSUER_ID = "GWF-01"
-
-
-class Datacenter(models.Model):
-    country = CountryField(db_column="countrydomain")
-    dc12v = models.BooleanField()
-    greengrid = models.BooleanField()
-    mja3 = models.BooleanField(null=True, verbose_name="meerjaren plan energie 3")
-    model = models.CharField(max_length=255, choices=ModelType.choices)
-    name = models.CharField(max_length=255, db_column="naam")
-    pue = models.FloatField(verbose_name="Power usage effectiveness")
-    residualheat = models.BooleanField(null=True)
-    showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
-    temperature = models.IntegerField(null=True)
-    temperature_type = models.CharField(
-        max_length=255, choices=TempType.choices, db_column="temperaturetype"
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
-    )
-    virtual = models.BooleanField()
-    website = models.CharField(max_length=255)
-
-    @property
-    def users(self) -> models.QuerySet["User"]:
-        """
-        Returns a QuerySet of Users who have permissions for a given Datacenter
-        """
-        return get_users_with_perms(
-            self, only_with_perms_in=(manage_datacenter.codename,)
-        )
-
-    @property
-    def users_explicit_perms(self) -> models.QuerySet["User"]:
-        """
-        Returns a QuerySet of all Users that have *explicit* permissions to manage this Datacenter,
-        not taking into consideration:
-            - group membership
-            - superuser status
-        """
-        return get_users_with_perms(
-            self,
-            only_with_perms_in=(manage_datacenter.codename,),
-            with_superusers=False,
-            with_group_users=False,
-        )
-
-    @property
-    def admin_url(self) -> str:
-        return reverse("greenweb_admin:accounts_datacenter_change", args=[str(self.id)])
-
-    @property
-    def city(self):
-        """
-        Return the city this datacentre is
-        placed in.
-        """
-        location = self.datacenterlocation_set.first()
-        if location:
-            return location.city
-        else:
-            return None
-
-    def legacy_representation(self):
-        """
-        Return a dictionary representation of datacentre,
-        suitable for serving in the older directory
-        API.
-        """
-
-        certificates = [
-            cert.legacy_representation() for cert in self.datacenter_certificates.all()
-        ]
-
-        return {
-            "id": self.id,
-            "naam": self.name,
-            "website": self.website,
-            "countrydomain": str(self.country),
-            "model": self.model,
-            "pue": self.pue,
-            "mja3": self.mja3,
-            # this needs a new table we don't have
-            "city": self.city,
-            "country": self.country.name,
-            # this lists through DatacenterCertificate
-            "certificates": certificates,
-            # the options below are deprecated
-            "classification": "DEPRECATED",
-            # this lists through DatacenterClassification
-            "classifications": ["DEPRECATED"],
-        }
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        db_table = "datacenters"
-        indexes = [
-            models.Index(fields=["name"], name="dc_name"),
-        ]
-        permissions = (manage_datacenter.astuple(),)
-
-
-class DatacenterClassification(models.Model):
-    # TODO if this is used to some extent, this should be m2m
-    classification = models.CharField(
-        max_length=255, choices=ClassificationChoice.choices
-    )
-    datacenter = models.ForeignKey(
-        Datacenter,
-        db_column="id_dc",
-        on_delete=models.CASCADE,
-        related_name="classifications",
-    )
-
-    def __str__(self):
-        return f"{self.classification} - related id: {self.datacenter_id}"
-
-    class Meta:
-        db_table = "datacenters_classifications"
-        # managed = False
-
-
-class DatacenterCooling(models.Model):
-    # TODO if this is used to some extent, this should ideally be m2m
-    cooling = models.CharField(max_length=255, choices=CoolingChoice.choices)
-    datacenter = models.ForeignKey(
-        Datacenter, db_column="id_dc", on_delete=models.CASCADE
-    )
-
-    def __str__(self):
-        return self.cooling
-
-    class Meta:
-        db_table = "datacenters_coolings"
-        # managed = False
-
-
-class Label(tag_models.TagBase):
-    """
-    The base tag class we need in order to create a separate set of
-    tags to use as internal labels
-    """
-
-    class Meta:
-        verbose_name = _("Label")
-        verbose_name_plural = _("Labels")
-
 
 class ProviderLabel(tag_models.TaggedItemBase):
     """
@@ -214,7 +57,6 @@ class ProviderLabel(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
-
 
 class Service(tag_models.TagBase):
     """
@@ -246,76 +88,6 @@ class ProviderService(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
-
-
-class DomainHash(TimeStampedModel):
-    """
-    A domain hash is unique to a combination of a domain and a provider.
-    It is used to verify that a domain is hosted by a provider, and referred to when
-    the platform is looking up a specific domain to see if a provider has control over it.
-    """
-
-    domain = models.CharField(max_length=255)
-    hash = models.CharField(max_length=255)
-    provider = models.ForeignKey(
-        "Hostingprovider",
-        on_delete=models.CASCADE,
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-    )
-
-    def clean(self):
-        """
-        Validate the domain using GreenDomainChecker.
-        """
-
-        # we have to import here to avoid a circular import
-        from ...greencheck.domain_check import GreenDomainChecker
-
-        checker = GreenDomainChecker()
-
-        if not checker.validate_domain(self.domain):
-            raise ValidationError({"domain": "Invalid domain provided"})
-
-    def save(self, *args, **kwargs):
-        """
-        Generate a hash before saving.
-        """
-        if not self.hash:
-            if not self.provider.shared_secret:
-                raise NoSharedSecret
-
-            self.hash = self.generate_hash()
-        super().save(*args, **kwargs)
-
-    def generate_hash(self) -> str:
-        """
-        Generates a SHA-256 hash based on the domain and the provider's shared secret.
-
-        Returns:
-            str: The generated hash in hexadecimal format.
-
-        Raises:
-            NoSharedSecret: If the provider does not have a shared secret.
-        """
-        """"""
-        if not self.provider.shared_secret:
-            raise NoSharedSecret
-
-        hash_object = hashlib.sha256(
-            f"{self.domain}{self.provider.shared_secret.body}".encode("utf-8")
-        )
-        # we want to be able to identify hashes by their issuer, so we prefix
-        # it with a string denoting the issuer and the version of the algo used
-        # to make the hash
-        domain_hash_prefix = DOMAIN_HASH_ISSUER_ID
-        return f"{domain_hash_prefix}-{hash_object.hexdigest()}"
-
-    def __str__(self):
-        return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
 
 
 class Hostingprovider(models.Model):
@@ -765,53 +537,6 @@ class ProviderSharedSecret(TimeStampedModel):
     provider = models.OneToOneField(Hostingprovider, on_delete=models.CASCADE)
 
 
-class AbstractNote(TimeStampedModel):
-    """
-    Notes around domain objects, to allow admin
-    staff to add unstructured data, and links, and commentary
-    add commentary or link to other information relating to
-    """
-
-    added_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True
-    )
-    body_text = models.TextField(blank=True)
-
-    def __str__(self):
-        added_at = self.created.strftime("%Y-%m-%d, %H:%M")
-        return f"Note, added by {self.added_by} at {added_at}"
-
-    class Meta:
-        abstract = True
-
-
-class SupportMessage(TimeStampedModel):
-    """
-    A model to represent the different kind of support messages we use when
-    corresponding with providers and end users.
-    """
-
-    category = models.CharField(
-        max_length=255,
-        help_text="A category for this kind of message. For internal use",
-    )
-    subject = models.CharField(
-        max_length=255,
-        help_text=(
-            "The default subject of the email message. This is what "
-            "the user sees in their inbox"
-        ),
-    )
-    body = models.TextField(
-        help_text=(
-            "The default content of the message sent to the user. Supports markdown."
-        ),
-    )
-
-    def __str__(self):
-        return self.category
-
-
 class HostingProviderNote(AbstractNote):
     """
     A note model for information about a hosting provider.
@@ -821,152 +546,6 @@ class HostingProviderNote(AbstractNote):
     """
 
     provider = models.ForeignKey(Hostingprovider, null=True, on_delete=models.PROTECT)
-
-
-class DatacenterNote(AbstractNote):
-    """
-    A note model for information about a datacentre - like the hosting note,
-    but for annotating datacenters in the admin.
-    """
-
-    provider = models.ForeignKey(
-        Datacenter, null=True, on_delete=models.PROTECT, db_column="id_dc"
-    )
-
-
-class DataCenterLocation(models.Model):
-    """
-    A join table linking datacentre cities
-    to the country.
-    """
-
-    city = models.CharField(max_length=255)
-    country = models.CharField(max_length=255)
-    datacenter = models.ForeignKey(
-        Datacenter, null=True, on_delete=models.CASCADE, db_column="id_dc"
-    )
-
-    def __str__(self):
-        return f"{self.city}, {self.country}"
-
-    class Meta:
-        verbose_name = "Datacentre Location"
-        db_table = "datacenters_locations"
-
-
-class HostingCommunication(TimeStampedModel):
-    template = models.CharField(max_length=128)
-    hostingprovider = models.ForeignKey(
-        Hostingprovider, null=True, on_delete=models.SET_NULL
-    )
-    # a store of the outbound messages we send, so we have a record
-    # for future reference
-    message_content = models.TextField(blank=True)
-
-
-class HostingproviderDatacenter(models.Model):
-    """Intermediary table between Datacenter and Hostingprovider"""
-
-    approved = models.BooleanField(default=False)
-    approved_at = models.DateTimeField(null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    datacenter = models.ForeignKey(Datacenter, null=True, on_delete=models.CASCADE)
-    hostingprovider = models.ForeignKey(
-        Hostingprovider, null=True, on_delete=models.CASCADE
-    )
-
-    class Meta:
-        db_table = "datacenters_hostingproviders"
-        # managed = False
-
-
-class EvidenceType(models.TextChoices):
-    """
-    Type of the supporting evidence, that certifies that green energy is used
-    """
-
-    ANNUAL_REPORT = "Annual report"
-    WEB_PAGE = "Web page"
-    CERTIFICATE = "Certificate"
-    OTHER = "Other"
-
-
-class AbstractSupportingDocument(models.Model):
-    """
-    When a hosting provider makes claims about running on green energy,
-    offsetting their emissions, and so on want to them to upload the
-    evidence.
-    We subclass this
-
-    """
-
-    title = models.CharField(
-        max_length=255,
-        help_text="Describe what you are listing, as you would to a user or customer.",
-    )
-    attachment = models.FileField(
-        upload_to="uploads/",
-        blank=True,
-        help_text=(
-            "If you have a sustainability report, or bill from a energy provider"
-            " provider, or similar certificate of supply from a green tariff add it"
-            " here."
-        ),
-    )
-    url = models.URLField(
-        blank=True,
-        help_text=(
-            "Alternatively, if you add a link, we'll fetch a copy at the URL you list,"
-            " so we can point to the version when you listed it"
-        ),
-    )
-    description = models.TextField(
-        blank=True,
-    )
-    valid_from = models.DateField()
-    valid_to = models.DateField()
-    type = models.CharField(choices=EvidenceType.choices, max_length=255, null=True)
-    public = models.BooleanField(
-        default=True,
-        help_text=(
-            "If this is checked, we'll add a link to this "
-            "document/page in your entry in the green web directory."
-        ),
-    )
-    archived = models.BooleanField(
-        default=False,
-        editable=False,
-        help_text=(
-            "If this is checked, this document will not show up in any queries. "
-            "Should not be editable via the admin interface by non-staff users."
-        ),
-    )
-
-    def __str__(self):
-        return f"{self.valid_from} - {self.title}"
-
-    class Meta:
-        abstract = True
-        verbose_name = "Supporting Document"
-
-
-class DatacenterSupportingDocument(AbstractSupportingDocument):
-    """
-    The concrete class for datacentre providers.
-    """
-
-    datacenter = models.ForeignKey(
-        Datacenter,
-        db_column="id_dc",
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="datacenter_evidence",
-    )
-
-    @property
-    def parent(self):
-        return self.datacentre
-
 
 class NonArchivedEvidenceManager(models.Manager):
     """
@@ -1034,43 +613,14 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
 
         return self.url
 
-
-class Certificate(models.Model):
-    energyprovider = models.CharField(max_length=255)
-    mainenergy_type = models.CharField(
-        max_length=255, db_column="mainenergytype", choices=EnergyType.choices
+class HostingCommunication(TimeStampedModel):
+    template = models.CharField(max_length=128)
+    hostingprovider = models.ForeignKey(
+        Hostingprovider, null=True, on_delete=models.SET_NULL
     )
-    url = models.CharField(max_length=255)
-    valid_from = models.DateField()
-    valid_to = models.DateField()
-
-    class Meta:
-        abstract = True
-
-
-class DatacenterCertificate(Certificate):
-    datacenter = models.ForeignKey(
-        Datacenter,
-        db_column="id_dc",
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="datacenter_certificates",
-    )
-
-    def legacy_representation(self):
-        """
-        Return the JSON representation
-        """
-        return {
-            "cert_valid_from": self.valid_from,
-            "cert_valid_to": self.valid_to,
-            "cert_url": self.url,
-        }
-
-    class Meta:
-        db_table = "datacenter_certificates"
-        # managed = False
-
+    # a store of the outbound messages we send, so we have a record
+    # for future reference
+    message_content = models.TextField(blank=True)
 
 class HostingproviderCertificate(Certificate):
     hostingprovider = models.ForeignKey(
@@ -1102,3 +652,74 @@ class HostingproviderStats(models.Model):
     class Meta:
         db_table = "hostingproviders_stats"
         # managed = False
+
+class DomainHash(TimeStampedModel):
+    """
+    A domain hash is unique to a combination of a domain and a provider.
+    It is used to verify that a domain is hosted by a provider, and referred to when
+    the platform is looking up a specific domain to see if a provider has control over it.
+    """
+
+    domain = models.CharField(max_length=255)
+    hash = models.CharField(max_length=255)
+    provider = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    def clean(self):
+        """
+        Validate the domain using GreenDomainChecker.
+        """
+
+        # we have to import here to avoid a circular import
+        from ....greencheck.domain_check import GreenDomainChecker
+
+        checker = GreenDomainChecker()
+
+        if not checker.validate_domain(self.domain):
+            raise ValidationError({"domain": "Invalid domain provided"})
+
+    def save(self, *args, **kwargs):
+        """
+        Generate a hash before saving.
+        """
+        if not self.hash:
+            if not self.provider.shared_secret:
+                raise NoSharedSecret
+
+            self.hash = self.generate_hash()
+        super().save(*args, **kwargs)
+
+    def generate_hash(self) -> str:
+        """
+        Generates a SHA-256 hash based on the domain and the provider's shared secret.
+
+        Returns:
+            str: The generated hash in hexadecimal format.
+
+        Raises:
+            NoSharedSecret: If the provider does not have a shared secret.
+        """
+        """"""
+        if not self.provider.shared_secret:
+            raise NoSharedSecret
+
+        hash_object = hashlib.sha256(
+            f"{self.domain}{self.provider.shared_secret.body}".encode("utf-8")
+        )
+        # we want to be able to identify hashes by their issuer, so we prefix
+        # it with a string denoting the issuer and the version of the algo used
+        # to make the hash
+        domain_hash_prefix = DOMAIN_HASH_ISSUER_ID
+        return f"{domain_hash_prefix}-{hash_object.hexdigest()}"
+
+    def __str__(self):
+        return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
+
+
