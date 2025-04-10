@@ -92,79 +92,6 @@ class ProviderService(tag_models.TaggedItemBase):
     )
 
 
-class DomainHash(TimeStampedModel):
-    """
-    A domain hash is unique to a combination of a domain and a provider.
-    It is used to verify that a domain is hosted by a provider, and referred to when
-    the platform is looking up a specific domain to see if a provider has control over it.
-    """
-
-    domain = models.CharField(max_length=255)
-    hash = models.CharField(max_length=255)
-    provider = models.ForeignKey(
-        "Hostingprovider",
-        on_delete=models.CASCADE,
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-    )
-
-    def clean(self):
-        """
-        Validate the domain using GreenDomainChecker.
-        """
-
-        # we have to import here to avoid a circular import
-        from ...greencheck.domain_check import GreenDomainChecker
-
-        checker = GreenDomainChecker()
-
-        if not checker.validate_domain(self.domain):
-            raise ValidationError({"domain": "Invalid domain provided"})
-
-    def save(self, *args, **kwargs):
-        """
-        Generate a hash before saving.
-        """
-        if not self.hash:
-            if not self.provider.shared_secret:
-                raise NoSharedSecret
-
-            self.hash = self.generate_hash()
-        super().save(*args, **kwargs)
-
-    def generate_hash(self) -> str:
-        """
-        Generates a SHA-256 hash based on the domain and the provider's shared secret.
-
-        Returns:
-            str: The generated hash in hexadecimal format.
-
-        Raises:
-            NoSharedSecret: If the provider does not have a shared secret.
-        """
-        """"""
-        if not self.provider.shared_secret:
-            raise NoSharedSecret
-
-        hash_object = hashlib.sha256(
-            f"{self.domain}{self.provider.shared_secret.body}".encode("utf-8")
-        )
-        # we want to be able to identify hashes by their issuer, so we prefix
-        # it with a string denoting the issuer and the version of the algo used
-        # to make the hash
-        domain_hash_prefix = DOMAIN_HASH_ISSUER_ID
-        return f"{domain_hash_prefix}-{hash_object.hexdigest()}"
-
-    def __str__(self):
-        return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
-
-    class Meta:
-        verbose_name_plural = "Domain Hashes"
-
-
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
@@ -800,3 +727,6 @@ class DomainHash(TimeStampedModel):
 
     def __str__(self):
         return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
+
+    class Meta:
+        verbose_name_plural = "Domain Hashes"
