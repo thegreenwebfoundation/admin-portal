@@ -1409,6 +1409,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         ProviderRequestIPRangeInline,
         ProviderRequestASNInline,
     ]
+    search_fields = ("name", "website")
     formfield_overrides = {TaggableManager: {"widget": LabelWidget(model=Service)}}
     empty_value_display = "(empty)"
     list_filter = ("status",)
