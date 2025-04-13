@@ -13,7 +13,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import DefaultStorage
 from django.db.models.query import QuerySet
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
@@ -165,7 +165,7 @@ class UserActivationView(ActivationView):
         return HttpResponseRedirect(force_str(self.get_success_url()))
 
 
-class DomainHashHomeView(LoginRequiredMixin, ListView):
+class ProviderDomainsView(LoginRequiredMixin, ListView):
     """
     Domain hash home page:
     - used by external (non-staff) users to see a list of domain hashes they have created,
@@ -173,44 +173,67 @@ class DomainHashHomeView(LoginRequiredMixin, ListView):
     - requires the flag `domain_hash` enabled for the user (otherwise returns 404).
     """
 
-    template_name = "provider_portal/domain_hash_index.html"
+    template_name = "provider_portal/provider_domains_index.html"
     model = DomainHash
 
     def get_queryset(self):
-        # TODO we want to allow users to see their own domain hashes, and
+        return self.provider.domainhash_set.all()
 
-        return self.model.objects.filter(
-            provider__in=[
-                prov.id
-                for prov in self.request.user.hosting_providers_explicit_perms.all()
-            ]
-        )
 
-    def get(self, *args, **kwargs):
+    def get_context_data(self):
+        return { **super().get_context_data(), **{
+            "provider": self.provider
+            }}
+
+    def get(self, request, *args, **kwargs):
+        provider_id = kwargs.get("provider_id")
+        self.provider = Hostingprovider.objects.get(id=provider_id)
         self.object_list = self.get_queryset()
         context = self.get_context_data()
-        import ipdb
-
         return self.render_to_response(context)
 
 
-class DomainHashCreateView(LoginRequiredMixin, CreateView):
-    template_name = "provider_portal/domain_hash_new.html"
+class ProviderDomainCreateView(LoginRequiredMixin, CreateView):
+    template_name = "provider_portal/provider_domain_new.html"
     form_class = DomainHashForm
     model = DomainHash
 
+    def get_context_data(self, *args, **kwargs):
+        return { **super().get_context_data(*args, **kwargs), **{
+            "provider": self.provider
+            }}
 
-class DomainHashDetailView(LoginRequiredMixin, DetailView):
-    template_name = "provider_portal/domain_hash_detail.html"
-    model = DomainHash
+
+    def get_initial(self):
+        return { **super().get_initial(), **{
+            "provider": self.provider
+            }}
+
+    def get_success_url(self):
+        return reverse('provider-domain-index', kwargs={'provider_id': self.provider.id})
 
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        context = self.get_context_data(object=self.object)
-        import ipdb
+        provider_id = kwargs.get("provider_id")
+        self.provider = Hostingprovider.objects.get(id=provider_id)
+        return super().get(request, *args, **kwargs);
 
-        # ipdb.set_trace()
-        return self.render_to_response(context)
+    def post(self, request, *args, **kwargs):
+        provider_id = kwargs.get("provider_id")
+        self.provider = Hostingprovider.objects.get(id=provider_id)
+        return super().post(request, *args, **kwargs);
+
+
+
+class ProviderDomainDetailView(LoginRequiredMixin, DetailView):
+    template_name = "provider_portal/provider_domain_detail.html"
+
+    def get_object(self):
+        provider = self.kwargs.get("provider_id")
+        domain = self.kwargs.get("domain")
+        return get_object_or_404(
+            DomainHash.objects.filter(provider=provider,domain=domain)
+        )
+
 
 
 class ProviderPortalHomeView(LoginRequiredMixin, ListView):

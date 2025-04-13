@@ -13,9 +13,9 @@ from apps.accounts.views import (
     ProviderRequestDetailView,
     ProviderRequestWizardView,
     ProviderAutocompleteView,
-    DomainHashHomeView,
-    DomainHashCreateView,
-    DomainHashDetailView,
+    ProviderDomainsView,
+    ProviderDomainCreateView,
+    ProviderDomainDetailView,
 )
 
 urlpatterns = [
@@ -155,19 +155,19 @@ urlpatterns = [
         name="before-starting",
     ),
     path(
-        "domain-hash/",
-        DomainHashHomeView.as_view(),
-        name="provider-hash-index",
+        "providers/<int:provider_id>/domains/",
+        ProviderDomainsView.as_view(),
+        name="provider-domain-index",
     ),
     path(
-        "domain-hash/new/",
-        DomainHashCreateView.as_view(),
-        name="provider-hash-create",
+        "providers/<int:provider_id>/domains/new",
+        ProviderDomainCreateView.as_view(),
+        name="provider-domain-create",
     ),
     path(
-        "domain-hash/detail/<int:pk>/",
-        DomainHashDetailView.as_view(),
-        name="provider-hash-detail",
+        "providers/<int:provider_id>/domains/<str:domain>",
+        ProviderDomainDetailView.as_view(),
+        name="provider-domain-detail",
     ),
     path(
         "domain-claim/",

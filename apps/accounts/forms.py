@@ -782,3 +782,5 @@ class DomainHashForm(forms.ModelForm):
     class Meta:
         model = ac_models.DomainHash
         fields = ["domain", "provider"]
+        widgets = { "provider": forms.HiddenInput() }
+
