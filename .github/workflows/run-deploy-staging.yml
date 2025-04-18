@@ -20,6 +20,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      - name: Eco CI Energy Estimation - Initialize
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: start-measurement
+        continue-on-error: true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -69,3 +76,18 @@ jobs:
           AWS_CONFIG_FILE: ${{ secrets.AWS_CONFIG_FILE }}
           API_URL: ${{ secrets.API_URL }}
           TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS: ${{ secrets.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS }}
+
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: get-measurement
+          label: "ansible deploy staging"
+        continue-on-error: true
+
+      - name: Eco CI Energy Estimation - End Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: display-results
+          pr-comment: true
+          send-data: true
+        continue-on-error: true
