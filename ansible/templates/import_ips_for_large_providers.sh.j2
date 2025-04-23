@@ -11,6 +11,6 @@ cd {{ project_root }}/current/
 
 # run our ip imports
 source .venv/bin/activate
-dotenv run -- ./manage.py update_networks_in_db_amazon
+#dotenv run -- ./manage.py update_networks_in_db_amazon
 dotenv run -- ./manage.py update_networks_in_db_google
 dotenv run -- ./manage.py update_networks_in_db_microsoft
