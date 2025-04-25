@@ -123,6 +123,7 @@ module.exports = {
 						},
 						h5: {
 							fontSize: theme('fontSize.2xl'),
+							fontWeight: 400,
 						},
 					},
 				},
