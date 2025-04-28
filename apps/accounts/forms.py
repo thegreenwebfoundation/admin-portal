@@ -25,11 +25,12 @@ from django.utils.safestring import mark_safe
 
 User = get_user_model()
 
+
 class AlwaysChangedModelFormMixin:
     """
     A mixin for ModelForms that makes sure that a form with this Mixin
     is always marked as changed in checks like `has_changed()`.
-    Used in form wizards containing formsets, to return true for all forms 
+    Used in form wizards containing formsets, to return true for all forms
     in a formset, so that all data is saved at the end of the wizard.
     """
 
@@ -38,7 +39,6 @@ class AlwaysChangedModelFormMixin:
         Always returns True, so that the form is always marked as changed.
         """
         return True
-
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -570,7 +570,7 @@ class NetworkFootprintForm(BetterMultiModelForm):
 
         return self.cleaned_data
 
-    
+
 class ConsentForm(forms.ModelForm):
     """
     Part of multi-step registration form (screen 5).
@@ -741,3 +741,11 @@ class PreviewForm(forms.Form):
     """
 
     pass
+
+
+class DomainHashForm(forms.ModelForm):
+    class Meta:
+        model = ac_models.DomainHash
+        fields = ["domain", "provider"]
+        widgets = { "provider": forms.HiddenInput() }
+

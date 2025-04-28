@@ -21,7 +21,7 @@ from model_utils.models import TimeStampedModel
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
 from ...permissions import manage_provider
-from ..choices import (ModelType, PartnerChoice)
+from ..choices import ModelType, PartnerChoice
 from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, Label
 
 logger = logging.getLogger(__name__)
@@ -42,6 +42,7 @@ AWAITING_REVIEW_SLUG = "awaiting-review"
 # about the hash
 DOMAIN_HASH_ISSUER_ID = "GWF-01"
 
+
 class ProviderLabel(tag_models.TaggedItemBase):
     """
     A different through model for listing internally facing tags,
@@ -57,6 +58,7 @@ class ProviderLabel(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
+
 
 class Service(tag_models.TagBase):
     """
@@ -547,6 +549,7 @@ class HostingProviderNote(AbstractNote):
 
     provider = models.ForeignKey(Hostingprovider, null=True, on_delete=models.PROTECT)
 
+
 class NonArchivedEvidenceManager(models.Manager):
     """
     A custom manager to filter out archived items of supporting evidence
@@ -613,6 +616,7 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
 
         return self.url
 
+
 class HostingCommunication(TimeStampedModel):
     template = models.CharField(max_length=128)
     hostingprovider = models.ForeignKey(
@@ -621,6 +625,7 @@ class HostingCommunication(TimeStampedModel):
     # a store of the outbound messages we send, so we have a record
     # for future reference
     message_content = models.TextField(blank=True)
+
 
 class HostingproviderCertificate(Certificate):
     hostingprovider = models.ForeignKey(
@@ -653,6 +658,7 @@ class HostingproviderStats(models.Model):
         db_table = "hostingproviders_stats"
         # managed = False
 
+
 class DomainHash(TimeStampedModel):
     """
     A domain hash is unique to a combination of a domain and a provider.
@@ -684,6 +690,12 @@ class DomainHash(TimeStampedModel):
 
         if not checker.validate_domain(self.domain):
             raise ValidationError({"domain": "Invalid domain provided"})
+        try:
+            response = checker.check_domain_carbon_txt(self.domain)
+        except Exception as e:
+            raise ValidationError({"domain": e.message })
+        if not response["success"]:
+            raise ValidationError({"domain": ", ".join(response["errors"])})
 
     def save(self, *args, **kwargs):
         """
@@ -722,4 +734,5 @@ class DomainHash(TimeStampedModel):
     def __str__(self):
         return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
 
-
+    class Meta:
+        verbose_name_plural = "Domain Hashes"

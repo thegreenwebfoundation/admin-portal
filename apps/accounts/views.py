@@ -13,12 +13,14 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import DefaultStorage
 from django.db.models.query import QuerySet
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, CreateView
 from django.views.generic.base import TemplateView
+from django.views.generic.edit import ModelFormMixin
+
 from django_registration import signals, validators
 from django_registration.backends.activation.views import (
     ActivationView,
@@ -39,6 +41,7 @@ from .forms import (
     OrgDetailsForm,
     PreviewForm,
     ServicesForm,
+    DomainHashForm,
 )
 from .models import (
     Hostingprovider,
@@ -49,6 +52,7 @@ from .models import (
     ProviderRequestIPRange,
     ProviderRequestStatus,
     User,
+    DomainHash,
 )
 from .permissions import manage_provider
 from .utils import send_email
@@ -60,15 +64,15 @@ logger = logging.getLogger(__name__)
 class DashboardView(TemplateView):
     """
     This dashboard view was what people would see when signing into the admin.
-    We currently redirect to the provider portal home page as at present,we 
+    We currently redirect to the provider portal home page as at present,we
     only really logged in activity by users who work for the providers in our system.
     """
+
     template_name = "dashboard.html"
 
     def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(reverse("provider_portal_home"))
-        
-    
+
 
 class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -154,12 +158,81 @@ class UserActivationView(ActivationView):
             )
             message = "Thanks, we've confirmed your email address. Now you can login with your username and password."
             messages.success(self.request, message)
-            return HttpResponseRedirect(
-                force_str(self.get_success_url(activated_user))
-            )
+            return HttpResponseRedirect(force_str(self.get_success_url(activated_user)))
 
         messages.error(self.request, error_message)
         return HttpResponseRedirect(force_str(self.get_success_url()))
+
+
+class ProviderDomainsView(LoginRequiredMixin, ListView):
+    """
+    Domain hash home page:
+    - used by external (non-staff) users to see a list of domain hashes they have created,
+    - renders the list of domain hashes a HTML template,
+    - requires the flag `domain_hash` enabled for the user (otherwise returns 404).
+    """
+
+    template_name = "provider_portal/provider_domains_index.html"
+    model = DomainHash
+
+    def get_queryset(self):
+        return self.provider.domainhash_set.all()
+
+
+    def get_context_data(self):
+        return { **super().get_context_data(), **{
+            "provider": self.provider
+            }}
+
+    def get(self, request, *args, **kwargs):
+        provider_id = kwargs.get("provider_id")
+        self.provider = Hostingprovider.objects.get(id=provider_id)
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        return self.render_to_response(context)
+
+
+class ProviderDomainCreateView(LoginRequiredMixin, CreateView):
+    template_name = "provider_portal/provider_domain_new.html"
+    form_class = DomainHashForm
+    model = DomainHash
+
+    def get_context_data(self, *args, **kwargs):
+        return { **super().get_context_data(*args, **kwargs), **{
+            "provider": self.provider
+            }}
+
+
+    def get_initial(self):
+        return { **super().get_initial(), **{
+            "provider": self.provider
+            }}
+
+    def get_success_url(self):
+        return reverse('provider-domain-index', kwargs={'provider_id': self.provider.id})
+
+    def get(self, request, *args, **kwargs):
+        provider_id = kwargs.get("provider_id")
+        self.provider = Hostingprovider.objects.get(id=provider_id)
+        return super().get(request, *args, **kwargs);
+
+    def post(self, request, *args, **kwargs):
+        provider_id = kwargs.get("provider_id")
+        self.provider = Hostingprovider.objects.get(id=provider_id)
+        return super().post(request, *args, **kwargs);
+
+
+
+class ProviderDomainDetailView(LoginRequiredMixin, DetailView):
+    template_name = "provider_portal/provider_domain_detail.html"
+
+    def get_object(self):
+        provider = self.kwargs.get("provider_id")
+        domain = self.kwargs.get("domain")
+        return get_object_or_404(
+            DomainHash.objects.filter(provider=provider,domain=domain)
+        )
+
 
 
 class ProviderPortalHomeView(LoginRequiredMixin, ListView):
@@ -225,6 +298,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
     - requires the flag `provider_request` enabled to access the view,
 
     """
+
     file_storage = DefaultStorage()
 
     class Steps(Enum):
@@ -655,7 +729,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             hp_provider_request = hosting_provider.request
 
             if hp_provider_request:
-
                 locations = hp_provider_request.providerrequestlocation_set.all()
                 # return only the locations that are associated with the request
                 return [
@@ -675,7 +748,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             ]
 
         def _org_details_initial_data(hosting_provider: Hostingprovider):
-
             initial_org_dict = {
                 "name": hosting_provider.name,
                 "website": hosting_provider.website,
@@ -689,7 +761,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             return initial_org_dict
 
         def _network_footprint_initial_data(hosting_provider: Hostingprovider):
-
             hp_provider_request = hosting_provider.request
             network_dict = {
                 # TODO: all IP ranges / ASNs or only active ones?
