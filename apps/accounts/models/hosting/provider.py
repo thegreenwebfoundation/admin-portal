@@ -763,12 +763,6 @@ class DomainHash(TimeStampedModel):
 
         if not checker.validate_domain(self.domain):
             raise ValidationError({"domain": "Invalid domain provided"})
-        try:
-            response = checker.check_domain_carbon_txt(self.domain)
-        except Exception as e:
-            raise ValidationError({"domain": e.message })
-        if not response["success"]:
-            raise ValidationError({"domain": ", ".join(response["errors"])})
 
     def save(self, *args, **kwargs):
         """

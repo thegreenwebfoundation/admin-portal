@@ -79,9 +79,6 @@ class GreenDomainChecker:
             parsed_url = urllib.parse.urlparse(f"//{url}")
         return parsed_url.netloc
 
-    def check_domain_carbon_txt(self, domain):
-        return httpx.post("https://carbon-txt-api.greenweb.org/api/validate/domain", json={"domain": domain}).json()
-
     def perform_full_lookup(self, domain: str) -> GreenDomain:
         """
         Return a Green Domain object from doing a lookup.
