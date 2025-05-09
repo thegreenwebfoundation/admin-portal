@@ -4,6 +4,7 @@ from typing import Union
 
 from apps.accounts.models import Hostingprovider
 from apps.greencheck.models import GreencheckASN, GreencheckIp
+from apps.greencheck import exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -166,11 +167,19 @@ class NetworkImporter:
         created_green_ips = []
         created_asns = []
 
+        if self.hosting_provider.archived:
+            logger.warning(
+                f"Hosting provider {self.hosting_provider} is archived. "
+                f"Not importing any IPs or ASNs"
+            )
+            raise exceptions.ImportingForArchivedProvider(
+                f"{self.hosting_provider} is archived. To import IPs for this provider, unarchive it first."
+            )
+
         # Determine the type of address (IPv4, IPv6 or ASN) for
         # address in list_of_addresses:
         try:
             for address in list_of_addresses:
-
                 if is_ip_range(address):
                     # address looks like an IPv4 or IPv6 range
                     green_ip, created = self.save_ip(address)
