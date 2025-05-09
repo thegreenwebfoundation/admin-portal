@@ -20,3 +20,15 @@ class NoMatchingDomainHash(NotFound):
     An exception raised when we try to fetch a shared secret for a provider
     but no shared secret has been set.
     """
+
+
+class ImportingForArchivedProvider(Exception):
+    """
+    An exception raised when we try to import data for a provider
+    that has been archived.
+    """
+
+    default_detail = (
+        "This provider has been archived. Please unarchive it before importing data."
+    )
+    default_code = "archived_provider"
