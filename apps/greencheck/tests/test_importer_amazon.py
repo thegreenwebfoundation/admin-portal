@@ -1,6 +1,7 @@
 import pytest
 import pathlib
 import json
+import io
 
 from django.core.management import call_command
 from apps.greencheck.importers.importer_amazon import AmazonImporter
@@ -141,3 +142,38 @@ class TestAmazonImportCommand:
         call_command("update_networks_in_db_amazon")
 
         assert fake_aws.greencheckip_set.all().count() > 0
+
+    def test_handle_with_archived_provider(
+        self,
+        mocker,
+        hosting_provider_factory,
+        settings_with_aws_provider,
+        sample_data_raw,
+    ):
+        # mock the call to retrieve from source, to a locally stored
+        # testing sample. By instead using the test sample,
+        # we avoid unnecessary network requests.
+
+        # identify method we want to mock
+        path_to_mock = (
+            "apps.greencheck.importers.importer_amazon."
+            "AmazonImporter.fetch_data_from_source"
+        )
+        # Given: a provider standing in for our Amazon
+        fake_aws = hosting_provider_factory.create(
+            id=settings_with_aws_provider.AMAZON_PROVIDER_ID
+        )
+        fake_aws.archive()
+
+        # define a different return when the targeted mock
+        # method is called
+        mocker.patch(
+            path_to_mock,
+            return_value=sample_data_raw,
+        )
+        from apps.greencheck.exceptions import ImportingForArchivedProvider
+
+        # Fail the test if the command does not raise an exception. We want the exception
+        # to be raised when we try to import data for an archived provider.
+        with pytest.raises(ImportingForArchivedProvider):
+            call_command("update_networks_in_db_amazon")
