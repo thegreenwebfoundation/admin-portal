@@ -72,7 +72,6 @@ class Service(tag_models.TagBase):
         verbose_name = _("Service")
         verbose_name_plural = _("Services")
 
-
 class ProviderService(tag_models.TaggedItemBase):
     """
     The corresponding through model for linking a Provider to
@@ -88,7 +87,6 @@ class ProviderService(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
-
 
 class Hostingprovider(models.Model):
     archived = models.BooleanField(default=False)

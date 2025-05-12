@@ -72,6 +72,7 @@ from .models import (
     Service,
     SupportMessage,
     User,
+    VerificationBasis,
 )
 from .permissions import manage_datacenter, manage_provider
 from .utils import get_admin_name, reverse_admin_name, send_email
@@ -1410,7 +1411,6 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         ProviderRequestASNInline,
     ]
     search_fields = ("name", "website")
-    formfield_overrides = {TaggableManager: {"widget": LabelWidget(model=Service)}}
     empty_value_display = "(empty)"
     list_filter = ("status",)
     readonly_fields = (
@@ -1427,6 +1427,13 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
     )
     actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'services':
+            kwargs['widget'] = LabelWidget(model=Service)
+        elif db_field.name == "verification_bases":
+            kwargs['widget'] = LabelWidget(model=VerificationBasis)
+        return super(ProviderRequest, self).formfield_for_dbfield(db_field,**kwargs)
 
     def send_approval_email(
         self,

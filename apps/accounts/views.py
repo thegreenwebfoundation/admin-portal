@@ -60,15 +60,15 @@ logger = logging.getLogger(__name__)
 class DashboardView(TemplateView):
     """
     This dashboard view was what people would see when signing into the admin.
-    We currently redirect to the provider portal home page as at present,we 
+    We currently redirect to the provider portal home page as at present,we
     only really logged in activity by users who work for the providers in our system.
     """
     template_name = "dashboard.html"
 
     def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(reverse("provider_portal_home"))
-        
-    
+
+
 
 class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -391,6 +391,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         org_details_form = form_dict[steps.ORG_DETAILS.value]
         pr = org_details_form.save(commit=False)
         pr.save()
+        verification_bases_slugs = org_details_form.cleaned_data["bases_for_verification"]
+        pr.set_verification_bases_from_slugs(verification_bases_slugs)
 
         # process LOCATIONS form: extract locations
         locations_formset = form_dict[steps.LOCATIONS.value].forms["locations"]

@@ -58,6 +58,7 @@ def wizard_form_org_details_data():
         "0-website": faker.url(),
         "0-description": faker.sentence(10),
         "0-authorised_by_org": "True",
+        "0-bases_for_verification": ["we-directly-pay-for-green-energy-to-cover-the-non-green-energy-we-use"]
     }
 
 
@@ -220,7 +221,7 @@ def fake_evidence():
 def test_evidence_validation_fails(evidence_data):
 
     evidence_data["request"] = ProviderRequestFactory.create()
-    
+
     evidence = models.ProviderRequestEvidence.objects.create(**evidence_data)
 
     with pytest.raises(ValidationError):

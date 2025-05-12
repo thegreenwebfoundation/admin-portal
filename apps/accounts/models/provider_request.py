@@ -6,6 +6,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models, transaction
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext_lazy
 from django_countries.fields import CountryField
 from guardian.shortcuts import assign_perm
 from model_utils.models import TimeStampedModel
@@ -66,6 +68,57 @@ class ProviderRequestService(tag_models.TaggedItemBase):
     )
 
 
+class VerificationBasis(tag_models.TagBase):
+    """
+    A model representing reasons why a provider would be verified.
+    This includes things like
+
+        "We use 100% green energy from our own infrastructure.",
+        "We operate in a region that has a grid intensity of less than 20g CO2e/kWh or uses over 99% renewable power.",
+        "We directly pay for green energy to cover the non-green energy we use.",
+        "We purchase quality carbon offsets to cover the non-green energy we use.",
+        "We resell or actively use a provider that is already in the Green Web Dataset.",
+
+    A subclass of Taggit's 'TagBase' model.
+
+    """
+
+
+    # Annoyingly, the only way to override the max_length in taggit appears to be to copy and adjust
+    # these two field definitions wholesale: https://github.com/jazzband/django-taggit/issues/510
+    name = models.CharField(
+        verbose_name=pgettext_lazy("A tag name", "name"), unique=True, max_length=255
+    )
+
+    slug = models.SlugField(
+        verbose_name=pgettext_lazy("A tag slug", "slug"),
+        unique=True,
+        max_length=255,
+        allow_unicode=True,
+    )
+
+    class Meta:
+        verbose_name = _("Basis for verification")
+        verbose_name_plural = _("Bases for verification")
+
+
+class ProviderRequestVerificationBasis(tag_models.TaggedItemBase):
+    """
+    The corresponding through model for linking a Provider to
+    a VerificationBasis as outlined above.
+    """
+
+    content_object = models.ForeignKey(
+        "ProviderRequest",
+        on_delete=models.CASCADE,
+    )
+    tag = models.ForeignKey(
+        VerificationBasis,
+        related_name="%(app_label)s_%(class)s_items",
+        on_delete=models.CASCADE,
+    )
+
+
 class ProviderRequest(TimeStampedModel):
     """
     Model representing the input data
@@ -95,6 +148,11 @@ class ProviderRequest(TimeStampedModel):
         ),
         blank=True,
         through=ProviderRequestService,
+    )
+    verification_bases = TaggableManager(
+        verbose_name="Basis for verification",
+        blank=True,
+        through=ProviderRequestVerificationBasis,
     )
     missing_network_explanation = models.TextField(
         verbose_name="Reason for no IP / AS data",
@@ -149,6 +207,14 @@ class ProviderRequest(TimeStampedModel):
         services = Service.objects.filter(slug__in=service_slugs)
         self.services.set(services)
 
+    def set_verification_bases_from_slugs(self, verification_basis_slugs: Iterable[str]) -> None:
+        """
+        Given list of verification_basis slugs (corresponding to Tag slugs)
+        apply matching verification_bases to the ProviderRequest object
+        """
+        verification_bases = VerificationBasis.objects.filter(slug__in=verification_basis_slugs)
+        self.verification_bases.set(verification_bases)
+
     @classmethod
     def get_service_choices(cls) -> List[Tuple[int, str]]:
         """
@@ -156,6 +222,14 @@ class ProviderRequest(TimeStampedModel):
         in a format expected by ChoiceField
         """
         return [(tag.slug, tag.name) for tag in Service.objects.all()]
+
+    @classmethod
+    def get_verification_bases_choices(cls) -> List[Tuple[int, str]]:
+        """
+        Returns a list of available verification bases (implemented in the Tag model)
+        in a format expected by ChoiceField
+        """
+        return [(tag.slug, tag.name) for tag in VerificationBasis.objects.all()]
 
     @transaction.atomic
     def approve(self) -> Hostingprovider:
