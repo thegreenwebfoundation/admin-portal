@@ -8,6 +8,7 @@ from django.db import IntegrityError, models, transaction
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
+from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from guardian.shortcuts import assign_perm
 from model_utils.models import TimeStampedModel
@@ -90,6 +91,7 @@ class VerificationBasis(tag_models.TagBase):
         verbose_name=pgettext_lazy("A tag name", "name"), unique=True, max_length=255
     )
 
+
     slug = models.SlugField(
         verbose_name=pgettext_lazy("A tag slug", "slug"),
         unique=True,
@@ -97,9 +99,21 @@ class VerificationBasis(tag_models.TagBase):
         allow_unicode=True,
     )
 
+    required_evidence_link = models.URLField(
+        max_length=255, null=True, blank=True,
+        verbose_name="Required evidence link"
+    )
+
     class Meta:
         verbose_name = _("Basis for verification")
         verbose_name_plural = _("Bases for verification")
+
+    @property
+    def label(self):
+        label = self.name
+        if self.required_evidence_link is not None and self.required_evidence_link.strip() != "":
+            label += f" (<a href='{self.required_evidence_link}' target='_blank'>see required evidence</a>)"
+        return mark_safe(label)
 
 
 class ProviderRequestVerificationBasis(tag_models.TaggedItemBase):
@@ -229,7 +243,7 @@ class ProviderRequest(TimeStampedModel):
         Returns a list of available verification bases (implemented in the Tag model)
         in a format expected by ChoiceField
         """
-        return [(tag.slug, tag.name) for tag in VerificationBasis.objects.all()]
+        return [(tag.slug, tag.label) for tag in VerificationBasis.objects.all()]
 
     @transaction.atomic
     def approve(self) -> Hostingprovider:

@@ -17,7 +17,7 @@ from convenient_formsets import ConvenientBaseModelFormSet
 from file_resubmit.widgets import ResubmitFileWidget
 from taggit_labels.widgets import LabelWidget
 
-from apps.accounts.models.provider_request import ProviderRequest, ProviderRequestStatus
+from apps.accounts.models.provider_request import ProviderRequest, ProviderRequestStatus, VerificationBasis
 
 from . import models as ac_models
 from django.utils.safestring import mark_safe
@@ -208,7 +208,6 @@ class InlineSupportingDocumentForm(forms.ModelForm):
     class Meta:
         model = ac_models.HostingProviderSupportingDocument
         fields = "__all__"
-
 
 class OrgDetailsForm(forms.ModelForm):
     """
