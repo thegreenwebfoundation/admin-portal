@@ -267,6 +267,13 @@ class ServiceAdmin(admin.ModelAdmin):
     class Meta:
         verbose_name = "Services Offered"
 
+@admin.register(VerificationBasis, site=greenweb_admin)
+class VerificationBasisAdmin(admin.ModelAdmin):
+    model = VerificationBasis
+
+    class Meta:
+        verbose_name = "Bases for Verification"
+
 
 @admin.register(Label, site=greenweb_admin)
 class LabelAdmin(admin.ModelAdmin):
