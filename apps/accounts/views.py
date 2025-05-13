@@ -32,6 +32,7 @@ from django_registration.forms import (
 from formtools.wizard.views import SessionWizardView
 
 from .forms import (
+    BasisForVerificationForm,
     ConsentForm,
     GreenEvidenceForm,
     LocationStepForm,
@@ -240,15 +241,17 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         ORG_DETAILS = "0"
         LOCATIONS = "1"
         SERVICES = "2"
-        GREEN_EVIDENCE = "3"
-        NETWORK_FOOTPRINT = "4"
-        CONSENT = "5"
-        PREVIEW = "6"
+        BASIS_FOR_VERIFICATION = "3"
+        GREEN_EVIDENCE = "4"
+        NETWORK_FOOTPRINT = "5"
+        CONSENT = "6"
+        PREVIEW = "7"
 
     FORMS = [
         (Steps.ORG_DETAILS.value, OrgDetailsForm),
         (Steps.LOCATIONS.value, LocationStepForm),
         (Steps.SERVICES.value, ServicesForm),
+        (Steps.BASIS_FOR_VERIFICATION.value, BasisForVerificationForm),
         (Steps.GREEN_EVIDENCE.value, GreenEvidenceForm),
         (Steps.NETWORK_FOOTPRINT.value, NetworkFootprintForm),
         (Steps.CONSENT.value, ConsentForm),
@@ -259,6 +262,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         Steps.ORG_DETAILS.value: "provider_registration/about_org.html",
         Steps.LOCATIONS.value: "provider_registration/locations.html",
         Steps.SERVICES.value: "provider_registration/services.html",
+        Steps.BASIS_FOR_VERIFICATION.value: "provider_registration/basis_for_verification.html",
         Steps.GREEN_EVIDENCE.value: "provider_registration/evidence.html",
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/network_footprint.html",
         Steps.CONSENT.value: "provider_registration/consent.html",
@@ -391,8 +395,6 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         org_details_form = form_dict[steps.ORG_DETAILS.value]
         pr = org_details_form.save(commit=False)
         pr.save()
-        verification_bases_slugs = org_details_form.cleaned_data["bases_for_verification"]
-        pr.set_verification_bases_from_slugs(verification_bases_slugs)
 
         # process LOCATIONS form: extract locations
         locations_formset = form_dict[steps.LOCATIONS.value].forms["locations"]
@@ -412,6 +414,11 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         pr.set_services_from_slugs(service_slugs)
         pr.created_by = self.request.user
         pr.save()
+
+        # process BASIS_FOR_VERIFICATION form: assign verification bases to ProviderRequest
+        verification_bases_form = form_dict[steps.BASIS_FOR_VERIFICATION.value]
+        verification_bases_slugs = verification_bases_form.cleaned_data["bases_for_verification"]
+        pr.set_verification_bases_from_slugs(verification_bases_slugs)
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]

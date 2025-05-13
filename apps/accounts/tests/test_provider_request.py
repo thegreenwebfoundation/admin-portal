@@ -30,6 +30,7 @@ from apps.accounts.factories import (
     ProviderRequestIPRangeFactory,
     ProviderRequestLocationFactory,
     SupportingEvidenceFactory,
+    VerificationBasisFactory,
 )
 from apps.greencheck.factories import (
     GreenASNFactory,
@@ -58,7 +59,6 @@ def wizard_form_org_details_data():
         "0-website": faker.url(),
         "0-description": faker.sentence(10),
         "0-authorised_by_org": "True",
-        "0-bases_for_verification": ["we-directly-pay-for-green-energy-to-cover-the-non-green-energy-we-use"]
     }
 
 
@@ -101,25 +101,41 @@ def wizard_form_services_data():
 
 
 @pytest.fixture()
+def wizard_form_verification_bases_data():
+    """
+    Returns valid data for step BASIS FOR VERIFICATION of the wizard as expected by the POST request.
+    """
+    for _ in range(5):
+        VerificationBasisFactory.create()
+
+    tags_choices = models.VerificationBasis.objects.all()
+    bases_sample = random.sample([tag.slug for tag in tags_choices], 3)
+
+    return {
+        "provider_request_wizard_view-current_step": "3",
+        "3-bases_for_verification": bases_sample,
+    }
+
+@pytest.fixture()
 def wizard_form_evidence_data(fake_evidence):
     """
     Returns valid data for step GREEN_EVIDENCE of the wizard
     as expected by the POST request.
     """
     return {
-        "provider_request_wizard_view-current_step": "3",
-        "3-TOTAL_FORMS": 2,
-        "3-INITIAL_FORMS": 0,
-        "3-0-title": " ".join(faker.words(3)),
-        "3-0-link": faker.url(),
-        "3-0-file": "",
-        "3-0-type": models.EvidenceType.WEB_PAGE.value,
-        "3-0-public": "on",
-        "3-1-title": " ".join(faker.words(3)),
-        "3-1-link": "",
-        "3-1-file": fake_evidence,
-        "3-1-type": models.EvidenceType.ANNUAL_REPORT.value,
-        "3-1-public": "on",
+        "provider_request_wizard_view-current_step": "4",
+        "4-TOTAL_FORMS": 2,
+        "4-INITIAL_FORMS": 0,
+        "4-0-title": " ".join(faker.words(3)),
+        "4-0-link": faker.url(),
+        "4-0-file": "",
+        "4-0-type": models.EvidenceType.WEB_PAGE.value,
+        "4-0-public": "on",
+        "4-1-title": " ".join(faker.words(3)),
+        "4-1-link": "",
+        "4-1-file": fake_evidence,
+        "4-1-type": models.EvidenceType.ANNUAL_REPORT.value,
+        "4-1-public": "on",
     }
 
 
@@ -138,16 +154,16 @@ def wizard_form_network_data(sorted_ips):
     as expected by the POST request.
     """
     return {
-        "provider_request_wizard_view-current_step": "4",
-        "ips__4-TOTAL_FORMS": "2",
-        "ips__4-INITIAL_FORMS": "0",
-        "ips__4-0-start": sorted_ips[0],
-        "ips__4-0-end": sorted_ips[1],
-        "ips__4-1-start": sorted_ips[2],
-        "ips__4-1-end": sorted_ips[3],
-        "asns__4-TOTAL_FORMS": "1",
-        "asns__4-INITIAL_FORMS": "0",
-        "asns__4-0-asn": faker.random_int(min=100, max=999),
+        "provider_request_wizard_view-current_step": "5",
+        "ips__5-TOTAL_FORMS": "2",
+        "ips__5-INITIAL_FORMS": "0",
+        "ips__5-0-start": sorted_ips[0],
+        "ips__5-0-end": sorted_ips[1],
+        "ips__5-1-start": sorted_ips[2],
+        "ips__5-1-end": sorted_ips[3],
+        "asns__5-TOTAL_FORMS": "1",
+        "asns__5-INITIAL_FORMS": "0",
+        "asns__5-0-asn": faker.random_int(min=100, max=999),
     }
 
 
@@ -158,12 +174,12 @@ def wizard_form_network_explanation_only():
     form wizard, without any IP or AS information.
     """
     return {
-        "provider_request_wizard_view-current_step": "4",
-        "ips__4-TOTAL_FORMS": "0",
-        "ips__4-INITIAL_FORMS": "0",
-        "asns__4-TOTAL_FORMS": "0",
-        "asns__4-INITIAL_FORMS": "0",
-        "extra__4-missing_network_explanation": faker.sentence(10),
+        "provider_request_wizard_view-current_step": "5",
+        "ips__5-TOTAL_FORMS": "0",
+        "ips__5-INITIAL_FORMS": "0",
+        "asns__5-TOTAL_FORMS": "0",
+        "asns__5-INITIAL_FORMS": "0",
+        "extra__5-missing_network_explanation": faker.sentence(10),
     }
 
 
@@ -174,9 +190,9 @@ def wizard_form_consent():
     as expected by the POST request.
     """
     return {
-        "provider_request_wizard_view-current_step": "5",
-        "5-data_processing_opt_in": "on",
-        "5-newsletter_opt_in": "off",
+        "provider_request_wizard_view-current_step": "6",
+        "6-data_processing_opt_in": "on",
+        "6-newsletter_opt_in": "off",
     }
 
 
@@ -187,7 +203,7 @@ def wizard_form_preview():
     as expected by the POST request.
     """
     return {
-        "provider_request_wizard_view-current_step": "6",
+        "provider_request_wizard_view-current_step": "7",
     }
 
 
@@ -296,6 +312,7 @@ def test_wizard_view_happy_path(
     wizard_form_org_details_data,
     wizard_form_org_location_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
@@ -306,6 +323,7 @@ def test_wizard_view_happy_path(
         wizard_form_org_details_data,
         wizard_form_org_location_data,
         wizard_form_services_data,
+        wizard_form_verification_bases_data,
         wizard_form_evidence_data,
         wizard_form_network_data,
         wizard_form_consent,
@@ -361,6 +379,7 @@ def test_wizard_sends_email_on_submission(
     wizard_form_org_details_data,
     wizard_form_org_location_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
@@ -378,6 +397,7 @@ def test_wizard_sends_email_on_submission(
         wizard_form_org_details_data,
         wizard_form_org_location_data,
         wizard_form_services_data,
+        wizard_form_verification_bases_data,
         wizard_form_evidence_data,
         wizard_form_network_data,
         wizard_form_consent,
@@ -937,6 +957,7 @@ def test_wizard_view_with_just_network_explanation(
     wizard_form_org_details_data,
     wizard_form_org_location_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_explanation_only,
     wizard_form_consent,
@@ -948,6 +969,7 @@ def test_wizard_view_with_just_network_explanation(
         wizard_form_org_details_data,
         wizard_form_org_location_data,
         wizard_form_services_data,
+        wizard_form_verification_bases_data,
         wizard_form_evidence_data,
         wizard_form_network_explanation_only,
         wizard_form_consent,
@@ -965,7 +987,7 @@ def test_wizard_view_with_just_network_explanation(
 
     # then we have our explanation saved to the provider
     explanation = wizard_form_network_explanation_only.get(
-        "extra__4-missing_network_explanation"
+        "extra__5-missing_network_explanation"
     )
 
     assert pr.missing_network_explanation == explanation
@@ -979,6 +1001,7 @@ def test_wizard_records_if_location_import_needed(
     wizard_form_org_details_data,
     wizard_form_org_location_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
@@ -995,6 +1018,7 @@ def test_wizard_records_if_location_import_needed(
         wizard_form_org_details_data,
         wizard_form_org_location_data,
         wizard_form_services_data,
+        wizard_form_verification_bases_data,
         wizard_form_evidence_data,
         wizard_form_network_data,
         wizard_form_consent,
@@ -1020,6 +1044,7 @@ def test_new_submission_doesnt_modify_available_services(
     wizard_form_org_details_data,
     wizard_form_org_location_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
@@ -1033,6 +1058,7 @@ def test_new_submission_doesnt_modify_available_services(
         wizard_form_org_details_data,
         wizard_form_org_location_data,
         wizard_form_services_data,
+        wizard_form_verification_bases_data,
         wizard_form_evidence_data,
         wizard_form_network_data,
         wizard_form_consent,
@@ -1141,6 +1167,7 @@ def test_editing_pr_updates_original_submission(
     client,
     wizard_form_org_details_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
@@ -1234,6 +1261,9 @@ def test_editing_pr_updates_original_submission(
     assert services_form.initial == {"services": ["service1", "service2"]}
     # when: submitting SERVICES form with overridden data
     response = client.post(edit_url, wizard_form_services_data, follow=True)
+
+    # then: wizard proceeds, VERIFICATION BASIS form is displayed
+    response = client.post(edit_url, wizard_form_verification_bases_data, follow=True)
 
     # then: wizards proceeds, EVIDENCE formset is displayed with bound queryset and initial data
     evidence_formset = response.context_data["form"]
@@ -1384,6 +1414,7 @@ def test_editing_hp_creates_new_verification_request(
     sorted_ips,
     wizard_form_org_details_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
@@ -1460,6 +1491,9 @@ def test_editing_hp_creates_new_verification_request(
     assert services_form.initial == {"services": []}
     # when: submitting SERVICES form with overridden data
     response = client.post(edit_url, wizard_form_services_data, follow=True)
+
+    # then: wizard proceeds, VERIFICATION BASIS form is displayed with initial data
+    response = client.post(edit_url, wizard_form_verification_bases_data, follow=True)
 
     # then: wizards proceeds, EVIDENCE formset is displayed with initial data
     evidence_formset = response.context_data["form"]
@@ -1561,6 +1595,7 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
     sorted_ips,
     wizard_form_org_details_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
@@ -1645,6 +1680,13 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
     # when: submitting SERVICES form with overridden data
     response = client.post(edit_url, wizard_form_services_data, follow=True)
 
+    # then: wizard proceeds, VERIFICATION BASES form is displayed with initial data
+    verification_bases_form = response.context_data["form"]
+    assert isinstance(verification_bases_form, account_forms.BasisForVerificationForm)
+
+    # when: submitting VERIFICATION BASES form with overridden data
+    response = client.post(edit_url, wizard_form_verification_bases_data, follow=True)
+
     # then: wizards proceeds,
     # when: EVIDENCE formset is displayed with initial data
     evidence_formset = response.context_data["form"]
@@ -1654,21 +1696,21 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
     # when: submitting EVIDENCE step with one piece of overridden data
     # and one saved data
     updated_evidence_data = {
-        "provider_request_wizard_view-current_step": "3",
-        "3-TOTAL_FORMS": 2,
-        "3-INITIAL_FORMS": 0,
+        "provider_request_wizard_view-current_step": "4",
+        "4-TOTAL_FORMS": 2,
+        "4-INITIAL_FORMS": 0,
         # first an existing piece of evidence from ev1
-        "3-0-title": ev1.title,
-        "3-0-link": ev1.url,
-        "3-0-file": "",
-        "3-0-type": ev1.type,
-        "3-0-public": ev1.public,
+        "4-0-title": ev1.title,
+        "4-0-link": ev1.url,
+        "4-0-file": "",
+        "4-0-type": ev1.type,
+        "4-0-public": ev1.public,
         # then a new piece of evidence
-        "3-1-title": " ".join(faker.words(3)),
-        "3-1-link": "",
-        "3-1-file": fake_evidence,
-        "3-1-type": models.EvidenceType.ANNUAL_REPORT.value,
-        "3-1-public": "on",
+        "4-1-title": " ".join(faker.words(3)),
+        "4-1-link": "",
+        "4-1-file": fake_evidence,
+        "4-1-type": models.EvidenceType.ANNUAL_REPORT.value,
+        "4-1-public": "on",
     }
 
     response = client.post(edit_url, updated_evidence_data, follow=True)
@@ -1701,16 +1743,16 @@ def test_saving_changes_to_verification_request_from_hp_via_wizard(
     # when: submitting NETWORK step with overridden data, where we
     # have one less IP  range than before
     modified_network_data = {
-        "provider_request_wizard_view-current_step": "4",
-        "ips__4-TOTAL_FORMS": "2",
-        "ips__4-INITIAL_FORMS": "0",
-        "ips__4-0-start": ip1.ip_start,
-        "ips__4-0-end": ip1.ip_end,
-        "ips__4-1-start": ip2.ip_start,
-        "ips__4-1-end": ip2.ip_end,
-        "asns__4-TOTAL_FORMS": "1",
-        "asns__4-INITIAL_FORMS": "0",
-        "asns__4-0-asn": asn.asn,
+        "provider_request_wizard_view-current_step": "5",
+        "ips__5-TOTAL_FORMS": "2",
+        "ips__5-INITIAL_FORMS": "0",
+        "ips__5-0-start": ip1.ip_start,
+        "ips__5-0-end": ip1.ip_end,
+        "ips__5-1-start": ip2.ip_start,
+        "ips__5-1-end": ip2.ip_end,
+        "asns__5-TOTAL_FORMS": "1",
+        "asns__5-INITIAL_FORMS": "0",
+        "asns__5-0-asn": asn.asn,
     }
 
     response = client.post(edit_url, modified_network_data, follow=True)
@@ -1777,6 +1819,7 @@ def test_saving_changes_to_hp_with_new_verification_request(
     sorted_ips,
     wizard_form_org_details_data,
     wizard_form_services_data,
+    wizard_form_verification_bases_data,
     wizard_form_evidence_data,
     wizard_form_network_data,
     wizard_form_consent,
@@ -1846,6 +1889,9 @@ def test_saving_changes_to_hp_with_new_verification_request(
     # when: submitting SERVICES form with overridden data
     response = client.post(edit_url, wizard_form_services_data, follow=True)
 
+    # when: submitting VERIFICATION BASES form with overridden data
+    response = client.post(edit_url, wizard_form_verification_bases_data, follow=True)
+
     # then: wizards proceeds,
     # when: EVIDENCE formset is displayed with initial data
     evidence_formset = response.context_data["form"]
@@ -1855,21 +1901,21 @@ def test_saving_changes_to_hp_with_new_verification_request(
     # when: submitting EVIDENCE step with one piece of overridden data
     # and one saved data
     updated_evidence_data = {
-        "provider_request_wizard_view-current_step": "3",
-        "3-TOTAL_FORMS": 2,
-        "3-INITIAL_FORMS": 0,
+        "provider_request_wizard_view-current_step": "4",
+        "4-TOTAL_FORMS": 2,
+        "4-INITIAL_FORMS": 0,
         # first an existing piece of evidence from ev1
-        "3-0-title": ev1.title,
-        "3-0-link": ev1.url,
-        "3-0-file": "",
-        "3-0-type": ev1.type,
-        "3-0-public": ev1.public,
-        # then a new piece of evidence
-        "3-1-title": " ".join(faker.words(3)),
-        "3-1-link": "",
-        "3-1-file": fake_evidence,
-        "3-1-type": models.EvidenceType.ANNUAL_REPORT.value,
-        "3-1-public": "on",
+        "4-0-title": ev1.title,
+        "4-0-link": ev1.url,
+        "4-0-file": "",
+        "4-0-type": ev1.type,
+        "4-0-public": ev1.public,
+        #4then a new piece of evidence
+        "4-1-title": " ".join(faker.words(3)),
+        "4-1-link": "",
+        "4-1-file": fake_evidence,
+        "4-1-type": models.EvidenceType.ANNUAL_REPORT.value,
+        "4-1-public": "on",
     }
 
     response = client.post(edit_url, updated_evidence_data, follow=True)
@@ -1902,16 +1948,16 @@ def test_saving_changes_to_hp_with_new_verification_request(
     # when: submitting NETWORK step with overridden data, where we
     # have one less IP  range than before
     modified_network_data = {
-        "provider_request_wizard_view-current_step": "4",
-        "ips__4-TOTAL_FORMS": "2",
-        "ips__4-INITIAL_FORMS": "0",
-        "ips__4-0-start": ip1.ip_start,
-        "ips__4-0-end": ip1.ip_end,
-        "ips__4-1-start": ip2.ip_start,
-        "ips__4-1-end": ip2.ip_end,
-        "asns__4-TOTAL_FORMS": "1",
-        "asns__4-INITIAL_FORMS": "0",
-        "asns__4-0-asn": asn.asn,
+        "provider_request_wizard_view-current_step": "5",
+        "ips__5-TOTAL_FORMS": "2",
+        "ips__5-INITIAL_FORMS": "0",
+        "ips__5-0-start": ip1.ip_start,
+        "ips__5-0-end": ip1.ip_end,
+        "ips__5-1-start": ip2.ip_start,
+        "ips__5-1-end": ip2.ip_end,
+        "asns__5-TOTAL_FORMS": "1",
+        "asns__5-INITIAL_FORMS": "0",
+        "asns__5-0-asn": asn.asn,
     }
 
     response = client.post(edit_url, modified_network_data, follow=True)

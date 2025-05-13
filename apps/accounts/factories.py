@@ -12,6 +12,15 @@ from apps.greencheck import factories as gc_factories
 factory.random.reseed_random("venture not into the land of flaky tests")
 
 
+class VerificationBasisFactory(dj_factory.DjangoModelFactory):
+    name = factory.Faker("word")
+
+    class Meta:
+        model = ac_models.VerificationBasis
+        # avoid creating duplicate entries
+        django_get_or_create = ("name",)
+
+
 class SupportingEvidenceFactory(dj_factory.DjangoModelFactory):
     """
     A piece of supporting evidence, at a remote url, rather than uploaded

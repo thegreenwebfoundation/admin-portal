@@ -262,22 +262,9 @@ class OrgDetailsForm(forms.ModelForm):
         coerce=lambda x: x == "True",
     )
 
-    bases_for_verification = forms.MultipleChoiceField(
-        choices=ProviderRequest.get_verification_bases_choices,
-        widget=forms.CheckboxSelectMultiple,
-        label="On what basis are you seeking verification?",
-        help_text=mark_safe(
-          "The Green Web dataset lists providers taking actions to <b>avoid</b>, <b>reduce</b>, or <b>offset</b> "
-          "the greenhouse gas emissions caused by using electricity to provide their services, so we will ask you for "
-          "<a target=\"_blank\" href=\"https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/\">"
-          "verifiable evidence</a> that you are taking one of the following actions. Select all the statements that apply to "
-          "the organisation:"
-        ),
-    )
-
     class Meta:
         model = ac_models.ProviderRequest
-        fields = ["name", "website", "description", "authorised_by_org", "bases_for_verification"]
+        fields = ["name", "website", "description", "authorised_by_org"]
 
 
 class ServicesForm(forms.ModelForm):
@@ -308,6 +295,29 @@ class ServicesForm(forms.ModelForm):
     class Meta:
         model = ac_models.ProviderRequest
         fields = ["services"]
+
+
+class BasisForVerificationForm(forms.ModelForm):
+    """
+    Part of multi-step registration form (screen 3)
+    """
+
+    bases_for_verification = forms.MultipleChoiceField(
+        choices=ProviderRequest.get_verification_bases_choices,
+        widget=forms.CheckboxSelectMultiple,
+        label="On what basis are you seeking verification?",
+        help_text=mark_safe(
+          "The Green Web dataset lists providers taking actions to <b>avoid</b>, <b>reduce</b>, or <b>offset</b> "
+          "the greenhouse gas emissions caused by using electricity to provide their services, so we will ask you for "
+          "<a target=\"_blank\" href=\"https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/\">"
+          "verifiable evidence</a> that you are taking one of the following actions. Select all the statements that apply to "
+          "the organisation:"
+        ),
+    )
+
+    class Meta:
+        model = ac_models.ProviderRequest
+        fields = ["bases_for_verification"]
 
 
 class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):

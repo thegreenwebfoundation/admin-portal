@@ -34,7 +34,7 @@
           If you want to update the information relating to this provider, please get in touch using <a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/support-form/">our support form</a>.
         {% endif %}
 
-          
+
       </header>
 
       <article class="pb-12">
@@ -68,6 +68,14 @@
             <td>
               {% for service in object.services.all %}
                 {{ service.name }}<br>
+              {% endfor %}
+            </td>
+          </tr>
+          <tr>
+            <td>Basis for verification</td>
+            <td>
+              {% for basis in object.verification_bases.all %}
+                {{ basis.name }}<br>
               {% endfor %}
             </td>
           </tr>
