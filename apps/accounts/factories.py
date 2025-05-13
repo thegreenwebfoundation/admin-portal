@@ -62,6 +62,20 @@ class ProviderRequestFactory(factory.django.DjangoModelFactory):
         for tag in extracted:
             self.services.add(tag)
 
+    @factory.post_generation
+    def verification_bases(self, create, extracted, **kwargs):
+        """
+        This handles many-to-many relationship between ProviderRequest and VerificationBasis.
+
+        More details: https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
+        """  # noqa
+        # nothing passed as an argument
+        if not create or not extracted:
+            return
+        # set tags
+        for tag in extracted:
+            self.verification_bases.add(tag)
+
     class Meta:
         model = ac_models.ProviderRequest
 

@@ -813,6 +813,7 @@ class HostingAdmin(
             "datacenter",
             "greencheckip_set",
             "services",
+            "verification_bases",
         ).annotate(models.Count("greencheckip"))
 
         if not request.user.is_admin:
@@ -834,6 +835,7 @@ class HostingAdmin(
                         "country",
                         "city",
                         "services",
+                        "verification_bases",
                         "created_by",
                     )
                 },

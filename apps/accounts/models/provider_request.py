@@ -7,8 +7,6 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models, transaction
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import pgettext_lazy
-from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from guardian.shortcuts import assign_perm
 from model_utils.models import TimeStampedModel
@@ -24,6 +22,7 @@ from .hosting import (
     Hostingprovider,
     HostingProviderSupportingDocument,
     Service,
+    VerificationBasis,
 )
 
 import ipaddress
@@ -67,53 +66,6 @@ class ProviderRequestService(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
-
-
-class VerificationBasis(tag_models.TagBase):
-    """
-    A model representing reasons why a provider would be verified.
-    This includes things like
-
-        "We use 100% green energy from our own infrastructure.",
-        "We operate in a region that has a grid intensity of less than 20g CO2e/kWh or uses over 99% renewable power.",
-        "We directly pay for green energy to cover the non-green energy we use.",
-        "We purchase quality carbon offsets to cover the non-green energy we use.",
-        "We resell or actively use a provider that is already in the Green Web Dataset.",
-
-    A subclass of Taggit's 'TagBase' model.
-
-    """
-
-
-    # Annoyingly, the only way to override the max_length in taggit appears to be to copy and adjust
-    # these two field definitions wholesale: https://github.com/jazzband/django-taggit/issues/510
-    name = models.CharField(
-        verbose_name=pgettext_lazy("A tag name", "name"), unique=True, max_length=255
-    )
-
-
-    slug = models.SlugField(
-        verbose_name=pgettext_lazy("A tag slug", "slug"),
-        unique=True,
-        max_length=255,
-        allow_unicode=True,
-    )
-
-    required_evidence_link = models.URLField(
-        max_length=255, null=True, blank=True,
-        verbose_name="Required evidence link"
-    )
-
-    class Meta:
-        verbose_name = _("Basis for verification")
-        verbose_name_plural = _("Bases for verification")
-
-    @property
-    def label(self):
-        label = self.name
-        if self.required_evidence_link is not None and self.required_evidence_link.strip() != "":
-            label += f" (<a href='{self.required_evidence_link}' target='_blank'>see required evidence</a>)"
-        return mark_safe(label)
 
 
 class ProviderRequestVerificationBasis(tag_models.TaggedItemBase):
@@ -335,6 +287,8 @@ class ProviderRequest(TimeStampedModel):
             hp.showonwebsite = False
         else:
             hp.showonwebsite = True
+
+        hp.verification_bases.set(self.verification_bases.all())
 
         hp.save()
 

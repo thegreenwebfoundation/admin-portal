@@ -520,7 +520,7 @@ def test_approve_changes_status_to_approved():
 @pytest.mark.django_db
 def test_approve_creates_hosting_provider():
     # given: a provider request with services is created
-    pr = ProviderRequestFactory.create(services=faker.words(nb=4))
+    pr = ProviderRequestFactory.create(services=faker.words(nb=4), verification_bases=faker.words(nb=4))
     ProviderRequestLocationFactory.create(request=pr)
     ProviderRequestEvidenceFactory.create(request=pr)
 
@@ -532,6 +532,7 @@ def test_approve_creates_hosting_provider():
     assert hp.name == pr.name
     assert hp.description == pr.description
     assert list(hp.services.all()) == list(pr.services.all())
+    assert list(hp.verification_bases.all()) == list(pr.verification_bases.all())
     assert hp.website == pr.website
     assert hp.request == pr
     assert hp.created_by == pr.created_by
