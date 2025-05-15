@@ -127,6 +127,11 @@ ADMIN_PERMS = [
     "change_tag",
     "delete_tag",
     "view_tag",
+    ## Can add and update the bases for verification listed in the onboarding wizard
+    "add_verificationbasis",
+    "change_verificationbasis",
+    "view_verificationbasis",
+    "delete_verificationbasis",
 ]
 
 
