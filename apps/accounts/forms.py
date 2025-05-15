@@ -307,11 +307,12 @@ class BasisForVerificationForm(forms.ModelForm):
         widget=forms.CheckboxSelectMultiple,
         label="On what basis are you seeking verification?",
         help_text=mark_safe(
-          "The Green Web dataset lists providers taking actions to <b>avoid</b>, <b>reduce</b>, or <b>offset</b> "
-          "the greenhouse gas emissions caused by using electricity to provide their services, so we will ask you for "
-          "<a target=\"_blank\" href=\"https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/\">"
-          "verifiable evidence</a> that you are taking one of the following actions. Select all the statements that apply to "
-          "the organisation:"
+          "The Green Web Dataset lists providers taking actions to <b>avoid</b>, <b>reduce</b>, or <b>offset</b> "
+          "the greenhouse gas emissions caused by using electricity to provide their services. "
+          "<p>On the next page, we will ask you to provide evidence that allows us to verify the steps you are taking. "
+          "So before continuing, we strongly recommend you understand the kinds of evidence required based on your organisations circumstances. "
+          "We've written about this on the <i><b><a target=\"_blank\" href=\"https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/\">What we accept as evidence of green power?</a></i></b> page on our website.</p>"
+          "<p>When you are ready to continue, please select one or more of the statements below that apply to your organisation.</p>"
         ),
     )
 
