@@ -1,6 +1,7 @@
-from apps.greencheck.importers.importer_amazon import AmazonImporter
-from ...exceptions import ImportingForArchivedProvider
 from django.core.management.base import BaseCommand
+
+from ...exceptions import ImportingForArchivedProvider
+from ...importers.importer_amazon import AmazonImporter
 
 
 class Command(BaseCommand):
