@@ -181,6 +181,6 @@ class TestAmazonImportCommand:
         call_command("update_networks_in_db_amazon", stdout=stdout)
 
         assert (
-            "The provider is archived. Skipping any further changes to ths provider"
+            "The provider is archived. Skipping any further changes to this provider"
             in stdout.getvalue()
         )
