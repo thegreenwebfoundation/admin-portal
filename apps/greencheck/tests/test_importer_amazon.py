@@ -6,6 +6,7 @@ import io
 from django.core.management import call_command
 from apps.greencheck.importers.importer_amazon import AmazonImporter
 from ..importers.network_importer import is_ip_network
+from ..exceptions import ImportingForArchivedProvider
 
 
 @pytest.fixture
@@ -171,9 +172,15 @@ class TestAmazonImportCommand:
             path_to_mock,
             return_value=sample_data_raw,
         )
-        from apps.greencheck.exceptions import ImportingForArchivedProvider
 
-        # Fail the test if the command does not raise an exception. We want the exception
-        # to be raised when we try to import data for an archived provider.
-        with pytest.raises(ImportingForArchivedProvider):
-            call_command("update_networks_in_db_amazon")
+        # We want to capture the output of the command
+        # to check that we see a helpful error message, so we use StringIO
+        # to capture the output
+        stdout = io.StringIO()
+
+        call_command("update_networks_in_db_amazon", stdout=stdout)
+
+        assert (
+            "The provider is archived. Skipping any further changes to ths provider"
+            in stdout.getvalue()
+        )

@@ -1,4 +1,5 @@
 from apps.greencheck.importers.importer_amazon import AmazonImporter
+from ...exceptions import ImportingForArchivedProvider
 from django.core.management.base import BaseCommand
 
 
@@ -7,7 +8,14 @@ class Command(BaseCommand):
         importer = AmazonImporter()
         data = importer.fetch_data_from_source()
         parsed_data = importer.parse_to_list(data)
-        result = importer.process(parsed_data)
+
+        try:
+            result = importer.process(parsed_data)
+        except ImportingForArchivedProvider:
+            self.stdout.write(
+                "The provider is archived. Skipping any further changes to this provider"
+            )
+            return None
 
         update_message = (
             f"Processing complete. Created {len(result['created_asns'])} ASNs,"
