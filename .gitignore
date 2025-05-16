@@ -142,6 +142,7 @@ deploy.retry
 data
 
 .env.staging
+.env.local
 *.prod
 *.prod.json
 .DS_Store

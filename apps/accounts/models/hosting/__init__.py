@@ -21,6 +21,7 @@ from .provider import (
     Service,
     PartnerChoice,
     ProviderSharedSecret,
+    VerificationBasis,
     DOMAIN_HASH_ISSUER_ID,
     GREEN_VIA_CARBON_TXT,
 )

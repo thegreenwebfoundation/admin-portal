@@ -26,13 +26,13 @@
 
           <div class="alert__warning">
             <p>Please check your data is correct before you submit your request.</p>
-            <p>On completion of the form, your submission will be reviewed by our staff. 
-              If we have all the evidence we need, we’ll notify you to let you know that checks 
-              against your site or services show as green. If we can't find the evidence we need, 
+            <p>On completion of the form, your submission will be reviewed by our staff.
+              If we have all the evidence we need, we’ll notify you to let you know that checks
+              against your site or services show as green. If we can't find the evidence we need,
               we’ll reply letting you know what else is required.</p>
           </div>
         </section>
-        
+
         <section>
           <h3>About your organisation</h3>
           {% include "provider_registration/partials/_preview.html" with form=preview_forms.0 %}
@@ -54,8 +54,14 @@
         </section>
 
         <section class="my-10">
+          <h3>Basis for verification</h3>
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.3 %}
+        </section>
+
+
+        <section class="my-10">
           <h3>Green evidence</h3>
-          {% for evidence_form in preview_forms.3.forms %}
+          {% for evidence_form in preview_forms.4.forms %}
             {% if not evidence_form.DELETE.value %}
               {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
             {% endif %}
@@ -65,7 +71,7 @@
         <section class="my-10">
           <h3>Network footprint</h3>
 
-          {% for ip_form in preview_forms.4.ips %}
+          {% for ip_form in preview_forms.5.ips %}
             {% if not ip_form.DELETE.value %}
               <div class="bg-neutral-50 rounded-xl my-6 p-4">
                 <div class="mb-4 last-of-type:mb-0">
@@ -76,20 +82,20 @@
             {% endif %}
           {% endfor %}
 
-          {% for asn_form in preview_forms.4.asns %}
+          {% for asn_form in preview_forms.5.asns %}
             {% if not asn_form.DELETE.value %}
               {% include "provider_registration/partials/_preview.html" with form=asn_form %}
             {% endif %}
           {% endfor %}
 
-          {% include "provider_registration/partials/_preview.html" with form=preview_forms.4.extra %}
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.5.extra %}
 
 
         </section>
 
         <section class="my-10">
           <h3>Consent</h3>
-          {% include "provider_registration/partials/_preview.html" with form=preview_forms.5 %}
+          {% include "provider_registration/partials/_preview.html" with form=preview_forms.6 %}
         </section>
       </div>
 

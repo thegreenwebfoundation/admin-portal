@@ -11,6 +11,11 @@
 				using custom template tag
 			{% endcomment %}
 			<p class="m-0">{{ field.value|render_as_services|conditional_yesno:"Yes,No,-" }}</p>
+		{% elif field.label|lower == "on what basis are you seeking verification?" %}
+			{% comment %}
+				Expand verification slugs to their full names using custom template tag
+			{% endcomment %}
+			<p class="m-0">{{ field.value|render_as_verification_bases|conditional_yesno:"Yes,No,-" }}</p>
 		{% elif field.label|lower == "country" %}
 			{% comment %}
 				Expand country code to country name (e.g. "DE" -> "Germany")

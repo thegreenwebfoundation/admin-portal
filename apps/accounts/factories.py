@@ -12,6 +12,15 @@ from apps.greencheck import factories as gc_factories
 factory.random.reseed_random("venture not into the land of flaky tests")
 
 
+class VerificationBasisFactory(dj_factory.DjangoModelFactory):
+    name = factory.Faker("word")
+
+    class Meta:
+        model = ac_models.VerificationBasis
+        # avoid creating duplicate entries
+        django_get_or_create = ("name",)
+
+
 class SupportingEvidenceFactory(dj_factory.DjangoModelFactory):
     """
     A piece of supporting evidence, at a remote url, rather than uploaded
@@ -61,6 +70,20 @@ class ProviderRequestFactory(factory.django.DjangoModelFactory):
         # set tags
         for tag in extracted:
             self.services.add(tag)
+
+    @factory.post_generation
+    def verification_bases(self, create, extracted, **kwargs):
+        """
+        This handles many-to-many relationship between ProviderRequest and VerificationBasis.
+
+        More details: https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
+        """  # noqa
+        # nothing passed as an argument
+        if not create or not extracted:
+            return
+        # set tags
+        for tag in extracted:
+            self.verification_bases.add(tag)
 
     class Meta:
         model = ac_models.ProviderRequest
