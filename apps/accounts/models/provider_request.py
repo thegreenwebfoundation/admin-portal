@@ -178,7 +178,7 @@ class ProviderRequest(TimeStampedModel):
         Given list of verification_basis slugs (corresponding to Tag slugs)
         apply matching verification_bases to the ProviderRequest object
         """
-        verification_bases = VerificationBasis.objects.filter(slug__in=verification_basis_slugs)
+        verification_bases = VerificationBasis.objects.filter(slug__in=verification_basis_slugs).distinct()
         self.verification_bases.set(verification_bases)
 
     @classmethod

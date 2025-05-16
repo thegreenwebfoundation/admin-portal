@@ -37,7 +37,7 @@ def render_as_verification_bases(value):
     Attempts to map slugs in to verification basis names
     based on a database query.
     """
-    tags = VerificationBasis.objects.filter(slug__in=value)
+    tags = VerificationBasis.objects.filter(slug__in=value).distinct()
     if tags:
         list_items =  "\n".join([f"<li>{tag.name}</li>" for tag in tags])
         return mark_safe(f"<ul>{list_items}</ul>")
