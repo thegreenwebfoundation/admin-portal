@@ -113,7 +113,7 @@ def wizard_form_verification_bases_data():
 
     return {
         "provider_request_wizard_view-current_step": "3",
-        "3-bases_for_verification": bases_sample,
+        "3-verification_bases": bases_sample,
     }
 
 @pytest.fixture()

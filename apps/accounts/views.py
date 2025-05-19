@@ -417,7 +417,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
 
         # process BASIS_FOR_VERIFICATION form: assign verification bases to ProviderRequest
         verification_bases_form = form_dict[steps.BASIS_FOR_VERIFICATION.value]
-        verification_bases_slugs = verification_bases_form.cleaned_data["bases_for_verification"]
+        verification_bases_slugs = verification_bases_form.cleaned_data["verification_bases"]
         pr.set_verification_bases_from_slugs(verification_bases_slugs)
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
@@ -626,6 +626,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "extra": pr_instance,
             },
             cls.Steps.SERVICES.value: pr_instance,
+            cls.Steps.BASIS_FOR_VERIFICATION.value: pr_instance,
             cls.Steps.GREEN_EVIDENCE.value: evidence_qs,
             cls.Steps.NETWORK_FOOTPRINT.value: {
                 "ips": ip_qs,

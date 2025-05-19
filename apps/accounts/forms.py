@@ -302,7 +302,7 @@ class BasisForVerificationForm(forms.ModelForm):
     Part of multi-step registration form (screen 3)
     """
 
-    bases_for_verification = forms.MultipleChoiceField(
+    verification_bases = forms.MultipleChoiceField(
         choices=ProviderRequest.get_verification_bases_choices,
         widget=forms.CheckboxSelectMultiple,
         label="On what basis are you seeking verification?",
@@ -316,9 +316,20 @@ class BasisForVerificationForm(forms.ModelForm):
         ),
     )
 
+    def __init__(self, *args, **kwargs):
+        """
+        Implement injecting initial values for bases_for_verification field (for editing existing objects).
+        By default the initial value is passed as a queryset,
+        but TaggableManager does not handle that well - we pass a list instead.
+        """
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+        if instance:
+            self.initial = {"verification_bases": [b for b in instance.verification_bases.slugs()]}
+
     class Meta:
         model = ac_models.ProviderRequest
-        fields = ["bases_for_verification"]
+        fields = ["verification_bases"]
 
 
 class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
