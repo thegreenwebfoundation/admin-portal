@@ -17,7 +17,7 @@ from convenient_formsets import ConvenientBaseModelFormSet
 from file_resubmit.widgets import ResubmitFileWidget
 from taggit_labels.widgets import LabelWidget
 
-from apps.accounts.models.provider_request import ProviderRequest, ProviderRequestStatus
+from apps.accounts.models.provider_request import ProviderRequest, ProviderRequestStatus, VerificationBasis
 
 from . import models as ac_models
 from django.utils.safestring import mark_safe
@@ -29,7 +29,7 @@ class AlwaysChangedModelFormMixin:
     """
     A mixin for ModelForms that makes sure that a form with this Mixin
     is always marked as changed in checks like `has_changed()`.
-    Used in form wizards containing formsets, to return true for all forms 
+    Used in form wizards containing formsets, to return true for all forms
     in a formset, so that all data is saved at the end of the wizard.
     """
 
@@ -111,6 +111,7 @@ class HostingAdminForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             "services": LabelWidget(model=ac_models.Service),
+            "verification_bases": LabelWidget(model=ac_models.VerificationBasis),
             "staff_labels": dal_widgets.TaggitSelect2("label-autocomplete"),
         }
 
@@ -209,7 +210,6 @@ class InlineSupportingDocumentForm(forms.ModelForm):
         model = ac_models.HostingProviderSupportingDocument
         fields = "__all__"
 
-
 class OrgDetailsForm(forms.ModelForm):
     """
     Part of multi-step registration form (screen 1)
@@ -295,6 +295,41 @@ class ServicesForm(forms.ModelForm):
     class Meta:
         model = ac_models.ProviderRequest
         fields = ["services"]
+
+
+class BasisForVerificationForm(forms.ModelForm):
+    """
+    Part of multi-step registration form (screen 3)
+    """
+
+    verification_bases = forms.MultipleChoiceField(
+        choices=ProviderRequest.get_verification_bases_choices,
+        widget=forms.CheckboxSelectMultiple,
+        label="On what basis are you seeking verification?",
+        help_text=mark_safe(
+          "The Green Web Dataset lists providers taking actions to <b>avoid</b>, <b>reduce</b>, or <b>offset</b> "
+          "the greenhouse gas emissions caused by using electricity to provide their services. "
+          "<p>On the next page, we will ask you to provide evidence that allows us to verify the steps you are taking. "
+          "So before continuing, we strongly recommend you understand the kinds of evidence required based on your organisations circumstances. "
+          "We've written about this on the <i><b><a target=\"_blank\" href=\"https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/\">What we accept as evidence of green power?</a></i></b> page on our website.</p>"
+          "<p>When you are ready to continue, please select one or more of the statements below that apply to your organisation.</p>"
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """
+        Implement injecting initial values for bases_for_verification field (for editing existing objects).
+        By default the initial value is passed as a queryset,
+        but TaggableManager does not handle that well - we pass a list instead.
+        """
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+        if instance:
+            self.initial = {"verification_bases": [b for b in instance.verification_bases.slugs()]}
+
+    class Meta:
+        model = ac_models.ProviderRequest
+        fields = ["verification_bases"]
 
 
 class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
@@ -570,7 +605,7 @@ class NetworkFootprintForm(BetterMultiModelForm):
 
         return self.cleaned_data
 
-    
+
 class ConsentForm(forms.ModelForm):
     """
     Part of multi-step registration form (screen 5).

@@ -127,6 +127,11 @@ ADMIN_PERMS = [
     "change_tag",
     "delete_tag",
     "view_tag",
+    ## Can add and update the bases for verification listed in the onboarding wizard
+    "add_verificationbasis",
+    "change_verificationbasis",
+    "view_verificationbasis",
+    "delete_verificationbasis",
 ]
 
 
@@ -270,3 +275,20 @@ def group_permissions_2023_04_26_revert_disallow_adding_hp_and_dc(apps, schema_e
 
     hp.permissions.add(*pr_perms)
     dc.permissions.add(*pr_perms)
+
+def group_permissions_2025_05_12_add_verification_basis_permissions_for_admins(apps, schema_editor):
+    """
+    Gives admins permission to modify bases for verification.
+    """
+    pr_perms_codenames = [
+        "add_verificationbasis",
+        "change_verificationbasis",
+        "view_verificationbasis",
+        "delete_verificationbasis"
+    ]
+
+    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
+
+    admin, _ = Group.objects.get_or_create(name="admin")
+
+    admin.permissions.add(*pr_perms)

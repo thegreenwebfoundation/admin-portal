@@ -32,6 +32,7 @@ from django_registration.forms import (
 from formtools.wizard.views import SessionWizardView
 
 from .forms import (
+    BasisForVerificationForm,
     ConsentForm,
     GreenEvidenceForm,
     LocationStepForm,
@@ -60,15 +61,15 @@ logger = logging.getLogger(__name__)
 class DashboardView(TemplateView):
     """
     This dashboard view was what people would see when signing into the admin.
-    We currently redirect to the provider portal home page as at present,we 
+    We currently redirect to the provider portal home page as at present,we
     only really logged in activity by users who work for the providers in our system.
     """
     template_name = "dashboard.html"
 
     def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(reverse("provider_portal_home"))
-        
-    
+
+
 
 class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -240,15 +241,17 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         ORG_DETAILS = "0"
         LOCATIONS = "1"
         SERVICES = "2"
-        GREEN_EVIDENCE = "3"
-        NETWORK_FOOTPRINT = "4"
-        CONSENT = "5"
-        PREVIEW = "6"
+        BASIS_FOR_VERIFICATION = "3"
+        GREEN_EVIDENCE = "4"
+        NETWORK_FOOTPRINT = "5"
+        CONSENT = "6"
+        PREVIEW = "7"
 
     FORMS = [
         (Steps.ORG_DETAILS.value, OrgDetailsForm),
         (Steps.LOCATIONS.value, LocationStepForm),
         (Steps.SERVICES.value, ServicesForm),
+        (Steps.BASIS_FOR_VERIFICATION.value, BasisForVerificationForm),
         (Steps.GREEN_EVIDENCE.value, GreenEvidenceForm),
         (Steps.NETWORK_FOOTPRINT.value, NetworkFootprintForm),
         (Steps.CONSENT.value, ConsentForm),
@@ -259,6 +262,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         Steps.ORG_DETAILS.value: "provider_registration/about_org.html",
         Steps.LOCATIONS.value: "provider_registration/locations.html",
         Steps.SERVICES.value: "provider_registration/services.html",
+        Steps.BASIS_FOR_VERIFICATION.value: "provider_registration/basis_for_verification.html",
         Steps.GREEN_EVIDENCE.value: "provider_registration/evidence.html",
         Steps.NETWORK_FOOTPRINT.value: "provider_registration/network_footprint.html",
         Steps.CONSENT.value: "provider_registration/consent.html",
@@ -410,6 +414,11 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         pr.set_services_from_slugs(service_slugs)
         pr.created_by = self.request.user
         pr.save()
+
+        # process BASIS_FOR_VERIFICATION form: assign verification bases to ProviderRequest
+        verification_bases_form = form_dict[steps.BASIS_FOR_VERIFICATION.value]
+        verification_bases_slugs = verification_bases_form.cleaned_data["verification_bases"]
+        pr.set_verification_bases_from_slugs(verification_bases_slugs)
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
@@ -617,6 +626,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "extra": pr_instance,
             },
             cls.Steps.SERVICES.value: pr_instance,
+            cls.Steps.BASIS_FOR_VERIFICATION.value: pr_instance,
             cls.Steps.GREEN_EVIDENCE.value: evidence_qs,
             cls.Steps.NETWORK_FOOTPRINT.value: {
                 "ips": ip_qs,
@@ -723,6 +733,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             },
             cls.Steps.SERVICES.value: {
                 "services": [s for s in hp_instance.services.slugs()]
+            },
+            cls.Steps.BASIS_FOR_VERIFICATION.value: {
+                "verification_bases": [b for b in hp_instance.verification_bases.slugs()]
             },
             cls.Steps.GREEN_EVIDENCE.value: [
                 _evidence_initial_data(ev)

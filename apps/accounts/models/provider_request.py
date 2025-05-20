@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models, transaction
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from guardian.shortcuts import assign_perm
 from model_utils.models import TimeStampedModel
@@ -21,6 +22,7 @@ from .hosting import (
     Hostingprovider,
     HostingProviderSupportingDocument,
     Service,
+    VerificationBasis,
 )
 
 import ipaddress
@@ -66,6 +68,23 @@ class ProviderRequestService(tag_models.TaggedItemBase):
     )
 
 
+class ProviderRequestVerificationBasis(tag_models.TaggedItemBase):
+    """
+    The corresponding through model for linking a Provider to
+    a VerificationBasis as outlined above.
+    """
+
+    content_object = models.ForeignKey(
+        "ProviderRequest",
+        on_delete=models.CASCADE,
+    )
+    tag = models.ForeignKey(
+        VerificationBasis,
+        related_name="%(app_label)s_%(class)s_items",
+        on_delete=models.CASCADE,
+    )
+
+
 class ProviderRequest(TimeStampedModel):
     """
     Model representing the input data
@@ -95,6 +114,11 @@ class ProviderRequest(TimeStampedModel):
         ),
         blank=True,
         through=ProviderRequestService,
+    )
+    verification_bases = TaggableManager(
+        verbose_name="Basis for verification",
+        blank=True,
+        through=ProviderRequestVerificationBasis,
     )
     missing_network_explanation = models.TextField(
         verbose_name="Reason for no IP / AS data",
@@ -149,6 +173,14 @@ class ProviderRequest(TimeStampedModel):
         services = Service.objects.filter(slug__in=service_slugs)
         self.services.set(services)
 
+    def set_verification_bases_from_slugs(self, verification_basis_slugs: Iterable[str]) -> None:
+        """
+        Given list of verification_basis slugs (corresponding to Tag slugs)
+        apply matching verification_bases to the ProviderRequest object
+        """
+        verification_bases = VerificationBasis.objects.filter(slug__in=verification_basis_slugs).distinct()
+        self.verification_bases.set(verification_bases)
+
     @classmethod
     def get_service_choices(cls) -> List[Tuple[int, str]]:
         """
@@ -156,6 +188,14 @@ class ProviderRequest(TimeStampedModel):
         in a format expected by ChoiceField
         """
         return [(tag.slug, tag.name) for tag in Service.objects.all()]
+
+    @classmethod
+    def get_verification_bases_choices(cls) -> List[Tuple[int, str]]:
+        """
+        Returns a list of available verification bases (implemented in the Tag model)
+        in a format expected by ChoiceField
+        """
+        return [(tag.slug, tag.label) for tag in VerificationBasis.objects.all()]
 
     @transaction.atomic
     def approve(self) -> Hostingprovider:
@@ -247,6 +287,8 @@ class ProviderRequest(TimeStampedModel):
             hp.showonwebsite = False
         else:
             hp.showonwebsite = True
+
+        hp.verification_bases.set(self.verification_bases.all())
 
         hp.save()
 

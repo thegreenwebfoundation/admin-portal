@@ -7,7 +7,6 @@ legend {
 }
 fieldset label {
 	@apply text-base;
-	@apply uppercase;
 }
 
 [type="text"],
@@ -34,14 +33,14 @@ select {
 textarea {
 	@apply border-2;
 }
-[type="checkbox"], 
+[type="checkbox"],
 [type="radio"] {
 	@apply mb-2;
 	@apply mr-2;
 	@apply text-black;
 	@apply border-black;
 }
-[type="checkbox"]:checked, 
+[type="checkbox"]:checked,
 [type="radio"]:checked {
 	@apply bg-black;
 }
