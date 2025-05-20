@@ -734,6 +734,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             cls.Steps.SERVICES.value: {
                 "services": [s for s in hp_instance.services.slugs()]
             },
+            cls.Steps.BASIS_FOR_VERIFICATION.value: {
+                "verification_bases": [b for b in hp_instance.verification_bases.slugs()]
+            },
             cls.Steps.GREEN_EVIDENCE.value: [
                 _evidence_initial_data(ev)
                 for ev in hp_instance.supporting_documents.all()
