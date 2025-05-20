@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+
+
+
+{% block content %}
+<div class="container mx-auto prose">
+
+{% block header_section %}
+<section class="mt-10">
+	<h1 class="mb-0">Domain Claim Status: Pending</h1>
+</section>
+{% endblock %}
+
+{% if verified %}
+
+<article>
+    <div class="prose mx-auto mt-8">
+
+        <h2>{{object.domain}} <span class="ml-4 bg-green-100 text-green-800 px-2 py-1 rounded text-ml border border-green-800">verified</span></h2>
+
+        <p>Domain hash: <code>{{ object.hash }}</code></p>
+
+
+
+        <p>This domain was verified as being associated with the provider <strong>{{ object.provider }}</strong> on {{ object.created }}
+
+        <p>We were able to find the domain hash, via <strong>the DNS method</strong></p>
+
+
+        <h3 class="text-md border-0">Next steps</h3>
+
+        <p><a href="">See how to use our badges on your website.</a></p>
+
+
+
+        <hr />
+        <a href="#" class="btn btn-white text-xs">Back to claimed domains   </a>
+
+        <a href="#" class="ml-6 btn btn-white border-0 text-xs ">❌ Remove this domain from this provider</a>
+
+
+
+
+
+
+
+	</div>
+</article>
+
+{% else %}
+
+
+<article>
+    <div class="prose mx-auto mt-8">
+
+        <h2>{{object.domain}} <span class="ml-4 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-ml border border-yellow-800">pending</span></h2>
+
+        <p>Domain hash: <code>{{ object.hash }}</code></p>
+
+
+        <p>This domain was is awaiting verification as being associated with the <strong>{{ object.provider }} via carbon.txt</strong>
+
+        <div class="bg-yellow-100 px-2 rounded border border-yellow-800">
+
+        <h4>Domain claim verification results</h4>
+
+        <p><strong>1. looking for a carbon.txt file</strong></p>
+
+        <p class="text-xs"> ❌ <span class="ml-4" >Our platform did not find a carbon.txt file at https://{{ object.domain }}/carbon.txt</span></p>
+        <p class="text-xs"> ❌ <span class="ml-4" >Our platform did not find a carbon.txt file at https://{{ object.domain }}/.well-known/carbon.txt.</span></p>
+
+        <p class="text-xs">🪧<a class="ml-4" href="#">Instructions for verifying with a carbon.txt file</a></p>
+
+        <p><strong>2. looking for a via header</strong></p>
+
+        <p class="text-xs"> ❌ <span class="ml-4" >No `via` header was found with the domain hash ending in <code>{{ object.hash|slice:"-16:" }}</code> when sending a request at https://{{ object.domain }}/carbon.txt</span></p>
+        <p class="text-xs"> ❌ <span class="ml-4" >No `via` header was found with the domain hash ending in <code>{{ object.hash|slice:"-16:" }}</code> when sending a request at https://{{ object.domain }}/well.known/carbon.txt</span></p>
+
+        <p class="text-xs">🪧<a class="ml-4" href="#">Instructions for verifying with a via header</a></p>
+
+        <p><strong>2. looking for DNS records</strong></p>
+
+        <p class="text-xs"> ❌ <span class="ml-4" >No DNS TXT record was founds domain hash ending in <code>{{ object.hash|slice:"-16:" }}</code> for the domain {{ object.domain }}.</span></p>
+
+        <p class="text-xs">🪧<a class="ml-4" href="#">Instructions for verifying with a DNS TXT record</a></p>
+
+        </div>
+
+
+        <h3 class="text-md border-0">Next steps</h3>
+
+        <h4>Upload a carbon.txt file</h4>
+
+        <p>(explanatory copy here, about doing so if someone doesn't have one. )</p>
+
+        <h4>Claim this domain with a 'via' header</h4>
+        <p>(explanatory copy here, about using the via header, with code example )</p>
+
+        <h4>Claim this domain with DNS record</h4>
+        <p>(explanatory copy here, with sample of what the DNS record ought to look like to make it easy to copy and paste in a DNS panel. )</p>
+
+
+
+        <hr />
+
+        <a href="#" class="btn">Verify this domain  </a>
+
+        <a href="#" class="ml-6  btn btn-white border-0 text-xs">Back to claimed domains   </a>
+
+
+
+
+
+
+
+	</div>
+</article>
+
+{% endif %}
+</div>
+{% endblock %}

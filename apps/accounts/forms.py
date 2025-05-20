@@ -25,6 +25,7 @@ from django.utils.safestring import mark_safe
 
 User = get_user_model()
 
+
 class AlwaysChangedModelFormMixin:
     """
     A mixin for ModelForms that makes sure that a form with this Mixin
@@ -38,7 +39,6 @@ class AlwaysChangedModelFormMixin:
         Always returns True, so that the form is always marked as changed.
         """
         return True
-
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -776,3 +776,11 @@ class PreviewForm(forms.Form):
     """
 
     pass
+
+
+class DomainHashForm(forms.ModelForm):
+    class Meta:
+        model = ac_models.DomainHash
+        fields = ["domain", "provider"]
+        widgets = { "provider": forms.HiddenInput() }
+

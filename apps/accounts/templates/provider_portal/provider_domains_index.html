@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="container mx-auto prose">
+
+  {% block header_section %}
+    <header class="">
+      <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">< Back to provider portal</a></p>
+
+      <h1 class="text-6xl mb-0"><span class="uppercase">Verified Domains</h1>
+      <h2>
+        Provider: {{provider.name}}
+      </h2>
+      </header>
+  {% endblock %}
+
+
+  <article>
+    <div class="mt-8">
+
+
+
+
+      <p class="prose italic pb-3">These are the domains associated with the provider {{provider.name}}  - verifying allows us to ensure that you are corrrectly identified as the hosting provider for them in the <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank">Green Web Check</a> tool.</p>
+
+
+      <div class="">
+
+        <div class="py-3 md:items-center ">
+          {% for obj in object_list %}
+            <div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2 flex justify-between gap-4">
+            <div class="py-6 pr-6">
+              <p class="my-0">
+              <span class="font-semibold text-xl">{{ obj.domain }}</span>
+              </p>
+              <p class="my-0" >
+                Primary domain, pending verification
+              </p>
+            </div>
+
+            <div class="text-right">
+              <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="btn btn-white text-xs">Verify now</a>
+              <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="btn btn-white text-xs">Details</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+      <a href="{% url "provider-domain-create" provider.id %}" class="w-full btn"><span class="text-xs">Add and verify another domain</span></a>
+  </article>
+
+</div>
+{% endblock %}
+

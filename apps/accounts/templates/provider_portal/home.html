@@ -1,25 +1,28 @@
 {% extends 'base.html' %}
 
-{% load i18n static humanize widget_tweaks tailwind_filters waffle_tags guardian_tags%}
+{% load i18n static humanize widget_tweaks tailwind_filters waffle_tags %}
 {% block content %}
 
 <article>
     <div class="prose mx-auto mt-8">
       	<h1 class="text-center leading-10">
-			<span class="text-xl">Welcome to our</span><br> 
+			<span class="text-xl">Welcome to our</span><br>
 			Provider portal</h1>
 
 		<h2 class="border-0 my-3 pb-0">Providers overview</h2>
 
+    {% if object_list.requests %}
+		  <h3 class="text-xl pt-8" id="pending">Pending verification</h3>
+    {% endif %}
+
 		{% for request in object_list.requests %}
-			<h3 class="text-xl pt-8" id="pending">Pending verification</h3>
-			
+
 			<a class="no-underline drop-shadow-lg hover:drop-shadow-none" href="{{ request.get_absolute_url }}">
 				<div class="verification_request">
 					{% if request.status|lower == "more info required" %}
 					<div class="alert__warning hover:bg-neutral-100">
 					{% endif %}
-				
+
 					<p class="mb-0"><span class="verification_request__name text-black font-bold underline">{{ request.name }}</span> <span class="text-black">|</span> <b class="">{{ request.status | upper }}</b></p>
 					<p class="verification_request__date mt-0 text-neutral-500 text-sm">Submitted: {{ request.modified }}</p>
 
@@ -42,8 +45,8 @@
 			</div>
 		{% endif %}
 
-		<p>Verified providers appear in our 
-			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/green-web-dataset/">Green Web Dataset</a> and 
+		<p>Verified providers appear in our
+			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/green-web-dataset/">Green Web Dataset</a> and
 			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/directory/">Green Web Directory</a>.</p>
 
 
@@ -53,30 +56,7 @@
 
 			<div class="provider_listings">
 				{% for provider in object_list.providers %}
-				<div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2">
-					
-					<div class="md:w-1/2">
-						<p class="my-0">
-							{% if provider.last_approved_verification_req %}
-								<a class="font-bold" href="{% url 'provider_request_detail' provider.last_approved_verification_req.id %}">{{ provider }}</a>
-							{% else %}
-								<span class="font-bold">{{ provider }}</span>
-							{% endif %}
-						</p>
-
-						{% if provider.request and provider.request.approved_at %}
-						<p class="my-0 text-sm">Last updated: {{ provider.request.approved_at }}</p>
-						{% endif %}
-					</div>
-
-					<div class="md:w-1/2 text-right">
-						{% get_obj_perms request.user for provider as "provider_perms" %}
-				
-						{% if "manage_provider" in provider_perms %}
-							<a href="{% url 'provider_edit' provider.id %}" class="btn btn-white text-sm">📝 Update listing</a>
-						{% endif %}
-					</div>
-				</div>
+          {% include "provider_portal/partials/provider_listing.html" with provider=provider request=request %}
 				{% endfor %}
 			</div>
 
@@ -97,7 +77,7 @@
 
 		{% flag "hide_old_admin" %}
 		<h3 class="text-xl pt-10">Other actions</h3>
-		
+
 		<p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:password_change' %}" class="text-neutral-500">Update your password</a></p>
 
 		<p class="text-neutral-500 mt-8"><a href="{% url 'green_urls_redirect' %}" class="text-neutral-500">See our list of downloadable green domain dataset snapshots</a></p>
