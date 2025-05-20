@@ -5,54 +5,50 @@
 <div class="container mx-auto prose">
 
   {% block header_section %}
-  <section class="mt-10">
-    <h1 class="mb-0">domains for provider {{provider.name}}</h1>
-  </section>
+    <header class="">
+      <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">< Back to provider portal</a></p>
+
+      <h1 class="text-6xl mb-0"><span class="uppercase">Verified Domains</h1>
+      <h2>
+        Provider: {{provider.name}}
+      </h2>
+      </header>
   {% endblock %}
 
 
   <article>
-    <div class="prose mx-auto mt-8">
-
-      <p class="italic">(explanatory copy here about how having a carbon.txt file allows you to more control how a badge looks, and who shows up as hosting it.)</p>
-
-      <a href="{% url "provider-domain-create" provider.id %}" class="ml-4 btn"><span class="text-xs">link a domain via carbon.txt</span></a>
+    <div class="mt-8">
 
 
-      <p class="italic">(copy saying "these are the domains you've claimed, and whether the platform has verified their status by finding the domain hash where we expect"</p>
+
+
+      <p class="prose italic pb-3">These are the domains associated with the provider {{provider.name}}  - verifying allows us to ensure that you are corrrectly identified as the hosting provider for them in the <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank">Green Web Check</a> tool.</p>
 
 
       <div class="">
 
-        <div class="provider_listing p-3 md:items-center ">
+        <div class="py-3 md:items-center ">
           {% for obj in object_list %}
-          <div class="md:flex md:items-center border-green border-t-2 last-of-type:border-b-2">
+            <div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2 flex justify-between gap-4">
             <div class="py-6 pr-6">
               <p class="my-0">
-              <span class="">{{ obj.domain }}</span>
-              {% if obj.domain == 'datasets.greenweb.org' %}
-              <span class="ml-4 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs border border-yellow-800">pending verification</span>
-              {% else %}
-              <span class="ml-4 bg-green-100 text-green-800 px-2 py-1 rounded text-xs border border-green-800">verified</span>
-              {% endif %}
-              </p>
-              <p class="my-0 pb-0">
-              <span class="text-xs">domain hash: <code>{{ obj.hash }}</code></span>
+              <span class="font-semibold text-xl">{{ obj.domain }}</span>
               </p>
               <p class="my-0" >
-              <span class="text-xs">created by {{ obj.created_by }} at {{ obj.created }}</span>
+                Primary domain, pending verification
               </p>
             </div>
 
             <div class="text-right">
-              <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="btn btn-white text-xs">📝 More details</a>
-              <a href="#" class="btn btn-white text-xs">❌ Delete</a>
+              <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="btn btn-white text-xs">Verify now</a>
+              <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="btn btn-white text-xs">Details</a>
             </div>
           </div>
           {% endfor %}
         </div>
       </div>
     </div>
+      <a href="{% url "provider-domain-create" provider.id %}" class="w-full btn"><span class="text-xs">Add and verify another domain</span></a>
   </article>
 
 </div>
