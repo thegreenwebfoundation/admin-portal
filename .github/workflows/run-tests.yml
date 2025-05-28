@@ -2,6 +2,12 @@ name: Run tests
 
 on:
   push:
+    # either only run on pushes to master and staging branches
+    # OR a PR. This avoids needless double CI runs
+    # https://adamj.eu/tech/2025/05/14/github-actions-avoid-simple-on/
+    branches:
+      - master
+      - staging
     paths-ignore:
       - "**.md"
       - ".gitignore"
