@@ -1290,9 +1290,9 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
 
 @admin.register(LinkedDomain, site=greenweb_admin)
 class LinkedDomainAdmin(admin.ModelAdmin):
-    list_display = ("domain", "created", "provider")
-    search_fields = ("domain",)
-    ordering = ("domain",)
+    list_display = ("domain", "state", "provider", "primary",  "created")
+    search_fields = ("domain", "provider__name", "state")
+    ordering = ("domain", "provider__name", "state", "primary", "created")
 
 
 @admin.register(SupportMessage, site=greenweb_admin)
