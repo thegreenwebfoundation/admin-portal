@@ -37,7 +37,7 @@ from ipwhois.net import Net
 
 from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
-from ..accounts.models import LinkedDomain, LinkedDomainState
+from ..accounts.models import LinkedDomain
 
 logger = logging.getLogger(__name__)
 
@@ -223,17 +223,15 @@ class GreenDomainChecker:
             checked_at=timezone.now(),
         )
 
-    def check_via_linked_domain(self, domain):
+    def check_via_linked_domain(self, domain) -> typing.Optional[LinkedDomain]:
         """
         Check against domains linked by providers using carbon.txt
         """
-        try:
-            linked_domain = LinkedDomain.objects.get(domain=domain, state=LinkedDomainState.APPROVED)
+        linked_domain = LinkedDomain.get_for_domain(domain)
+        if linked_domain:
             provider = linked_domain.provider
             if provider and provider.counts_as_green:
                 return linked_domain
-        except LinkedDomain.DoesNotExist:
-            return None
 
     def green_sitecheck_by_linked_domain(
         self, domain: str, matching_linked_domain: LinkedDomain

@@ -338,18 +338,16 @@ class Hostingprovider(models.Model):
     @property
     def primary_linked_domain(self) -> typing.Optional["LinkedDomain"]:
         try:
-            return self.linkeddomain_set.filter(
+            return self.linkeddomain_set.valid.filter(
                         primary=True,
-                        state=LinkedDomainState.APPROVED
                     ).first()
         except LinkedDomain.DoesNotExist:
             pass
 
     def linked_domain_for(self, domain: str) -> typing.Optional["LinkedDomain"]:
         try:
-            return self.linkeddomain_set.filter(
+            return self.linkeddomain_set.valid.filter(
                 domain=domain,
-                state=LinkedDomainState.APPROVED
             ).first()
         except LinkedDomain.DoesNotExist:
                 pass
@@ -434,8 +432,10 @@ class Hostingprovider(models.Model):
         """
         active_green_ips = self.greencheckip_set.filter(active=True)
         active_green_asns = self.greencheckasn_set.filter(active=True)
+        active_linked_domains = self.linkeddomain_set.filter(active=True)
         active_green_ips.update(active=False)
         active_green_asns.update(active=False)
+        active_linked_domains.update(active=False)
 
         self.archived = True
         self.showonwebsite = False
@@ -706,6 +706,17 @@ class LinkedDomain(DirtyFieldsMixin, TimeStampedModel):
     It is used to verify that a domain is hosted by a provider, and referred to when
     the platform is looking up a specific domain to see if a provider has control over it.
     """
+    class Manager(models.Manager):
+        @property
+        def valid(self):
+            """
+            valid LinkedDomains are both
+            1) APPROVED (in that they have been verified manually by GWF support), and
+            2) ACTIVE (in that they are not related to an archived Provider).
+            """
+            return self.filter(state=LinkedDomainState.APPROVED, active=True)
+
+    objects = Manager()
 
     domain = models.CharField(max_length=255, unique=True, validators=[DomainNameValidator()])
     provider = models.ForeignKey(
@@ -719,11 +730,21 @@ class LinkedDomain(DirtyFieldsMixin, TimeStampedModel):
     )
     primary = models.BooleanField(default=False, verbose_name="This domain represents this hosting provider itself.")
 
+    active = models.BooleanField(default=True)
+
     state = models.CharField(
         choices=LinkedDomainState.choices,
         default=LinkedDomainState.PENDING_REVIEW,
         max_length=255,
     )
+
+
+    @classmethod
+    def get_for_domain(cls, domain : str) -> typing.Optional["LinkedDomain"]:
+        try:
+            return LinkedDomain.objects.valid.get(domain=domain)
+        except LinkedDomain.DoesNotExist:
+            return None
 
     def _clear_cached_greendomains(self):
         """

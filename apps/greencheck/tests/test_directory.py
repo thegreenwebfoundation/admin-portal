@@ -1,8 +1,6 @@
 from django.urls import reverse
 from waffle.testutils import override_flag
 
-from apps.accounts.models import LinkedDomain, LinkedDomainState
-
 import pytest
 
 
@@ -59,19 +57,18 @@ def test_templates_in_filter_view(client, hosting_provider_factory):
     assert "greencheck/partials/_directory_results.html" in templates
 
 @pytest.mark.django_db
-def test_carbon_txt_template_included_for_provider_with_linked_domain(client, hosting_provider_factory):
+def test_carbon_txt_template_included_for_provider_with_linked_domain(client, hosting_provider_factory, linked_domain_factory):
     """
     Check that we include the carbon_txt badge when a provider has a linked domain
     """
 
     # given: a hosting provider in Germany which has a primary linked domain
     provider = hosting_provider_factory.create(country="DE", showonwebsite=True)
-    LinkedDomain(
-        provider_id=provider.pk,
+    ld = linked_domain_factory(
+        provider=provider,
         domain="example.com",
-        state=LinkedDomainState.APPROVED,
-        primary=True
-    ).save()
+        primary=True,
+    )
     # when: we visit our directory
     res = client.get(reverse("directory-index"))
 

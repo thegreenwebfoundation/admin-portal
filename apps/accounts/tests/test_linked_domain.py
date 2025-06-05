@@ -140,7 +140,7 @@ def test_create_linked_domain_unauthorized(user, hosting_provider_factory, clien
 
 
 @pytest.mark.django_db
-def test_delete_linked_domain_happy_path(user, hosting_provider_factory, client):
+def test_delete_linked_domain_happy_path(user, hosting_provider_factory, linked_domain_factory, client):
     """
     Test deleting a linked domain for a provider,
     where the logged in user has permissions for provider
@@ -151,7 +151,7 @@ def test_delete_linked_domain_happy_path(user, hosting_provider_factory, client)
     provider = hosting_provider_factory(created_by=user)
     domain = "example.com"
     assign_perm(manage_provider.codename, user, provider)
-    ld = models.LinkedDomain(created_by=user, domain=domain, provider=provider).save()
+    ld = linked_domain_factory(created_by=user, domain=domain, provider=provider)
     # WHEN I delete the linked domain
     client.force_login(user)
     response = client.post(urls.reverse("provider-domain-delete", args=[provider.id, domain]), {}, follow=True)
@@ -164,7 +164,7 @@ def test_delete_linked_domain_happy_path(user, hosting_provider_factory, client)
     assert not ld
 
 @pytest.mark.django_db
-def test_delete_linked_domain_unauthorized(user, hosting_provider_factory, client):
+def test_delete_linked_domain_unauthorized(user, hosting_provider_factory, linked_domain_factory, client):
     """
     Test deleting a linked domain for a provider,
     where the logged in user has no permissions for provider
@@ -174,7 +174,7 @@ def test_delete_linked_domain_unauthorized(user, hosting_provider_factory, clien
     # AND a linked domain for that provider
     provider = hosting_provider_factory()
     domain = "example.com"
-    ld = models.LinkedDomain(created_by=user, domain=domain, provider=provider).save()
+    ld = linked_domain_factory(created_by=user, domain=domain, provider=provider)
 
     # WHEN I delete the linked domain
     client.force_login(user)

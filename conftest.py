@@ -30,6 +30,7 @@ register(gc_factories.GreenDomainFactory)
 register(gc_factories.SiteCheckFactory)
 register(ac_factories.SupportingEvidenceFactory)
 register(ac_factories.ProviderRequestFactory)
+register(ac_factories.LinkedDomainFactory)
 
 
 @pytest.fixture
