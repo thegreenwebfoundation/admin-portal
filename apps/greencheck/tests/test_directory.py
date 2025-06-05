@@ -67,7 +67,7 @@ def test_carbon_txt_template_included_for_provider_with_linked_domain(client, ho
     ld = linked_domain_factory(
         provider=provider,
         domain="example.com",
-        primary=True,
+        is_primary=True,
     )
     # when: we visit our directory
     res = client.get(reverse("directory-index"))

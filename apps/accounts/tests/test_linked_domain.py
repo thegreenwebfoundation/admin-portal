@@ -17,14 +17,14 @@ def test_create_linked_domain_happy_path(user, hosting_provider_factory, client,
 
     #GIVEN a hosting provider, and a domain with a valid carbon.txt
     domain = "example.com"
-    primary = "True"
+    is_primary = "True"
     provider = hosting_provider_factory(created_by=user)
     assign_perm(manage_provider.codename, user, provider)
     form_data = [
         {
             "provider_domain_create_view-current_step": "0",
             "0-domain": domain,
-            "0-primary": primary,
+            "0-is_primary": is_primary,
         }, {
             "provider_domain_create_view-current_step": "1",
         }
@@ -52,7 +52,7 @@ def test_create_linked_domain_happy_path(user, hosting_provider_factory, client,
     assert ld.created_by == user
     assert ld.provider == provider
     assert ld.state == models.LinkedDomainState.PENDING_REVIEW
-    assert ld.primary
+    assert ld.is_primary
 
 @pytest.mark.django_db
 def test_create_linked_domain_unvalidated(user, hosting_provider_factory, client, mocker):
@@ -63,14 +63,14 @@ def test_create_linked_domain_unvalidated(user, hosting_provider_factory, client
 
     #GIVEN a hosting provider, and a domain without a valid carbon.txt
     domain = "example.com"
-    primary = "True"
+    is_primary = "True"
     provider = hosting_provider_factory(created_by=user)
     assign_perm(manage_provider.codename, user, provider)
     form_data = [
         {
             "provider_domain_create_view-current_step": "0",
             "0-domain": domain,
-            "0-primary": primary,
+            "0-is_primary": is_primary,
         }, {
             "provider_domain_create_view-current_step": "1",
         }
@@ -107,13 +107,13 @@ def test_create_linked_domain_unauthorized(user, hosting_provider_factory, clien
     # and a user without permissions on that provider
 
     domain = "example.com"
-    primary = "True"
+    is_primary = "True"
     provider = hosting_provider_factory()
     form_data = [
         {
             "provider_domain_create_view-current_step": "0",
             "0-domain": domain,
-            "0-primary": primary,
+            "0-is_primary": is_primary,
         }, {
             "provider_domain_create_view-current_step": "1",
         }

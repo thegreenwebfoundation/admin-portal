@@ -339,7 +339,7 @@ class Hostingprovider(models.Model):
     def primary_linked_domain(self) -> typing.Optional["LinkedDomain"]:
         try:
             return self.linkeddomain_set.valid.filter(
-                        primary=True,
+                        is_primary=True,
                     ).first()
         except LinkedDomain.DoesNotExist:
             pass
@@ -719,16 +719,19 @@ class LinkedDomain(DirtyFieldsMixin, TimeStampedModel):
     objects = Manager()
 
     domain = models.CharField(max_length=255, unique=True, validators=[DomainNameValidator()])
+
     provider = models.ForeignKey(
         "Hostingprovider",
         on_delete=models.CASCADE,
     )
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
     )
-    primary = models.BooleanField(default=False, verbose_name="This domain represents this hosting provider itself.")
+
+    is_primary = models.BooleanField(default=False, verbose_name="This domain represents this hosting provider itself.")
 
     active = models.BooleanField(default=True)
 

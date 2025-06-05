@@ -785,7 +785,7 @@ class LinkedDomainFormStep0(forms.ModelForm):
     the dummy PreviewForm with a custom template.
     """
 
-    primary = forms.TypedChoiceField(
+    is_primary = forms.TypedChoiceField(
         label="Is this your primary domain?",
         help_text=(
             "Select this option if this domain represents your own hosting provider "
@@ -799,5 +799,5 @@ class LinkedDomainFormStep0(forms.ModelForm):
 
     class Meta:
         model = ac_models.LinkedDomain
-        fields = ["domain", "primary"]
+        fields = ["domain", "is_primary"]
 
