@@ -97,6 +97,7 @@ class HostingProviderFactory(dj_factory.DjangoModelFactory):
     # iconurl = models.CharField(max_length=255, blank=True)
     model = ac_choices.ModelType.COMPENSATION
     name = factory.Faker("company")
+    created_by = factory.SubFactory(UserFactory)
     # partner = models.CharField(
     #     max_length=255,
     #     null=True,

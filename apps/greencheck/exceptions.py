@@ -15,13 +15,6 @@ class CarbonTxtFileNotFound(Exception):
     pass
 
 
-class NoMatchingDomainHash(NotFound):
-    """
-    An exception raised when we try to fetch a shared secret for a provider
-    but no shared secret has been set.
-    """
-
-
 class ImportingForArchivedProvider(Exception):
     """
     An exception raised when we try to import data for a provider

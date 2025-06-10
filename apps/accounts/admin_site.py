@@ -23,7 +23,6 @@ from ..greencheck import models as gc_models
 checker = domain_check.GreenDomainChecker()
 logger = logging.getLogger(__name__)
 
-
 class CarbonTxtForm(forms.Form):
     """
     A form for previewing what is in the database given a carbon txt file,
@@ -88,6 +87,9 @@ class CarbonTxtForm(forms.Form):
                     )
 
 
+# TODO Tim Is this still used* it's the only remaining uses of the carbon_txt module.
+# It appears to be parsing an old version of the carbon.txt syntax? eg bigroom.eco/carbon.txt doesn't parse,
+# but www.bergfreunde.it/carbon.txt does
 class CarbonTxtCheckView(WaffleFlagMixin, LoginRequiredMixin, FormView):
     template_name = "carbon_txt_preview.html"
     form_class = CarbonTxtForm

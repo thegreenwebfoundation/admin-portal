@@ -127,3 +127,15 @@ class ProviderRequestASNFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = ac_models.ProviderRequestASN
+
+
+class LinkedDomainFactory(factory.django.DjangoModelFactory):
+    domain = factory.Faker("domain_name")
+    state = ac_models.LinkedDomainState.APPROVED
+    active = True
+    is_primary = False
+    provider = factory.SubFactory(gc_factories.HostingProviderFactory)
+    created_by = factory.SubFactory(gc_factories.UserFactory)
+
+    class Meta:
+        model = ac_models.LinkedDomain

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n static %}
+{% block extrahead %}
+  <script src="/static/accounts/js/provider_domain_new_form.js"></script>
+  {{ wizard.form.media }}
+{% endblock extrahead %}
+{% block content %}
+<div class="container mx-auto prose">
+  <form method="post" action="" class="gwf-form" id="provider-domain-new-form">
+    {% block header_section %}
+      <header class="">
+        {% block back_link %}
+        <p class="mb-6 text-sm text-green"><button name="wizard_goto_step" type="submit" value="{{wizard.steps.prev}}" class="text-neutral-500 underline hover:no-underline">&lt; Back to previous step</button></p>
+        {% endblock back_link %}
+
+        <h1 class="text-6xl mb-0"><span class="uppercase">Link a domain with carbon.txt</h1>
+        <h2 class="mt-4">
+          Provider: {{provider.name}}
+        </h2>
+        </header>
+    {% endblock %}
+
+
+    <article>
+      <div class="prose mx-auto mt-8">
+        {% block explanatory_copy %}
+            <p class="italic">Explanatory copy here about how Carbon.txt gives you more control over how your provider is presented on Green Web Check results and Green Web  badges. </p>
+            <p>More copy explaining what is required (access to server, DNS, etc), and how long the process will take and what it will involve</p>
+        {% endblock explanatory_copy %}
+        {%  block previous_steps %}
+        {%  endblock previous_steps %}
+        {%  block current_step_pre %}
+        {%  endblock current_step_pre %}
+          {% csrf_token %}
+          <div class="gwf-form">
+            <table class="my-0">
+              {{ wizard.management_form }}
+              {% if wizard.form.forms %}
+                {{ wizard.form.management_form }}
+                {% for form in wizard.form.forms %}
+                  {{ form.as_table }}
+                {% endfor %}
+              {% else %}
+                {{ wizard.form }}
+              {% endif %}
+            </table>
+          </div>
+          <button type="submit" class="btn w-full">
+            <span class="text-xs">
+              {% block submit_button_text %}
+                Next Step
+              {% endblock submit_button_text %}
+            </span>
+          </button>
+      </div>
+    </article>
+
+  </form>
+</div>
+{% endblock %}

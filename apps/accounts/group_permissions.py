@@ -132,6 +132,11 @@ ADMIN_PERMS = [
     "change_verificationbasis",
     "view_verificationbasis",
     "delete_verificationbasis",
+    ## Can administer linked domains
+    "add_linkeddomain",
+    "change_linkeddomain",
+    "view_linkeddomain",
+    "delete_linkeddomain",
 ]
 
 
@@ -285,6 +290,23 @@ def group_permissions_2025_05_12_add_verification_basis_permissions_for_admins(a
         "change_verificationbasis",
         "view_verificationbasis",
         "delete_verificationbasis"
+    ]
+
+    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
+
+    admin, _ = Group.objects.get_or_create(name="admin")
+
+    admin.permissions.add(*pr_perms)
+
+def group_permissions_2025_06_03_add_linked_domain_permissions_for_admins(apps, schema_editor):
+    """
+    Gives admins permission to modify linked domains
+    """
+    pr_perms_codenames = [
+        "add_linkeddomain",
+        "change_linkeddomain",
+        "view_linkeddomain",
+        "delete_linkeddomain"
     ]
 
     pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)

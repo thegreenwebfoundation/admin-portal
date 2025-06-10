@@ -1,0 +1,7 @@
+Hello
+Thank you for taking the time to link the domain {{domain}} for {{ provider.name }} in the Green Web Dataset.
+What happens next?
+We review new linked domains on Tuesday each week. Once we have reviewed the request, we will contact you by email to let you know that it is approved, or that we need more information from you.
+If you have further questions, please contact support@thegreenwebfoundation.org.
+Many thanks,
+Green Web Foundation

@@ -336,6 +336,15 @@ GOOGLE_DATASET_ENDPOINT = env(
 )
 
 
+CARBON_TXT_VALIDATOR_API_ENDPOINT = env(
+    "CARBON_TXT_VALIDATOR_API_ENDPOINT", default="https://carbon-txt-api.greenweb.org/api/validate/domain"
+)
+
+CARBON_TXT_VALIDATOR_UI_URL = env(
+    "CARBON_TXT_VALIDATOR_UI_URL", default="https://carbontxt.org/tools/validator"
+)
+
+
 RABBITMQ_URL = env("RABBITMQ_URL", default=None)
 
 

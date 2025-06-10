@@ -16,6 +16,7 @@ from django.utils.translation import pgettext_lazy
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from django_mysql.models import EnumField
+from dirtyfields import DirtyFieldsMixin
 from guardian.shortcuts import get_users_with_perms
 from taggit import models as tag_models
 from taggit.managers import TaggableManager
@@ -23,7 +24,8 @@ from model_utils.models import TimeStampedModel
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
 from ...permissions import manage_provider
-from ..choices import (ModelType, PartnerChoice)
+from ...validators import DomainNameValidator
+from ..choices import ModelType, PartnerChoice
 from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, Label
 
 logger = logging.getLogger(__name__)
@@ -44,6 +46,7 @@ AWAITING_REVIEW_SLUG = "awaiting-review"
 # about the hash
 DOMAIN_HASH_ISSUER_ID = "GWF-01"
 
+
 class ProviderLabel(tag_models.TaggedItemBase):
     """
     A different through model for listing internally facing tags,
@@ -59,6 +62,7 @@ class ProviderLabel(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
+
 
 class Service(tag_models.TagBase):
     """
@@ -219,7 +223,6 @@ class Hostingprovider(models.Model):
     )
     showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
     website = models.URLField(max_length=255)
-    carbon_txt_url = models.URLField(max_length=255, null=True, blank=True)
     datacenter = models.ManyToManyField(
         "Datacenter",
         through="HostingproviderDatacenter",
@@ -332,6 +335,25 @@ class Hostingprovider(models.Model):
         else:
             return f"https://{self.website}"
 
+    @property
+    def primary_linked_domain(self) -> typing.Optional["LinkedDomain"]:
+        try:
+            return self.linkeddomain_set.valid.filter(
+                        is_primary=True,
+                    ).first()
+        except LinkedDomain.DoesNotExist:
+            pass
+
+    def linked_domain_for(self, domain: str) -> typing.Optional["LinkedDomain"]:
+        try:
+            return self.linkeddomain_set.valid.filter(
+                domain=domain,
+            ).first()
+        except LinkedDomain.DoesNotExist:
+                pass
+
+
+
     # Mutators
     def refresh_shared_secret(self) -> str:
         try:
@@ -347,57 +369,6 @@ class Hostingprovider(models.Model):
         shared_secret.save()
 
         return shared_secret.body
-
-    def create_domain_hash(self, domain: str, user: "User") -> str:
-        """
-        Create a domain hash for the given provider using the latest shared secret.
-
-        Args:
-            domain (str): The domain to create a hash for.
-            user (User): The user creating the hash.
-
-        Returns:
-            str: The generated domain hash.
-
-        Raises:
-            NoSharedSecret: If the provider does not have a shared secret.
-            ValueError: If no user is associated with the provider.
-            PermissionDenied: If the user does not have permission to update the provider.
-        """
-        if not user:
-            raise ValueError(
-                "A user must be associated with the provider to create a domain hash."
-            )
-
-        # check if the user has permission to update this provider
-
-        if user not in self.users:
-            raise PermissionDenied(
-                "User does not have permission to update this provider"
-            )
-
-        if not self.shared_secret:
-            raise NoSharedSecret
-
-        # check for dupes so we won't end up with loads
-        matching_provider_domains = self.domainhash_set.filter(domain=domain)
-        domain_hash = DomainHash(domain=domain, provider=self, created_by=user)
-
-        # we check for duplicates, based on the string value
-
-        # TODO: look into making this a database constraint instead
-        # i.e. unique on domain, provider, and shared secret in use.
-        if matching_provider_domains:
-            domain_hash.hash = domain_hash.generate_hash()
-            for existing_hash in matching_provider_domains:
-                if str(existing_hash) == str(domain_hash):
-                    raise ValueError(
-                        "Domain hash already exists for this domain and provider"
-                    )
-
-        domain_hash.clean()
-        domain_hash.save()
-        return domain_hash
 
     def label_as_awaiting_review(self, notify_admins=False):
         """
@@ -461,8 +432,10 @@ class Hostingprovider(models.Model):
         """
         active_green_ips = self.greencheckip_set.filter(active=True)
         active_green_asns = self.greencheckasn_set.filter(active=True)
+        active_linked_domains = self.linkeddomain_set.filter(active=True)
         active_green_ips.update(active=False)
         active_green_asns.update(active=False)
+        active_linked_domains.update(active=False)
 
         self.archived = True
         self.showonwebsite = False
@@ -470,19 +443,6 @@ class Hostingprovider(models.Model):
         return self
 
     # Queries
-
-    def domain_hash_for_domain(self, domain: str) -> str:
-        """
-        Accept a domain, and return a hash of the domain and the
-        shared secret for this provider.
-        """
-        if not self.shared_secret:
-            raise NoSharedSecret
-
-        hash_object = hashlib.sha256(
-            f"{domain}{self.shared_secret.body}".encode("utf-8")
-        )
-        return hash_object.hexdigest()
 
     def public_supporting_evidence(
         self,
@@ -512,14 +472,14 @@ class Hostingprovider(models.Model):
             .first()
         )
 
+    @property
     def counts_as_green(self):
         """
         A convenience check, provide a simple to let us avoid
         needing to implement the logic for determining
         if a provider counts as green in multiple places
         """
-        # TODO: this method should probably be a property
-        return GREEN_VIA_CARBON_TXT in self.staff_labels.names()
+        return (not self.archived)
 
     def outstanding_approval_requests(self):
         """
@@ -620,6 +580,7 @@ class HostingProviderNote(AbstractNote):
 
     provider = models.ForeignKey(Hostingprovider, null=True, on_delete=models.PROTECT)
 
+
 class NonArchivedEvidenceManager(models.Manager):
     """
     A custom manager to filter out archived items of supporting evidence
@@ -686,6 +647,7 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
 
         return self.url
 
+
 class HostingCommunication(TimeStampedModel):
     template = models.CharField(max_length=128)
     hostingprovider = models.ForeignKey(
@@ -694,6 +656,7 @@ class HostingCommunication(TimeStampedModel):
     # a store of the outbound messages we send, so we have a record
     # for future reference
     message_content = models.TextField(blank=True)
+
 
 class HostingproviderCertificate(Certificate):
     hostingprovider = models.ForeignKey(
@@ -726,73 +689,114 @@ class HostingproviderStats(models.Model):
         db_table = "hostingproviders_stats"
         # managed = False
 
-class DomainHash(TimeStampedModel):
+
+class LinkedDomainState(models.TextChoices):
     """
-    A domain hash is unique to a combination of a domain and a provider.
+    Status of a LinkedDomain, visible to staff and the associated provider.
+    Meaning of each value:
+    - PENDING_REVIEW: GWF staff need to verify the domain link
+    - APPROVED: GWF staff have verified the domain link
+    """
+    PENDING_REVIEW = "Pending review"
+    APPROVED = "Approved"
+
+class LinkedDomain(DirtyFieldsMixin, TimeStampedModel):
+    """
+    A linked domain asserts that a given domain is hosted by a given provider.
     It is used to verify that a domain is hosted by a provider, and referred to when
     the platform is looking up a specific domain to see if a provider has control over it.
     """
+    class Manager(models.Manager):
+        @property
+        def valid(self):
+            """
+            valid LinkedDomains are both
+            1) APPROVED (in that they have been verified manually by GWF support), and
+            2) ACTIVE (in that they are not related to an archived Provider).
+            """
+            return self.filter(state=LinkedDomainState.APPROVED, active=True)
 
-    domain = models.CharField(max_length=255)
-    hash = models.CharField(max_length=255)
+    objects = Manager()
+
+    domain = models.CharField(max_length=255, unique=True, validators=[DomainNameValidator()])
+
     provider = models.ForeignKey(
         "Hostingprovider",
         on_delete=models.CASCADE,
     )
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
     )
 
-    def clean(self):
+    is_primary = models.BooleanField(default=False, verbose_name="This domain represents this hosting provider itself.")
+
+    active = models.BooleanField(default=True)
+
+    state = models.CharField(
+        choices=LinkedDomainState.choices,
+        default=LinkedDomainState.PENDING_REVIEW,
+        max_length=255,
+    )
+
+
+    @classmethod
+    def get_for_domain(cls, domain : str) -> typing.Optional["LinkedDomain"]:
+        try:
+            return LinkedDomain.objects.valid.get(domain=domain)
+        except LinkedDomain.DoesNotExist:
+            return None
+
+    def _clear_cached_greendomains(self):
         """
-        Validate the domain using GreenDomainChecker.
+        Make sure any previous greencheck results for this domain are cleared
         """
+        from apps.greencheck.models import GreenDomain # Avoid circular import
+        GreenDomain.objects.filter(url=self.domain).delete()
 
-        # we have to import here to avoid a circular import
-        from ....greencheck.domain_check import GreenDomainChecker
+    def creation_callback(self):
+        from ...utils import send_email # Imported here to avoid circular import.
+        if self.created_by:
+            send_email(
+                address=self.created_by.email,
+                subject=f"Your domain link request: {self.domain} (provider: {self.provider})",
+                context={"provider": self.provider, "domain": self.domain},
+                template_html="emails/new-linked-domain-notify.html",
+                template_txt="emails/new-linked-domain-notify.txt",
+                bcc=settings.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS,
+            )
 
-        checker = GreenDomainChecker()
-
-        if not checker.validate_domain(self.domain):
-            raise ValidationError({"domain": "Invalid domain provided"})
+    def state_change_callback(self, from_state, to_state):
+        transitioning_to_approved = (
+            from_state == LinkedDomainState.PENDING_REVIEW and
+            to_state == LinkedDomainState.APPROVED
+        )
+        if transitioning_to_approved:
+            self._clear_cached_greendomains()
+            if self.created_by:
+                from ...utils import send_email # Imported here to avoid circular import.
+                send_email(
+                    address=self.created_by.email,
+                    subject=f"Domain link request approved: {self.domain} (provider: {self.provider})",
+                    context={"provider": self.provider, "domain": self.domain},
+                    template_html="emails/approve-linked-domain-notify.html",
+                    template_txt="emails/approve-linked-domain-notify.txt",
+                    bcc=settings.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS,
+                )
 
     def save(self, *args, **kwargs):
-        """
-        Generate a hash before saving.
-        """
-        if not self.hash:
-            if not self.provider.shared_secret:
-                raise NoSharedSecret
-
-            self.hash = self.generate_hash()
+        if self.pk is None:
+            self.creation_callback()
+        if self.is_dirty():
+            dirty_fields = self.get_dirty_fields()
+            if "state" in dirty_fields:
+                self.state_change_callback(dirty_fields["state"], self.state)
         super().save(*args, **kwargs)
 
-    def generate_hash(self) -> str:
-        """
-        Generates a SHA-256 hash based on the domain and the provider's shared secret.
-
-        Returns:
-            str: The generated hash in hexadecimal format.
-
-        Raises:
-            NoSharedSecret: If the provider does not have a shared secret.
-        """
-        """"""
-        if not self.provider.shared_secret:
-            raise NoSharedSecret
-
-        hash_object = hashlib.sha256(
-            f"{self.domain}{self.provider.shared_secret.body}".encode("utf-8")
-        )
-        # we want to be able to identify hashes by their issuer, so we prefix
-        # it with a string denoting the issuer and the version of the algo used
-        # to make the hash
-        domain_hash_prefix = DOMAIN_HASH_ISSUER_ID
-        return f"{domain_hash_prefix}-{hash_object.hexdigest()}"
-
     def __str__(self):
-        return f"{self.domain} - {self.provider.name} - {self.hash[-8:]}"
+        return f"{self.domain} - {self.provider.name}"
 
-
+    class Meta:
+        verbose_name_plural = "Linked Domains"

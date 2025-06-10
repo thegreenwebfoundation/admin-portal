@@ -105,24 +105,9 @@ urlpatterns += [
         name="ip-to-co2intensity",
     ),
     path(
-        "api/v3/carbontxt",
-        api_views.CarbonTxtAPI.as_view(),
-        name="carbon-txt-parse",
-    ),
-    path(
         "api/v3/carbontxt_shared_secret",
         api_views.ProviderSharedSecretView.as_view(),
         name="carbon-txt-shared-secret",
-    ),
-    path(
-        "api/v3/domain_hash/",
-        api_views.DomainHashView.as_view(),
-        name="carbon-txt-domain-hash",
-    ),
-    path(
-        "api/v3/domain_claim/",
-        api_views.DomainClaimView.as_view(),
-        name="carbon-txt-domain-claim",
     ),
     path(
         "api/v3/greencheckimage/<url>",

@@ -63,7 +63,7 @@ class TestHostingProvider:
         assert datacenter.model == accounting_model
 
     def test_archive(
-        self, db, hosting_provider_factory, green_ip_factory, green_asn_factory
+        self, db, hosting_provider_factory, green_ip_factory, green_asn_factory, linked_domain_factory
     ):
 
         provider = hosting_provider_factory.create()
@@ -71,18 +71,23 @@ class TestHostingProvider:
         ip_range = green_ip_factory.create(hostingprovider=provider)
         # make a green asn range
         as_network = green_asn_factory.create(hostingprovider=provider)
+        # make a linked domain
+        linked_domain = linked_domain_factory.create(provider=provider)
 
         assert ip_range.active is True
         assert as_network.active is True
+        assert linked_domain.active is True
 
         provider.archive()
         ip_range.refresh_from_db()
         as_network.refresh_from_db()
+        linked_domain.refresh_from_db()
 
         assert provider.active_ip_ranges().count() == 0
         assert provider.active_asns().count() == 0
         assert ip_range.active is False
         assert as_network.active is False
+        assert linked_domain.active is False
         #
         assert provider.archived is True
         assert provider.showonwebsite is False
