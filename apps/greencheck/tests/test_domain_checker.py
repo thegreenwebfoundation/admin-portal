@@ -37,9 +37,12 @@ class TestDomainChecker:
         # THEN the result is green
         assert res.green
 
-    def test_with_grey_domain_by_linked_domain_and_hidden_provider(self, hosting_provider_factory, linked_domain_factory, checker):
+    def test_with_green_domain_by_linked_domain_and_hidden_provider(self, hosting_provider_factory, linked_domain_factory, checker):
         """
-        A hidden hosting provider with a linked domain produces a grey result
+        A hidden hosting provider with a linked domain produces a green result -
+        now we have linked domains, we need the ability to add "Green providers" who may
+        not be listed in the directory, as they don't actually provide hosting services
+        to third parties
         """
 
         #GIVEN a provider which is not shown on the website
@@ -53,8 +56,8 @@ class TestDomainChecker:
         # WHEN I perform a domain check for the linkeddomain
         res = checker.check_domain("example.com")
 
-        # THEN the result is grey
-        assert not res.green
+        # THEN the result is green
+        assert res.green
 
     def test_with_grey_domain_by_linked_domain_and_archived_provider(self, hosting_provider_factory, linked_domain_factory, checker):
         """

@@ -479,7 +479,7 @@ class Hostingprovider(models.Model):
         needing to implement the logic for determining
         if a provider counts as green in multiple places
         """
-        return (not self.archived) and self.showonwebsite
+        return (not self.archived)
 
     def outstanding_approval_requests(self):
         """
