@@ -437,6 +437,9 @@ class Hostingprovider(models.Model):
         active_green_asns.update(active=False)
         active_linked_domains.update(active=False)
 
+        from apps.greencheck.models import GreenDomain # Avoid circular import
+        GreenDomain.objects.filter(hosted_by_id=self.id).delete()
+
         self.archived = True
         self.showonwebsite = False
         self.save()
