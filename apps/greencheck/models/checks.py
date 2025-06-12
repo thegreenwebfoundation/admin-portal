@@ -500,6 +500,7 @@ class GreenDomain(models.Model):
     partner = models.CharField(max_length=255)
     green = models.BooleanField()
     modified = models.DateTimeField()
+    created = models.DateTimeField(auto_now_add=True)
 
     # TODO consider updating Green Domain to support creation date
     # like so. this would allow us to set a TTL on them and so on
