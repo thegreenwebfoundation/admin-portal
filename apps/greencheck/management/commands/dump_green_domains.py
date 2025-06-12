@@ -34,7 +34,7 @@ class GreenDomainExporter:
         """
         db = settings.DATABASES["default"]
         # change this if we ever leave mysql, obvs
-        return f"mysql://{db['USER']}:{db['PASSWORD']}@{db['HOST']}/{db['NAME']}"
+        return f"mysql://{db['USER']}:{db['PASSWORD']}@{db['HOST']}:{db['PORT']}/{db['NAME']}"
 
     @classmethod
     def export_to_sqlite(cls, database_url: str, db_path: str) -> None:
