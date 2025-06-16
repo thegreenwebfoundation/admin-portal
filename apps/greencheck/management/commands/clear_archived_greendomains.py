@@ -5,7 +5,7 @@ from ...models import GreenDomain
 
 
 class Command(BaseCommand):
-    help = "Clear cached GreenDomain records for providers that are archived)"
+    help = "Clear cached GreenDomain records for providers that are archived"
 
     def handle(self, *args, **options) -> None:
         providers = Hostingprovider.objects.filter(archived=True).all()

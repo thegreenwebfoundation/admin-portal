@@ -502,10 +502,6 @@ class GreenDomain(models.Model):
     modified = models.DateTimeField()
     created = models.DateTimeField(auto_now_add=True)
 
-    # TODO consider updating Green Domain to support creation date
-    # like so. this would allow us to set a TTL on them and so on
-    # created_at = models.DateTimeField(blank=True, null=True)
-
     def __str__(self):
         return f"{self.url} - {self.modified}"
 
