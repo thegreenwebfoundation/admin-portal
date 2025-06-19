@@ -14,13 +14,67 @@ More concretely, when we do a check for a site, we are usually looking up a doma
 
 Once we the IP address, we take one of three paths to arrive at an organisation that we have information for.
 
-1. Domain, to IP to provider, by IP range
-2. Domain to IP to provider, by ASN
-3. Domain to carbon.txt lookup, to provider(s)
+1. Domain to provider, by an explicitly _Linked Domain_ (verified with [carbon.txt](https://carbontxt.org)).
+2. Domain, to IP to provider, by IP range
+3. Domain to IP to provider, by ASN
 
 We'll cover each one in turn.
 
+### Domain to provider, via a Linked Domain.
+
+The first check we carry out, is whether the domain has been explicitly "linked" to a provider within our platform by the provider itself, using a [carbon.txt](https://carbontxt.org) file.
+
+This is a simple database query at the point the query is made, but the process of registering (and validating) a linked domain is more involved:
+
+The flow is as follows:
+
+1. The provider [implements carbon.txt for their domain](https://carbontxt.org/quickstart), either by uploading a carbon.txt file to the site directly, or delegating to another domain or URL with a DNS TXT record or HTTP header.
+2. The provider registers the linked domain in the provider portal
+3. The carbon.txt file is automatically checked on registration - [ADR 2](https://github.com/thegreenwebfoundation/carbon-txt-validator/blob/main/docs/adrs/02_improvements_to_delegation_and_domain_validation.md) and [ADR 3](https://github.com/thegreenwebfoundation/carbon-txt-validator/blob/main/docs/adrs/03_change_of_lookup_priority_order.md) in the carbon.txt project give full details of how this check is implemented.
+4. If the carbon.txt lookup resolves and the resulting file is syntactically valid, the linked domain is set up in a "Pending review" state - GWF staff then manually verify that this domain corresponds to the given provider, and approve the linked domain if so.
+5. Once a linked domain is approved, it will be used as the first step in any green domain check, ensuring that the linked provider is always shown for that domain.
+
+#### Why do it this way?
+
+This flow is designed to allows CDNs and managed service providers to serve information in a default carbon.txt file, whilst allowing "downstream" providers to share their own, more detailed information if need be. This provides important benefits for two different groups of users:
+
+- Hosting providers who resell infrastructure for another provider
+- Anyone using a CDN (eg cloufront, cloudflare) in front of their own infrastructure
+
+Both of these groups of users would *not* be shown as the corresponding provider in a greencheck using only IP or ASN based checks - the ability to explicitly link a domain to a provider allows us to ensure the correct provider is listed in a verified manner.
+
+
+**How can you trust this? What would stop me lying in my carbon.txt file about my site?**
+
+You could indeed list a green provider in your supply chain, and claim it was hosting your site, so your site showed up as green through association. Your site would not show up as green until you had been able to submit some supporting evidence for manual review that you _really were_ using that provider.
+
+After manual review by our support staff, you would have managed to mark one domain as green.
+
+**What would stop me using someone else's carbon.txt file instead?**
+
+**1. [Current approach] Manual review for new domains** - just like with your own domain, we have a manual review step for any new domain delegating to one already trusted. New domains don't show as green until they have been added to an allow list for a given provider. We are in the process of replacing this with an automated verification process, based on _domain hashes_:
+
+**2. [To be implemented] Domain hashes for newly seen domains** -
+
+Domain hashes are SHA256 hashes based on:
+
+1. the domain a lookup is being delegated to
+2. a secret shared that only the green web platform and the provider associated with the domain above has access to
+
+They are an optional part of either a TXT record or HTTP header, when delegating a lookup to carbon.txt file at a different domain.
+
+They allow the organisation *Cool Green Hosted Services Inc*, who own the domain `cool-green-hosted-services.com`, and who are serving a site for a customer *Customer Of Green Hosted Services Ltd* at domain `customer-of-green-hosted-services.com`, to assert that it's really organisation *Cool Green Hosted Services Inc* operating the infrastructure powering `customer-of-green-hosted-services.com`. This allows them to use the supporting evidence shared by
+*Cool Green Hosted Services Inc*, for any green checks by default.
+
+Once they are implemented, an extra step will be added to the linked domain registration process above: After the carbon.txt has been resolved and syntactically verified, the hosting provider will be directed to add a `gwf-domain-hash` DNS TXT record or `GWF-DomainHash` HTTP header containing this SHA256 hash, and the authenticity of the record will be verified before proceeding to create the linked domain. This both provides stronger guarantees of domain ownership than manual review, and results in a simpler, faster process.
+
+For more, please follow the link to the [github repo where the syntax and conventions are being worked at out](https://github.com/thegreenwebfoundation/carbon.txt), and in particular [ADR 2](https://github.com/thegreenwebfoundation/carbon-txt-validator/blob/main/docs/adrs/02_improvements_to_delegation_and_domain_validation.md).
+
 ### Domain, to IP to provider, by IP range
+
+If no Linked Domain exists for the given domain, we proceed to the IP based check.
+
+The domain is resolved to an IP address using the standard DNS mechanism.
 
 Once we have an IP address, we establish the link a provider by checking if this IP falls inside one of the IP ranges already shared with us by a given service provider.
 
@@ -59,70 +113,3 @@ By following the link to supporting evidence shared by `Provider B`, we can esta
 
 Similarly, a domain `my-green-site.com`, which resolves to the IP address `213.213.212.213`. From there, we perform a lookup to the same Autonomous Network 12345 (`AS 12345`). We follow the link from `AS 12345` to link to Provider B, and refer to their evidence to establish the link to green energy.
 
-------
-
-### Domain to carbon.txt lookup
-
-The final supported approach, which is currently under development, is to avoid relying on IP addresses entirely, and go straight from a domain name, to one or more providers, based on machine readable information exposed in a `carbon.txt` file.
-
-
-The flow is as follows:
-
-1. Check the domain name is a valid one.
-2. Check there if there is `carbon-txt` DNS TXT record for the given domain.
-3. Perform an HTTP request at https://domain.com/carbon.txt, OR the overide URL given as the value in the DNS TXT lookup.
-4. If there is valid 200 response and a parseable file, parse the file.
-5. If there is a no valid 200/OK response at domain.com/carbon.txt (i.e. a 404, or 403), check the HTTP for a `Via` header with a new domain, as a new domain to check.
-6. Repeat steps 1 through 5 until we end up with a 200 response with a parsable carbon.txt payload, or bad request (i.e. 40x, 50x).
-
-Once there is a parseable carbon.txt file, the domain the carbon.txt belongs to is used as a lookup key against a known list of domains associated with a provider. If there is a match, the site is assumed to be running at the provider, and shows as green.
-
-#### Why do it this way?
-
-This flow is designed to allows CDNs and managed service providers to serve information in a default carbon.txt file, whilst allowing "downstream" providers to share their own, more detailed information if need be.
-
-**Why support the carbon.txt DNS TXT record?**
-
-Supporting the DNS lookup allows an organisation that owns or operates multiple domains to refer to a single URL for them to maintain.
-The "override URL" also allows for organisations that prefer to serve their file from a `.well-known` directory to do so, without explicitly requiring it from people who do not know what a `.well-known` directory is, or want to control who is able to write to the directory.
-
-**Why use the `Via` header?**
-
-Consider the case where a managed-service-provider.com is hosting customer-a.com's website.
-
-The managed service provider may be  offering a CDN or managed hosting service, but they may not have control over the customer-a.com domain. They may not have, or want direct control over what a downstream user is sharing at a given url. However because they are offering some service "in front" of customer-a's website, and serving it over a secure connection, they are able to add headers to HTTP requests.
-
-the [HTTP Via header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/via) exists specifically to serve this purpose, and provides a well specified way to pass along information about a domain of the organisation providing a managed service, when the domain is different.
-
-**Why use domain/carbon.txt as the path?**
-
-Defaulting to a root `carbon.txt` makes it possible to implement a carbon.txt file without needing to know about `.well-known` directories, that by convention are normally invisible files. Having a single default place to look avoids needing to support a hierarchy of potential places to look, and precedence rules for where to look - there is either one place to default to when making an HTTP request, OR the single override.
-
-
-**How can you trust this? What would stop me lying in my carbon.txt file about my site?**
-
-You could indeed list a green provider in your supply chain, and claim it was hosting your site, so your site showed up as green through association. Your site would not show up as green until you had been able to submit some supporting evidence for manual review that you _really were_ using that provider.
-
-After manual review by our support staff, you would have managed to mark one domain as green.
-
-
-**What would stop me using someone else's carbon.txt file instead?**
-
-There are two mechanisms designed to mitigate against lying.
-
-**1. Manual review for new domains** - just like with your own domain, we have a manual review step for any new domain delegating to one already trusted. New domains don't show as green until they have been added to an allow list for a given provider, or until a domain hash is made available when performing a lookup. More on domain hashes below.
-
-**2. Domain hashes for newly seen domains** -
-
-Domain hashes are SHA256 hashes based on:
-
-1. the domain a lookup is being delegated to
-2. a secret shared that only the green web platform and the provider associated with the domain above has access to
-
-They are an optional part of either a TXT record or HTTP header, when delegating a lookup to carbon.txt file at a different domain.
-
-They allow the organisation *Cool Green Hosted Services Inc*, who own the domain `cool-green-hosted-services.com`, and who are serving a site for a customer *Customer Of Green Hosted Services Ltd* at domain `customer-of-green-hosted-services.com`, to assert that it's really organisation *Cool Green Hosted Services Inc* operating the infrastructure powering `customer-of-green-hosted-services.com`, and to use the supporting evidence shared by
-*Cool Green Hosted Services Inc*, for any green checks by default.
-
-
-For more, please follow the link to the [github repo where the syntax and conventions are being worked at out](https://github.com/thegreenwebfoundation/carbon.txt).
