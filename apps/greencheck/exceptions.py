@@ -11,10 +11,6 @@ class NoSharedSecret(NotFound):
     default_code = "no_shared_secret"
 
 
-class CarbonTxtFileNotFound(Exception):
-    pass
-
-
 class ImportingForArchivedProvider(Exception):
     """
     An exception raised when we try to import data for a provider
