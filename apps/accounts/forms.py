@@ -792,7 +792,7 @@ class LinkedDomainFormStep0(forms.ModelForm):
         #     "itself, rather than a customer or some other entity."
         # ),
        coerce=lambda x: x == 'True',
-       choices=((True, "This is my organisation's primary domain."), (False, "This is a subdomain, a subsidiary's domain, or a domain belonging to a customer or some other entity.")),
+       choices=((True, "This is the organisation's primary domain."), (False, "This is a subdomain, a domain for another entity, or a customer's domain.")),
        required=True,
        widget=forms.RadioSelect
     )
