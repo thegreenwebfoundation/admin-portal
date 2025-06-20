@@ -10,8 +10,18 @@
 <h3>Step 2: Link Domain to a Carbon.txt file</h3>
 {% if provider.primary_linked_domain %}
 <p>
-You can either create a new carbon.txt file or point to the carbon.txt at an existing domain, using HTTP or DNS. More copy on the circumstances in which you might use each one.
+You can either create a new Carbon.txt file for {{preview_data.0.domain}} or link it to the Carbon.txt file hosted on your primary domain ({{provider.primary_linked_domain.domain}}) using DNS or HTTP Headers.
 </p>
+
+<p>Which method should you use?</p>
+
+<ul>
+    <li><b>Use a new Carbon.txt file if</b> you are able to upload content onto the server for {{preview_data.0.domain}}, <b>and if</b> the sustainability disclosures for {{preview_data.0.domain}} differ from those of your primary domain ({{provider.primary_linked_domain.domain}}).</li>
+    <li><b>Use DNS to link to an existing Carbon.txt file if</b> your are able to edit the DNS records for {{preview_data.0.domain}}, and you want this domain to share the same sustainability disclosures as your primary domain.</li>
+    <li><b>Use HTTP Headers to link to an existing Carbon.txt file if</b> your are able to edit the server configuration for {{preview_data.0.domain}} to return additional response headers, and you want this domain to share the same sustainability disclosures as your primary domain.</li>
+</ul>
+
+
 <div class="tabbedview my-5 py-5">
   <ul role="tablist" class="tablist flex flex-wrap text-sm font-medium text-center list-none w-full justify-items-stretch pl-0 m-0">
       <li class="pl-0 m-0 grow">
@@ -48,7 +58,7 @@ You can either create a new carbon.txt file or point to the carbon.txt at an exi
 </div>
 {% else %}
 <p>
-You can either create a new carbon.txt file or point to the carbon.txt at an existing domain, using HTTP or DNS. More copy on the circumstances in which you might use each one.
+To setup your primary domain, you must first create a new Carbon.txt file and upload it to your primary domain.
 </p>
     <h4>Create and upload a Carbon.txt file for your primary domain</h4>
     <p class="m-0">Follow the steps in the <a href="https://carbontxt.org/quickstart" target="_blank">Carbon.txt Quickstart</a> (opens in new tab) to create a Carbon.txt file for your organisation. You should ensure that the file you create is uploaded to <strong>https://{{preview_data.0.domain}}/carbon.txt</strong>.</p>
