@@ -30,7 +30,7 @@ def test_create_linked_domain_happy_path(user, hosting_provider_factory, client,
         }
     ]
     mock_validator = mocker.patch(
-        "apps.accounts.views.validate_carbon_txt_for_domain",
+        "apps.accounts.views.provider.domains.validate_carbon_txt_for_domain",
         return_value=True
     )
 
@@ -76,7 +76,7 @@ def test_create_linked_domain_unvalidated(user, hosting_provider_factory, client
         }
     ]
     mock_validator = mocker.patch(
-        "apps.accounts.views.validate_carbon_txt_for_domain",
+        "apps.accounts.views.provider.domains.validate_carbon_txt_for_domain",
         side_effect=ValidationError("Something went wrong validating the domain")
     )
 
@@ -119,7 +119,7 @@ def test_create_linked_domain_unauthorized(user, hosting_provider_factory, clien
         }
     ]
     mock_validator = mocker.patch(
-        "apps.accounts.views.validate_carbon_txt_for_domain",
+        "apps.accounts.views.provider.domains.validate_carbon_txt_for_domain",
         return_value=True
     )
 
