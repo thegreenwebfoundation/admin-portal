@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 # https://github.com/django/django/blob/main/django/core/validators.py
 @deconstructible
 class DomainNameValidator(RegexValidator):
-    message = _("Enter a valid domain name.")
+    message = _("Enter a valid domain name. This can include any subdomains (e.g. www.), but should not include the protocol (i.e. http:// or https://) or any content paths (e.g /news/, /about, news-update-2025.html etc.).")
     ul = "\u00a1-\uffff"  # Unicode letters range (must not be a raw string).
     # Host patterns.
     hostname_re = (
