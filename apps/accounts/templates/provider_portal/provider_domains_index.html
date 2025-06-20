@@ -56,7 +56,7 @@
     </div>
 			{% if object_list|length == 0 %}
 			 <div class="alert__warning">
-                <p>You don't have any linked domains! <b>Start by linking a primary domain.</b></p>
+                <p>You don't have any linked domains! Use the link below to link your first domain.</p>
 				</div>
         <a href="{% url "provider-domain-create" provider.id %}" class="w-full btn"><span class="text-xs">Link a domain</span></a>
       {% else %}
