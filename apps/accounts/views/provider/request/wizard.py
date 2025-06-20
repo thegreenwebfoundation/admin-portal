@@ -1,45 +1,21 @@
+from enum import Enum
 import logging
 
-from enum import Enum
-from collections import OrderedDict
-
-from dal import autocomplete
+from django.core.files.storage import DefaultStorage
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin.models import LogEntry, ADDITION
-
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.contrib.auth.models import Group
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.files.storage import DefaultStorage
-from django.core.exceptions import ValidationError
-from django.db.models.query import QuerySet
-from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import redirect, get_object_or_404
+from django.http import HttpRequest, Http404, HttpResponseRedirect
+from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
-from django.utils.functional import cached_property
-from django.views.generic import DetailView, ListView, CreateView, DeleteView
-from django.views.generic.base import TemplateView
-from django.views.generic.edit import ModelFormMixin
 
-from django_registration import signals, validators
-from django_registration.backends.activation.views import (
-    ActivationView,
-    RegistrationView,
-)
-from django_registration.exceptions import ActivationError
-from django_registration.forms import (
-    RegistrationFormCaseInsensitive,
-    RegistrationFormUniqueEmail,
-)
 from formtools.wizard.views import SessionWizardView
 
-from guardian.shortcuts import get_users_with_perms
-
-from .forms import (
+from ....forms import (
     BasisForVerificationForm,
     ConsentForm,
     GreenEvidenceForm,
@@ -48,9 +24,9 @@ from .forms import (
     OrgDetailsForm,
     PreviewForm,
     ServicesForm,
-    LinkedDomainFormStep0,
 )
-from .models import (
+
+from ....models import (
     Hostingprovider,
     HostingproviderCertificate,
     ProviderRequest,
@@ -58,318 +34,13 @@ from .models import (
     ProviderRequestEvidence,
     ProviderRequestIPRange,
     ProviderRequestStatus,
-    User,
-    LinkedDomain,
 )
-from .permissions import manage_provider
-from .utils import (send_email, validate_carbon_txt_for_domain)
-from django.http import HttpRequest
+
+from ....permissions import manage_provider
+
+from ....utils import send_email
 
 logger = logging.getLogger(__name__)
-
-
-class DashboardView(TemplateView):
-    """
-    This dashboard view was what people would see when signing into the admin.
-    We currently redirect to the provider portal home page as at present,we
-    only really logged in activity by users who work for the providers in our system.
-    """
-
-    template_name = "dashboard.html"
-
-    def get(self, request, *args, **kwargs):
-        return HttpResponseRedirect(reverse("provider_portal_home"))
-
-
-class ProviderAutocompleteView(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        # if a user is not authenticated don't show anything
-        if not self.request.user.is_admin:
-            return Hostingprovider.objects.none()
-
-        # we only want active hosting providers to allocate to
-        qs = Hostingprovider.objects.exclude(archived=True)
-
-        if self.q:
-            qs = qs.filter(name__istartswith=self.q)
-
-        return qs
-
-
-class RegistrationForm(RegistrationFormCaseInsensitive, RegistrationFormUniqueEmail):
-    def __init__(self, *args, **kwargs):
-        # override error message for unique email validation
-        validators.DUPLICATE_EMAIL = mark_safe(
-            """This email address is already in use.
-            If this is your email address, you can <a href="/accounts/login/">log in</a>
-            or do a <a href="/accounts/password_reset/">password reset</a>"""
-        )
-        super().__init__(*args, **kwargs)
-
-    class Meta(RegistrationFormCaseInsensitive.Meta):
-        model = User
-
-
-class UserRegistrationView(RegistrationView):
-    form_class = RegistrationForm
-    email_body_template = "emails/activation.html"
-    email_subject_template = "emails/activation_subject.txt"
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        context["site_header"] = "Register a new user"
-        return context
-
-    def create_inactive_user(self, form):
-        new_user = super().create_inactive_user(form)
-        groups = Group.objects.filter(name__in=["hostingprovider", "datacenter"])
-
-        for group in groups:
-            new_user.groups.add(group)
-        new_user.save()
-        return new_user
-
-    def get_success_url(self, user=None):
-        """
-        Return the URL to redirect to after successful redirection.
-        """
-        # stay on the same page
-        return reverse("registration")
-
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            messages.success(
-                request,
-                "We've sent you an email. You need to follow the link in the email to confirm your address to finish signing up.",
-            )
-        return super().post(request, *args, **kwargs)
-
-
-class UserActivationView(ActivationView):
-    def get_success_url(self, user=None):
-        return reverse("login")
-
-    def get(self, *args, **kwargs):
-        """
-        We override the get method here because we only want to use the admin
-        page and show the user a message.
-        """
-        try:
-            activated_user = self.activate(*args, **kwargs)
-        except ActivationError as e:
-            error_message = e.message
-        else:
-            signals.user_activated.send(
-                sender=self.__class__, user=activated_user, request=self.request
-            )
-            message = "Thanks, we've confirmed your email address. Now you can login with your username and password."
-            messages.success(self.request, message)
-            return HttpResponseRedirect(force_str(self.get_success_url(activated_user)))
-
-        messages.error(self.request, error_message)
-        return HttpResponseRedirect(force_str(self.get_success_url()))
-
-
-class ProviderRelatedResourceMixin(LoginRequiredMixin, PermissionRequiredMixin):
-    """
-    This class handles permissions and object loading for resources related to a
-    specific hosting provider (such as LinkedDomains).
-
-    Mixing it into a view ensures that:
-        - the self.provider property is populated appropriately
-        - the `provider` is passed in the template context
-        . the view is only accessible to admins or the provider's owner
-            (returning a 403 otherwise)
-    """
-
-    @cached_property
-    def provider(self):
-        provider_id = self.kwargs.get("provider_id")
-        return Hostingprovider.objects.get(pk=provider_id)
-
-    def has_permission(self):
-        allowed_users= get_users_with_perms(
-                self.provider,
-                only_with_perms_in=(manage_provider.codename,),
-                with_superusers=True,
-                with_group_users=True,
-        )
-        return self.request.user in allowed_users
-
-    def get_context_data(self, *args, **kwargs):
-        return { **super().get_context_data(*args, **kwargs), **{
-            "provider": self.provider
-        }}
-
-class ProviderDomainsView(ProviderRelatedResourceMixin, ListView):
-    """
-    Domain hash home page:
-    - used by external (non-staff) users to see a list of domain hashes they have created,
-    - renders the list of domain hashes a HTML template,
-    - requires the flag `domain_hash` enabled for the user (otherwise returns 404).
-    """
-
-    template_name = "provider_portal/provider_domains_index.html"
-    model = LinkedDomain
-
-
-    def get_queryset(self):
-        return self.provider.linkeddomain_set.all()
-
-
-class ProviderDomainCreateView(ProviderRelatedResourceMixin, SessionWizardView):
-
-    FORMS = [
-         ("0", LinkedDomainFormStep0),
-         ("1", PreviewForm),
-    ]
-
-    TEMPLATES = {
-        "0": "provider_portal/provider_domain_new/step_0.html",
-        "1": "provider_portal/provider_domain_new/step_1.html"
-    }
-
-    def _get_data_for_preview(self):
-        preview_data = {}
-        current_step = int(self.steps.current or 0)
-        for step in range(0, current_step):
-            cleaned_data = self.get_cleaned_data_for_step(str(step))
-            preview_data[str(step)] = cleaned_data
-        return preview_data
-
-
-    def get_template_names(self):
-        return [self.TEMPLATES[self.steps.current]]
-
-    def get_context_data(self, *args, **kwargs):
-        return { **super().get_context_data(*args, **kwargs), **{
-            "preview_data": self._get_data_for_preview()
-        }}
-
-    def get_success_url(self):
-        return reverse('provider-domain-index', kwargs={'provider_id': self.provider.id})
-
-
-    def done(self, form_list, form_dict, **kwargs):
-        domain = form_dict["0"].save(commit=False)
-        domain.provider = self.provider
-        domain.created_by = self.request.user
-        validate_carbon_txt_for_domain(domain.domain)
-        domain.save()
-        messages.success(
-            self.request,
-            """
-            Thank you!
-
-            Your linked domain was submitted succesfully.
-            We are now reviewing your request - we'll be in touch soon.
-            """
-        )
-        return redirect(self.get_success_url())
-
-    def render_done(self, form, **kwargs):
-        # This method is copied from the Wizard base class, and overridden with a try/except block
-        # in order to allow us to add extra validation in the `done` method,
-        # see https://github.com/jazzband/django-formtools/issues/61#issuecomment-199702599.
-        # This allows us to check for the presence of carbon.txt when the wizard completes,
-        # and allow the user to retry if necessary.
-        final_forms = OrderedDict()
-        for form_key in self.get_form_list():
-            form_obj = self.get_form(
-                step=form_key,
-                data=self.storage.get_step_data(form_key),
-                files=self.storage.get_step_files(form_key)
-            )
-            if not form_obj.is_valid():
-                return self.render_revalidation_failure(form_key, form_obj, **kwargs)
-            final_forms[form_key] = form_obj
-
-        try:
-            done_response = self.done(list(final_forms.values()), form_dict=final_forms, **kwargs)
-            self.storage.reset()
-            return done_response
-        except ValidationError as e:
-            form.add_error(None, e)
-            return self.render(form)
-
-class ProviderDomainDetailView(ProviderRelatedResourceMixin, DetailView):
-    template_name = "provider_portal/provider_domain_detail.html"
-
-    def get_object(self):
-        domain = self.kwargs.get("domain")
-        return get_object_or_404(
-            LinkedDomain.objects.filter(provider=self.provider.id,domain=domain)
-        )
-
-class ProviderDomainDeleteView(ProviderRelatedResourceMixin, DeleteView):
-    template_name = "provider_portal/provider_domain_delete.html"
-    model = LinkedDomain
-
-
-    def get_object(self):
-        domain = self.kwargs.get("domain")
-        return get_object_or_404(
-            LinkedDomain.objects.filter(provider=self.provider.id,domain=domain)
-        )
-
-    def get_success_url(self):
-        return reverse("provider-domain-index", args=(self.kwargs.get("provider_id"),))
-
-class ProviderPortalHomeView(LoginRequiredMixin, ListView):
-    """
-    Home page of the Provider Portal:
-    - used by external (non-staff) users to access a list of requests they submitted,
-    - renders the list of pending verification requests as well as hosting providers on a HTML template,
-    - requires the flag `provider_request` enabled for the user (otherwise returns 404).
-    """
-
-    template_name = "provider_portal/home.html"
-    model = ProviderRequest
-
-    def get_queryset(self) -> "dict[str, QuerySet[ProviderRequest]]":
-        """
-        Returns a dictionary with 2 querysets:
-        - unapproved ProviderRequests created by the user,
-        - all HostingProviders that the user has *explicit* object-level permissions to.
-            This means: we don't show all possible providers for users who belong to the admin group or have staff status,
-            only those where object-level permission between the user and the provider was explicitly granted.
-        """
-        return {
-            "requests": ProviderRequest.objects.filter(created_by=self.request.user)
-            .exclude(
-                status__in=[
-                    ProviderRequestStatus.APPROVED,
-                    ProviderRequestStatus.REMOVED,
-                ]
-            )
-            .order_by("name"),
-            "providers": self.request.user.hosting_providers_explicit_perms.order_by(
-                "name"
-            ),
-        }
-
-
-class ProviderRequestDetailView(LoginRequiredMixin, DetailView):
-    """
-    Detail view for ProviderRequests:
-    - used by external (non-staff) users to view a summary of a single request they submitted,
-    - renders a single provider request on a HTML template,
-    - requires the flag `provider_request` enabled for the user (otherwise returns 404).
-    """  # noqa
-
-    template_name = "provider_portal/request_detail.html"
-    model = ProviderRequest
-
-    def get_queryset(self) -> "QuerySet[ProviderRequest]":
-        """
-        Admins can retrieve any ProviderRequest object,
-        regular users can only retrieve objects that they created.
-        """
-        if self.request.user.is_admin:
-            return ProviderRequest.objects.all()
-        return ProviderRequest.objects.filter(created_by=self.request.user)
-
 
 class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
     """
