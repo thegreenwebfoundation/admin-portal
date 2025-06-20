@@ -38,11 +38,11 @@
     {% endif %}
 
     {% if object.is_primary %}
-      <p>This is the <strong>primary</strong> domain for your provider, meaning it represents the provider itself, not a customer.</p>
+      <p>This is the <strong>primary</strong> domain for {{object.provider.name}}.</p>
     {% endif %}
   </div>
   <div class="prose mx-auto mt-8 border-t-2 border-black ">
-    <a href="{% url "provider-domain-delete" object.provider_id object.domain %}" class="mt-8 w-full btn btn-white text-xs ">❌ Unlink this domain from this provider</a>
+    <a href="{% url "provider-domain-delete" object.provider_id object.domain %}" class="mt-8 w-full btn btn-white text-xs ">❌ Unlink this domain from {{object.provider.name}}</a>
   </div>
   </article>
 

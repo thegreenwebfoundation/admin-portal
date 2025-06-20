@@ -133,6 +133,7 @@ notes.md
 
 .vscode/
 .vscode/
+.zed/
 sublime.sublime-workspace
 *.code-workspace
 static/*.*

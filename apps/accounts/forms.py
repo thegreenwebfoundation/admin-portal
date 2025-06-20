@@ -786,13 +786,13 @@ class LinkedDomainFormStep0(forms.ModelForm):
     """
 
     is_primary = forms.TypedChoiceField(
-        label="Is this your primary domain?",
-        help_text=(
-            "Select this option if this domain represents your own hosting provider "
-            "itself, rather than a customer or some other entity."
-        ),
+        label="Is this your organisation's primary domain?",
+        # help_text=(
+        #     "Select this option if this domain represents your own hosting provider "
+        #     "itself, rather than a customer or some other entity."
+        # ),
        coerce=lambda x: x == 'True',
-       choices=((True, 'This is my primary domain'), (False, 'This is the domain of a customer or some other entity.')),
+       choices=((True, "This is the organisation's primary domain."), (False, "This is a subdomain, a domain for another entity, or a customer's domain.")),
        required=True,
        widget=forms.RadioSelect
     )
@@ -800,4 +800,3 @@ class LinkedDomainFormStep0(forms.ModelForm):
     class Meta:
         model = ac_models.LinkedDomain
         fields = ["domain", "is_primary"]
-
