@@ -7,10 +7,8 @@
 
 
 {%  block current_step_pre %}
-<h3>Step 2: Create carbon.txt</h3>
+<h3>Step 2: Link Domain to a Carbon.txt file</h3>
 <p>
-The carbon.txt standard allows publishing sustainability data on the web in a way that is open, discoverable, comparable	and traceable. We use carbon.txt to etc etc etc.
-</p><p>
 You can either create a new carbon.txt file or point to the carbon.txt at an existing domain, using HTTP or DNS. More copy on the circumstances in which you might use each one.
 </p>
 {% if provider.primary_linked_domain %}
@@ -46,8 +44,9 @@ it to your site, so it is accessible at <strong>https://{{preview_data.0.domain}
   </div>
 </div>
 {% else %}
-    <p class="m-0">Use the <a href="https://carbontxt.org/tools/builder" target="_blank">carbon.txt builder tool</a> (opens in new tab) to create a carbon.txt file and  upload
-it to your site, so it is accessible at <strong>https://{{preview_data.0.domain}}/carbon.txt</strong></p>
+    <h4>Create and upload a Carbon.txt file for your primary domain</h4>
+    <p class="m-0">Follow the steps in the <a href="https://carbontxt.org/quickstart" target="_blank">Carbon.txt Quickstart</a> (opens in new tab) to create a Carbon.txt file for your organisation. You should ensure that the file you create is uploaded to <strong>https://{{preview_data.0.domain}}/carbon.txt</strong>.</p>
+    <a href="https://carbontxt.org/quickstart" class="btn btn-white text-xs w-full mt-8" target="_blank">Create and upload a Carbon.txt file.</a>
 {% endif %}
 {%  endblock current_step_pre %}
 {% block submit_button_text %}
