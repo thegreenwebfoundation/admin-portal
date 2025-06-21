@@ -52,14 +52,17 @@ jobs:
 
     steps:
       - name: Eco CI Energy Estimation - Initialize
-        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: start-measurement
+          # Intensity for USA in 2024 from https://github.com/thegreenwebfoundation/co2.js/blob/2bf7b54d030249a8edf01604567079fbc1642c39/data/output/average-intensities.json#L1262
+          co2-calculation-method: 'constant'
+          co2-grid-intensity-constant: 383
         continue-on-error: true
 
       - uses: actions/checkout@v4
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: get-measurement
           label: "checkout"
@@ -71,7 +74,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: get-measurement
           label: "setup-python"
@@ -81,7 +84,7 @@ jobs:
         run: |
           python -m pip install --upgrade uv wheel
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: get-measurement
           label: "pip install uv wheel"
@@ -102,7 +105,7 @@ jobs:
           uv venv
           uv sync
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: get-measurement
           label: "pip install requirements"
@@ -130,14 +133,14 @@ jobs:
           AWS_CONFIG_FILE: ${{ secrets.AWS_CONFIG_FILE }}
 
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: get-measurement
           label: "pytest"
         continue-on-error: true
 
       - name: Eco CI Energy Estimation - End Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: display-results
           pr-comment: true
