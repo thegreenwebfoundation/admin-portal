@@ -10,7 +10,7 @@ from .provider.domains import (
         ProviderDomainDeleteView,
         ProviderDomainDetailView
 )
-from .provider.autocomplete import ProviderAutocompleteView
+from .provider.autocomplete import LabelAutocompleteView, ProviderAutocompleteView
 from .provider.portal_home import ProviderPortalHomeView
 from .provider.request.detail import ProviderRequestDetailView
 from .provider.request.wizard import ProviderRequestWizardView
