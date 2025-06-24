@@ -15,13 +15,14 @@
     {% endif %}
   </div>
 
-  <div class="flex gap-2 text-right items-right">
-    {% flag "verified_domains" %}
-    <a href="{% url 'provider-domain-index' provider.id %}" class="btn btn-white px-2 text-sm">🌐 Linked Domains</a>
-    {% endflag %}
+  <div class="flex gap-2 text-right items-right items-center">
     {% get_obj_perms request.user for provider as "provider_perms" %}
     {% if "manage_provider" in provider_perms %}
       <a href="{% url 'provider_edit' provider.id %}" class="btn btn-white px-2 text-sm">📝 Update listing</a>
     {% endif %}
+
+    {% flag "verified_domains" %}
+      <span class="px-2 text-sm"><a href="{% url 'provider-domain-index' provider.id %}"> Linked Domains</a></span>
+    {% endflag %}
   </div>
 </div>

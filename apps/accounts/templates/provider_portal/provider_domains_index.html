@@ -8,30 +8,43 @@
     <header class="">
       <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt;Back to provider portal</a></p>
 
-      <h1 class="text-6xl mb-0"><span class="uppercase">Linked Domains</h1>
-      <h2 class="mt-4">
+      <h1 class="text-center leading-10"><span class="uppercase">Linked Domains</h1>
+      <h2 class="my-3">
         Provider: {{provider.name}}
-      </h2>
+      </h3>
       </header>
   {% endblock %}
 
 
   <article>
-    <div class="mt-8">
+    <div class="mt-8 prose">
+      <p class="pb-3">Problems with your Green Web Check results showing the right hosting provider name? This solution using carbon.txt is for you. It has three key steps:</p>
+      <ol class="pb-3">
+        <li>Identify a domain you are in complete control of - your primary domain.</li>
+        <li>Create a carbon.txt file containing your key sustainability disclosures and host it on your primary domain. This makes it your primary linked domain.</li>
+        <li>Configure the sharing of that carbon.txt file across your customers' or other domains.</li>
+      </ol>
 
+      <p class="pb-3"><a href="https://thegreenwebfoundation.org/support">Is this solution worth your time?</a> | <a href="https://thegreenwebfoundation.org/support">Overview of the process</a> | <a href="https://carbontxt.org/">Background on carbon.txt</a></p>
+      
+			{% if object_list|length == 0 %}
+			 <div class="alert__warning">
+                <p>Get started by linking your primary domain to a carbon.txt file.</p>
+				</div>
+        <a href="{% url "provider-domain-create" provider.id %}" class="w-full btn font-bold">Link primary domain</a>
+      {% endif %}
+    </div>
 
-
-
-      <p class="prose pb-3">These are the domains associated with the provider {{provider.name}}. Linking a domain to a provider allows us to associate that domain with {{provider.name}} in the <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank">Green Web Check</a> and our <a href="https://admin.thegreenwebfoundation.org/api-docs/" target="_blank">API</a>.</p>
-
-      <p class="prose pb-3">A provider can link an unlimited number of domains to their listing. However, every provider must designate one domain as their <b>primary domain</b>. This primary domain should be a web address that the provider owns and manages, and it represents their official online presence - i.e. their organisation's main website.</p>
-
+    <div>
       <div class="">
         {% if object_list|length > 0 %}
+        <h3 class=""text-xl pt-10>Your linked domains</h3>
+        <p class="prose pb-3">These are the domains associated with the provider {{provider.name}}. Linking a domain to a provider allows us to associate that domain with {{provider.name}} in the <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank">Green Web Check</a> and our <a href="https://admin.thegreenwebfoundation.org/api-docs/" target="_blank">API</a>.</p>
+
         <div class="py-3 md:items-center ">
           {% for obj in object_list %}
             <div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2 flex justify-between gap-4">
-            <div class="py-6 pr-6">
+            <div class="py-3 pr-6">
               <p class="my-0">
                 <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="font-semibold text-xl no-underline hover:underline">
                 {{ obj.domain }}
@@ -51,17 +64,14 @@
           </div>
           {% endfor %}
         </div>
+
+			  <p><a href="{% url "provider-domain-create" provider.id %}">Link another domain</a></p>
+
+        <p class="pb-3 text-xs">A provider can link an unlimited number of domains to their listing. However, every provider must designate one domain as their <b>primary domain</b>. This primary domain should be a web address that the provider owns and manages, and it represents their official online presence - i.e. their organisation's main website.</p>
+
         {% endif %}
       </div>
     </div>
-			{% if object_list|length == 0 %}
-			 <div class="alert__warning">
-                <p>You don't have any linked domains! Use the link below to link your first domain.</p>
-				</div>
-        <a href="{% url "provider-domain-create" provider.id %}" class="w-full btn"><span class="text-xs">Link a domain</span></a>
-      {% else %}
-			  <p><a href="{% url "provider-domain-create" provider.id %}">Link another domain</a></p>
-      {% endif %}
   </article>
 
 </div>
