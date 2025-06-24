@@ -9,10 +9,7 @@
       <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt;Back to provider portal</a></p>
 
       <h1 class="text-center leading-10"><span class="uppercase">Linked Domains</h1>
-      <h2 class="my-3">
-        Provider: {{provider.name}}
-      </h3>
-      </header>
+    </header>
   {% endblock %}
 
 
@@ -38,8 +35,9 @@
     <div>
       <div class="">
         {% if object_list|length > 0 %}
-        <h3 class=""text-xl pt-10>Your linked domains</h3>
-        <p class="prose pb-3">These are the domains associated with the provider {{provider.name}}. Linking a domain to a provider allows us to associate that domain with {{provider.name}} in the <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank">Green Web Check</a> and our <a href="https://admin.thegreenwebfoundation.org/api-docs/" target="_blank">API</a>.</p>
+        <h4 class="border-b text-xl pt-4">Linked domains for {{provider.name}}</h4>
+
+        <p class="pb-3 text-xs">You can link an unlimited number of domains here. However, you must designate one domain as your <b>primary domain</b>. This primary domain should be a web address that the provider owns and manages and represents your official online presence - i.e. your main website. This is also where we'd expect to find your canoncial carbon.txt file.</p>
 
         <div class="py-3 md:items-center ">
           {% for obj in object_list %}
@@ -66,8 +64,6 @@
         </div>
 
 			  <p><a href="{% url "provider-domain-create" provider.id %}">Link another domain</a></p>
-
-        <p class="pb-3 text-xs">A provider can link an unlimited number of domains to their listing. However, every provider must designate one domain as their <b>primary domain</b>. This primary domain should be a web address that the provider owns and manages, and it represents their official online presence - i.e. their organisation's main website.</p>
 
         {% endif %}
       </div>
