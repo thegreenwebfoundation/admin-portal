@@ -8,29 +8,41 @@
     <header class="">
       <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt;Back to provider portal</a></p>
 
-      <h1 class="text-6xl mb-0"><span class="uppercase">Linked Domains</h1>
-      <h2 class="mt-4">
-        Provider: {{provider.name}}
-      </h2>
-      </header>
+      <h1 class="text-center leading-10"><span class="uppercase">Linked Domains</h1>
+    </header>
   {% endblock %}
 
 
   <article>
-    <div class="mt-8">
+    <div class="mt-8 prose">
+      <p class="pb-3">Problems with your Green Web Check results showing the right hosting provider name? This solution using carbon.txt is for you. It has three key steps:</p>
+      <ol class="pb-3">
+        <li>Identify a domain you are in complete control of - your primary domain.</li>
+        <li>Create a carbon.txt file containing your key sustainability disclosures and host it on your primary domain. This makes it your primary linked domain.</li>
+        <li>Configure the sharing of that carbon.txt file across your customers' or other domains.</li>
+      </ol>
 
+      <p class="pb-3"><a href="https://thegreenwebfoundation.org/support">Is this solution worth your time?</a> | <a href="https://thegreenwebfoundation.org/support">Overview of the process</a> | <a href="https://carbontxt.org/">Background on carbon.txt</a></p>
+      
+			{% if object_list|length == 0 %}
+			 <div class="alert__warning">
+                <p>Get started by linking your primary domain to a carbon.txt file.</p>
+				</div>
+        <a href="{% url "provider-domain-create" provider.id %}" class="w-full btn font-bold">Link primary domain</a>
+      {% endif %}
+    </div>
 
-
-
-      <p class="prose italic pb-3">These are the domains associated with the provider {{provider.name}}  - verifying allows us to ensure that you are corrrectly identified as the hosting provider for them in the <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank">Green Web Check</a> tool.</p>
-
-
+    <div>
       <div class="">
         {% if object_list|length > 0 %}
+        <h4 class="border-b text-xl pt-4">Linked domains for {{provider.name}}</h4>
+
+        <p class="pb-3 text-xs">You can link an unlimited number of domains here. However, you must designate one domain as your <b>primary domain</b>. This primary domain should be a web address that the provider owns and manages and represents your official online presence - i.e. your main website. This is also where we'd expect to find your canoncial carbon.txt file.</p>
+
         <div class="py-3 md:items-center ">
           {% for obj in object_list %}
             <div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2 flex justify-between gap-4">
-            <div class="py-6 pr-6">
+            <div class="py-3 pr-6">
               <p class="my-0">
                 <a href="{% url "provider-domain-detail" provider.id obj.domain %}" class="font-semibold text-xl no-underline hover:underline">
                 {{ obj.domain }}
@@ -50,17 +62,13 @@
           </div>
           {% endfor %}
         </div>
+
+			  <p><a href="{% url "provider-domain-create" provider.id %}">Link another domain</a></p>
+
         {% endif %}
       </div>
     </div>
-			{% if object_list|length == 0 %}
-        <p>You don't yet have any linked domains!</p>
-        <a href="{% url "provider-domain-create" provider.id %}" class="w-full btn"><span class="text-xs">Link and verify a domain</span></a>
-      {% else %}
-			  <p><a href="{% url "provider-domain-create" provider.id %}">Link and verify another domain</a></p>
-      {% endif %}
   </article>
 
 </div>
 {% endblock %}
-

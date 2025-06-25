@@ -13,10 +13,10 @@
         <p class="mb-6 text-sm text-green"><button name="wizard_goto_step" type="submit" value="{{wizard.steps.prev}}" class="text-neutral-500 underline hover:no-underline">&lt; Back to previous step</button></p>
         {% endblock back_link %}
 
-        <h1 class="text-6xl mb-0"><span class="uppercase">Link a domain with carbon.txt</h1>
-        <h2 class="mt-4">
+        <h1 class="text-center">Link a domain with carbon.txt</h1>
+        <h3 class="my-3">
           Provider: {{provider.name}}
-        </h2>
+        </h3>
         </header>
     {% endblock %}
 
@@ -24,8 +24,17 @@
     <article>
       <div class="prose mx-auto mt-8">
         {% block explanatory_copy %}
-            <p class="italic">Explanatory copy here about how Carbon.txt gives you more control over how your provider is presented on Green Web Check results and Green Web  badges. </p>
-            <p>More copy explaining what is required (access to server, DNS, etc), and how long the process will take and what it will involve</p>
+            <!-- <p>Carbon.txt is a single recognisable location on any web domain for public sustainability data relating to that company. By combing Carbon.txt with your Green Web Foundation provider listing you can maintain a single source of truth for your organisations sustainability disclosures, and then share them across the different domains your organisation owns.</p>
+            <p>This benefit can also be passed on to your customers, who's domains can also be linked to your hosting provider listing our dataset. This ensures that whenever their domains are checked in our <a href="https://www.thegreenwebfoundation.org/green-web-check/" target="_blank">Green Web Check</a> and <a href="https://admin.thegreenwebfoundation.org/api-docs/" target="_blank">API</a> the results accurately reflect their use of your services.</p>
+
+            <p>To continue, you will need either:</p>
+
+            <ul>
+                <li>The ability to upload a Carbon.txt file to your website server. Or,</li>
+                <li>The ability to make DNS updates for the domain you wish to link to your provider. Or,</li>
+                <li>The ability to edit HTTP Headers for the domain you wish to link to your provider.</li>
+            </ul> -->
+
         {% endblock explanatory_copy %}
         {%  block previous_steps %}
         {%  endblock previous_steps %}
