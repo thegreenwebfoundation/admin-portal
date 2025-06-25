@@ -82,6 +82,7 @@ class ProviderDomainCreateView(ProviderRelatedResourceMixin, SessionWizardView):
         "1": "provider_portal/provider_domain_new/step_1.html"
     }
 
+
     def _get_data_for_preview(self):
         preview_data = {}
         current_step = int(self.steps.current or 0)
@@ -90,6 +91,17 @@ class ProviderDomainCreateView(ProviderRelatedResourceMixin, SessionWizardView):
             preview_data[str(step)] = cleaned_data
         return preview_data
 
+    def get_form_initial(self, step):
+        if step == "0":
+            if self.provider.primary_linked_domain:
+                domain = None
+                primary = "False"
+            else:
+                domain = self.provider.website_domain
+                primary = "True"
+            return { "domain": domain, "is_primary": primary }
+        else:
+            return super().get_form_initial(step)
 
     def get_template_names(self):
         return [self.TEMPLATES[self.steps.current]]
