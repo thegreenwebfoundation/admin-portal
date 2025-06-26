@@ -32,9 +32,9 @@
   </div>
   <div class="prose mx-auto mt-8">
     {%if object.state == "Approved" %}
-    <p>✔️  This domain has succesfully been verified with carbon.txt.</p>
+    <p>✔️  This domain has succesfully been verified with carbon.txt. You can <a href="https://carbontxt.org/tools/validator?auto=true&domain={{object.domain}}" target="_blank">check the carbon.txt details</a> in the validator.</p>
     {% elif object.state == "Pending review" %}
-    <p>⏳ We are reviewing the carbon.txt for this domain, and will be in touch shortly.</p>
+    <p>⏳ We are reviewing the carbon.txt for this domain, and will be in touch shortly. You can <a href="https://carbontxt.org/tools/validator?auto=true&domain={{object.domain}}" target="_blank">check the carbon.txt details</a> in the validator.</p>
     {% endif %}
 
     {% if object.is_primary %}
