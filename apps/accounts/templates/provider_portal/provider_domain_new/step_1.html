@@ -7,7 +7,7 @@
 
 
 {%  block current_step_pre %}
-<h3>Step 2: Link Domain to a Carbon.txt file</h3>
+<h3 id="step2">Step 2: Link Domain to a Carbon.txt file</h3>
 {% if provider.primary_linked_domain %}
 <p>
 You can either create a new Carbon.txt file for {{preview_data.0.domain}} or link it to the Carbon.txt file hosted on your primary domain ({{provider.primary_linked_domain.domain}}) using DNS or HTTP Headers.
