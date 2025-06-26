@@ -33,7 +33,7 @@ from apps.greencheck.swagger import TGWFSwaggerView
 from apps.greencheck.api import legacy_views
 from apps.greencheck.api import image_views
 from apps.greencheck.api import views as api_views
-from apps.accounts.admin import LabelAutocompleteView
+from apps.accounts.views import LabelAutocompleteView
 from apps.accounts import urls as accounts_urls
 from rest_framework.authtoken import views
 
