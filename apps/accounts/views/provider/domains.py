@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.views.generic import DetailView, ListView, CreateView, DeleteView
 
@@ -110,12 +111,16 @@ class ProviderDomainCreateView(ProviderRelatedResourceMixin, SessionWizardView):
         domain.save()
         messages.success(
             self.request,
-            """
-            Thank you!
-
-            Your linked domain was submitted succesfully.
-            We are now reviewing your request - we'll be in touch soon.
-            """
+            mark_safe(
+                f"""
+                Thank you for taking the time to link the domain {domain}!<br />
+                Your submission was recieved succesfully.<br />
+                We review new linked domains on Tuesday each week.
+                Once we have reviewed the request, we will contact you
+                by email to let you know that it is approved, or that
+                we need more information from you.
+                """
+            )
         )
         return redirect(self.get_success_url())
 
