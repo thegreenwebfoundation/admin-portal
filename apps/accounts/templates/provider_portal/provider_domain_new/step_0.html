@@ -5,6 +5,8 @@
   <p class="mb-6 text-sm text-green"><a href="{% url 'provider-domain-index' provider.id %}" class="text-neutral-500">&lt; Back to linked domains</a></p>
 {% endblock back_link %}
 
+{% block form_action %}#step2{% endblock form_action %}
+
 {% block submit_button_text %}
   Next Step - Create Carbon.txt
 {% endblock submit_button_text %}
