@@ -115,6 +115,15 @@ class TestHostingProvider:
         assert clear_cached_greendomains.call_count == 2
 
     @pytest.mark.django_db
+    def test_clear_green_domains_cache_called_when_name_updated(self, db, hosting_provider_factory, mocker):
+        clear_cached_greendomains = mocker.patch("apps.accounts.models.Hostingprovider._clear_cached_greendomains")
+        provider = hosting_provider_factory.create()
+        provider.save()
+        provider.name = "New rebranded hosting provider!"
+        provider.save()
+        assert clear_cached_greendomains.call_count == 2
+
+    @pytest.mark.django_db
     def test_clear_green_domains_cache_called_when_other_field_updated(self, db, hosting_provider_factory, mocker):
         clear_cached_greendomains = mocker.patch("apps.accounts.models.Hostingprovider._clear_cached_greendomains")
         provider = hosting_provider_factory.create()

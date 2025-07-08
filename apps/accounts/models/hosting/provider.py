@@ -556,7 +556,7 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
     def save(self, *args, **kwargs):
         if self.is_dirty():
             dirty_fields = self.get_dirty_fields()
-            if len(set(["is_listed", "website"]) & set(dirty_fields.keys())) > 0:
+            if len(set(["is_listed", "website", "name"]) & set(dirty_fields.keys())) > 0:
                 # The is_listed flag and website url are denormalized into the
                 # greendomains table, so updating these should clear cached
                 # greendomains for this provider.
