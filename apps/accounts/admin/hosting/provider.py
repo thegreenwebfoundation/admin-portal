@@ -538,6 +538,7 @@ class HostingAdmin(
                         "services",
                         "verification_bases",
                         "created_by",
+                        "is_listed",
                     )
                 },
             ),
