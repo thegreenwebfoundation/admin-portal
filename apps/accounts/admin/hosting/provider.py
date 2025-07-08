@@ -144,7 +144,7 @@ class HostingAdmin(
             "name",
             "country_str",
             "html_website",
-            "showonwebsite",
+            "is_listed",
             "partner",
             "ip_addresses",
             self.service_list,
@@ -560,7 +560,7 @@ class HostingAdmin(
                 "fields": (
                     (
                         "archived",
-                        "showonwebsite",
+                        "is_listed",
                         "customer",
                     ),
                     ("partner", "model"),

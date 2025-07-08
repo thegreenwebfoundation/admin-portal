@@ -221,7 +221,7 @@ class Hostingprovider(models.Model):
         blank=True,
         related_name="labels",
     )
-    showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
+    is_listed = models.BooleanField(verbose_name="List this provider in the greenweb directory?", default=False)
     website = models.URLField(max_length=255)
     datacenter = models.ManyToManyField(
         "Datacenter",
@@ -444,7 +444,7 @@ class Hostingprovider(models.Model):
         GreenDomain.objects.filter(hosted_by_id=self.id).delete()
 
         self.archived = True
-        self.showonwebsite = False
+        self.is_listed = False
         self.save()
         return self
 
@@ -557,7 +557,7 @@ class Hostingprovider(models.Model):
         indexes = [
             models.Index(fields=["name"], name="hp_name"),
             models.Index(fields=["archived"], name="hp_archived"),
-            models.Index(fields=["showonwebsite"], name="hp_showonwebsite"),
+            models.Index(fields=["is_listed"], name="hp_is_listed"),
         ]
         permissions = (manage_provider.astuple(),)
 

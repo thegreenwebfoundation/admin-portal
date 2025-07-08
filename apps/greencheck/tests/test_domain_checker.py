@@ -27,7 +27,7 @@ class TestDomainChecker:
 
         #GIVEN a provider which is shown on the website and not archived
         #AND an approved LinkedDomain for that provider
-        provider = hosting_provider_factory.create(country="DE", showonwebsite=True, archived=False)
+        provider = hosting_provider_factory.create(country="DE", is_listed=True, archived=False)
         ld = linked_domain_factory(
             provider=provider,
             domain="example.com",
@@ -47,7 +47,7 @@ class TestDomainChecker:
 
         #GIVEN a provider which is not shown on the website
         #AND an approved LinkedDomain for that provider
-        provider = hosting_provider_factory.create(country="DE", showonwebsite=False, archived=False)
+        provider = hosting_provider_factory.create(country="DE", is_listed=False, archived=False)
         ld = linked_domain_factory(
             provider=provider,
             domain="example.com",
@@ -66,7 +66,7 @@ class TestDomainChecker:
 
         #GIVEN a provider which is archived
         #AND an approved LinkedDomain for that provider
-        provider = hosting_provider_factory.create(country="DE", showonwebsite=True, archived=True)
+        provider = hosting_provider_factory.create(country="DE", is_listed=True, archived=True)
         ld = linked_domain_factory(
             provider=provider,
             domain="example.com",
@@ -85,7 +85,7 @@ class TestDomainChecker:
 
         #GIVEN a provider which is valid and green
         #AND an pending LinkedDomain for that provider
-        provider = hosting_provider_factory.create(country="DE", showonwebsite=True, archived=False)
+        provider = hosting_provider_factory.create(country="DE", is_listed=True, archived=False)
         ld = linked_domain_factory(
             provider=provider,
             domain="example.com",
@@ -290,7 +290,7 @@ class TestDomainCheckerOrderBySize:
             model="groeneenergie",
             name="Smaller Reseller",
             partner="",
-            showonwebsite=True,
+            is_listed=True,
             website="http://small-reseller.com",
         )
         small_hosting_provider.save()

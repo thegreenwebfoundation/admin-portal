@@ -23,7 +23,7 @@ def hosting_provider():
         model="groeneenergie",
         name="Google",
         partner="",
-        showonwebsite=True,
+        is_listed=True,
         website="http://google.com",
     )
 

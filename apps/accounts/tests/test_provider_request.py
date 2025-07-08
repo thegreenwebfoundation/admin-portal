@@ -561,7 +561,7 @@ def test_approve_creates_hosting_provider():
 
     # provider is visible by default
     # appropriate tag is added
-    assert hp.showonwebsite is True
+    assert hp.is_listed is True
     assert "up-to-date" in hp.staff_labels.slugs()
     # "other-none" is the label condition check for
     # when someone is just trying to get a site marked
@@ -597,7 +597,7 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
 
     # provider is visible by default
     # appropriate tag is added
-    assert hp.showonwebsite is True
+    assert hp.is_listed is True
     assert hp.archived is False
     assert "up-to-date" in hp.staff_labels.slugs()
     # "other-none" is the label condition check for
@@ -748,7 +748,7 @@ def test_approve_supports_orgs_not_offering_hosted_services():
 
     # provider is visible by default
     # appropriate labels and services are listed
-    assert hp.showonwebsite is False
+    assert hp.is_listed is False
     assert "up-to-date" in hp.staff_labels.slugs()
     assert "other-none" in hp.services.slugs()
 

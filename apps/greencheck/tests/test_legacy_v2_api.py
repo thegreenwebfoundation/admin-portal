@@ -73,9 +73,9 @@ class TestDirectoryListingView:
         # that avoids those objects to be already sorted, to create a more
         # realistic testing scenario.
         for _ in range(3):
-            p1 = hosting_provider_factory.create(partner="", showonwebsite=True)
-            p2 = hosting_provider_factory.create(partner="Partner", showonwebsite=True)
-            p3 = hosting_provider_factory.create(partner=None, showonwebsite=True)
+            p1 = hosting_provider_factory.create(partner="", is_listed=True)
+            p2 = hosting_provider_factory.create(partner="Partner", is_listed=True)
+            p3 = hosting_provider_factory.create(partner=None, is_listed=True)
             partners.append(p2)
             nonpartners.extend([p1, p3])
 

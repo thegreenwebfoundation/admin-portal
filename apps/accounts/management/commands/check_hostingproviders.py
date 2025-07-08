@@ -22,5 +22,5 @@ class Command(BaseCommand):
                 resp = requests.get(GREENCHECK_URL.format(url)).json()
                 time.sleep(1)
                 if resp.get("green") is False:
-                    host.showonwebsite = False
+                    host.is_listed = False
                     host.save()

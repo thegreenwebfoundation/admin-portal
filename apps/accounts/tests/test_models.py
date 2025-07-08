@@ -93,7 +93,7 @@ class TestHostingProvider:
         assert linked_domain.active is False
         #
         assert provider.archived is True
-        assert provider.showonwebsite is False
+        assert provider.is_listed is False
         assert not green_domain
 
 

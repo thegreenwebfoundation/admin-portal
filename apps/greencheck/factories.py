@@ -109,7 +109,7 @@ class HostingProviderFactory(dj_factory.DjangoModelFactory):
     #     verbose_name="Services Offered",
     #     help_text="Click the services that your organisation offers. These will be listed in the green web directory.",
     # )
-    # showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
+    # is_listed = models.BooleanField(verbose_name="Show on website", default=False)
     website = factory.Faker("domain_name")
     # datacenter = models.ManyToManyField(
     #     "Datacenter",

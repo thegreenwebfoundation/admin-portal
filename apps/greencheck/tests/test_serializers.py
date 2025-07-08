@@ -37,7 +37,7 @@ def new_hosting_provider():
         model="groeneenergie",
         name="Greeny Cloudy",
         partner="",
-        showonwebsite=True,
+        is_listed=True,
         website="http://greeny.cloud",
     )
 

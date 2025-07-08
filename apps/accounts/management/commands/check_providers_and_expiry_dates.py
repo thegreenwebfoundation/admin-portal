@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         providers_and_expiry_dates = [
-            (hp.id, hp.name, hp.evidence_expiry_date, hp.showonwebsite)
+            (hp.id, hp.name, hp.evidence_expiry_date, hp.is_listed)
             for hp in Hostingprovider.objects.filter(archived=False)
         ]
 
