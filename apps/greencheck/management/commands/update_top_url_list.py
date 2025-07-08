@@ -65,6 +65,7 @@ class TopUrlUpdater:
                     gp.hosted_by_id = hp.id
                     gp.hosted_by = hp.name
                     gp.hosted_by_website = hp.website
+                    gp.listed_provider = hp.is_listed
 
                     try:
                         gp.save()
@@ -110,6 +111,7 @@ class TopUrlUpdater:
                         gp.hosted_by_id = hp.id
                         gp.hosted_by = hp.name
                         gp.hosted_by_website = hp.website
+                        gp.listed_provider = hp.is_listed
                         gp.partner = hp.partner
 
                         gp.save()

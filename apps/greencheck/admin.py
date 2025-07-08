@@ -340,6 +340,7 @@ class GreenDomainAdmin(admin.ModelAdmin):
         "green",
         "hosted_by_website",
         "hosting_provider",
+        "listed_provider",
     ]
     search_fields = ("url", "hosted_by_website")
     fields = [
@@ -347,6 +348,7 @@ class GreenDomainAdmin(admin.ModelAdmin):
         "hosted_by",
         "hosted_by_website",
         "hosted_by_id",
+        "listed_provider",
         "modified",
         "green",
     ]

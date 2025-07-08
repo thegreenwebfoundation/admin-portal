@@ -167,7 +167,7 @@ class GreenDomainFactory(dj_factory.DjangoModelFactory):
     url = factory.Faker("domain_name")
     green = True
     hosted_by = factory.SubFactory(HostingProviderFactory)
-
+    listed_provider = factory.SelfAttribute("hosted_by.is_listed")
     # see the `_adjust_kwargs` step, for checking that
     # hosting provider info is realistic
     hosted_by_id = factory.SelfAttribute("hosted_by")

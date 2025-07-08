@@ -84,6 +84,7 @@ class TestUpdateList:
             hosted_by_id=greencheck.hostingprovider,
             hosted_by=hostingprovider,
             hosted_by_website=hostingprovider.website,
+            listed_provider=hostingprovider.is_listed,
             url=greencheck.url,
             partner=hostingprovider.partner,
             modified=greencheck.date,
