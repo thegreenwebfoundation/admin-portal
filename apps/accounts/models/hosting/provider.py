@@ -159,7 +159,7 @@ class ProviderVerificationBasis(tag_models.TaggedItemBase):
         on_delete=models.CASCADE,
     )
 
-class Hostingprovider(models.Model):
+class Hostingprovider(models.Model, DirtyFieldsMixin):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
     city = models.CharField(max_length=255, blank=True)
@@ -239,6 +239,10 @@ class Hostingprovider(models.Model):
 
     def __str__(self):
         return self.name
+
+    def _clear_cached_greendomains(self):
+        from apps.greencheck.models import GreenDomain # Avoid circular import
+        GreenDomain.objects.filter(hosted_by_id=self.id).delete()
 
     # Properties
     # TODO: we should try to move to only using properties for methods that
@@ -440,8 +444,7 @@ class Hostingprovider(models.Model):
         # When providers are archived, any domains they host cease to be green, so we should
         # Remove them from the cache of green domains. This ensures that the next time the are
         # checked, the correct (grey) result will be returned.
-        from apps.greencheck.models import GreenDomain # Avoid circular import
-        GreenDomain.objects.filter(hosted_by_id=self.id).delete()
+        self._clear_cached_greendomains()
 
         self.archived = True
         self.is_listed = False
@@ -549,6 +552,16 @@ class Hostingprovider(models.Model):
         self.notify_admins(
             notification_subject, notification_email_copy, notification_email_html
         )
+
+    def save(self, *args, **kwargs):
+        if self.is_dirty():
+            dirty_fields = self.get_dirty_fields()
+            if len(set(["is_listed", "website"]) & set(dirty_fields.keys())) > 0:
+                # The is_listed flag and website url are denormalized into the
+                # greendomains table, so updating these should clear cached
+                # greendomains for this provider.
+                self._clear_cached_greendomains()
+        super().save(*args, **kwargs)
 
     class Meta:
         # managed = False
