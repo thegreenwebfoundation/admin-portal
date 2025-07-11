@@ -340,6 +340,7 @@ class GreenDomainAdmin(admin.ModelAdmin):
         "green",
         "hosted_by_website",
         "hosting_provider",
+        "listed_provider",
     ]
     search_fields = ("url", "hosted_by_website")
     fields = [
@@ -347,6 +348,7 @@ class GreenDomainAdmin(admin.ModelAdmin):
         "hosted_by",
         "hosted_by_website",
         "hosted_by_id",
+        "listed_provider",
         "modified",
         "green",
     ]
@@ -363,7 +365,8 @@ class GreenDomainAdmin(admin.ModelAdmin):
         if request.user and request.user.is_admin:
             return default_actions
         else:
-            del default_actions["allocate_to_provider"]
+            if "allocate_to_provider" in default_actions:
+                del default_actions["allocate_to_provider"]
             return default_actions
 
     @admin.action(description="Allocate selected domains to new provider")

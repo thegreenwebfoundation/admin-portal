@@ -159,7 +159,7 @@ class ProviderVerificationBasis(tag_models.TaggedItemBase):
         on_delete=models.CASCADE,
     )
 
-class Hostingprovider(models.Model):
+class Hostingprovider(models.Model, DirtyFieldsMixin):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
     city = models.CharField(max_length=255, blank=True)
@@ -221,7 +221,7 @@ class Hostingprovider(models.Model):
         blank=True,
         related_name="labels",
     )
-    showonwebsite = models.BooleanField(verbose_name="Show on website", default=False)
+    is_listed = models.BooleanField(verbose_name="List this provider in the greenweb directory?", default=False)
     website = models.URLField(max_length=255)
     datacenter = models.ManyToManyField(
         "Datacenter",
@@ -239,6 +239,10 @@ class Hostingprovider(models.Model):
 
     def __str__(self):
         return self.name
+
+    def _clear_cached_greendomains(self):
+        from apps.greencheck.models import GreenDomain # Avoid circular import
+        GreenDomain.objects.filter(hosted_by_id=self.id).delete()
 
     # Properties
     # TODO: we should try to move to only using properties for methods that
@@ -440,11 +444,10 @@ class Hostingprovider(models.Model):
         # When providers are archived, any domains they host cease to be green, so we should
         # Remove them from the cache of green domains. This ensures that the next time the are
         # checked, the correct (grey) result will be returned.
-        from apps.greencheck.models import GreenDomain # Avoid circular import
-        GreenDomain.objects.filter(hosted_by_id=self.id).delete()
+        self._clear_cached_greendomains()
 
         self.archived = True
-        self.showonwebsite = False
+        self.is_listed = False
         self.save()
         return self
 
@@ -550,6 +553,18 @@ class Hostingprovider(models.Model):
             notification_subject, notification_email_copy, notification_email_html
         )
 
+    def save(self, *args, **kwargs):
+        # The is_listed flag, name and website url are denormalized into the
+        # greendomains table, so updating these should clear cached
+        # greendomains for this provider.
+        if self.is_dirty():
+            dirty_fields = self.get_dirty_fields()
+            greendomain_cache_expiring_fields = ["is_listed", "website", "name"]
+            any_cache_expiring_field_is_dirty = len(set(greendomain_cache_expiring_fields) & set(dirty_fields.keys())) > 0
+            if any_cache_expiring_field_is_dirty:
+                self._clear_cached_greendomains()
+        super().save(*args, **kwargs)
+
     class Meta:
         # managed = False
         verbose_name = "Hosting Provider"
@@ -557,7 +572,7 @@ class Hostingprovider(models.Model):
         indexes = [
             models.Index(fields=["name"], name="hp_name"),
             models.Index(fields=["archived"], name="hp_archived"),
-            models.Index(fields=["showonwebsite"], name="hp_showonwebsite"),
+            models.Index(fields=["is_listed"], name="hp_is_listed"),
         ]
         permissions = (manage_provider.astuple(),)
 

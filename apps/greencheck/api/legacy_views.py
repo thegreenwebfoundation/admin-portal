@@ -75,13 +75,13 @@ def fetch_providers_for_country(country_code):
     # country, at a maximum we can get away with doing it in memory
 
     all_providers = Hostingprovider.objects.filter(
-        country=country_code, showonwebsite=True
+        country=country_code, is_listed=True
     )
 
     # because historically we have had a mix of empty strings and null
     # values, we need to use multiple excludes
     partner_providers = (
-        all_providers.filter(country=country_code, showonwebsite=True)
+        all_providers.filter(country=country_code, is_listed=True)
         .filter(partner__isnull=False)
         .exclude(partner__in=["", "None"])
         .order_by("name")

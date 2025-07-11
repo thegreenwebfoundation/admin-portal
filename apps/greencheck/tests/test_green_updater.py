@@ -23,7 +23,7 @@ def hosting_provider():
         model="groeneenergie",
         name="Google",
         partner="",
-        showonwebsite=True,
+        is_listed=True,
         website="http://google.com",
     )
 
@@ -84,6 +84,7 @@ class TestUpdateList:
             hosted_by_id=greencheck.hostingprovider,
             hosted_by=hostingprovider,
             hosted_by_website=hostingprovider.website,
+            listed_provider=hostingprovider.is_listed,
             url=greencheck.url,
             partner=hostingprovider.partner,
             modified=greencheck.date,

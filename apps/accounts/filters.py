@@ -86,7 +86,7 @@ class ShowWebsiteFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value() is None:
             return queryset
-        return queryset.filter(showonwebsite=self.value())
+        return queryset.filter(is_listed=self.value())
 
 
 class PartnerFilter(SimpleListFilter):

@@ -284,9 +284,9 @@ class ProviderRequest(TimeStampedModel):
         # organisations that we would need to recognise as
         # using green energy, but who do not offer hosted services
         if "other-none" in hp.services.slugs():
-            hp.showonwebsite = False
+            hp.is_listed = False
         else:
-            hp.showonwebsite = True
+            hp.is_listed = True
 
         hp.verification_bases.set(self.verification_bases.all())
 

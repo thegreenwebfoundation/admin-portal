@@ -44,7 +44,7 @@ def named_hosting_provider(name: str) -> ac_models.Hostingprovider:
         model="groeneenergie",
         name=name,
         partner="",
-        showonwebsite=True,
+        is_listed=True,
         website=f"http://{text.slugify(name)}.com",
     )
 

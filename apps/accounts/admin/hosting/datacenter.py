@@ -118,7 +118,7 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         read_only = super().get_readonly_fields(request, obj)
         if not request.user.is_admin:
-            read_only.append("showonwebsite")
+            read_only.append("is_listed")
         if obj is not None:
             read_only.append("created_by")
         return read_only
@@ -139,7 +139,7 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
                             "temperature",
                             "temperature_type",
                         ),
-                        ("dc12v", "virtual", "greengrid", "showonwebsite"),
+                        ("dc12v", "virtual", "greengrid", "is_listed"),
                         ("model",),
                     ),
                 },
@@ -239,7 +239,7 @@ class DatacenterAdmin(ObjectPermissionsAdminMixin, admin.ModelAdmin):
         boolean=True,
     )
     def show_website(self, obj):
-        return obj.showonwebsite
+        return obj.is_listed
 
 
     @admin.display(

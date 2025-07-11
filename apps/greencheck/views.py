@@ -80,7 +80,7 @@ class DirectoryView(TemplateView):
         """
 
         queryset = Hostingprovider.objects.filter(
-            showonwebsite=True,
+            is_listed=True,
             archived=False
         ).prefetch_related(
             "services"

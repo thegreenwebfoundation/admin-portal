@@ -161,6 +161,7 @@ class SiteCheckLogger:
         green_domain.hosted_by = hosting_provider.name
         green_domain.hosted_by_id = sitecheck.hosting_provider_id
         green_domain.hosted_by_website = hosting_provider.website
+        green_domain.listed_provider = hosting_provider.is_listed
         green_domain.partner = hosting_provider.partner
         green_domain.modified = sitecheck.checked_at
         green_domain.green = sitecheck.green
