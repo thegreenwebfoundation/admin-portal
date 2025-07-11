@@ -554,12 +554,14 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         )
 
     def save(self, *args, **kwargs):
+        # The is_listed flag, name and website url are denormalized into the
+        # greendomains table, so updating these should clear cached
+        # greendomains for this provider.
         if self.is_dirty():
             dirty_fields = self.get_dirty_fields()
-            if len(set(["is_listed", "website", "name"]) & set(dirty_fields.keys())) > 0:
-                # The is_listed flag and website url are denormalized into the
-                # greendomains table, so updating these should clear cached
-                # greendomains for this provider.
+            greendomain_cache_expiring_fields = ["is_listed", "website", "name"]
+            any_cache_expiring_field_is_dirty = len(set(greendomain_cache_expiring_fields) & set(dirty_fields.keys())) > 0
+            if any_cache_expiring_field_is_dirty:
                 self._clear_cached_greendomains()
         super().save(*args, **kwargs)
 
