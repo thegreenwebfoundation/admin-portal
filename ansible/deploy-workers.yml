@@ -29,8 +29,6 @@
     # For triggering restarts with systemd
     service_restart: true
     service_user: "deploy"
-    service_gunicorn_app: "admin_web"
-    service_worker_job: "admin_worker"
 
     # See "dramatiq_threads" and "dramatiq_processes"
     # in the inventory
@@ -74,30 +72,30 @@
       tags:
         - systemd
 
-- name: Set up systemd entries for workers and web app
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: deploy
-    group: deploy
-    mode: "0755"
-  loop:
-    - {
-        src: "systemd.web-app.service.j2",
-        dest: "/etc/systemd/system/{{ service_gunicorn_app }}.service",
-      }
-    - {
-        src: "systemd.worker.service.j2",
-        dest: "/etc/systemd/system/{{ service_worker_job }}.service",
-      }
-  become: true
-  tags:
-    - systemd
-    - config
+    - name: Set up systemd entries for workers and web app
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: deploy
+        group: deploy
+        mode: "0755"
+      loop:
+        - {
+            src: "systemd.web-app.service.j2",
+            dest: "/etc/systemd/system/{{ service_gunicorn_app }}.service",
+          }
+        - {
+            src: "systemd.worker.service.j2",
+            dest: "/etc/systemd/system/{{ service_worker_job }}.service",
+          }
+      become: true
+      tags:
+        - systemd
+        - config
 
-- name: Trigger restart for worker with systemd
-  ansible.builtin.service:
-    name: "{{ service_worker_job }}:"
-    state: restarted
-  become: true
-  when: service_restart is true
+    - name: Trigger restart for worker with systemd
+      ansible.builtin.service:
+        name: "{{ service_worker_job }}"
+        state: restarted
+      become: true
+      when: service_restart is true
