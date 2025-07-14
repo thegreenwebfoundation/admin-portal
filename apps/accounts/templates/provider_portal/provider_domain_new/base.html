@@ -6,7 +6,7 @@
 {% endblock extrahead %}
 {% block content %}
 <div class="container mx-auto prose">
-  <form method="post" action="" class="gwf-form" id="provider-domain-new-form">
+  <form method="post" action="{% block form_action %}{% endblock form_action %}" class="gwf-form" id="provider-domain-new-form">
     {% block header_section %}
       <header class="">
         {% block back_link %}
