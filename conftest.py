@@ -93,7 +93,7 @@ def hosting_provider():
         model="groeneenergie",
         name="Amazon US West",
         partner="",
-        showonwebsite=True,
+        is_listed=True,
         website="http://aws.amazon.com",
     )
 
@@ -132,7 +132,7 @@ def datacenter(sample_hoster_user):
         name="KPN DC2",
         pue=1.3,
         residualheat=False,
-        showonwebsite=True,
+        is_listed=True,
         temperature=22,
         temperature_type="C",
         created_by=sample_hoster_user,

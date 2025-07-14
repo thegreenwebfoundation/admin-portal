@@ -497,6 +497,7 @@ class GreenDomain(models.Model):
     hosted_by_id = models.IntegerField()
     hosted_by = models.CharField(max_length=255)
     hosted_by_website = models.CharField(max_length=255)
+    listed_provider = models.BooleanField()
     partner = models.CharField(max_length=255)
     green = models.BooleanField()
     modified = models.DateTimeField()
@@ -519,6 +520,7 @@ class GreenDomain(models.Model):
             hosted_by=provider.name,
             hosted_by_id=provider.id,
             hosted_by_website=provider.website,
+            listed_provider=provider.is_listed,
             partner=ac_models.PartnerChoice.NONE,
             modified=timezone.now(),
         )
@@ -551,6 +553,7 @@ class GreenDomain(models.Model):
             hosted_by=None,
             hosted_by_id=None,
             hosted_by_website=None,
+            listed_provider=False,
             partner=None,
             modified=timezone.now(),
         )
@@ -578,6 +581,7 @@ class GreenDomain(models.Model):
             hosted_by_id=hosting_provider.id,
             hosted_by_website=hosting_provider.website,
             partner=hosting_provider.partner,
+            listed_provider=hosting_provider.is_listed,
             modified=timezone.now(),
             green=True,
         )

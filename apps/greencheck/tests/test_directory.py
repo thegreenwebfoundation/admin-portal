@@ -22,8 +22,8 @@ def test_ordering_of_providers_in_directory(client, hosting_provider_factory):
     Check that providers are listed in order of the name of their
     country, to allow for grouping by country in templates
     """
-    german_provider = hosting_provider_factory.create(country="DE", showonwebsite=True)
-    danish_provider = hosting_provider_factory.create(country="DK", showonwebsite=True)
+    german_provider = hosting_provider_factory.create(country="DE", is_listed=True)
+    danish_provider = hosting_provider_factory.create(country="DK", is_listed=True)
 
     # when: the directory is accessed with an active flag
     res = client.get(reverse("directory-index"))
@@ -43,7 +43,7 @@ def test_templates_in_filter_view(client, hosting_provider_factory):
     """
 
     # given: a hosting provider in Germany
-    hosting_provider_factory.create(country="DE", showonwebsite=True)
+    hosting_provider_factory.create(country="DE", is_listed=True)
 
     # when: we visit our directory
     res = client.get(reverse("directory-index"))
@@ -63,7 +63,7 @@ def test_carbon_txt_template_included_for_provider_with_linked_domain(client, ho
     """
 
     # given: a hosting provider in Germany which has a primary linked domain
-    provider = hosting_provider_factory.create(country="DE", showonwebsite=True)
+    provider = hosting_provider_factory.create(country="DE", is_listed=True)
     ld = linked_domain_factory(
         provider=provider,
         domain="example.com",
@@ -87,7 +87,7 @@ def test_carbon_txt_template_not_included_for_provider_without_linked_domain(cli
     """
 
     # given: a hosting provider in Germany
-    hosting_provider_factory.create(country="DE", showonwebsite=True)
+    hosting_provider_factory.create(country="DE", is_listed=True)
 
     # when: we visit our directory
     res = client.get(reverse("directory-index"))
@@ -108,7 +108,7 @@ def test_fallback_when_no_filter_view_has_no_results(client, hosting_provider_fa
     """
 
     # given: a hosting provider in Germany
-    hosting_provider_factory.create(country="DE", showonwebsite=True)
+    hosting_provider_factory.create(country="DE", is_listed=True)
 
     # when: we filter our directory by another country, Denmark
     res = client.get(reverse("directory-index"), {"country": "DK"})

@@ -187,6 +187,7 @@ class GreenDomainSerializer(serializers.ModelSerializer):
             "url",
             "hosted_by",
             "hosted_by_website",
+            "listed_provider",
             "partner",
             "green",
             "hosted_by_id",
