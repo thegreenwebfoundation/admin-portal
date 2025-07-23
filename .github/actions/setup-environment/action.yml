@@ -1,0 +1,59 @@
+name: 'Setup environment'
+description: 'Set up a test environment for the GWF admin portal'
+runs:
+  using: "composite"
+  steps:
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
+        with:
+          task: get-measurement
+          label: "checkout"
+        continue-on-error: true
+
+      - name: Use Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
+        with:
+          task: get-measurement
+          label: "setup-python"
+        continue-on-error: true
+
+      - name: Install tooling for managing dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade uv wheel
+
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
+        with:
+          task: get-measurement
+          label: "pip install uv wheel"
+        continue-on-error: true
+
+      # - name: Set up a cache-key for installations of dependencies, in .venv
+      #   id: cache-venv
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ./.venv
+      #     key: ${{ runner.os }}-venv-${{ hashFiles('**/Pipfile.lock') }}
+
+      - name: Install dependencies
+        # skipping this check to see if we have a collision between cache keys
+        # when deploying versus running tests
+        # if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          uv venv
+          uv sync
+
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
+        with:
+          task: get-measurement
+          label: "pip install requirements"
+        continue-on-error: true
+
