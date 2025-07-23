@@ -1,0 +1,107 @@
+# This is a reusable workflow called by ci.yml in order to deploy the application.
+# It takes one parameter:
+# - the `environment` to which we want to deploy: either `staging` or `prod.`
+
+name: Deploy
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        description: "The environment to which we want to deploy"
+        required: true
+
+jobs:
+  deploy:
+    environment: "${{ inputs.environment }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ANSIBLE_STDOUT_CALLBACK: yaml
+      PYTHONDONTWRITEBYTECODE: 1
+      MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL_READ_ONLY: ${{ secrets.DATABASE_URL_READ_ONLY }}
+      EXPLORER_TOKEN: ${{ secrets.EXPLORER_TOKEN }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DJANGO_SETTINGS_MODULE: ${{ secrets.DJANGO_SETTINGS_MODULE }}
+      RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      SENTRY_RELEASE: ${{ secrets.SENTRY_RELEASE }}
+      SENTRY_ENVIRONMENT: ${{ secrets.SENTRY_ENVIRONMENT }}
+      OBJECT_STORAGE_ENDPOINT: ${{ secrets.OBJECT_STORAGE_ENDPOINT }}
+      OBJECT_STORAGE_REGION: ${{ secrets.OBJECT_STORAGE_REGION }}
+      OBJECT_STORAGE_ACCESS_KEY_ID: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY_ID }}
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.OBJECT_STORAGE_SECRET_ACCESS_KEY }}
+      OBJECT_STORAGE_BUCKET_NAME: ${{ secrets.OBJECT_STORAGE_BUCKET_NAME }}
+      DOMAIN_SNAPSHOT_BUCKET: ${{ secrets.DOMAIN_SNAPSHOT_BUCKET }}
+      AMAZON_PROVIDER_ID: ${{ secrets.AMAZON_PROVIDER_ID }}
+      AMAZON_REMOTE_API_ENDPOINT: ${{ secrets.AMAZON_REMOTE_API_ENDPOINT }}
+      MICROSOFT_PROVIDER_ID: ${{ secrets.MICROSOFT_PROVIDER_ID }}
+      MICROSOFT_LOCAL_FILE_DIRECTORY: ${{ secrets.MICROSOFT_LOCAL_FILE_DIRECTORY }}
+      EQUINIX_PROVIDER_ID: ${{ secrets.EQUINIX_PROVIDER_ID }}
+      EQUINIX_REMOTE_API_ENDPOINT: ${{ secrets.EQUINIX_REMOTE_API_ENDPOINT }}
+      MAXMIND_USER_ID: ${{ secrets.MAXMIND_USER_ID }}
+      MAXMIND_LICENCE_KEY: ${{ secrets.MAXMIND_LICENCE_KEY }}
+      AWS_SHARED_CREDENTIALS_FILE: ${{ secrets.AWS_SHARED_CREDENTIALS_FILE }}
+      AWS_CONFIG_FILE: ${{ secrets.AWS_CONFIG_FILE }}
+      API_URL: ${{ secrets.API_URL }}
+      TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS: ${{ secrets.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS }}
+
+    steps:
+
+      - name: Eco CI Energy Estimation - Initialize
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
+        with:
+          task: start-measurement
+        continue-on-error: true
+
+      - uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Use turnstyle to serialise deploys
+        uses: softprops/turnstyle@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Check that no migrations are pending"
+        run: |
+          source .venv/bin/activate
+          python manage.py migrate --check
+
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ./ansible/deploy.yml
+          directory: ./
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          options: |
+            --inventory "./ansible/inventories/${{ inputs.environment }}.yml"
+
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ./ansible/deploy-workers.yml
+          directory: ./
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          options: |
+            --inventory "./ansible/inventories/${{ inputs.environment }}.yml"
+
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
+        with:
+          task: get-measurement
+          label: "ansible deploy"
+        continue-on-error: true
+
+      - name: Eco CI Energy Estimation - End Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v5
+        with:
+          task: display-results
+          pr-comment: true
+          send-data: true
+        continue-on-error: true
+
