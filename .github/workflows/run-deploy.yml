@@ -17,7 +17,7 @@ defaults:
 
 jobs:
   deploy:
-    environment:  "${{ github.ref == refs/heads/master && 'prod' || 'staging' }}"
+    environment: "${{ github.ref == 'refs/heads/master' && 'prod' || 'staging' }}"
     timeout-minutes: 10
     runs-on: ubuntu-latest
     env:
@@ -59,9 +59,6 @@ jobs:
         uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: start-measurement
-          # Intensity for USA in 2024 from https://github.com/thegreenwebfoundation/co2.js/blob/2bf7b54d030249a8edf01604567079fbc1642c39/data/output/average-intensities.json#L1262
-          co2-calculation-method: 'constant'
-          co2-grid-intensity-constant: 383
         continue-on-error: true
 
       - uses: actions/checkout@v4
@@ -75,8 +72,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Check that no migrations are pending"
-        run: |
-          uv run python manage.py migrate --check
+        run: "uv run python manage.py migrate --check"
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
@@ -85,7 +81,7 @@ jobs:
           directory: ./
           key: ${{secrets.SSH_PRIVATE_KEY}}
           options: |
-            --inventory "${{ github.ref == refs/heads/master && './ansible/inventories/prod.yml' || './ansible/inventories/staging.yml' }}"
+            --inventory "${{ github.ref == 'refs/heads/master' && './ansible/inventories/prod.yml' || './ansible/inventories/staging.yml' }}"
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
@@ -94,7 +90,7 @@ jobs:
           directory: ./
           key: ${{secrets.SSH_PRIVATE_KEY}}
           options: |
-            --inventory "${{ github.ref == refs/heads/master && './ansible/inventories/prod.yml' || './ansible/inventories/staging.yml' }}"
+            --inventory "${{ github.ref == 'refs/heads/master' && './ansible/inventories/prod.yml' || './ansible/inventories/staging.yml' }}"
 
       - name: Eco CI Energy Estimation - Get Measurement
         uses: green-coding-solutions/eco-ci-energy-estimation@v5

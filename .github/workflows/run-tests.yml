@@ -23,6 +23,7 @@ defaults:
 
 jobs:
   run_tests:
+    environment: "test"
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write # this allows to show table and charts in PRs
@@ -55,9 +56,6 @@ jobs:
         uses: green-coding-solutions/eco-ci-energy-estimation@v5
         with:
           task: start-measurement
-          # Intensity for USA in 2024 from https://github.com/thegreenwebfoundation/co2.js/blob/2bf7b54d030249a8edf01604567079fbc1642c39/data/output/average-intensities.json#L1262
-          co2-calculation-method: 'constant'
-          co2-grid-intensity-constant: 383
         continue-on-error: true
 
       - uses: actions/checkout@v4
