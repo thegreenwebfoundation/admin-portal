@@ -11,7 +11,7 @@ class LinkedDomainFormStep0(forms.ModelForm):
 
     domain = forms.CharField(
         help_text=(
-            "Enter a valid domain name, for example: <strong>thegreenwebfoundation.org</strong>"
+            "Enter a domain name, for example: <strong>thegreenwebfoundation.org</strong>, without the https://."
         )
     )
 

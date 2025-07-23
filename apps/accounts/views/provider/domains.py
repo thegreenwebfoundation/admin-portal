@@ -125,12 +125,9 @@ class ProviderDomainCreateView(ProviderRelatedResourceMixin, SessionWizardView):
             self.request,
             mark_safe(
                 f"""
-                Thank you for taking the time to link the domain {domain}!<br />
-                Your submission was recieved succesfully.<br />
-                We review new linked domains on Tuesday each week.
-                Once we have reviewed the request, we will contact you
-                by email to let you know that it is approved, or that
-                we need more information from you.
+                Thank you for taking the time to setup carbon.txt for {domain.domain}!<br />
+                We review linked domains on Tuesday each week. We will contact you by email to let you
+                know when it is approved, or if we need more information from you.
                 """
             )
         )
