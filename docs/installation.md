@@ -150,10 +150,10 @@ The first time you run the application locally, there's a few extra steps you'll
 
 First, ensure you have a local `.env` file: copy `env.sample` and adjust as appropriate.
 
-Then run outstanding database migrations:
+Then run outstanding database migrations, and setup permissions - this involves an additional step after running the migrations themselves, so we always use our `just migrate` command, rather than calling `python manage.py migrate` directly:
 
 ```shell
-just dev_manage migrate
+just migrate
 ```
 
 Install JS and CSS dependencies and build static assets:

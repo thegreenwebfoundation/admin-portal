@@ -12,7 +12,8 @@ on:
       - "**.md"
       - ".gitignore"
   # make our tests run when we have external PRs
-  pull_request:
+  # WARNING - ONLY use pull_request_target when explicitly checking user permissions as part of the workflow run.
+  pull_request_target:
     paths-ignore:
       - "**.md"
       - ".gitignore"
@@ -23,6 +24,9 @@ defaults:
 
 jobs:
   # First, work out whether the user that triggered the run is a collaborator or not.
+  # WARNING: without this check, we should NOT use pull_request_target as a trigger above,
+  # and revert to pull_request, as pull_request_target is insecure without an explicit
+  # permissions check.
   determine-user-role:
       runs-on: ubuntu-latest
       outputs:
@@ -34,8 +38,12 @@ jobs:
             if [[ "${{ github.event_name }}" == "push" ]]; then
               # direct pushes can only be made by collaborators. We can run the tests directly
               echo "is-collaborator=true" >> $GITHUB_OUTPUT
+              # the triggering ref is just the ref of the branch:
+              echo "ref=$GITHUB_REF" >> $GITHUB_OUTPUT
             elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
               assoc="${{ github.event.pull_request.author_association }}"
+              # the triggering ref is the ref of the pull request head
+              echo "ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
               if [[ "$assoc" == "COLLABORATOR" || "$assoc" == "OWNER" ]]; then
                 # PRs from collaborators and owners run the tests directly
                 echo "is-collaborator=true" >> $GITHUB_OUTPUT
@@ -44,8 +52,8 @@ jobs:
                 echo "is-collaborator=false" >> $GITHUB_OUTPUT
               fi
             else
-              # Some other trigger we didn't expect - don't run tests automatically.
-              echo "is-collaborator=false" >> $GITHUB_OUTPUT
+              # Some other trigger we didn't expect, refuse to continue.
+              return 1
             fi
 
   run-tests-collaborator:
@@ -64,4 +72,5 @@ jobs:
     uses: ./.github/workflows/run-tests-inner.yml
     with:
       environment: test-external
+      ref: "${{ needs.determne-user-role.outputs.ref }}"
     secrets: inherit

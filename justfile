@@ -7,20 +7,26 @@ _default:
 TAG := `echo $$APP_RELEASE-$(git log -n 1 --format=%h)`
 
 ## Deploy a new release to production. This will not work in a Github Codespace, as it relies on staff SSH keys for deployment.
-release:
-    uv run sentry-cli releases new -p admin-portal `sentry-cli releases propose-version`
-    uv run sentry-cli releases set-commits --auto `sentry-cli releases propose-version`
-    uv run ansible-playbook ansible/deploy.yml -i ansible/inventories/prod.yml
-    uv run sentry-cli releases finalize `sentry-cli releases propose-version`
+release inventory='prod':
+    uv run ansible-playbook ansible/deploy.yml -i ansible/inventories/{{inventory}}.yml
+    uv run ansible-playbook ansible/deploy-workers.yml -i ansible/inventories/{{inventory}}.yml
+
+## Deploy a new release to production. This will not work in a Github Codespace, as it relies on staff SSH keys for deployment.
+release_migrate inventory='prod':
+    uv run ansible-playbook ansible/deploy.yml -i ansible/inventories/{{inventory}}.yml
+    uv run ansible-playbook ansible/migrate.yml -i ansible/inventories/{{inventory}}.yml
+    uv run ansible-playbook ansible/deploy-workers.yml -i ansible/inventories/{{inventory}}.yml
+
+# Run the django database migrations
+migrate:
+    uv run python manage.py migrate
+    uv run python manage.py setup_group_permissions
 
 # Create a super user for local development using the basic django `createsuperuser` command.
 _dev_setup_local_users:
     uv run python ./manage.py createsuperuser --username admin --email admin@admin.com --noinput
     uv run python ./manage.py set_fake_passwords
 
-# Run the django database migrations
-_dev_setup_migrations:
-    uv run python manage.py migrate
 
 # Run a django development server that reloads when code is changed.
 dev_runserver:
@@ -47,7 +53,7 @@ dev_test_only *options:
     uv run pytest -s --create-db --looponfail -m only -v --ds=greenweb.settings.testing {{ options }}
 
 # Set up a development environment inside Github Codespaces
-dev_setup_codespaces: _dev_setup_migrations _dev_tailwind_install _dev_setup_local_users
+dev_setup_codespaces: migrate _dev_tailwind_install _dev_setup_local_users
     uv run python manage.py tailwind build
     cd ./apps/theme/static_src/ && npx rollup --config
     uv run python manage.py collectstatic --no-input
