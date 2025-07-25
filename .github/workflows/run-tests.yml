@@ -12,10 +12,17 @@ on:
       - "**.md"
       - ".gitignore"
   # make our tests run when we have external PRs
-  pull_request:
+  # WARNING - ONLY use pull_request_target when explicitly checking user permissions as part of the workflow run, as this
+  # runs *with* privileges, on the PR target branch.
+  pull_request_target:
     paths-ignore:
       - "**.md"
       - ".gitignore"
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
 
 defaults:
   run:
@@ -23,10 +30,20 @@ defaults:
 
 jobs:
   # First, work out whether the user that triggered the run is a collaborator or not.
+  # WARNING: without this check, we should NOT use pull_request_target as a trigger above,
+  # and revert to pull_request, as pull_request_target is insecure without an explicit
+  # permissions check.
+  # If the user is a collaborator, we go ahead and run the PR.  If the user is not, then we runs-on
+  # against the test-external environment, which blocks, waiting for manual approval from GWF staff
+  # before doing anything further.
+  # We also identify the `ref` of the code to test: as pull_request_target
+  # is run on the *target* branch of the PR, we need to explicitly check this out, once we've
+  # verified the user permissions, and manually reviewed the code.
   determine-user-role:
       runs-on: ubuntu-latest
       outputs:
         is-collaborator: ${{ steps.check-collaborator.outputs.is-collaborator }}
+        ref: ${{ steps.check-collaborator.outputs.ref }}
       steps:
         - name: Check if actor is a collaborator
           id: check-collaborator
@@ -34,8 +51,12 @@ jobs:
             if [[ "${{ github.event_name }}" == "push" ]]; then
               # direct pushes can only be made by collaborators. We can run the tests directly
               echo "is-collaborator=true" >> $GITHUB_OUTPUT
-            elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              # the triggering ref is just the ref of the branch:
+              echo "ref=$GITHUB_REF" >> $GITHUB_OUTPUT
+            elif [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
               assoc="${{ github.event.pull_request.author_association }}"
+              # the triggering ref is the ref of the pull request head
+              echo "ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
               if [[ "$assoc" == "COLLABORATOR" || "$assoc" == "OWNER" ]]; then
                 # PRs from collaborators and owners run the tests directly
                 echo "is-collaborator=true" >> $GITHUB_OUTPUT
@@ -44,8 +65,8 @@ jobs:
                 echo "is-collaborator=false" >> $GITHUB_OUTPUT
               fi
             else
-              # Some other trigger we didn't expect - don't run tests automatically.
-              echo "is-collaborator=false" >> $GITHUB_OUTPUT
+              # Some other trigger we didn't expect, refuse to continue.
+              exit 1
             fi
 
   run-tests-collaborator:
@@ -55,6 +76,7 @@ jobs:
     uses: ./.github/workflows/run-tests-inner.yml
     with:
       environment: test
+      ref: "${{ needs.determine-user-role.outputs.ref }}"
     secrets: inherit
 
   run-tests-external:
@@ -64,4 +86,5 @@ jobs:
     uses: ./.github/workflows/run-tests-inner.yml
     with:
       environment: test-external
+      ref: "${{ needs.determine-user-role.outputs.ref }}"
     secrets: inherit

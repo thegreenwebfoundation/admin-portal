@@ -10,6 +10,7 @@
       shell: |
         source .venv/bin/activate
         dotenv run -- ./manage.py migrate
+        dotenv run -- ./manage.py setup_group_permissions
       args:
         chdir: "{{ project_root }}/current"
         executable: "/usr/bin/bash"

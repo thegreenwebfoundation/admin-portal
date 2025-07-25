@@ -6,6 +6,10 @@ on:
         type: string
         description: "The environment in which to run the tests"
         required: true
+      ref:
+        type: string
+        description: "The ref of the PR or branch to be tested"
+        required: true
 jobs:
   run_tests:
     environment: "${{ inputs.environment }}"
@@ -44,7 +48,10 @@ jobs:
           task: start-measurement
         continue-on-error: true
 
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: "${{ inputs.ref }}"
 
       - name: Setup environment
         uses: ./.github/actions/setup-environment
