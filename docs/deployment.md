@@ -24,9 +24,24 @@ Assuming you have ssh access set up for the correct servers, you deploy with the
 
 ```
 ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml
+ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy-workers.yml
 ```
+... or just run `just release` which will run these two commands.
 
 Alternatively, merging code into master triggers the same ansible script via github actions.
+
+If you are releasing code which requires a database migration, the automatic deploy trigger on merge will fail, and you will have to deploy manually.
+
+In this case, run:
+
+```
+ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml
+ansible-playbook -i ansible/inventories/prod.yml ./ansible/migrate.yml
+ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy-workers.yml
+```
+... or just run `just release_migrate` which will run these two commands.
+
+You can also deploy to our staging environment, by pushing to the `staging` branch, running the above ansible playbooks with the `staging.yml` inventory instead of `prod.yml`, or running `just release staging` or `just release_migrate staging`
 
 ### Understanding our infrastructure
 
