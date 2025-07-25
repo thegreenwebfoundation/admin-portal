@@ -12,7 +12,11 @@ on:
       - "**.md"
       - ".gitignore"
   # make our tests run when we have external PRs
-  pull_request:
+  # WARNING - ONLY use pull_request_target when explicitly checking user permissions as part of the workflow run.
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
     paths-ignore:
       - "**.md"
       - ".gitignore"
@@ -23,6 +27,9 @@ defaults:
 
 jobs:
   # First, work out whether the user that triggered the run is a collaborator or not.
+  # WARNING: without this check, we should NOT use pull_request_target as a trigger above,
+  # and revert to pull_request, as pull_request_target is insecure without an explicit
+  # permissions check.
   determine-user-role:
       runs-on: ubuntu-latest
       outputs:
