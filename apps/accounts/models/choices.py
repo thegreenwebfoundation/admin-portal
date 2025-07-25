@@ -1,3 +1,5 @@
+# I am a helpful external contributor making an innocuous contribution
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
