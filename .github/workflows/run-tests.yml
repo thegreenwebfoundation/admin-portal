@@ -1,4 +1,4 @@
-name: Run tests
+name: Trigger test run
 
 on:
   push:
@@ -22,79 +22,46 @@ defaults:
     working-directory: ./
 
 jobs:
-  run_tests:
-    environment: "test"
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write # this allows to show table and charts in PRs
+  # First, work out whether the user that triggered the run is a collaborator or not.
+  determine-user-role:
+      runs-on: ubuntu-latest
+      outputs:
+        is-collaborator: ${{ steps.check-collaborator.outputs.is-collaborator }}
+      steps:
+        - name: Check if actor is a collaborator
+          id: check-collaborator
+          run: |
+            if [[ "${{ github.event_name }}" == "push" ]]; then
+              # direct pushes can only be made by collaborators. We can run the tests directly
+              echo "is-collaborator=true" >> $GITHUB_OUTPUT
+            elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              assoc="${{ github.event.pull_request.author_association }}"
+              if [[ "$assoc" == "COLLABORATOR" || "$assoc" == "OWNER" ]]; then
+                # PRs from collaborators and owners run the tests directly
+                echo "is-collaborator=true" >> $GITHUB_OUTPUT
+              else
+                #  PRs from other users wait for approval before running
+                echo "is-collaborator=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              # Some other trigger we didn't expect - don't run tests automatically.
+              echo "is-collaborator=false" >> $GITHUB_OUTPUT
+            fi
 
-    services:
-      mariadb:
-        image: mariadb:10.11
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ROOT_PASSWORD: just-for-github-actions
-          MYSQL_DATABASE: greencheck
+  run-tests-collaborator:
+    # Triggering user is collaborator: Run the tests in an environment which doesn't require approval
+    needs: determine-user-role
+    if: needs.determine-user-role.outputs.is-collaborator == 'true'
+    uses: ./.github/workflows/run-tests-inner.yml
+    with:
+      environment: test
+    secrets: inherit
 
-      # rabbitmq
-      rabbitmq:
-        image: rabbitmq:3.8
-        env:
-          RABBITMQ_USERNAME: "guest"
-          RABBITMQ_PASSWORD: "guest"
-        ports:
-          - 5672:5672
-        options: '--hostname "rmq" --health-cmd "rabbitmqctl status" --health-interval 10s --health-timeout 10s --health-retries 3 --health-start-period 60s'
-
-    strategy:
-      matrix:
-        python-version: [3.11, 3.12]
-
-    steps:
-      - name: Eco CI Energy Estimation - Initialize
-        uses: green-coding-solutions/eco-ci-energy-estimation@v5
-        with:
-          task: start-measurement
-        continue-on-error: true
-
-      - uses: actions/checkout@v4
-
-      - name: Setup environment
-        uses: ./.github/actions/setup-environment
-
-      - name: Run tests
-        run: |
-          source .venv/bin/activate
-          .venv/bin/dotenv -f .env.test run -- pytest
-        env:
-          DOMAIN_SNAPSHOT_BUCKET: ${{ secrets.TESTING_DOMAIN_SNAPSHOT_BUCKET }}
-          DATABASE_URL_READ_ONLY: ${{ secrets.TESTING_DATABASE_URL_READ_ONLY }}
-          OBJECT_STORAGE_ACCESS_KEY_ID: ${{ secrets.TESTING_OBJECT_STORAGE_ACCESS_KEY_ID }}
-          OBJECT_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.TESTING_OBJECT_STORAGE_SECRET_ACCESS_KEY }}
-          OBJECT_STORAGE_ENDPOINT: ${{ secrets.TESTING_OBJECT_STORAGE_ENDPOINT }}
-          OBJECT_STORAGE_REGION: ${{ secrets.TESTING_OBJECT_STORAGE_REGION }}
-          OBJECT_STORAGE_BUCKET_NAME: ${{ secrets.TESTING_OBJECT_STORAGE_BUCKET_NAME }}
-          AMAZON_PROVIDER_ID: ${{ secrets.AMAZON_PROVIDER_ID }}
-          AMAZON_REMOTE_API_ENDPOINT: ${{ secrets.AMAZON_REMOTE_API_ENDPOINT }}
-          MICROSOFT_PROVIDER_ID: ${{ secrets.MICROSOFT_PROVIDER_ID }}
-          MICROSOFT_LOCAL_FILE_DIRECTORY: ${{ secrets.MICROSOFT_LOCAL_FILE_DIRECTORY }}
-          EQUINIX_PROVIDER_ID: ${{ secrets.EQUINIX_PROVIDER_ID }}
-          EQUINIX_REMOTE_API_ENDPOINT: ${{ secrets.EQUINIX_REMOTE_API_ENDPOINT }}
-          AWS_SHARED_CREDENTIALS_FILE: ${{ secrets.AWS_SHARED_CREDENTIALS_FILE }}
-          AWS_CONFIG_FILE: ${{ secrets.AWS_CONFIG_FILE }}
-
-      - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v5
-        with:
-          task: get-measurement
-          label: "pytest"
-        continue-on-error: true
-
-      - name: Eco CI Energy Estimation - End Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v5
-        with:
-          task: display-results
-          pr-comment: true
-          send-data: true
-        continue-on-error: true
+  run-tests-external:
+    # Triggering user is not collaborator: Run the tests in an environment which does require approval
+    needs: determine-user-role
+    if: needs.determine-user-role.outputs.is-collaborator == 'false'
+    uses: ./.github/workflows/run-tests-inner.yml
+    with:
+      environment: test-external
+    secrets: inherit
