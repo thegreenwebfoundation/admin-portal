@@ -3,7 +3,7 @@ name: Deploy
 on:
   workflow_run:
     workflows:
-      - "Trigger test run"
+      - "Run the GWF test suite"
     branches:
       - master
       - staging
@@ -18,6 +18,7 @@ defaults:
 jobs:
   deploy:
     environment: "${{ github.ref == 'refs/heads/master' && 'prod' || 'staging' }}"
+    if: "${{ github.event.workflow_run.conclusion == 'success' }}"
     timeout-minutes: 10
     runs-on: ubuntu-latest
     env:
@@ -106,3 +107,9 @@ jobs:
           pr-comment: true
           send-data: true
         continue-on-error: true
+
+  halt:
+    runs-on: "ubuntu-latest"
+    if: "${{ github.event.workflow_run.conclusion != 'success' }}"
+    steps:
+      - run: echo 'Tests failed, deploy halted.'
