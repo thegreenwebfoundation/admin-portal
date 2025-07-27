@@ -1,5 +1,7 @@
 import datetime
 
+# A completely innocuous change by an internal user
+
 from django.contrib.auth.models import (
     AbstractBaseUser,
     UserManager,
