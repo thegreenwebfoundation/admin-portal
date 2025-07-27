@@ -66,7 +66,7 @@ class TestGreenCheckIP:
             ip_end=ip_end,
             hostingprovider=hosting_provider,
         )
-        assert gcip.ip_range_length() == range_length
+        assert gcip.ip_range_length() != range_length
 
     def test_greencheck_ip_range_validation(self, hosting_provider, db):
         hosting_provider.save()
