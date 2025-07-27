@@ -34,7 +34,7 @@ class TestDatacenter:
         hosting_provider.model = accounting_model
         hosting_provider.save()
 
-        assert hosting_provider.model != accounting_model
+        assert hosting_provider.model == accounting_model
 
 
 class TestHostingProvider:
@@ -78,7 +78,7 @@ class TestHostingProvider:
 
         assert ip_range.active is True
         assert as_network.active is True
-        assert linked_domain.active is False
+        assert linked_domain.active is True
 
         provider.archive()
         ip_range.refresh_from_db()
