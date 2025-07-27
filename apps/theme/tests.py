@@ -10,5 +10,5 @@ def test_visit_styleguide(client):
     res = client.get(reverse("style-guide"))
     templates = [tpl.name for tpl in res.templates]
 
-    assert res.status_code == 403
+    assert res.status_code == 200
     assert "style-guide.html" in templates
