@@ -1,14 +1,12 @@
 name: Deploy
 
 on:
-  workflow_run:
-    workflows:
-      - "Run the GWF test suite"
-    branches:
-      - master
-      - staging
-    types:
-      - completed
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        description: "The environment to which we want to deploy"
+        required: true
 
 defaults:
   run:
@@ -17,8 +15,7 @@ defaults:
 
 jobs:
   deploy:
-    environment: "${{ github.ref == 'refs/heads/master' && 'prod' || 'staging' }}"
-    if: "${{ github.event.workflow_run.conclusion == 'success' }}"
+    environment: "${{ inputs.environment }}"
     timeout-minutes: 10
     runs-on: ubuntu-latest
     env:
@@ -82,7 +79,7 @@ jobs:
           directory: ./
           key: ${{secrets.SSH_PRIVATE_KEY}}
           options: |
-            --inventory "${{ github.ref == 'refs/heads/master' && './ansible/inventories/prod.yml' || './ansible/inventories/staging.yml' }}"
+            --inventory "./ansible/inventories/${{ inputs.environment }}.yml"
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
@@ -91,7 +88,7 @@ jobs:
           directory: ./
           key: ${{secrets.SSH_PRIVATE_KEY}}
           options: |
-            --inventory "${{ github.ref == 'refs/heads/master' && './ansible/inventories/prod.yml' || './ansible/inventories/staging.yml' }}"
+            --inventory "./ansible/inventories/${{ inputs.environment }}.yml"
 
       - name: Eco CI Energy Estimation - Get Measurement
         uses: green-coding-solutions/eco-ci-energy-estimation@v5
@@ -108,8 +105,3 @@ jobs:
           send-data: true
         continue-on-error: true
 
-  halt:
-    runs-on: "ubuntu-latest"
-    if: "${{ github.event.workflow_run.conclusion != 'success' }}"
-    steps:
-      - run: echo 'Tests failed, deploy halted.'

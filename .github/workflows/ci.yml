@@ -1,4 +1,4 @@
-name: Trigger test run
+name: CI run
 
 on:
   push:
@@ -73,17 +73,25 @@ jobs:
     # Triggering user is collaborator: Run the tests in an environment which doesn't require approval
     needs: determine-user-role
     if: needs.determine-user-role.outputs.is-collaborator == 'true'
-    uses: ./.github/workflows/run-tests-inner.yml
+    uses: ./.github/workflows/test.yml
     with:
       environment: test
       ref: "${{ needs.determine-user-role.outputs.ref }}"
     secrets: inherit
 
+  deploy:
+    # The workflow is only run on the push event for deployable branches
+    if: "${{ github.event.name == 'push' }}"
+    needs: run-tests-collaborator
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: "${{ github.ref == 'refs/heads/master' && 'prod' || 'staging' }}"
+
   run-tests-external:
     # Triggering user is not collaborator: Run the tests in an environment which does require approval
     needs: determine-user-role
     if: needs.determine-user-role.outputs.is-collaborator == 'false'
-    uses: ./.github/workflows/run-tests-inner.yml
+    uses: ./.github/workflows/test.yml
     with:
       environment: test-external
       ref: "${{ needs.determine-user-role.outputs.ref }}"
