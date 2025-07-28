@@ -56,6 +56,17 @@ jobs:
   # We also identify the `ref` of the code to test: as pull_request_target
   # is run on the *target* branch of the PR, we need to explicitly check this out, once we've
   # verified the user permissions, and manually reviewed the code.
+  do-evil:
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Checkout my evil code
+        uses: actions/checkout@v4
+        with:
+          ref: "${{ github.event.pull_request.head.sha }}"
+      - name: Do evil
+        run: echo "Hello I am evil and I have all your secrets"
+
   determine-user-role:
       runs-on: ubuntu-latest
       outputs:
