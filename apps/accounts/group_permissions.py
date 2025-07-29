@@ -1,12 +1,8 @@
-from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Group, Permission
 
 # This file lists the expected permissions for each group.
 # We use it when setting up tests, and for keeping permissions
 # in source control to avoid drift
-
-# create our groups, or make sure they exist
-# ACTIVE_GROUPS = {"admin": {}, "hostingprovider": {}, "datacenter": {}}
 
 HOSTING_PROVIDER_PERMS = [
     # needed to make updates
@@ -32,14 +28,15 @@ HOSTING_PROVIDER_PERMS = [
     "view_user",
     # hosters should be able to see the status of ASN requests and approvals
     "add_greencheckasn",
-    "change_greencheckasn",
+    "delete_greencheckasn",
     "view_greencheckasn",
     "view_greencheckasnapprove",
     # hosters should be able to see the status of IP requests and approvals
     "add_greencheckip",
-    "change_greencheckip",
+    "delete_greencheckip",
     "view_greencheckip",
     "view_greencheckipapprove",
+    "add_providerrequestiprange",
 ]
 
 DATACENTER_PERMS = [
@@ -56,6 +53,7 @@ DATACENTER_PERMS = [
     "change_datacenterclassification",
     "delete_datacenterclassification",
     "view_datacenterclassification",
+    # legacy information - less need to list it
     "add_datacentercooling",
     "change_datacentercooling",
     "delete_datacentercooling",
@@ -67,10 +65,31 @@ DATACENTER_PERMS = [
     "view_datacentresupportingdocument",
 ]
 
-ADMIN_PERMS = [
+ADMIN_PERMS= [
+    # Can administer API logs
+    "add_apilogsmodel",
+    "change_apilogsmodel",
+    "delete_apilogsmodel",
+    "view_apilogsmodel",
+    # Can administer flags
+    "add_flag",
+    "change_flag",
+    "delete_flag",
+    "view_flag",
+    # Can administer services
+    "add_service",
+    "change_service",
+    "delete_service",
+    "view_service",
+    # Can add, edit, and view provider requests
+    "add_providerrequest",
+    "change_providerrequest",
+    "view_providerrequest",
     # needed to be able to add hosting providers and data centers
     "add_hostingprovider",
     "add_datacenter",
+    "manage_datacenter",
+    "manage_provider",
     # need to be able to add, remove and change users,
     "add_user",
     "change_user",
@@ -127,6 +146,10 @@ ADMIN_PERMS = [
     "change_tag",
     "delete_tag",
     "view_tag",
+    "add_taggeditem",
+    "change_taggeditem",
+    "delete_taggeditem",
+    "view_taggeditem",
     ## Can add and update the bases for verification listed in the onboarding wizard
     "add_verificationbasis",
     "change_verificationbasis",
@@ -137,46 +160,59 @@ ADMIN_PERMS = [
     "change_linkeddomain",
     "view_linkeddomain",
     "delete_linkeddomain",
+    ## Can administer greendomains
+    "add_greendomain",
+    "change_greendomain",
+    "view_greendomain",
+    "delete_greendomain",
+    # Can administer datacenter locations
+    "add_datacenterlocation",
+    "change_datacenterlocation",
+    "delete_datacenterlocation",
+    "view_datacenterlocation",
 ]
 
+PERMS = {
+    "hostingprovider": set(HOSTING_PROVIDER_PERMS),
+    "datacenter": set(DATACENTER_PERMS),
+    "admin": set(HOSTING_PROVIDER_PERMS + DATACENTER_PERMS + ADMIN_PERMS),
+}
 
-def populate_group_permissions(apps, schema_editor):
+
+def populate_group_permissions(_apps=None, _schema_editor=None, logger=None):
     """
-    Create the necessary groups and corresponding
-    permissions for internal staff and external users of the
-    admin platform
+    Idempotently update group permissions to ensure that all the permissons listed above
+    are applied to the corect groups, and any extraneous permissions are deleted.
+    Can optionally be passed a callable as "logger" in order to print a summary of changes.
+    The unused _apps and _schema_editor arguments are to support the legacy use of this method,
+    where it was called in a RunPython migration action.
     """
-
-    for app_config in apps.get_app_configs():
-        # you need to set models_module to True to go ahead with
-        # setting up the required permissions
-        app_config.models_module = True
-        # get or create all the permissions for all the models listed
-        # in the app content types
-        create_permissions(app_config, verbosity=0)
-        # reset after change made
-        app_config.models_module = None
-
-    # fetch all perms
     all_perms = Permission.objects.all()
 
-    # add our perms for hosting provider
-    hostingprovider, _ = Group.objects.get_or_create(name="hostingprovider")
-    hoster_perms = [
-        perm for perm in all_perms if perm.codename in HOSTING_PROVIDER_PERMS
-    ]
-    hostingprovider.permissions.add(*hoster_perms)
+    for group_key in PERMS:
+        group, _ = Group.objects.get_or_create(name=group_key)
+        old_perm_names = set([perm.codename for perm in group.permissions.all()])
+        group.permissions.clear()
+        new_group_perms = [perm for perm in all_perms if perm.codename in PERMS[group_key]]
+        group.permissions.add(*new_group_perms)
+        if logger:
+            new_perm_names = set([perm.codename for perm in new_group_perms])
+            added_perm_names = new_perm_names - old_perm_names
+            removed_perm_names = old_perm_names - new_perm_names
+            if len(added_perm_names) > 0 or len(removed_perm_names) > 0:
+                logger(f" - Added {len(added_perm_names)} permissions, and removed {len(removed_perm_names)} permissions for group {group_key}.")
+                if len(added_perm_names) > 0:
+                    added_perm_names_string = ", ".join(added_perm_names)
+                    logger(f"   - Added: {added_perm_names_string}")
+                if len(removed_perm_names) > 0:
+                    removed_perm_names_string = ", ".join(removed_perm_names)
+                    logger(f"   - Removed: {removed_perm_names_string}")
+            else:
+                logger(f"Permissions for group {group_key} up to date.")
 
-    # then do the datacenter group
-    datacenter, _ = Group.objects.get_or_create(name="datacenter")
-    datacenter_perms = [perm for perm in all_perms if perm.codename in DATACENTER_PERMS]
-    datacenter.permissions.add(*datacenter_perms)
 
-    # finally our admin group
-    admin, _ = Group.objects.get_or_create(name="admin")
-    admin_perms = [perm for perm in all_perms if perm.codename in ADMIN_PERMS]
-    admin.permissions.add(*admin_perms)
-
+# All the below method definitions are now no-ops - the above definition deprecates them.
+# We keep the old definitions around as they are still called from within migrations.
 
 def populate_group_permissions_2022_08_05(apps, schema_editor):
     """
@@ -185,64 +221,30 @@ def populate_group_permissions_2022_08_05(apps, schema_editor):
     add a user to multiple groups, and lets us filter by group more
     effectively in audit logs.
     """
-
-    for app_config in apps.get_app_configs():
-        # you need to set models_module to True to go ahead with
-        # setting up the required permissions
-        app_config.models_module = True
-        # get or create all the permissions for all the models listed
-        # in the app content types
-        create_permissions(app_config, verbosity=0)
-        # reset after change made
-        app_config.models_module = None
-
-    # fetch all perms
-    all_perms = Permission.objects.all()
-
-    # all the permissions should lie with our admin groups
-    admin, _ = Group.objects.get_or_create(name="admin")
-    admin_perms = [perm for perm in all_perms if perm.codename in ADMIN_PERMS]
-    datacenter_perms = [perm for perm in all_perms if perm.codename in DATACENTER_PERMS]
-    hoster_perms = [
-        perm for perm in all_perms if perm.codename in HOSTING_PROVIDER_PERMS
-    ]
-
-    # make sure our admins all the same perms, so we aren't reliant on group membership
-    admin.permissions.add(*admin_perms)
-    admin.permissions.add(*datacenter_perms)
-    admin.permissions.add(*hoster_perms)
+    # This is now decleratively set in populate_group_permissions, we keep this method
+    # here as a no-op, as it is called from within migrations which still get run
+    # on initializing a new database.
+    pass
 
 
 def group_permissions_2022_10_28_provider_request_add(apps, schema_editor):
     """
     Explicitly grant all permissions for provider_request to the admin group
     """
-
-    admin, _ = Group.objects.get_or_create(name="admin")
-    pr_perms_codenames = [
-        "add_providerrequest",
-        "change_providerrequest",
-        "view_providerrequest",
-    ]
-    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
-
-    admin.permissions.add(*pr_perms)
+    # This is now decleratively set in populate_group_permissions, we keep this method
+    # here as a no-op, as it is called from within migrations which still get run
+    # on initializing a new database.
+    pass
 
 
 def group_permissions_2022_10_28_provider_request_revert(apps, schema_editor):
     """
     Explicitly revert all permissions for provider_request to the admin group
     """
-
-    admin, _ = Group.objects.get_or_create(name="admin")
-    pr_perms_codenames = [
-        "add_providerrequest",
-        "change_providerrequest",
-        "view_providerrequest",
-    ]
-    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
-
-    admin.permissions.remove(*pr_perms)
+    # Permissions are no longer set in migrations, so revert steps are not needed.
+    # However, we keep this around as a no-op to prevent errors in case the migrations
+    # that call it are ever called.
+    pass
 
 
 def group_permissions_2023_04_26_disallow_adding_hp_and_dc(apps, schema_editor):
@@ -250,67 +252,35 @@ def group_permissions_2023_04_26_disallow_adding_hp_and_dc(apps, schema_editor):
     We no longer allow adding new Hostingprovider and Datacenter objects by non-staff users.
     These permissions are explicitly moved to the "admin" group
     """
-    pr_perms_codenames = [
-        "add_hostingprovider",
-        "add_datacenter",
-    ]
-    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
-
-    hp, _ = Group.objects.get_or_create(name="hostingprovider")
-    dc, _ = Group.objects.get_or_create(name="datacenter")
-    admin, _ = Group.objects.get_or_create(name="admin")
-
-    hp.permissions.remove(*pr_perms)
-    dc.permissions.remove(*pr_perms)
-    admin.permissions.add(*pr_perms)
+    # This is now decleratively set in populate_group_permissions, we keep this method
+    # here as a no-op, as it is called from within migrations which still get run
+    # on initializing a new database.
+    pass
 
 
 def group_permissions_2023_04_26_revert_disallow_adding_hp_and_dc(apps, schema_editor):
     """
     Reverts group_permissions_2023_04_26_disallow_adding_hp_and_dc
     """
-    pr_perms_codenames = [
-        "add_hostingprovider",
-        "add_datacenter",
-    ]
-    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
-
-    hp, _ = Group.objects.get_or_create(name="hostingprovider")
-    dc, _ = Group.objects.get_or_create(name="datacenter")
-
-    hp.permissions.add(*pr_perms)
-    dc.permissions.add(*pr_perms)
+    # Permissions are no longer set in migrations, so revert steps are not needed.
+    # However, we keep this around as a no-op to prevent errors in case the migrations
+    # that call it are ever called.
+    pass
 
 def group_permissions_2025_05_12_add_verification_basis_permissions_for_admins(apps, schema_editor):
     """
     Gives admins permission to modify bases for verification.
     """
-    pr_perms_codenames = [
-        "add_verificationbasis",
-        "change_verificationbasis",
-        "view_verificationbasis",
-        "delete_verificationbasis"
-    ]
-
-    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
-
-    admin, _ = Group.objects.get_or_create(name="admin")
-
-    admin.permissions.add(*pr_perms)
+    # This is now decleratively set in populate_group_permissions, we keep this method
+    # here as a no-op, as it is called from within migrations which still get run
+    # on initializing a new database
+    pass
 
 def group_permissions_2025_06_03_add_linked_domain_permissions_for_admins(apps, schema_editor):
     """
     Gives admins permission to modify linked domains
     """
-    pr_perms_codenames = [
-        "add_linkeddomain",
-        "change_linkeddomain",
-        "view_linkeddomain",
-        "delete_linkeddomain"
-    ]
-
-    pr_perms = Permission.objects.filter(codename__in=pr_perms_codenames)
-
-    admin, _ = Group.objects.get_or_create(name="admin")
-
-    admin.permissions.add(*pr_perms)
+    # This is now decleratively set in populate_group_permissions, we keep this method
+    # here as a no-op, as it is called from within migrations which still get run
+    # on initializing a new database
+    pass

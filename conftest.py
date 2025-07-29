@@ -11,6 +11,7 @@ from pytest_factoryboy import register
 from apps.accounts import factories as ac_factories
 from apps.accounts import models as ac_models
 from apps.accounts.permissions import manage_datacenter, manage_provider
+from apps.accounts.group_permissions import populate_group_permissions
 from apps.greencheck import factories as gc_factories
 from apps.greencheck.models import GreencheckASN, GreencheckIp
 
@@ -31,6 +32,19 @@ register(gc_factories.SiteCheckFactory)
 register(ac_factories.SupportingEvidenceFactory)
 register(ac_factories.ProviderRequestFactory)
 register(ac_factories.LinkedDomainFactory)
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_permissions(django_db_setup, django_db_blocker):
+    """
+    This fixture runs after migrations and before tests start.
+    """
+    # We incldue django_db_setup as an argument even though it's unused, asn
+    # This ensures that the migrations are run before we setup permissions.
+
+    # DB access not allowed by default in an autouse fixture, as it's not
+    #directly included in a test marked with django.db. Instead we can manually unblock:
+    with django_db_blocker.unblock():
+        populate_group_permissions()
 
 
 @pytest.fixture

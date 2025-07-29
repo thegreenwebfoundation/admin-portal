@@ -1,0 +1,117 @@
+# This is the "main" CI workflow file which coordinates test running and deployment.
+# It is run on **pushes** to the `master` and `staging` branches, and on new pull requests,
+# via the `pull_request_target` trigger.
+# It's main responsibility is to check the permissions of the calling user and hand off
+# to the appropriate reusable workflows. This works as follows:
+#
+# On **push** to master or staging,
+#  - This can only be done by users with explicit permissions on the repo, so we
+#   run the tests in the `test` environment (which does not require approval),
+#   then, if the tests pass, deploy to the appropriate environment
+#   (prod for master, staging for staging).
+#
+# On opening, synchronizing, reopening or marking as "ready for review" a **pull_request**:
+# - First we identify if the author is a collaborator with explicit permissions on the repo.
+#   - If so: run the tests in the `test` environment (which does not require authorization.)
+#   - If not: run the tests in the `test-external` environment (which requires pre-authorization).
+
+name: CI run
+
+on:
+  push:
+    # either only run on pushes to master and staging branches
+    # OR a PR. This avoids needless double CI runs
+    # https://adamj.eu/tech/2025/05/14/github-actions-avoid-simple-on/
+    branches:
+      - master
+      - staging
+    paths-ignore:
+      - "**.md"
+      - ".gitignore"
+  # make our tests run when we have external PRs
+  # WARNING - ONLY use pull_request_target when explicitly checking user permissions as part of the workflow run, as this
+  # runs *with* privileges, on the PR target branch.
+  pull_request_target:
+    paths-ignore:
+      - "**.md"
+      - ".gitignore"
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  # First, work out whether the user that triggered the run is a collaborator or not.
+  # WARNING: without this check, we should NOT use pull_request_target as a trigger above,
+  # and revert to pull_request, as pull_request_target is insecure without an explicit
+  # permissions check.
+  # If the user is a collaborator, we go ahead and run the PR.  If the user is not, then we runs-on
+  # against the test-external environment, which blocks, waiting for manual approval from GWF staff
+  # before doing anything further.
+  # We also identify the `ref` of the code to test: as pull_request_target
+  # is run on the *target* branch of the PR, we need to explicitly check this out, once we've
+  # verified the user permissions, and manually reviewed the code.
+  determine-user-role:
+      runs-on: ubuntu-latest
+      outputs:
+        is-collaborator: ${{ steps.check-collaborator.outputs.is-collaborator }}
+        ref: ${{ steps.check-collaborator.outputs.ref }}
+      steps:
+        - name: Check if actor is a collaborator
+          id: check-collaborator
+          run: |
+            if [[ "${{ github.event_name }}" == "push" ]]; then
+              # direct pushes can only be made by collaborators. We can run the tests directly
+              echo "is-collaborator=true" >> $GITHUB_OUTPUT
+              # the triggering ref is just the ref of the branch:
+              echo "ref=$GITHUB_REF" >> $GITHUB_OUTPUT
+            elif [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
+              assoc="${{ github.event.pull_request.author_association }}"
+              # the triggering ref is the ref of the pull request head
+              echo "ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+              if [[ "$assoc" == "COLLABORATOR" || "$assoc" == "OWNER" ]]; then
+                # PRs from collaborators and owners run the tests directly
+                echo "is-collaborator=true" >> $GITHUB_OUTPUT
+              else
+                #  PRs from other users wait for approval before running
+                echo "is-collaborator=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              # Some other trigger we didn't expect, refuse to continue.
+              exit 1
+            fi
+
+  run-tests-collaborator:
+    # Triggering user is collaborator: Run the tests in an environment which doesn't require approval
+    needs: determine-user-role
+    if: needs.determine-user-role.outputs.is-collaborator == 'true'
+    uses: ./.github/workflows/test.yml
+    with:
+      environment: test
+      ref: "${{ needs.determine-user-role.outputs.ref }}"
+    secrets: inherit
+
+  deploy:
+    # The workflow is only run on the push event for deployable branches
+    if: "${{ github.event_name == 'push' }}"
+    needs: run-tests-collaborator
+    uses: ./.github/workflows/deploy.yml
+    with:
+      # The master branch deploys to prod, otherwise default to 'staging': `staging`
+      environment: "${{ github.ref == 'refs/heads/master' && 'prod' || 'staging' }}"
+    secrets: inherit
+
+  run-tests-external:
+    # Triggering user is not collaborator: Run the tests in an environment which does require approval
+    needs: determine-user-role
+    if: needs.determine-user-role.outputs.is-collaborator == 'false'
+    uses: ./.github/workflows/test.yml
+    with:
+      environment: test-external
+      ref: "${{ needs.determine-user-role.outputs.ref }}"
+    secrets: inherit
