@@ -1,7 +1,8 @@
 import subprocess
+
 from datetime import date
 from typing import List, Iterable
-
+from sentry_sdk.crons import monitor
 from requests import request, HTTPError
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
@@ -175,6 +176,12 @@ class Command(BaseCommand):
                 default=compression_type,
             )
 
+    # This is called by a cronjob which runs at 1.30AM every day, as specified in
+    # ansible/setup_cronjobs.yml in this repository.
+    # Please note that when changing the cron schedule there, the "schedule" attribute
+    # below should also be changed to match, otherwise we will receive spurious error
+    # alerts in sentry.
+    @monitor(monitor_slug="export_green_domains", monitor_config={ "schedule": "30 1 * * *" })
     def handle(self, upload: bool, compression_type: str, *args, **options) -> None:
         try:
             db_path = f"green_urls_{date.today()}.db"
