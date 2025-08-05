@@ -11,4 +11,4 @@ cd {{ project_root }}/current/
 
 # run the domains export and upload to object storage
 source .venv/bin/activate
-dotenv run -- python ./manage.py clear_archived_greendomains
+dotenv run -- python ./manage.py clear_expired_greendomains

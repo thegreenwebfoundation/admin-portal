@@ -26,10 +26,10 @@
         mode: "0755"
       tags: [ip-importers]
 
-    - name: Upload archived domain pruning script
+    - name: Upload expired domain pruning script
       ansible.builtin.template:
-        src: clear_archived_domains.sh.j2
-        dest: /home/deploy/cronjobs/clear_archived_domains.sh
+        src: clear_expired_domains.sh.j2
+        dest: /home/deploy/cronjobs/clear_expired_domains.sh
         mode: "0755"
       tags: [green-domains-exporter]
 
@@ -65,12 +65,12 @@
             path: "/var/log/export_green_domains.error.log",
           }
         - {
-            name: "clear archived domains STDOUT",
-            path: "/var/log/clear_archived_domains.log",
+            name: "clear expired domains STDOUT",
+            path: "/var/log/clear_expired_domains.log",
           }
         - {
-            name: "clear archived domains STDERR",
-            path: "/var/log/clear_archived_domains.error.log",
+            name: "clear expired domains STDERR",
+            path: "/var/log/clear_expired_domains.error.log",
           }
       tags: [ip-importers, green-domains-exporter]
 
@@ -88,20 +88,27 @@
           2>> /var/log/import_ips_for_large_providers.error.log
       tags: [crontab]
 
-    - name: Ensure job to clear archived domains is present
+
+    # Note: when changing the schedule here, be sure to update the sentry configuration
+    # in apps/greencheck/management/commands/clear_expired_greendomains.py to match,
+    # otherwise we risk getting spurious error alerts.
+    - name: Ensure job to clear expired domains is present
       ansible.builtin.cron:
-        name: "every day at 1:00 clear all archived domains"
+        name: "every day at 1:00 clear all expired domains"
         state: present
         weekday: "*"
         hour: "1"
         minute: "00"
         user: deploy
         job: >
-          bash /home/deploy/cronjobs/clear_archived_domains.sh
-          >> /var/log/clear_archived_domains.log
-          2>> /var/log/clear_archived_domains.error.log
+          bash /home/deploy/cronjobs/clear_expired_domains.sh
+          >> /var/log/clear_expired_domains.log
+          2>> /var/log/clear_expired_domains.error.log
       tags: [crontab]
 
+    # Note: when changing the schedule here, be sure to update the sentry configuration
+    # in apps/greencheck/management/commands/dump_green_domains.py to match,
+    # otherwise we risk getting spurious error alerts.
     - name: Ensure job to export green domains is present
       ansible.builtin.cron:
         name: "every day at 1:30 export our green domains table"
