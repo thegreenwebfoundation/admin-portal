@@ -9,6 +9,12 @@ class LinkedDomainFormStep0(forms.ModelForm):
     the dummy PreviewForm with a custom template.
     """
 
+    domain = forms.CharField(
+        help_text=(
+            "Enter a domain name, for example: <strong>thegreenwebfoundation.org</strong>, without the https://."
+        )
+    )
+
     is_primary = forms.TypedChoiceField(
         label="Is this your organisation's primary domain?",
         # help_text=(

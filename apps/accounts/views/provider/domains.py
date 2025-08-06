@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.views.generic import DetailView, ListView, CreateView, DeleteView
 
@@ -81,6 +82,7 @@ class ProviderDomainCreateView(ProviderRelatedResourceMixin, SessionWizardView):
         "1": "provider_portal/provider_domain_new/step_1.html"
     }
 
+
     def _get_data_for_preview(self):
         preview_data = {}
         current_step = int(self.steps.current or 0)
@@ -89,6 +91,17 @@ class ProviderDomainCreateView(ProviderRelatedResourceMixin, SessionWizardView):
             preview_data[str(step)] = cleaned_data
         return preview_data
 
+    def get_form_initial(self, step):
+        if step == "0":
+            if self.provider.primary_linked_domain:
+                domain = None
+                primary = "False"
+            else:
+                domain = self.provider.website_domain
+                primary = "True"
+            return { "domain": domain, "is_primary": primary }
+        else:
+            return super().get_form_initial(step)
 
     def get_template_names(self):
         return [self.TEMPLATES[self.steps.current]]
@@ -110,12 +123,13 @@ class ProviderDomainCreateView(ProviderRelatedResourceMixin, SessionWizardView):
         domain.save()
         messages.success(
             self.request,
-            """
-            Thank you!
-
-            Your linked domain was submitted succesfully.
-            We are now reviewing your request - we'll be in touch soon.
-            """
+            mark_safe(
+                f"""
+                Thank you for taking the time to setup carbon.txt for {domain.domain}!<br />
+                We review linked domains on Tuesday each week. We will contact you by email to let you
+                know when it is approved, or if we need more information from you.
+                """
+            )
         )
         return redirect(self.get_success_url())
 

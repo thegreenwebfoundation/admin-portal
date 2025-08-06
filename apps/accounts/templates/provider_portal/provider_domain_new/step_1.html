@@ -7,48 +7,56 @@
 
 
 {%  block current_step_pre %}
-<h3>Step 2: Link Domain to a Carbon.txt file</h3>
+<h3 id="step2">
+  Step 2:
+
+{% if provider.primary_linked_domain %}
+  Create or link a carbon.txt file
+{% else %}
+  Create and upload a carbon.txt file
+{% endif %}
+</h3>
 {% if provider.primary_linked_domain %}
 <p>
-You can either create a new Carbon.txt file for {{preview_data.0.domain}} or link it to the Carbon.txt file hosted on your primary domain ({{provider.primary_linked_domain.domain}}) using DNS or HTTP Headers.
+You can either create a new carbon.txt file for {{preview_data.0.domain}} or link it to the carbon.txt file hosted on your primary domain ({{provider.primary_linked_domain.domain}}) using DNS or HTTP Headers.
 </p>
 
 <p>Which method should you use?</p>
 
 <ul>
-    <li><b>Use a new Carbon.txt file if</b> you are able to upload content onto the server for {{preview_data.0.domain}}, <b>and if</b> the sustainability disclosures for {{preview_data.0.domain}} differ from those of your primary domain ({{provider.primary_linked_domain.domain}}).</li>
-    <li><b>Use DNS to link to an existing Carbon.txt file if</b> your are able to edit the DNS records for {{preview_data.0.domain}}, and you want this domain to share the same sustainability disclosures as your primary domain.</li>
-    <li><b>Use HTTP Headers to link to an existing Carbon.txt file if</b> your are able to edit the server configuration for {{preview_data.0.domain}} to return additional response headers, and you want this domain to share the same sustainability disclosures as your primary domain.</li>
+    <li><b>Use a new carbon.txt file if</b> you are able to upload content onto the server for {{preview_data.0.domain}}, <b>and if</b> the sustainability disclosures for {{preview_data.0.domain}} differ from those of your primary domain ({{provider.primary_linked_domain.domain}}).</li>
+    <li><b>Use DNS to link to an existing carbon.txt file if</b> your are able to edit the DNS records for {{preview_data.0.domain}}, and you want this domain to share the same sustainability disclosures as your primary domain.</li>
+    <li><b>Use HTTP Headers to link to an existing carbon.txt file if</b> your are able to edit the server configuration for {{preview_data.0.domain}} to return additional response headers, and you want this domain to share the same sustainability disclosures as your primary domain.</li>
 </ul>
 
 
 <div class="tabbedview my-5 py-5">
   <ul role="tablist" class="tablist flex flex-wrap text-sm font-medium text-center list-none w-full justify-items-stretch pl-0 m-0">
       <li class="pl-0 m-0 grow">
-          <a href="#" role="tab" aria-selected="true" aria-controls="carbontxt-file-panel" id="carbontxt-file-tab" class="tab inline-block py-4 px-2 border rounded-tl-lg w-full active m-0 no-underline hover:underline">Create a new Carbon.txt file</a>
+          <a href="#" role="tab" aria-selected="true" aria-controls="carbontxt-file-panel" id="carbontxt-file-tab" class="tab inline-block py-4 px-2 border rounded-tl-lg w-full active m-0 no-underline hover:underline">Create a new carbon.txt file</a>
       </li>
       <li class="pl-0 m-0 grow">
-          <a href="#" role="tab" aria-selected="false" aria-controls="carbontxt-dns-panel" id="carbontxt-dns-tab" class="tab inline-block py-4 px-2 border-y bg-neutral-200 hover:bg-neutral-100 w-full m-0 no-underline hover:underline">Use existing Carbon.txt with DNS</a>
+          <a href="#" role="tab" aria-selected="false" aria-controls="carbontxt-dns-panel" id="carbontxt-dns-tab" class="tab inline-block py-4 px-2 border-y bg-neutral-200 hover:bg-neutral-100 w-full m-0 no-underline hover:underline">Use existing carbon.txt with DNS</a>
       </li>
       <li class="pl-0 m-0 grow">
-          <a href="#" role="tab" aria-selected="false" aria-controls="carbontxt-http-panel" id="carbontxt-http-tab" class="tab inline-block py-4 px-2 border rounded-tr-lg bg-neutral-200 hover:bg-neutral-100 w-full m-0 no-underline hover:underline">Use existing Carbon.txt with HTTP</a>
+          <a href="#" role="tab" aria-selected="false" aria-controls="carbontxt-http-panel" id="carbontxt-http-tab" class="tab inline-block py-4 px-2 border rounded-tr-lg bg-neutral-200 hover:bg-neutral-100 w-full m-0 no-underline hover:underline">Use existing carbon.txt with HTTP</a>
       </li>
   </ul>
   <div role="tabpanel" id="carbontxt-file-panel" aria-labelledby="carbontxt-file-tab" class="panel border-l border-r border-b p-5 border-t-none">
-      <h4>Create and upload a Carbon.txt file for this domain</h4>
-      <p class="m-0">Follow the steps in the <a href="https://carbontxt.org/quickstart" target="_blank">Carbon.txt Quickstart guide</a> (opens in new tab) to create a Carbon.txt file for this domain. You should ensure that the file you create is uploaded to <strong>https://{{preview_data.0.domain}}/carbon.txt</strong>.</p>
+      <h4>Create and upload a carbon.txt file for this domain</h4>
+      <p class="m-0">Follow the steps in the <a href="https://carbontxt.org/quickstart" target="_blank">carbon.txt quickstart guide</a> (opens in new tab) to create a carbon.txt file for this domain. You should ensure that the file you create is uploaded to <strong>https://{{preview_data.0.domain}}/carbon.txt</strong>.</p>
   </div>
   <div role="tabpanel" id="carbontxt-dns-panel" aria-labelledby="carbontxt-dns-tab" class="panel border-l border-r border-b p-5 border-t-none hidden">
-      <h4>Link this domain to an existing Carbon.txt file using DNS</h4>
-    <p>Please create a DNS TXT record for your domain ({{preview_data.0.domain}}) containing the content below. This will create a link between the domain {{preview_data.0.domain}} and the Carbon.txt file uploaded for your primary domain {{provider.primary_linked_domain.domain}}.</p>
+      <h4>Link this domain to an existing carbon.txt file using DNS</h4>
+    <p>Please create a DNS TXT record for your domain ({{preview_data.0.domain}}) containing the content below. This will create a link between the domain {{preview_data.0.domain}} and the carbon.txt file uploaded for your primary domain {{provider.primary_linked_domain.domain}}.</p>
     <div class="copyable bg-neutral-200 flex justify-between px-4 py-2 w-full">
       <code>carbon-txt-location={{provider.primary_linked_domain.domain}}</code>
       <a href="#" class="copy no-underline">📋</a>
     </div>
   </div>
   <div role="tabpanel" id="carbontxt-http-panel" aria-labelledby="carbontxt-http-tab" class="panel border-l border-r border-b p-5 border-t-none hidden">
-      <h4>Link this domain to an existing Carbon.txt file using HTTP Headers</h4>
-    <p>Please configure your web server for {{preview_data.0.domain}} to return the following additional CarbonTxt-Location header. This will create a link between the domain {{preview_data.0.domain}} and the Carbon.txt file uploaded for your primary domain {{provider.primary_linked_domain.domain}}.</p>
+      <h4>Link this domain to an existing carbon.txt file using HTTP Headers</h4>
+    <p>Please configure your web server for {{preview_data.0.domain}} to return the following additional CarbonTxt-Location header. This will create a link between the domain {{preview_data.0.domain}} and the carbon.txt file uploaded for your primary domain {{provider.primary_linked_domain.domain}}.</p>
     <div class="copyable bg-neutral-200 flex justify-between px-4 py-2 w-full">
       <code>CarbonTxt-Location: {{provider.primary_linked_domain.domain}}</code>
       <a href="#" class="copy no-underline">📋</a>
@@ -56,12 +64,12 @@ You can either create a new Carbon.txt file for {{preview_data.0.domain}} or lin
   </div>
 </div>
 {% else %}
-<p>
-To setup your primary domain, you must first create a new Carbon.txt file and upload it to your primary domain.
-</p>
-    <h4>Create and upload a Carbon.txt file for your primary domain</h4>
-    <p class="m-0">Follow the steps in the <a href="https://carbontxt.org/quickstart" target="_blank">Carbon.txt Quickstart guide</a> (opens in new tab) to create a Carbon.txt file for your organisation. You should ensure that the file you create is uploaded to <strong>https://{{preview_data.0.domain}}/carbon.txt</strong>.</p>
+  <p>Create a carbon.txt file containing your key sustainability disclosures and host it on your primary domain. This makes it your primary linked domain.</p>
+  <p class="m-0">Follow the steps in the <a href="https://carbontxt.org/quickstart" target="_blank">carbon.txt quickstart guide</a> (opens in new tab) to create a carbon.txt file for your organisation. You should ensure that the file you create is uploaded to <strong>https://{{preview_data.0.domain}}/carbon.txt</strong>.</p>
 {% endif %}
+<p>
+New linked domains are manually reviewed by our team, this may take up to one week. We will contact you by email when your domain has been approved.
+</p>
 {%  endblock current_step_pre %}
 {% block submit_button_text %}
 Submit for verification
