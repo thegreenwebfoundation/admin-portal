@@ -128,14 +128,10 @@ class ProviderRequestASNFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ac_models.ProviderRequestASN
 
-
-class LinkedDomainFactory(factory.django.DjangoModelFactory):
-    domain = factory.Faker("domain_name")
-    state = ac_models.LinkedDomainState.APPROVED
-    active = True
-    is_primary = False
+class ProviderCarbonTxtFactory(factory.django.DjangoModelFactory):
     provider = factory.SubFactory(gc_factories.HostingProviderFactory)
-    created_by = factory.SubFactory(gc_factories.UserFactory)
-
+    domain = factory.Faker("domain_name")
+    carbon_txt_url = factory.LazyAttribute(lambda ct: f"https://{ct.domain}/carbon.txt")
+    is_delegation_set = True
     class Meta:
-        model = ac_models.LinkedDomain
+        model = ac_models.ProviderCarbonTxt

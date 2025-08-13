@@ -17,14 +17,17 @@ from .provider import (
     HostingProviderNote,
     HostingProviderSupportingDocument,
     HostingCommunication,
-    LinkedDomain,
-    LinkedDomainState,
     Service,
     PartnerChoice,
     ProviderSharedSecret,
     VerificationBasis,
     DOMAIN_HASH_ISSUER_ID,
     GREEN_VIA_CARBON_TXT,
+)
+from .carbon_txt import (
+    CarbonTxtMotivation,
+    ProviderCarbonTxtMotivation,
+    ProviderCarbonTxt,
 )
 
 class SupportMessage(TimeStampedModel):
