@@ -14,7 +14,8 @@ from ..models import (
     HostingProviderSupportingDocument,
     Service,
     SupportMessage,
-    VerificationBasis
+    VerificationBasis,
+    CarbonTxtMotivation,
 )
 
 class HostingAdminForm(forms.ModelForm):
@@ -31,6 +32,7 @@ class HostingAdminForm(forms.ModelForm):
             "services": LabelWidget(model=Service),
             "verification_bases": LabelWidget(model=VerificationBasis),
             "staff_labels": dal_widgets.TaggitSelect2("label-autocomplete"),
+            "carbon_txt_motivations": LabelWidget(model=CarbonTxtMotivation)
         }
 
 

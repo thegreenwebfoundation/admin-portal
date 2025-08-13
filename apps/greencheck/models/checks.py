@@ -502,13 +502,17 @@ class GreenDomain(models.Model):
     green = models.BooleanField()
     modified = models.DateTimeField()
     created = models.DateTimeField(auto_now_add=True)
+    type = dj_mysql_models.EnumField(
+        choices=gc_choices.GreenlistChoice.choices,
+        default=gc_choices.GreenlistChoice.NONE,
+    )
 
     def __str__(self):
         return f"{self.url} - {self.modified}"
 
     # Factories
     @classmethod
-    def create_for_provider(cls, domain: str, provider: ac_models.Hostingprovider):
+    def create_for_provider(cls, domain: str, provider: ac_models.Hostingprovider, type=gc_choices.GreenlistChoice.NONE.value):
         """
         Create a new green domain for the domain passed in,  and allocate
         it  to the given provider.
@@ -523,26 +527,27 @@ class GreenDomain(models.Model):
             listed_provider=provider.is_listed,
             partner=ac_models.PartnerChoice.NONE,
             modified=timezone.now(),
+            type=type,
         )
         dom.save()
         return dom
 
     @classmethod
-    def upsert_for_provider(cls, domain: str, provider: ac_models.Hostingprovider):
+    def upsert_for_provider(cls, domain: str, provider: ac_models.Hostingprovider, type=gc_choices.GreenlistChoice.NONE.value):
         """
         Try to fetch given domain if it exists, and link it given provider,
         otherwise create a new green domain, allocated to said provider.
         """
         try:
             green_domain = GreenDomain.objects.get(url=domain)
-            green_domain.allocate_to_provider(provider)
+            green_domain.allocate_to_provider(provider, type)
         except GreenDomain.DoesNotExist:
-            green_domain = GreenDomain.create_for_provider(domain, provider)
+            green_domain = GreenDomain.create_for_provider(domain, provider, type)
 
         return green_domain
 
     @classmethod
-    def grey_result(cls, domain=None):
+    def grey_result(cls, domain=None, type=gc_choices.GreenlistChoice.NONE.value):
         """
         Return a grey domain with just the domain name added,
         the time of the and the rest empty.
@@ -555,6 +560,7 @@ class GreenDomain(models.Model):
             hosted_by_website=None,
             listed_provider=False,
             partner=None,
+            type=type,
             modified=timezone.now(),
         )
 
@@ -584,6 +590,7 @@ class GreenDomain(models.Model):
             listed_provider=hosting_provider.is_listed,
             modified=timezone.now(),
             green=True,
+            type=sitecheck.match_type,
         )
     # Queries
     @property
@@ -614,12 +621,7 @@ class GreenDomain(models.Model):
         Return True if this domain is linked to a provider via a
         linked domain, otherwise return false.
         """
-        provider = self.hosting_provider
-
-        if provider:
-            # when we add a domain using a carbon.txt lookup, we add a
-            # special label tag "green:carbontxt"
-            return provider.linked_domain_for(self.url)
+        return self.type == gc_choices.GreenlistChoice.CARBONTXT.value
 
     @classmethod
     def check_for_domain(cls, domain, skip_cache=False):
@@ -638,7 +640,7 @@ class GreenDomain(models.Model):
         return GreenDomain.objects.filter(url=domain).first()
 
     # Mutators
-    def allocate_to_provider(self, provider: ac_models.Hostingprovider):
+    def allocate_to_provider(self, provider: ac_models.Hostingprovider, type=gc_choices.GreenlistChoice.NONE.value):
         """
         Accept a provider and update the green domain to show as hosted by
         it in future checks.
@@ -647,6 +649,7 @@ class GreenDomain(models.Model):
         self.hosted_by = provider.name
         self.hosted_by_website = provider.website
         self.modified = timezone.now()
+        self.type = type
         self.save()
 
         # add log entry for making this change

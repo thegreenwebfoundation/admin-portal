@@ -1,7 +1,9 @@
+from carbon_txt.finders import UnreachableCarbonTxtFile
 import pytest
-
+from unittest.mock import patch, MagicMock, PropertyMock
 from apps.accounts.models.choices import ModelType
 from apps.accounts import models as ac_models
+from carbon_txt.exceptions import UnreachableCarbonTxtFile
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from django.core.files import base as dj_files
@@ -63,7 +65,7 @@ class TestHostingProvider:
         assert datacenter.model == accounting_model
 
     def test_archive(
-        self, db, hosting_provider_factory, green_ip_factory, green_asn_factory, linked_domain_factory, green_domain_factory
+        self, db, hosting_provider_factory, green_ip_factory, green_asn_factory, green_domain_factory
     ):
 
         provider = hosting_provider_factory.create()
@@ -71,26 +73,21 @@ class TestHostingProvider:
         ip_range = green_ip_factory.create(hostingprovider=provider)
         # make a green asn range
         as_network = green_asn_factory.create(hostingprovider=provider)
-        # make a linked domain
-        linked_domain = linked_domain_factory.create(provider=provider)
         # make a green domain
         green_domain = green_domain_factory.create(hosted_by_id=provider.id)
 
         assert ip_range.active is True
         assert as_network.active is True
-        assert linked_domain.active is True
 
         provider.archive()
         ip_range.refresh_from_db()
         as_network.refresh_from_db()
-        linked_domain.refresh_from_db()
         green_domain = green_domain.refresh_from_db()
 
         assert provider.active_ip_ranges().count() == 0
         assert provider.active_asns().count() == 0
         assert ip_range.active is False
         assert as_network.active is False
-        assert linked_domain.active is False
         #
         assert provider.archived is True
         assert provider.is_listed is False
@@ -193,3 +190,190 @@ class TestUser:
         # and is it the same as the actual password we use
         # for logging in via django?
         assert new_user.legacy_password == new_user.password
+
+
+class TestProviderCarbonTxt:
+    @pytest.mark.django_db
+    def test_state_pending_validation(self, provider_carbon_txt_factory):
+        """
+        A ProviderCarbonTxt without a carbon_txt_url is in the pending validation state,
+        and is not valid.
+        """
+
+        carbon_txt = provider_carbon_txt_factory(
+            domain = "example.com",
+            carbon_txt_url = None,
+            is_delegation_set = False,
+        )
+
+        assert carbon_txt.state == ac_models.ProviderCarbonTxt.State.PENDING_VALIDATION
+        assert not carbon_txt.is_valid
+
+    @pytest.mark.django_db
+    def test_state_pending_delegation(self, provider_carbon_txt_factory):
+        """
+        A ProviderCarbonTxt with a carbon_txt_url, but without the is_delegation_set
+        flag set is in the pending delegation state, and is valid.
+        """
+
+        carbon_txt = provider_carbon_txt_factory(
+            domain = "example.com",
+            carbon_txt_url = "https://example.com/carbon.txt",
+            is_delegation_set = False,
+        )
+
+        assert carbon_txt.state == ac_models.ProviderCarbonTxt.State.PENDING_DELEGATION
+        assert carbon_txt.is_valid
+
+    @pytest.mark.django_db
+    def test_state_active(self, provider_carbon_txt_factory):
+        """
+        A ProviderCarbonTxt with a carbon_txt_url, and the is_delegation_set
+        flag set is in the active state, and is valid.
+        """
+
+        carbon_txt = provider_carbon_txt_factory(
+            domain = "example.com",
+            carbon_txt_url = "https://example.com/carbon.txt",
+            is_delegation_set = True,
+        )
+
+        assert carbon_txt.state == ac_models.ProviderCarbonTxt.State.ACTIVE
+        assert carbon_txt.is_valid
+
+    @pytest.mark.django_db
+    def test_validate_without_domain(self):
+        """
+        Validating a ProviderCarbonTxt wtihout a domain raises an error.
+        """
+        # Given a carbon_txt with no domain set
+        carbon_txt = ac_models.ProviderCarbonTxt()
+
+        # When I attempt to validate
+        # Then an error should be raised.
+        with pytest.raises(ac_models.ProviderCarbonTxt.BlankDomainError):
+            carbon_txt.validate()
+
+    @pytest.mark.django_db
+    @patch("apps.accounts.models.hosting.carbon_txt.CarbonTxtValidator")
+    def test_validate_with_invalid_carbon_txt(self, validator_factory_mock, provider_carbon_txt_factory):
+        """
+        Validating a ProviderCarbonTxt for a domain with an invalid carbon.txt
+        raises an error.
+        """
+        # Given a carbon_txt with a domain set, and a carbon.txt with errors
+        carbon_txt = provider_carbon_txt_factory(
+            domain = "example.com",
+            carbon_txt_url = None,
+            is_delegation_set = False
+        )
+
+        validation_result = MagicMock()
+        validation_result.exceptions = ["An exception raised while validating the carbon.txt"]
+        validator = validator_factory_mock.return_value
+        validator.validate_domain.return_value = validation_result
+
+        # When I attempt to validate
+        # Then an error should be raised.
+        with pytest.raises(ac_models.ProviderCarbonTxt.CarbonTxtNotValidatedError):
+            carbon_txt.validate()
+
+    @pytest.mark.django_db
+    @patch("apps.accounts.models.hosting.carbon_txt.CarbonTxtValidator")
+    def test_validate_with_valid_carbon_txt(self, validator_factory_mock, provider_carbon_txt_factory):
+        """
+        Validating a ProviderCarbonTxt for a domain with a valid carbon txt
+        sets the carbon_txt_url
+        """
+        # Given a carbon_txt with a domain set, and a carbon.txt without errors
+        carbon_txt = provider_carbon_txt_factory(
+            domain = "example.com",
+            carbon_txt_url = None,
+            is_delegation_set = False
+        )
+
+        validation_result = MagicMock()
+        validation_result.exceptions = []
+        validation_result.url = "https://examples/.well-known/carbon.txt"
+
+        validator = validator_factory_mock.return_value
+        validator.validate_domain.return_value = validation_result
+
+        # When I attempt to validate
+        result = carbon_txt.validate()
+
+        # Then "True" should be returned.
+        assert result
+
+        # And the carbon_txt_url should be set
+        assert carbon_txt.carbon_txt_url == validation_result.url
+
+
+    @pytest.mark.django_db
+    @patch("apps.accounts.models.hosting.carbon_txt.FileFinder")
+    def test_find_for_domain_with_carbon_txt_and_existing_provider_carbon_txt(self, finder_factory_mock, provider_carbon_txt_factory):
+        """
+        Looking up a ProviderCarbonTxt for an existing provider via a domain
+        which delegates to it.
+        """
+        # Given a carbon_txt exists
+        carbon_txt = provider_carbon_txt_factory(
+            domain = "example.com",
+            carbon_txt_url = "https://example.com/carbon.txt",
+            is_delegation_set = True
+        )
+
+        # When I query a domain which delegates to that carbon.txt
+        resolution_result = MagicMock()
+        resolution_result.uri =  carbon_txt.carbon_txt_url
+
+        finder = finder_factory_mock.return_value
+        finder.resolve_domain.return_value = resolution_result
+
+        result = ac_models.ProviderCarbonTxt.find_for_domain("foobar.com")
+
+        # Then the relevant carbon_txt should be returned.
+        assert result == carbon_txt
+
+
+    @pytest.mark.django_db
+    @patch("apps.accounts.models.hosting.carbon_txt.FileFinder")
+    def test_find_for_domain_with_carbon_txt_and_no_provider_carbon_txt(self, finder_factory_mock):
+        """
+        Looking up a ProviderCarbonTxt for a non-existent  provider via a domain
+        with a carbon.txt
+        """
+        # Given a domain with a carbon.txt which is not registered for a provider
+        resolution_result = MagicMock()
+        resolution_result.uri = "https://foobar.com/carbon.txt"
+
+        finder = finder_factory_mock.return_value
+        finder.resolve_domain.return_value = resolution_result
+
+
+        # When I query that domain
+        result = ac_models.ProviderCarbonTxt.find_for_domain("foobar.com")
+
+        # Then no carbon.txt should be returned.
+        assert result is None
+
+    @pytest.mark.django_db
+    @patch("apps.accounts.models.hosting.carbon_txt.FileFinder")
+    def test_find_for_domain_with_no_carbon_txt(self, finder_factory_mock):
+        """
+        Looking up a ProviderCarbonTxt for a domain with no carbon.txt
+        """
+        # Given a domain without a carbon.txt
+
+        finder = finder_factory_mock.return_value
+
+        def side_effect(*args, **kwargs):
+            raise UnreachableCarbonTxtFile
+
+        finder.resolve_domain.side_effect = side_effect
+
+        # When I query that domain
+        result = ac_models.ProviderCarbonTxt.find_for_domain("foobar.com")
+
+        # Then no carbon.txt should be returned.
+        assert result is None
