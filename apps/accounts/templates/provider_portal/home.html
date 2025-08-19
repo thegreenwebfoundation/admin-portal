@@ -38,12 +38,19 @@
 
 		<h3 class="text-xl pt-10">Your verified providers</h3>
 
-		{% if request.user.is_admin %}
+		{% flag "verified_domains" %}
+			<div class="alert__warning not-prose">
+        <p>Problems with your Green Web Check results showing the wrong provider name? Our new integration with <a href="https://carbontxt.org" target="_blank">carbon.txt</a> can help. Click <strong>setup carbon.txt</strong> below to find out more!</p>
+			</div>
+		{% endflag %}
+
+    {% if request.user.is_admin %}
 			<div class="alert__warning">
 				<p>You belong to the admin group, which gives you permission to manage all providers in the database.
 				Below is a list of those providers for which a permission has been granted explicitly for you, rather than based on the group membership.</p>
 			</div>
 		{% endif %}
+
 
 		<p>Verified providers appear in our
 			<a target="_blank" rel="noopener noreferrer" href="https://www.thegreenwebfoundation.org/tools/green-web-dataset/">Green Web Dataset</a> and

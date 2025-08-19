@@ -27,6 +27,11 @@ from .user import (
     CustomUserCreationForm,
 )
 
+from .carbon_txt import (
+    CarbonTxtStep1Form,
+    CarbonTxtStep3Form,
+)
+
 
 class PreviewForm(forms.Form):
     """

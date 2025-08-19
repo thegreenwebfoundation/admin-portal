@@ -472,6 +472,10 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         """
         return (not self.archived)
 
+    @property
+    def has_carbon_txt(self):
+        return hasattr(self, "carbon_txt") and self.carbon_txt is not None
+
     def outstanding_approval_requests(self):
         """
         Return all the ASN or IP Range requests as a single list.

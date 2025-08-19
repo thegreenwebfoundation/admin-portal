@@ -1,9 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponseRedirect
 from django.utils.functional import cached_property
+from django.views.generic.base import TemplateView
 
 from guardian.shortcuts import get_users_with_perms
 
-from ...models import Hostingprovider
+from ...forms import CarbonTxtStep1Form, CarbonTxtStep3Form
+from ...models import Hostingprovider, ProviderCarbonTxt
 
 from ...permissions import manage_provider
 
@@ -39,3 +42,46 @@ class ProviderRelatedResourceMixin(LoginRequiredMixin, PermissionRequiredMixin):
             "provider": self.provider
         }}
 
+class ProviderCarbonTxtView(ProviderRelatedResourceMixin, TemplateView):
+
+    def get_context_data(self, form_data=None, *args, **kwargs):
+        return { **super().get_context_data(*args, **kwargs), **{
+            "form": self.get_form(form_data)
+        }}
+
+    def get_template_names(self):
+        if not self.provider.has_carbon_txt:
+            return "provider_portal/carbon_txt/step_1_domain.html"
+        elif self.provider.carbon_txt.state == ProviderCarbonTxt.State.PENDING_VALIDATION:
+            return "provider_portal/carbon_txt/step_2_validation.html"
+        elif self.provider.carbon_txt.state == ProviderCarbonTxt.State.PENDING_DELEGATION:
+            return "provider_portal/carbon_txt/step_3_delegation.html"
+        else:
+            return "provider_portal/carbon_txt/step_4_complete.html"
+
+    def get_form(self, data=None):
+        if not self.provider.has_carbon_txt:
+            if data:
+                return CarbonTxtStep1Form(data)
+            else:
+                return CarbonTxtStep1Form(initial={
+                    "domain": self.provider.website_domain
+                })
+        elif self.provider.carbon_txt.state == ProviderCarbonTxt.State.PENDING_VALIDATION:
+            return None
+        elif self.provider.carbon_txt.state == ProviderCarbonTxt.State.PENDING_DELEGATION:
+            if data:
+                return CarbonTxtStep3Form(data)
+            else:
+                return CarbonTxtStep3Form()
+        else:
+            return None
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(request.POST, *args, **kwargs)
+        form = context["form"]
+        if form.is_valid():
+            form.update_provider(self.provider)
+            return HttpResponseRedirect("")
+        else:
+            return self.render_to_response(context)
