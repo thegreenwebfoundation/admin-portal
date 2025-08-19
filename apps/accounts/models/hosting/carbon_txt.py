@@ -78,10 +78,14 @@ class ProviderCarbonTxt(TimeStampedModel):
         PENDING_DELEGATION="Pending delegation setup"
         ACTIVE="Active"
 
-    class BlankDomainError(RuntimeError):
-        pass
-    class CarbonTxtNotValidatedError(RuntimeError):
-        pass
+    class CarbonTxtValidationError(RuntimeError):
+        message = "Error validating carbon.txt."
+
+    class BlankDomainError(CarbonTxtValidationError):
+        message = "You must provider a domain to validate!"
+
+    class CarbonTxtNotValidatedError(CarbonTxtValidationError):
+        message = "Could not find a valid carbon.txt at your domain."
 
 
     @classmethod
@@ -137,7 +141,7 @@ class ProviderCarbonTxt(TimeStampedModel):
         if self.domain is None or len(self.domain) == 0:
             raise self.BlankDomainError
 
-        validator = CarbonTxtValidator()
+        validator = CarbonTxtValidator(http_timeout=settings.CARBON_TXT_RESOLUTION_TIMEOUT)
         try:
             result = validator.validate_domain(self.domain)
             if len(result.exceptions) == 0:

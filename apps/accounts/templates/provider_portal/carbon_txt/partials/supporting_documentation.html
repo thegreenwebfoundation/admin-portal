@@ -1,0 +1,25 @@
+<ul class="list-none p-0">
+  {% for document in provider.valid_public_supporting_documents %}
+      <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 px-5 border-neutral border-t last-of-type:border-b">
+        <div class="columns-2">
+          <div>
+            <span class="copyable">
+              <a class="font-bold content" href="{{document.url}}" target="_blank">{{document.title}}</a>
+              <a class="copy no-underline" href="#">📋</a>
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <div>
+              <strong>Type: </strong>{{document.type}}
+            </div>
+            <div>
+              <strong>Valid to: </strong>{{document.valid_to}}
+            </div>
+          </div>
+        </div>
+        <div>
+          <p>{{document.description}}</p>
+        </div>
+      </li>
+  {% endfor %}
+</ul>

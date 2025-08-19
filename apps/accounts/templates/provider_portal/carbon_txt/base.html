@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load i18n static breakpoint %}
+{% block content %}
+{% block extrahead %}
+  <script src="{% static "accounts/js/provider_carbon_txt.js"  %}"></script>
+{% endblock %}
+<div class="container mx-auto prose">
+    {% block header_section %}
+      <header class="">
+        {% block back_link %}
+          <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt; Back to provider portal</a></p>
+        {% endblock back_link %}
+
+        <h1 class="text-center mb-1 mt-6 pt-3">Setup carbon.txt</h1>
+        <h6 class="text-center my-3">
+          Provider: {{provider.name}}
+        </h6>
+        </header>
+    {% endblock %}
+
+
+    <article>
+      <div class="prose mx-auto mt-8">
+        {% block content_section %}
+
+        {% endblock %}
+
+        {% if form %}
+          <form method="post" class="form" action="">
+            {% csrf_token %}
+            {{ form.non_field_errors.as_ul }}
+            {% for field in form %}
+            <div class="mb-6 {{field.field.widget.attrs.class}}">
+              {% if not field.is_hidden %}
+              <div class="label_tag">{{ field.label_tag }}</div>
+              {% endif %}
+              <div class="field">{{ field }}</div>
+              {% if field.help_text %}
+              <p class="helptext mt-0 pt-1">{{ field.help_text | safe }}</p>
+              {% endif %}
+
+              {{ field.errors }}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn w-full">
+              <span class="text-xs">
+                {% block submit_button_text %}
+                Save and continue
+                {% endblock submit_button_text %}
+              </span>
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </article>
+
+</div>
+{% endblock %}

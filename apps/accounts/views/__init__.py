@@ -8,6 +8,7 @@ from .provider.autocomplete import LabelAutocompleteView, ProviderAutocompleteVi
 from .provider.portal_home import ProviderPortalHomeView
 from .provider.request.detail import ProviderRequestDetailView
 from .provider.request.wizard import ProviderRequestWizardView
+from .provider.carbon_txt import ProviderCarbonTxtView
 
 
 class DashboardView(TemplateView):

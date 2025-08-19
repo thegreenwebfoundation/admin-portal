@@ -7,6 +7,8 @@ from anymail.message import AnymailMessage
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q, URLField
+from django.db.models.functions import Trim, Now
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -28,6 +30,8 @@ from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, Lab
 
 logger = logging.getLogger(__name__)
 
+# This allows us to filter on url__trim in the  valid_public_supporting_documents method below.
+URLField.register_lookup(Trim)
 
 GREEN_VIA_CARBON_TXT = f"green:{GreenlistChoice.CARBONTXT.value}"
 
@@ -309,6 +313,22 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
             return most_recent_evidence.first().valid_to
 
     @property
+    def valid_public_supporting_documents(self):
+        """
+        Return all publicly available (ie: marked as public, and with a non-null URL)
+        supporting documentents which are currently valid for this provider. Used to
+        populate the list of available evidence in the carbon.txt wizard.
+        """
+        return self.supporting_documents.filter(
+            Q(public = True) &
+            Q(valid_from__lte = Now()) &
+            Q(valid_to__gte = Now()) &
+            ~ (
+               Q(url__isnull=True) | Q(url__trim="")
+            )
+        ).all()
+
+    @property
     def ip_range_count(self) -> int:
         """
         Convenience method for counting IP ranges.
@@ -471,6 +491,10 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         if a provider counts as green in multiple places
         """
         return (not self.archived)
+
+    @property
+    def has_carbon_txt(self):
+        return hasattr(self, "carbon_txt") and self.carbon_txt is not None
 
     def outstanding_approval_requests(self):
         """

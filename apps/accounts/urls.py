@@ -13,6 +13,7 @@ from apps.accounts.views import (
     ProviderRequestDetailView,
     ProviderRequestWizardView,
     ProviderAutocompleteView,
+    ProviderCarbonTxtView,
 )
 
 urlpatterns = [
@@ -151,4 +152,9 @@ urlpatterns = [
         TemplateView.as_view(template_name="provider_portal/before_starting.html"),
         name="before-starting",
     ),
+    path(
+        "providers/<int:provider_id>/carbon_txt/",
+        ProviderCarbonTxtView.as_view(),
+        name="provider-carbon-txt"
+    )
 ]

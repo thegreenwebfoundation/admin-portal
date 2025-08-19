@@ -1,0 +1,35 @@
+{% load static %}
+<div class="embedded-greenchecker">
+  <div class="flex justify-between items-start gap-4">
+    <div class="flex-grow">
+      <div class="label_tag"><label for="id_domain"><span class="text-base">Domain</span></label></div>
+      <div class="field" ><input type="text" name="domain" class="domain-input" placeholder="Enter a customer domain" required="" aria-describedby="id_domain_helptext" id="id_domain" ></div>
+      <p id="id_domain_helptext" class="helptext mt-0 pt-1">e.g.: www.greenweb.org, without the https://.</p>
+    </div>
+    <div class="pt-11 w-1/8 text-center">
+      <a target="" href="#" class="btn submit mt-0"><span class="text-xs">Check</span></a>
+      <span class="spinner mt-0 hidden"></span>
+    </div>
+  </div>
+  <div class="results-area">
+    <div class="grey-result border-2 rounded-2xl flex justify-between items-start gap-6 bg-neutral-200 p-4 hidden">
+      <div>
+				<img class="m-0" width="150px" height="150px" src="{% static 'img/GWF-icon-flames.svg' %}" alt="Green Web Foundation logo"/>
+      </div>
+      <div class="flex-grow">
+        <h6 class="border-b font-normal">No evidence found for <span class="font-bold domain">timcowlishaw.co.uk</span>.</h6>
+        <p class="mb-0">Unfortunately, we can't find any evidence in our Green Web Dataset that this website runs on green energy. <a href="#" class="check-again">Check another domain</a>.</p>
+      </div>
+    </div>
+    <div class="green-result border-2 rounded-2xl flex justify-between items-start gap-6 bg-green-200 p-4 hidden">
+      <div>
+				<img class="m-0" width="250px" height="250px" src="{% static 'img/GWF-icon-recycle--green.svg' %}" alt="Green Web Foundation logo"/>
+      </div>
+      <div class="flex-grow">
+        <h6 class="border-b font-normal">We've found evidence that <span class="font-bold domain">timcowlishaw.co.uk</span> is hosted <span class="font-bold">green</span>.</h6>
+        <p>We found evidence that this website runs on green energy. Using data submitted to our Green Web Dataset, we can match this website's IP address to a verified green hosting provider.</p>
+        <p class="mb-0">Hosted by: <span class="font-bold provider-name">Tim's Hosting Provider</span>. <a href="#" class="check-again">Check another domain</a>.</p>
+      </div>
+    </div>
+  </div>
+</div>

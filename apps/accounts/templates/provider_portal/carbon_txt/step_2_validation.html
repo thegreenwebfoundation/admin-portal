@@ -1,0 +1,29 @@
+{% extends "provider_portal/carbon_txt/base.html" %}
+
+{% block content_section %}
+{% include "provider_portal/carbon_txt/partials/steps.html" with active_step=2 %}
+{% include "provider_portal/carbon_txt/partials/primary_domain.html" with provider=provider %}
+<h3>Your carbon.txt file</h3>
+<p>
+Create a carbon.txt file containing key evidence or documentation of your commitment to hosting powered by 100% green energy, and host it on your primary domain, using <a href="https://carbontxt.org/tools/builder" target="_blank" class="font-bold">the carbon.txt builder tool</a> (opens in new tab).
+</p>
+
+<p>
+Your carbon.txt file collates links to your organization's key public sustainability documents, such as sustainability or CSR declarations, annual reports, or renewable energy certificates, and must contain at least one link.
+</p>
+{% if provider.valid_public_supporting_documents|length > 0 %}
+
+  <p>
+  Below is a table of the supporting documentation you provided to us when you registered as a verified green provider, for you to consider including in your carbon.txt file.
+  </p>
+
+  {% include "provider_portal/carbon_txt/partials/supporting_documentation.html" with provider=provider %}
+
+{% endif %}
+
+<p>Once you have created your carbon.txt file, you should ensure that it is uploaded to <strong class="whitespace-nowrap">https://{{provider.carbon_txt.domain}}/carbon.txt</strong> and is available on the web. Once this is done, you can continue to verify and link your domain.</p>
+{% endblock content_section %}
+
+{% block submit_button_text %}
+Submit for verification
+{% endblock submit_button_text %}

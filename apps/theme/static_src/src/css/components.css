@@ -66,6 +66,7 @@
 		@apply text-orange-700;
 		@apply border-orange-700;
 	}
+
 	.alert__error {
 		@apply bg-purple-50;
 		@apply text-purple-600;
@@ -95,7 +96,7 @@
 	}
 	.utility-icon {
 		@apply relative;
-		@apply -top-0.5; 
+		@apply -top-0.5;
 		@apply inline-block;
 		@apply leading-none;
 		@apply text-center;

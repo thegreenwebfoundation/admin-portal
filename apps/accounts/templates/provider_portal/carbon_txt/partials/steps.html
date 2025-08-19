@@ -1,0 +1,22 @@
+
+  <p><strong>Problems with your Green Web Check results showing the wrong hosting provider name?</strong>
+    This solution using carbon.txt is for you. It has three key steps:</p>
+
+  <ol>
+    <li class="{% if active_step == 1 %}font-bold{% else %}text-neutral-500{% endif %}">
+      {% if active_step == 1 %}👉 {% elif active_step > 1 %}✅ {% endif %}
+      <span class="{%if active_step > 1 %}line-through{% endif %}">Identify a domain you are in complete control of - your primary domain.</span>
+    </li>
+    <li class="{% if active_step == 2 %}font-bold{% else %}text-neutral-500{% endif %}">
+      {% if active_step == 2 %}👉 {% elif active_step > 2 %}✅ {% endif %}
+      <span class="{%if active_step > 2 %}line-through{% endif %}">Create a carbon.txt file containing your key sustainability disclosures and host it on your primary domain.</span>
+    </li>
+    <li class="{% if active_step == 3 %}font-bold{% else %}text-neutral-500{% endif %}">
+      {% if active_step == 3 %}👉 {% elif active_step > 3 %}✅ {% endif %}
+      <span class="{%if active_step > 3 %}line-through{% endif %}">Configure that carbon.txt file to be shared across your customers' or other domains, which ensures they're correctly attributed to your hosting provider in the Green Web platform.</span>
+    </li>
+  </ol>
+
+  <p>
+  <a href="#"> What problems does carbon.txt solve?</a> | <a href="#">Overview of the process</a> | <a href="#">Background on carbon.txt</a>
+  </p>
