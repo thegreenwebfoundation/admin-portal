@@ -10,6 +10,6 @@ Thank you for taking the time to {% if provider %}update the listing for {{ prov
 {{ link_to_verification_request }}
 What happens next?
 We review {% if provider %}provider updates{% else %}new verification requests{% endif %} on Tuesday each week. Once we have reviewed the request, we will contact you by email to let you know that it is approved, or that we need more information from you.
-If you have further questions, or need to edit your verification request,  please contact support@thegreenwebfoundation.org.
+If you have further questions, or need to edit your verification request,  please contact support@greenweb.org.
 Many thanks,
 Green Web Foundation

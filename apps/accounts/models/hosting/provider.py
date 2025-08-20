@@ -518,7 +518,7 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         msg = AnymailMessage(
             subject=subject,
             body=email_txt,
-            to=["support@thegreenwebfoundation.org"],
+            to=["support@greenweb.org"],
         )
 
         if email_html:

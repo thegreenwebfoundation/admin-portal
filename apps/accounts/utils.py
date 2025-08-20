@@ -54,7 +54,7 @@ def send_email(address, subject, context, template_txt, template_html=None, bcc=
         subject=subject,
         body=email_body,
         to=[address],
-        cc=["support@thegreenwebfoundation.org"],
+        cc=["support@greenweb.org"],
     )
 
     if bcc:

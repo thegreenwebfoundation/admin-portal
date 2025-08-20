@@ -26,7 +26,7 @@ schema_view = get_schema_view(
         ),
         default_version="v3",
         terms_of_service="https://www.thegreenwebfoundation.org/privacy-statement/",
-        contact=openapi.Contact(email="support@thegreenwebfoundation.org"),
+        contact=openapi.Contact(email="support@greenweb.org"),
         license=openapi.License(name="License: Apache 2.0. "),
         x_logo={
             "url": "https://www.thegreenwebfoundation.org/wp-content/themes/tgwf2015/img/top-logo-greenweb.png",  # noqa

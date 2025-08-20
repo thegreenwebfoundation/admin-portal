@@ -281,7 +281,7 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 # Email settings
-DEFAULT_FROM_EMAIL = "support@thegreenwebfoundation.org"
+DEFAULT_FROM_EMAIL = "support@greenweb.org"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
