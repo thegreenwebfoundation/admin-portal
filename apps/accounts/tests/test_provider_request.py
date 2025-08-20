@@ -417,7 +417,7 @@ def test_wizard_sends_email_on_submission(
 
     # then: and our email is addressed to the people we expect it to be
     assert user.email in eml.to
-    assert "support@thegreenwebfoundation.org" in eml.cc
+    assert "support@greenweb.org" in eml.cc
 
     # then: and our email has the subject and copy we were expecting
     assert "Your Green Web Dataset verification request:" in eml.subject
