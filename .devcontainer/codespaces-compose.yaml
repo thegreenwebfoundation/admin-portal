@@ -2,7 +2,7 @@ services:
   main:
     # we use the default codespaces image. this likely requires an x86
     # processor, so might not work on arm machines
-    image: "mcr.microsoft.com/devcontainers/universal:2"
+    image: "mcr.microsoft.com/devcontainers/universal:3"
   
     volumes:
       - ../..:/workspaces:cached
