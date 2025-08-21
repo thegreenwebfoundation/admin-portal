@@ -1,5 +1,7 @@
 from django.urls import reverse
 from waffle.testutils import override_flag
+from apps.accounts.models import ProviderCarbonTxt
+
 
 import pytest
 
@@ -57,18 +59,22 @@ def test_templates_in_filter_view(client, hosting_provider_factory):
     assert "greencheck/partials/_directory_results.html" in templates
 
 @pytest.mark.django_db
-def test_carbon_txt_template_included_for_provider_with_linked_domain(client, hosting_provider_factory, linked_domain_factory):
+def test_carbon_txt_template_included_for_provider_with_carbon_txt(client, hosting_provider_factory):
     """
-    Check that we include the carbon_txt badge when a provider has a linked domain
+    Check that we include the carbon_txt badge when a provider has a carbon_txt
     """
 
-    # given: a hosting provider in Germany which has a primary linked domain
+    # given: a hosting provider in Germany which has a carbon_txt
     provider = hosting_provider_factory.create(country="DE", is_listed=True)
-    ld = linked_domain_factory(
+    carbon_txt = ProviderCarbonTxt(
         provider=provider,
         domain="example.com",
-        is_primary=True,
+        carbon_txt_url="https://example.com/carbon.txt",
+        is_delegation_set=True
     )
+    carbon_txt.save()
+
+
     # when: we visit our directory
     res = client.get(reverse("directory-index"))
 
@@ -81,9 +87,9 @@ def test_carbon_txt_template_included_for_provider_with_linked_domain(client, ho
     assert "greencheck/partials/_directory_carbon_txt_badge.html" in templates
 
 @pytest.mark.django_db
-def test_carbon_txt_template_not_included_for_provider_without_linked_domain(client, hosting_provider_factory):
+def test_carbon_txt_template_not_included_for_provider_without_carbon_txt(client, hosting_provider_factory):
     """
-    Check that we do not include the carbon_txt badge when a provider has no primary linked domain
+    Check that we do not include the carbon_txt badge when a provider has no carbon_txt
     """
 
     # given: a hosting provider in Germany

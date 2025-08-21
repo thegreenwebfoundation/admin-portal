@@ -5,7 +5,6 @@ from rest_framework.validators import UniqueValidator
 from taggit import serializers as tag_serializers
 
 from apps.accounts.models import (
-    LinkedDomain,
     Hostingprovider,
     HostingProviderSupportingDocument,
     ProviderSharedSecret,
@@ -227,15 +226,4 @@ class ProviderSharedSecretSerializer(serializers.ModelSerializer):
         fields = [
             "body",
         ]
-
-
-class LinkedDomainSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = LinkedDomain
-        fields = [
-            "domain",
-            "created",
-        ]
-
 

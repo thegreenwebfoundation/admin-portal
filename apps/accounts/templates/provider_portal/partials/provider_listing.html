@@ -1,4 +1,4 @@
-{% load guardian_tags waffle_tags %}
+{% load guardian_tags waffle_tags static %}
 <div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2 flex justify-between gap-4">
 
   <div>
@@ -18,11 +18,14 @@
   <div class="flex gap-2 text-right items-right items-center">
     {% get_obj_perms request.user for provider as "provider_perms" %}
     {% if "manage_provider" in provider_perms %}
+      {% flag "verified_domains" %}
+        <a class="btn btn-white px-2 text-sm" href="{% url 'provider-carbon-txt' provider.id %}">
+          <img class="my-0 mr-1 inline-block" width="14" height="14" src="{% static 'img/carbontxt-logo.svg' %}" alt="carbon.txt logo"/>
+          Setup carbon.txt
+        </a>
+      {% endflag %}
       <a href="{% url 'provider_edit' provider.id %}" class="btn btn-white px-2 text-sm">📝 Update listing</a>
     {% endif %}
 
-    {% flag "verified_domains" %}
-      <span class="px-2 text-sm"><a href="{% url 'provider-domain-index' provider.id %}"> Linked Domains</a></span>
-    {% endflag %}
   </div>
 </div>

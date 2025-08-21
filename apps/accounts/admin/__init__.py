@@ -10,11 +10,11 @@ from .hosting.provider import (
     ServiceAdmin,
     VerificationBasisAdmin,
     LabelAdmin,
-    LinkedDomainAdmin,
     SupportMessageAdmin,
     HostingAdmin
 )
 from .hosting.datacenter import DatacenterNoteInline, DatacenterAdmin
+from .hosting.carbon_txt import CarbonTxtMotivationAdmin, ProviderCarbonTxtAdmin
 from .provider_request import ProviderRequest
 from .log_entry import GWLogEntryAdmin
 

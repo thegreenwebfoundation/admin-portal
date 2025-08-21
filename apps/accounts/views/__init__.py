@@ -4,16 +4,11 @@ from django.views.generic.base import TemplateView
 
 from .user import UserRegistrationView
 from .user import UserActivationView
-from .provider.domains import (
-        ProviderDomainsView,
-        ProviderDomainCreateView,
-        ProviderDomainDeleteView,
-        ProviderDomainDetailView
-)
 from .provider.autocomplete import LabelAutocompleteView, ProviderAutocompleteView
 from .provider.portal_home import ProviderPortalHomeView
 from .provider.request.detail import ProviderRequestDetailView
 from .provider.request.wizard import ProviderRequestWizardView
+from .provider.carbon_txt import ProviderCarbonTxtView
 
 
 class DashboardView(TemplateView):
