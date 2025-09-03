@@ -20,7 +20,7 @@ all:
       gunicorn_threads: 2
 
     app2a.thegreenwebfoundation.org:
-      internal_ip: "10.0.0.4"
+      internal_ip: "10.0.0.9"
       dramatiq_threads: 2
       dramatiq_processes: 3
       sentry_sample_rate: 0
