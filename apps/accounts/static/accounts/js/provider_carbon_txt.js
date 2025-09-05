@@ -2,6 +2,9 @@ function setupOptionalDescriptionForms() {
   const descriptionFieldContainer = document.querySelector("div.description-field");
   const descriptionField = document.querySelector("input.description-field");
   document.querySelectorAll(".show-description-field").forEach((elem) => {
+    if(elem.classList.contains("loaded")) {
+      return true;
+    }
     const label = elem.closest("label");
     const input = label.querySelector("input");
     if(input.checked) {
@@ -16,6 +19,7 @@ function setupOptionalDescriptionForms() {
       descriptionField.classList.toggle("hidden");
       descriptionField.required = !descriptionField.classList.contains("hidden");
     });
+    elem.classList.add("loaded");
   });
 }
 
@@ -58,7 +62,6 @@ function setupEmbeddedGreenchecker() {
         button.classList.remove("hidden");
         spinner.classList.add("hidden");
         const result = await response.json();
-        console.log(result);
         for(display of domainDisplays) {
           display.innerText = domain;
         }
