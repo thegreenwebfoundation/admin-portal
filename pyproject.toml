@@ -74,6 +74,7 @@ dependencies = [
     "httpx>=0.28.1",
     "pytest-httpx>=0.35.0",
     "carbon-txt==0.0.17",
+    "truststore>=0.10.4",
 ]
 
 [tool.uv]
