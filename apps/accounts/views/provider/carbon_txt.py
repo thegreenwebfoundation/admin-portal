@@ -50,7 +50,8 @@ class ProviderCarbonTxtView(ProviderRelatedResourceMixin, TemplateView):
         }}
 
     def get_current_step(self):
-        if not self.provider.has_carbon_txt:
+        returned_to_domain_setup = self.request.GET.get("setup_domain") == "1"
+        if not self.provider.has_carbon_txt or returned_to_domain_setup:
             return 0
         else:
             carbon_txt = self.provider.carbon_txt
@@ -75,8 +76,12 @@ class ProviderCarbonTxtView(ProviderRelatedResourceMixin, TemplateView):
 
 
     def get_initial_data(self):
+        if self.provider.has_carbon_txt:
+            domain = self.provider.carbon_txt.domain
+        else:
+            domain = self.provider.website_domain
         return [
-            { "domain": self.provider.website_domain },
+            { "domain": domain },
             {},
             {},
             {}

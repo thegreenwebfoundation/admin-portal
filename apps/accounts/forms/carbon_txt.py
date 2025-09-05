@@ -1,4 +1,5 @@
 from django import forms
+from django.db import IntegrityError
 from django.utils.functional import lazy
 from django.utils.safestring import mark_safe
 from dns.reversename import ipv4_reverse_domain
@@ -52,11 +53,18 @@ class CarbonTxtStep1Form(forms.Form):
         if not self.is_valid():
             return False
 
-        carbon_txt = ProviderCarbonTxt(
-            provider_id=provider.id,
-            domain = self.cleaned_data["domain"]
-        )
-        carbon_txt.save()
+        if provider.has_carbon_txt:
+            carbon_txt = provider.carbon_txt
+        else:
+            carbon_txt = ProviderCarbonTxt(provider_id=provider.id)
+
+        carbon_txt.domain = self.cleaned_data["domain"]
+
+        try:
+            carbon_txt.save()
+        except IntegrityError:
+            self.add_error("domain", "This domain has already been claimed by another provider")
+
         for slug in self.cleaned_data["carbon_txt_motivations"]:
             motivation = CarbonTxtMotivation.objects.filter(slug=slug).first()
             description = None
@@ -78,6 +86,11 @@ class CarbonTxtStep2Form(forms.Form):
 
         except ProviderCarbonTxt.CarbonTxtValidationError as error:
             self.add_error(None, error.message)
+        except IntegrityError:
+            provider.carbon_txt.carbon_txt_url = None
+            provider.carbon_txt.save()
+            self.add_error(None, "This carbon.txt has already been verified by another provider")
+
 
 class CarbonTxtStep3Form(forms.Form):
     is_delegation_set = forms.BooleanField(widget=forms.HiddenInput(), initial=True)

@@ -8,4 +8,9 @@
       <a target="_blank" href="https://www.thegreenwebfoundation.org/green-web-check/?url={{provider.carbon_txt.domain}}&nocache=1" class="btn mt-0"><span class="text-xs">Check</span></a>
     </div>
   {% endif %}
+  {% if show_edit_button %}
+    <div>
+      <a href="?setup_domain=1" class="btn mt-0"><span class="text-xs">Edit</span></a>
+    </div>
+  {% endif %}
 </div>
