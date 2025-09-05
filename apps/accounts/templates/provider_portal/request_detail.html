@@ -35,6 +35,23 @@
         {% endif %}
 
 
+        {% if object.provider.has_carbon_txt %}
+
+          <div class="mt-2">
+            <div class="flex prose justify-between items-center gap-4">
+              <img class="my-0" width="50" height="50" src="{% static 'img/carbontxt-logo.svg' %}" alt="carbon.txt logo"/>
+              <p class="my-0 flex-grow">
+                This provider uses carbon.txt to publish their sustainability disclosures. <a class="no-underline" href="https://carbontxt.org/tools/validator?domain={{object.provider.carbon_txt.domain}}&auto=true" target="_blank">
+                  <span class="underline hover:no-underline">See details in the carbon.txt validator tool</span></a>
+                <img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>.
+              </p>
+              <div>
+                <a target="_blank" href="{% url 'provider-carbon-txt' object.provider.id %}" class="btn mt-0"><span class="text-xs">Setup</span></a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
       </header>
 
       <article class="pb-12">
