@@ -24,7 +24,7 @@
     pkg:
       - build-essential
       - libmariadb-dev
-      - libmariadbclient-dev
+      #- libmariadbclient-dev
       - libmariadb3
       - mariadb-client
       - mariadb-common
@@ -85,7 +85,7 @@
 
 - name: Check if uv is already installed
   ansible.builtin.stat:
-    path: "/home/deploy/.cargo/bin/uv"
+    path: "/home/deploy/.local/bin/uv"
   register: uv_installed
   when: install_uv is true
   tags: [uv-install]

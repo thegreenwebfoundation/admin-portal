@@ -1,6 +1,9 @@
 ---
 - name: Build minified tailwind css file
   ansible.builtin.shell: |
+    FNM_PATH="/home/deploy/.local/share/fnm"
+    export PATH="$FNM_PATH:$PATH"
+    eval "`fnm env`"
     source .venv/bin/activate
     dotenv run -- ./manage.py tailwind build
   args:
@@ -9,9 +12,14 @@
   changed_when: false
 
 - name: Build javascript bundle with rollup, using the local config file
-  ansible.builtin.command: "npx rollup --config"
+  ansible.builtin.shell: |
+    FNM_PATH="/home/deploy/.local/share/fnm"
+    export PATH="$FNM_PATH:$PATH"
+    eval "`fnm env`"
+    npx rollup --config
   args:
     chdir: "{{ project_root }}/current/apps/theme/static_src"
+    executable: "/usr/bin/bash"
   changed_when: false
 
 - name: Collect static files for django
