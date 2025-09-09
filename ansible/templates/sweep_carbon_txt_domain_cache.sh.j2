@@ -1,0 +1,13 @@
+
+# {{ ansible_managed }}
+# Last run: {{ template_run_date }}
+
+# make sure we fail on any error
+set -euo pipefail
+
+# make sure we are in the right directory
+cd {{ project_root }}/current/
+
+# run the domains export and upload to object storage
+source .venv/bin/activate
+dotenv run -- python ./manage.py sweep_carbon_txt_domain_cache

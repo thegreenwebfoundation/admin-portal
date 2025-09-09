@@ -624,18 +624,26 @@ class GreenDomain(models.Model):
         return self.type == gc_choices.GreenlistChoice.CARBONTXT.value
 
     @classmethod
-    def check_for_domain(cls, domain, skip_cache=False):
+    def check_for_domain(cls, domain, skip_cache=False, refresh_carbon_txt_cache=None):
         """
         Accept a domain, or object that resolves to an IP and check.
         Accepts skip_cache option to perform a full DNS lookup
-        instead of looking up a domain by key
+        instead of looking up a domain by key.
+        We also allow the main greendomains cache to be skipped, while NOT
+        skipping the separate carbon.txt domain cache - this is used in the
+        carbon.txt image generation view, as image embed code has historiclaly been provided
+        to end users **with** the nocache parameter set, and we want to ensure that the carbon.txt
+        cache is **not** skipped, even in this case.
         """
         from ..domain_check import GreenDomainChecker
 
         checker = GreenDomainChecker()
 
+        if refresh_carbon_txt_cache is None:
+            refresh_carbon_txt_cache = skip_cache
+
         if skip_cache:
-            return checker.perform_full_lookup(domain)
+            return checker.perform_full_lookup(domain, refresh_carbon_txt_cache=refresh_carbon_txt_cache)
 
         return GreenDomain.objects.filter(url=domain).first()
 

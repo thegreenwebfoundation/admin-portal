@@ -40,6 +40,13 @@
         mode: "0755"
       tags: [green-domains-exporter]
 
+    - name: Upload carbon.txt cache sweep script
+      ansible.builtin.template:
+        src: sweep_carbon_txt_domain_cache.sh.j2
+        dest: /home/deploy/cronjobs/sweep_carbon_txt_domain_cache.sh
+        mode: "0755"
+      tags: [green-domains-exporter]
+
     - name: Ensure log files exist for /home/deploy/cronjobs
       ansible.builtin.file:
         path: "{{ item.path }}"
@@ -71,6 +78,14 @@
         - {
             name: "clear expired domains STDERR",
             path: "/var/log/clear_expired_domains.error.log",
+          }
+        - {
+            name: "sweep carbon.txt domain cache STDOUT",
+            path: "/var/log/sweep_carbon_txt_domain_cache.log",
+          }
+        - {
+            name: "sweep carbon.txt domain cache STDERR",
+            path: "/var/log/sweep_carbon_txt_domain_cach.error.log",
           }
       tags: [ip-importers, green-domains-exporter]
 
@@ -121,4 +136,21 @@
           bash /home/deploy/cronjobs/export_green_domains.sh
           >> /var/log/export_green_domains.log
           2>> /var/log/export_green_domains.error.log
+      tags: [crontab]
+
+      # Note: when changing the schedule here, be sure to update the sentry configuration
+    # in apps/accounts/management/commands/sweep_carbon_txt_domain_cache.py to match,
+    # otherwise we risk getting spurious error alerts.
+    - name: Ensure job to export green domains is present
+      ansible.builtin.cron:
+        name: "hour at ten past the hour  sweep the carbon.txt cache"
+        state: present
+        weekday: "*"
+        hour: "*"
+        minute: "10"
+        user: deploy
+        job: >
+          bash /home/deploy/cronjobs/sweep_carbon_txt_domain_cache.sh
+          >> /var/log/sweep_carbon_txt_domain_cache.log
+          2>> /var/log/sweep_carbon_txt_domain_cache.error.log
       tags: [crontab]

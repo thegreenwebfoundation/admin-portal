@@ -26,6 +26,7 @@ from .provider import (
 )
 from .carbon_txt import (
     CarbonTxtMotivation,
+    CarbonTxtDomainResultCache,
     ProviderCarbonTxtMotivation,
     ProviderCarbonTxt,
 )

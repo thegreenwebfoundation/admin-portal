@@ -41,6 +41,7 @@ env = environ.Env(
         os.getenv("TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS"),
     ),
     CARBON_TXT_RESOLUTION_TIMEOUT = (float, os.getenv("CARBON_TXT_RESOLUTION_TIMEOUT")),
+    CARBON_TXT_CACHE_TTL = (int, os.getenv("CARBON_TXT_CACHE_TTL")),
 )
 
 # in some cases we don't have a .env file to work from - the environment
@@ -347,6 +348,10 @@ CARBON_TXT_VALIDATOR_UI_URL = env(
 
 CARBON_TXT_RESOLUTION_TIMEOUT = env(
     "CARBON_TXT_RESOLUTION_TIMEOUT", default=1.0
+)
+
+CARBON_TXT_CACHE_TTL = env(
+    "CARBON_TXT_CACHE_TTL", default=60*60*24
 )
 
 RABBITMQ_URL = env("RABBITMQ_URL", default=None)

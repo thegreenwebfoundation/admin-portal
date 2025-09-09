@@ -1,4 +1,5 @@
 from enum import StrEnum
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db import models
@@ -11,6 +12,30 @@ from carbon_txt.exceptions import UnreachableCarbonTxtFile
 from httpx import HTTPError
 
 from ...validators import DomainNameValidator
+
+class CarbonTxtDomainResultCache(TimeStampedModel):
+    domain = models.CharField(max_length=255, unique=True, validators=[DomainNameValidator])
+    carbon_txt = models.ForeignKey("ProviderCarbonTxt", on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["domain"]),
+            models.Index(fields=["created"])
+        ]
+
+    @classmethod
+    def last_modified(cls, domain):
+        result = cls.objects.filter(domain=domain).first()
+        if result:
+            return result.modified
+
+    @classmethod
+    def sweep_cache(cls, ttl=None):
+        if ttl is None:
+            ttl = settings.CARBON_TXT_CACHE_TTL
+        threshold_time = datetime.now() - timedelta(seconds=ttl)
+        cls.objects.filter(created__lte=threshold_time).delete()
+
 
 class CarbonTxtMotivation(tag_models.TagBase):
     """
@@ -89,7 +114,7 @@ class ProviderCarbonTxt(TimeStampedModel):
 
 
     @classmethod
-    def find_for_domain(cls, domain):
+    def find_for_domain(cls, domain, refresh_cache=False):
         """
         Method to identify if a valid provider carbon.txt exists for a given domain.
         First it performs a carbon.txt delegation lookup, attempting to resolve a canonical
@@ -97,7 +122,23 @@ class ProviderCarbonTxt(TimeStampedModel):
         ProviderCarbonTxt in our database corresponding to that url.
         In the case where a provider carbontxt exists, it is returned, otherwise
         returns None.
+
+        Results are saved in the domain cache which is periodically cleared, in order to reduce
+        load on the greenchecker API endpoint, and also to ensure we don't DOS the servers being
+        checked. The cache can be busted with the refresh_cache argument.
         """
+        cached_domain = CarbonTxtDomainResultCache.objects.filter(domain=domain).first()
+        if cached_domain and not refresh_cache:
+            return cached_domain.carbon_txt
+        else:
+            carbon_txt = cls._find_for_domain_uncached(domain)
+            CarbonTxtDomainResultCache.objects.filter(domain=domain).delete()
+            cached_domain = CarbonTxtDomainResultCache(domain=domain, carbon_txt=carbon_txt)
+            cached_domain.save()
+            return carbon_txt
+
+    @classmethod
+    def _find_for_domain_uncached(cls, domain):
 
         finder = FileFinder(http_timeout=settings.CARBON_TXT_RESOLUTION_TIMEOUT)
         try:

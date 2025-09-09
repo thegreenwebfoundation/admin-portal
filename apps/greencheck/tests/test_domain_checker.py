@@ -197,6 +197,87 @@ class TestDomainChecker:
         assert isinstance(res, legacy_workers.SiteCheck)
 
 
+class TestDomainCheckerCarbonTxtCacheBehaviour:
+
+
+    @mock.patch("apps.accounts.models.hosting.carbon_txt.ProviderCarbonTxt")
+    def test_with_cached_green_domain_by_carbon_txt(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):
+        """
+        WHEN I query a domain with a valid carbon.txt and unarchived provider,
+        AND I do not explicitly refresh the domain cache
+        THEN the cached carbon.txt result should be used.
+        """
+
+        carbon_txt = provider_carbon_txt_factory(domain="example.com")
+        provider_carbon_txt_mock._find_for_domain_uncached.return_value = carbon_txt
+
+        checker.check_domain("example.com")
+
+        old_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        checker.check_domain("example.com")
+
+        new_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        assert old_modified == new_modified
+
+    @mock.patch("apps.accounts.models.hosting.carbon_txt.ProviderCarbonTxt")
+    def test_with_uncached_green_domain_by_carbon_txt(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):
+        """
+        WHEN I query a domain with a valid carbon.txt and unarchived provider,
+        AND I do explicitly refresh the domain cache
+        THEN the cached carbon.txt result should not be used.
+        """
+
+        carbon_txt = provider_carbon_txt_factory(domain="example.com")
+        provider_carbon_txt_mock._find_for_domain_uncached.return_value = carbon_txt
+
+        checker.check_domain("example.com")
+
+        old_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        checker.check_domain("example.com", refresh_carbon_txt_cache=True)
+
+        new_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        assert old_modified < new_modified
+
+    def test_with_cached_grey_domain_by_carbon_txt(self, checker):
+        """
+        WHEN I query a domain without a valid carbon.txt,
+        AND I do not explicitly refresh the domain cache
+        THEN the cached null carbon.txt result should be used.
+        """
+
+        checker.check_domain("example.com")
+
+        old_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        checker.check_domain("example.com")
+
+        new_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        assert old_modified == new_modified
+
+    def test_with_uncached_grey_domain_by_carbon_txt(self, checker):
+        """
+        WHEN I query a domain without a valid carbon.txt,
+        AND I do explicitly refresh the domain cache
+        THEN the cached null carbon.txt result should not be used.
+        """
+
+        checker.check_domain("example.com")
+
+        old_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        checker.check_domain("example.com", refresh_carbon_txt_cache=True)
+
+        new_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        assert old_modified < new_modified
+
+
+
 class TestDomainCheckerOrderBySize:
     """
     Check that we can return the ip ranges from a check in the
