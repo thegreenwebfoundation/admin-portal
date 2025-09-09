@@ -11,15 +11,6 @@ all:
       gunicorn_threads: 2
 
     app2.thegreenwebfoundation.org:
-      internal_ip: "10.0.0.4"
-      dramatiq_threads: 2
-      dramatiq_processes: 3
-      sentry_sample_rate: 0
-      app_name: app2
-      gunicorn_workers: 4
-      gunicorn_threads: 2
-
-    app2a.thegreenwebfoundation.org:
       internal_ip: "10.0.0.9"
       dramatiq_threads: 2
       dramatiq_processes: 3
@@ -73,7 +64,7 @@ all:
       # so it's clear which hosts you want to refer to
       hosts:
         app1.thegreenwebfoundation.org:
-        app2a.thegreenwebfoundation.org:
+        app2.thegreenwebfoundation.org:
         app3.thegreenwebfoundation.org:
         app4.thegreenwebfoundation.org:
         app5.thegreenwebfoundation.org:
@@ -86,7 +77,7 @@ all:
     api_servers:
       hosts:
         app1.thegreenwebfoundation.org:
-        app2a.thegreenwebfoundation.org:
+        app2.thegreenwebfoundation.org:
         app3.thegreenwebfoundation.org:
         app4.thegreenwebfoundation.org:
     # the admin server also hosts the staging servers

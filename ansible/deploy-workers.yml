@@ -2,7 +2,7 @@
 - name: Deploy updates for the worker nodes
   hosts:
     - app1.thegreenwebfoundation.org
-    - app2a.thegreenwebfoundation.org
+    - app2.thegreenwebfoundation.org
   remote_user: "deploy"
   become: false
 
