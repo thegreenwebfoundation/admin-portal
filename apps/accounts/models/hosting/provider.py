@@ -7,8 +7,8 @@ from anymail.message import AnymailMessage
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Q, URLField
-from django.db.models.functions import Trim, Now
+from django.db.models import Q
+from django.db.models.functions import Now
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -29,9 +29,6 @@ from ..choices import ModelType, PartnerChoice
 from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, Label
 
 logger = logging.getLogger(__name__)
-
-# This allows us to filter on url__trim in the  valid_public_supporting_documents method below.
-URLField.register_lookup(Trim)
 
 GREEN_VIA_CARBON_TXT = f"green:{GreenlistChoice.CARBONTXT.value}"
 
@@ -322,10 +319,7 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         return self.supporting_documents.filter(
             Q(public = True) &
             Q(valid_from__lte = Now()) &
-            Q(valid_to__gte = Now()) &
-            ~ (
-               Q(url__isnull=True) | Q(url__trim="")
-            )
+            Q(valid_to__gte = Now())
         ).all()
 
     @property
