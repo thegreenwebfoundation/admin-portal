@@ -1,3 +1,4 @@
+{% load i18n static breakpoint %}
 <h3>Your primary domain</h3>
 <div class="flex justify-between items-start">
   <div>
@@ -5,12 +6,15 @@
   </div>
   {% if show_check_button %}
     <div>
-      <a target="_blank" href="https://www.thegreenwebfoundation.org/green-web-check/?url={{provider.carbon_txt.domain}}&nocache=1" class="btn mt-0"><span class="text-xs">Check</span></a>
+      <a target="_blank" href="https://www.thegreenwebfoundation.org/green-web-check/?url={{provider.carbon_txt.domain}}&nocache=1" class="btn btn-sm btn-white mt-0">
+        <span class="text-xs">Check</span>
+        <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>
+      </a>
     </div>
   {% endif %}
   {% if show_edit_button %}
     <div>
-      <a href="?setup_domain=1" class="btn mt-0"><span class="text-xs">Edit</span></a>
+      <a href="?setup_domain=1" class="btn btn-sm btn-white mt-0"><span class="text-xs">Edit</span></a>
     </div>
   {% endif %}
 </div>

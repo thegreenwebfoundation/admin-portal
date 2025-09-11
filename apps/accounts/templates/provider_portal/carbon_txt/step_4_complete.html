@@ -7,7 +7,7 @@
 {% include "provider_portal/carbon_txt/partials/carbon_txt_badge.html" with provider=provider %}
 <h3>Test carbon.txt sharing</h3>
 <p>
-Test your customer domains using the checker below to verify that you have set up carbon.txt sharing correctly. If {{provider.name}} is not listed as the hosting provider, you can <a href="?setup_delegation=1">return to the setup instructions</a> for troubleshooting.
+Test your customer domains using the checker below to verify that you have set up carbon.txt sharing correctly, and that all the domains you host link to you. If {{provider.name}} is not listed as the hosting provider, you can <a href="?setup_delegation=1">return to the setup instructions</a> for troubleshooting.
 </p>
 {% include "provider_portal/carbon_txt/partials/embedded_greenchecker.html" %}
 {% endblock content_section %}
