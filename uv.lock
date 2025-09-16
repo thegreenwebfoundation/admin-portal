@@ -120,7 +120,7 @@ requires-dist = [
     { name = "awscli", specifier = ">=1.35.20" },
     { name = "awscli-plugin-endpoint", specifier = ">=0.4" },
     { name = "boto3", specifier = ">=1.35.54" },
-    { name = "carbon-txt", specifier = "==0.0.17" },
+    { name = "carbon-txt", specifier = "==0.0.18" },
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "dateutils", specifier = ">=0.6.12" },
     { name = "db-to-sqlite", specifier = ">=1.5" },
@@ -674,7 +674,7 @@ wheels = [
 
 [[package]]
 name = "carbon-txt"
-version = "0.0.17"
+version = "0.0.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arelle-release" },
@@ -692,9 +692,9 @@ dependencies = [
     { name = "sentry-sdk", extra = ["django"] },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/d5/996bb2634617d6c52b61b16857457d86abcd57a667d5aa0a9daae5abab91/carbon_txt-0.0.17.tar.gz", hash = "sha256:e70939db92aa7bd9aa666a3fe370f941a29c1c1ba81526c5ba473df6a14843cb", size = 2971935, upload-time = "2025-08-11T09:40:51.065Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/d1/85392978ad664ac23d91d87340f88449a05eea0b7587e01f593757799ee7/carbon_txt-0.0.18.tar.gz", hash = "sha256:b438a9ed5b68904a2c0e249e74a1cbd43e8feeec71c22d1481193dc539efe693", size = 2972334, upload-time = "2025-09-16T10:42:32.121Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/38/6c5f105e79ce4725649397632407fbdfbc649692b26193ccda5ef13f496b/carbon_txt-0.0.17-py3-none-any.whl", hash = "sha256:4cdaebb6b2cf52005a3329b16395747a01906d33a968a8bfad4b445631e87ab6", size = 40156, upload-time = "2025-08-11T09:40:49.475Z" },
+    { url = "https://files.pythonhosted.org/packages/00/90/7fcf85b222e7bca9a4c5c5115faeff9c899e1dfcdcaee0cd411e5c223348/carbon_txt-0.0.18-py3-none-any.whl", hash = "sha256:8fe5929d1725d2ce89b5be28c6069796097d647cf4c55e40b4ff15d482acd234", size = 40354, upload-time = "2025-09-16T10:42:30.523Z" },
 ]
 
 [[package]]

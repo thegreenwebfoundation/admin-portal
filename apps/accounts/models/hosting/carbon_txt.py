@@ -140,7 +140,10 @@ class ProviderCarbonTxt(TimeStampedModel):
     @classmethod
     def _find_for_domain_uncached(cls, domain):
 
-        finder = FileFinder(http_timeout=settings.CARBON_TXT_RESOLUTION_TIMEOUT)
+        finder = FileFinder(
+            http_timeout=settings.CARBON_TXT_RESOLUTION_TIMEOUT,
+            http_user_agent=settings.CARBON_TXT_USER_AGENT,
+        )
         try:
             result = finder.resolve_domain(domain)
             if result:
