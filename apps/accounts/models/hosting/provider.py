@@ -317,9 +317,9 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         populate the list of available evidence in the carbon.txt wizard.
         """
         return self.supporting_documents.filter(
-            Q(public = True) &
-            Q(valid_from__lte = Now()) &
-            Q(valid_to__gte = Now())
+                public = True,
+                valid_from__lte = Now(),
+                valid_to__gte = Now(),
         ).all()
 
     @property
@@ -611,7 +611,7 @@ class NonArchivedEvidenceManager(models.Manager):
     """
 
     def get_queryset(self) -> models.QuerySet:
-        return super().get_queryset().filter(archived=False)
+        return super().get_queryset().filter(archived=False).order_by("valid_to")
 
 
 class HostingProviderSupportingDocument(AbstractSupportingDocument):

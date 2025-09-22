@@ -17,7 +17,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         Deletes all Carbon.txt domain result cache entries which were
-        modified more than CARBON_TXT_CACHE_TTL seconds ago
+        modified more than CARBON_TXT_CACHE_TTL seconds ago - set in an environment
+        variable and defaulting to 24 hours.
         """
         CarbonTxtDomainResultCache.sweep_cache()
 
