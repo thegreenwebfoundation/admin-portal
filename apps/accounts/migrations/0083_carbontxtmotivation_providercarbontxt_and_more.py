@@ -179,7 +179,4 @@ class Migration(migrations.Migration):
             """,
         ),
         migrations.RunPython(set_carbon_txt_urls),
-        migrations.DeleteModel(
-            name="LinkedDomain",
-        ),
     ]
