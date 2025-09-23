@@ -2,7 +2,7 @@ from enum import StrEnum
 from datetime import datetime, timedelta
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 from taggit import models as tag_models
@@ -132,9 +132,13 @@ class ProviderCarbonTxt(TimeStampedModel):
             return cached_domain.carbon_txt
         else:
             carbon_txt = cls._find_for_domain_uncached(domain)
-            CarbonTxtDomainResultCache.objects.filter(domain=domain).delete()
-            cached_domain = CarbonTxtDomainResultCache(domain=domain, carbon_txt=carbon_txt)
-            cached_domain.save()
+            # We need to wrap this in a transaction to ensure that we don't get two
+            # threads trying to create the same cache entry at once and failing because
+            # of the uniqueness constraint on the domain name
+            with transaction.atomic():
+                CarbonTxtDomainResultCache.objects.filter(domain=domain).delete()
+                cached_domain = CarbonTxtDomainResultCache(domain=domain, carbon_txt=carbon_txt)
+                cached_domain.save()
             return carbon_txt
 
     @classmethod
