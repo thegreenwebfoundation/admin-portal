@@ -85,7 +85,7 @@
           }
         - {
             name: "sweep carbon.txt domain cache STDERR",
-            path: "/var/log/sweep_carbon_txt_domain_cach.error.log",
+            path: "/var/log/sweep_carbon_txt_domain_cache.error.log",
           }
       tags: [ip-importers, green-domains-exporter]
 
