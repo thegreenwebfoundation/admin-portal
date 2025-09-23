@@ -8,12 +8,10 @@ from rest_framework import permissions, views
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.response import Response
 
-from apps.accounts.models import LinkedDomain, Hostingprovider
-from apps.greencheck.models.checks import CO2Intensity, GreenDomain
+from apps.greencheck.models.checks import CO2Intensity
 
 from ..serializers import (
     CO2IntensitySerializer,
-    LinkedDomainSerializer,
     ProviderSharedSecretSerializer,
 )
 from . import exceptions

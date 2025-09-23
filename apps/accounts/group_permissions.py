@@ -155,11 +155,21 @@ ADMIN_PERMS= [
     "change_verificationbasis",
     "view_verificationbasis",
     "delete_verificationbasis",
-    ## Can administer linked domains
-    "add_linkeddomain",
-    "change_linkeddomain",
-    "view_linkeddomain",
-    "delete_linkeddomain",
+    ## Can administer carbon.txt motivations
+    "add_carbontxtmotivation",
+    "change_carbontxtmotivation",
+    "view_carbontxtmotivation",
+    "delete_carbontxtmotivation",
+    ## Can administer provider carbon.txt motivations
+    "add_providercarbontxtmotivation",
+    "change_providercarbontxtmotivation",
+    "view_providercarbontxtmotivation",
+    "delete_providercarbontxtmotivation",
+    ## Can administer provider carbon.txts
+    "add_providercarbontxt",
+    "change_providercarbontxt",
+    "view_providercarbontxt",
+    "delete_providercarbontxt",
     ## Can administer greendomains
     "add_greendomain",
     "change_greendomain",

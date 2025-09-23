@@ -1,0 +1,14 @@
+
+{% extends "provider_portal/carbon_txt/base.html" %}
+
+{% block content_section %}
+{% include "provider_portal/carbon_txt/partials/steps.html" with active_step=4 %}
+{% include "provider_portal/carbon_txt/partials/primary_domain.html" with provider=provider show_check_button=True %}
+{% include "provider_portal/carbon_txt/partials/carbon_txt_badge.html" with provider=provider %}
+<h3>Test carbon.txt sharing</h3>
+<p>
+Test your customer domains using the checker below to verify that you have set up carbon.txt sharing correctly, and that all the domains you host link to you. If {{provider.name}} is not listed as the hosting provider, you can <a href="?setup_delegation=1">return to the setup instructions</a> for troubleshooting.
+</p>
+{% include "provider_portal/carbon_txt/partials/embedded_greenchecker.html" %}
+{% endblock content_section %}
+

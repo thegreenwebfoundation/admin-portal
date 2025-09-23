@@ -218,3 +218,7 @@ ul.errorlist {
 .form__evidence--field-file:has(input[type="file"]) {
   overflow: auto;
 }
+
+.small-labels label {
+  font-size: 1rem;
+}

@@ -35,7 +35,6 @@ from ...models import (
     HostingProviderNote,
     HostingProviderSupportingDocument,
     Label,
-    LinkedDomain,
     Service,
     SupportMessage,
     VerificationBasis,
@@ -86,13 +85,6 @@ class LabelAdmin(admin.ModelAdmin):
 
     class Meta:
         verbose_name = "Provider Label"
-
-@admin.register(LinkedDomain, site=greenweb_admin)
-class LinkedDomainAdmin(admin.ModelAdmin):
-    list_display = ("domain", "state", "provider", "is_primary", "active",  "created")
-    search_fields = ("domain", "provider__name", "state")
-    ordering = ("domain", "provider__name", "state", "is_primary", "active", "created")
-
 
 @admin.register(SupportMessage, site=greenweb_admin)
 class SupportMessageAdmin(admin.ModelAdmin):
@@ -515,6 +507,7 @@ class HostingAdmin(
             "greencheckip_set",
             "services",
             "verification_bases",
+            "carbon_txt_motivations",
         ).annotate(models.Count("greencheckip"))
 
         if not request.user.is_admin:
@@ -537,6 +530,7 @@ class HostingAdmin(
                         "city",
                         "services",
                         "verification_bases",
+                        "carbon_txt_motivations",
                         "created_by",
                         "is_listed",
                     )

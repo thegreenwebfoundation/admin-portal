@@ -40,6 +40,9 @@ env = environ.Env(
         str,
         os.getenv("TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS"),
     ),
+    CARBON_TXT_RESOLUTION_TIMEOUT = (float, os.getenv("CARBON_TXT_RESOLUTION_TIMEOUT")),
+    CARBON_TXT_CACHE_TTL = (int, os.getenv("CARBON_TXT_CACHE_TTL")),
+    CARBON_TXT_USER_AGENT = (str, os.getenv("CARBON_TXT_USER_AGENT")),
 )
 
 # in some cases we don't have a .env file to work from - the environment
@@ -344,6 +347,17 @@ CARBON_TXT_VALIDATOR_UI_URL = env(
     "CARBON_TXT_VALIDATOR_UI_URL", default="https://carbontxt.org/tools/validator"
 )
 
+CARBON_TXT_RESOLUTION_TIMEOUT = env(
+    "CARBON_TXT_RESOLUTION_TIMEOUT", default=1.0
+)
+
+CARBON_TXT_CACHE_TTL = env(
+    "CARBON_TXT_CACHE_TTL", default=60*60*24
+)
+
+CARBON_TXT_USER_AGENT = env(
+        "CARBON_TXT_USER_AGENT", default="GreenWebChecker/1.0 (https://www.thegreenwebfoundation.org/green-web-checker-faq/)"
+)
 
 RABBITMQ_URL = env("RABBITMQ_URL", default=None)
 

@@ -37,7 +37,7 @@ from ipwhois.net import Net
 
 from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
-from ..accounts.models import LinkedDomain
+from ..accounts.models import ProviderCarbonTxt
 
 logger = logging.getLogger(__name__)
 
@@ -57,21 +57,19 @@ class GreenDomainChecker:
         try:
             fetched_tld = tld.get_tld(url, fix_protocol=True)
             has_valid_tld = tld.is_tld(fetched_tld)
+            if has_valid_tld:
+                # note: we fetch this "as an object" this time
+                res = tld.get_tld(url, fix_protocol=True, as_object=True)
+                return res.parsed_url.netloc
         except tld.exceptions.TldDomainNotFound:
-            return ""
-
-        # looks like a domain
-        if has_valid_tld:
-            # note: we fetch this "as an object" this time
-            res = tld.get_tld(url, fix_protocol=True, as_object=True)
-            return res.parsed_url.netloc
+            pass
 
         # not a domain, try ip address, ending early if not
         try:
             ipaddress.ip_address(url)
         except ValueError:
             # not an ip address either, return an empty result
-            return ""
+            return None
 
         parsed_url = urllib.parse.urlparse(url)
         if not parsed_url.netloc:
@@ -80,13 +78,13 @@ class GreenDomainChecker:
             parsed_url = urllib.parse.urlparse(f"//{url}")
         return parsed_url.netloc
 
-    def perform_full_lookup(self, domain: str) -> GreenDomain:
+    def perform_full_lookup(self, domain: str, refresh_carbon_txt_cache : bool = False) -> GreenDomain:
         """
         Return a Green Domain object from doing a lookup.
         """
         from .models import GreenDomain
 
-        res = self.check_domain(domain)
+        res = self.check_domain(domain, refresh_carbon_txt_cache=refresh_carbon_txt_cache)
 
         if not res.green:
             return GreenDomain.grey_result(domain=res.url)
@@ -102,6 +100,9 @@ class GreenDomainChecker:
         Accept an domain or IP address, and return extended information
         about it, like extended whois data, and any relevant sitecheck
         or green domain objects.
+
+        An extended greencheck ALWAYS refreshes the carbon.txt cache to make sure
+        that the returned result is accurate.
         """
         try:
             ip_address = self.convert_domain_to_ip(domain_to_check)
@@ -111,9 +112,9 @@ class GreenDomainChecker:
             logger.warning(f"Unable to lookup domain: {domain_to_check} - error: {err}")
 
         # fetch our sitecheck object
-        site_check = self.check_domain(domain_to_check)
+        site_check = self.check_domain(domain_to_check, refresh_carbon_txt_cache=True)
         # fetch our GreendDomain object
-        green_domain = self.perform_full_lookup(domain_to_check)
+        green_domain = self.perform_full_lookup(domain_to_check, refresh_carbon_txt_cache=True)
 
         # carry out our extended whois lookup
         whois_lookup = ipwhois.IPWhois(ip_address)
@@ -223,41 +224,30 @@ class GreenDomainChecker:
             checked_at=timezone.now(),
         )
 
-    def check_via_linked_domain(self, domain) -> typing.Optional[LinkedDomain]:
-        """
-        Check against domains linked by providers using carbon.txt
-        """
-        linked_domain = LinkedDomain.get_for_domain(domain)
-        if linked_domain:
-            provider = linked_domain.provider
-            if provider and provider.counts_as_green:
-                return linked_domain
-
-    def green_sitecheck_by_linked_domain(
-        self, domain: str, matching_linked_domain: LinkedDomain
-    ):
+    def green_sitecheck_by_carbon_txt(
+            self, domain: str, refresh_cache : bool = False
+    ) -> typing.Optional[SiteCheck]:
         """
         Return a green site check, based the information we
         are showing via linked domains for a provider
+        calls to find_for_domain are cached internally for
+        CARBON_TXT_CACHE_TTL seconds (defaults to 24 hours)
         """
-        return SiteCheck(
-            url=domain,
-            ip=None,
-            data=True,
-            green=True,
-            hosting_provider_id=matching_linked_domain.provider_id,
-            # NOTE: we use WHOIS for now, as a way to decouple
-            # an expensive and risky migration from the rest of
-            # this carbon.txt work. See this issue for more:
-            # https://github.com/thegreenwebfoundation/admin-portal/issues/198
-            # match_type=GreenlistChoice.CARBONTXT.value,
-            match_type=GreenlistChoice.WHOIS.value,
-            match_ip_range=None,
-            cached=False,
-            checked_at=timezone.now(),
-        )
+        if carbon_txt := ProviderCarbonTxt.find_for_domain(domain, refresh_cache=refresh_cache):
+            if carbon_txt.is_valid and carbon_txt.provider.counts_as_green:
+                return SiteCheck(
+                    url=domain,
+                    ip=None,
+                    data=True,
+                    green=True,
+                    hosting_provider_id=carbon_txt.provider_id,
+                    match_type=GreenlistChoice.CARBONTXT.value,
+                    match_ip_range=None,
+                    cached=False,
+                    checked_at=timezone.now(),
+                )
 
-    def check_domain(self, domain: str) -> SiteCheck:
+    def check_domain(self, domain: str, refresh_carbon_txt_cache : bool = False) -> SiteCheck:
         """
         Accept a domain name and return either a GreenDomain Object,
         the best matching IP range for the ip address it resolves to,
@@ -265,9 +255,8 @@ class GreenDomainChecker:
         """
         UNRESOLVED_ADDRESS = "0.0.0.0"
 
-        if linked_domain := self.check_via_linked_domain(domain):
-            return self.green_sitecheck_by_linked_domain(domain, linked_domain)
-
+        if carbon_txt_sitecheck := self.green_sitecheck_by_carbon_txt(domain, refresh_cache=refresh_carbon_txt_cache):
+            return carbon_txt_sitecheck
         try:
             ip_address = self.convert_domain_to_ip(domain)
         except (ipaddress.AddressValueError, socket.gaierror):

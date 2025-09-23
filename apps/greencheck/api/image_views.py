@@ -24,7 +24,10 @@ def greencheck_image(request, url):
     # hits an app server
     skip_cache = request.GET.get("nocache") == "true"
 
-    checked_domain = GreenDomain.check_for_domain(domain, skip_cache)
+    # Always use the carbon.txt domain cache, even when nocache is set - historically
+    # we have provided embed urls to end users with the nocache flag set, but we definitely don't
+    # want every request for a badge image to result in an HTTP request to the domain in question.
+    checked_domain = GreenDomain.check_for_domain(domain, skip_cache, refresh_carbon_txt_cache=False)
     green = checked_domain and checked_domain.green
 
     if green:

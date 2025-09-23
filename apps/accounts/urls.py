@@ -13,10 +13,7 @@ from apps.accounts.views import (
     ProviderRequestDetailView,
     ProviderRequestWizardView,
     ProviderAutocompleteView,
-    ProviderDomainsView,
-    ProviderDomainCreateView,
-    ProviderDomainDetailView,
-    ProviderDomainDeleteView,
+    ProviderCarbonTxtView,
 )
 
 urlpatterns = [
@@ -156,30 +153,8 @@ urlpatterns = [
         name="before-starting",
     ),
     path(
-        "providers/<int:provider_id>/domains/",
-        ProviderDomainsView.as_view(),
-        name="provider-domain-index",
-    ),
-    path(
-        "providers/<int:provider_id>/domains/new",
-        ProviderDomainCreateView.as_view(
-            ProviderDomainCreateView.FORMS,
-        ),
-        name="provider-domain-create",
-    ),
-    path(
-        "providers/<int:provider_id>/domains/<str:domain>",
-        ProviderDomainDetailView.as_view(),
-        name="provider-domain-detail",
-    ),
-    path(
-        "providers/<int:provider_id>/domains/<str:domain>/delete",
-        ProviderDomainDeleteView.as_view(),
-        name="provider-domain-delete",
-    ),
-    path(
-        "domain-claim/",
-        ProviderPortalHomeView.as_view(),
-        name="provider_domain_claim",
-    ),
+        "providers/<int:provider_id>/carbon_txt/",
+        ProviderCarbonTxtView.as_view(),
+        name="provider-carbon-txt"
+    )
 ]

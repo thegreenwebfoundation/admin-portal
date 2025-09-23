@@ -24,6 +24,7 @@ from .api.asn_viewset import ASNViewSet  # noqa
 
 # from ...accounts.models import ac_models
 from . import models as gc_models
+from ..accounts.models import CarbonTxtDomainResultCache
 from . import serializers as gc_serializers
 
 # import (
@@ -111,7 +112,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
         if log_check:
             log_domain_safely(domain)
-        return response.Response({"green": False, "url": domain, "data": False})
+
+        modified = CarbonTxtDomainResultCache.last_modified(domain)
+        return response.Response({"green": False, "url": domain, "data": False, "modified": modified })
 
     def return_green_response(self, instance, log_check=True):
         """
@@ -135,12 +138,12 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(instance)
         return response.Response(serializer.data)
 
-    def build_response_from_full_network_lookup(self, domain):
+    def build_response_from_full_network_lookup(self, domain, refresh_carbon_txt_cache):
         """
         Build a response
         """
         try:
-            res = checker.perform_full_lookup(domain)
+            res = checker.perform_full_lookup(domain, refresh_carbon_txt_cache=refresh_carbon_txt_cache)
             if res.green:
                 return self.return_green_response(res)
         except socket.gaierror:
@@ -171,7 +174,6 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         # means we won't have to worry about nginx caching our request before it
         # hits an app server
         skip_cache = request.GET.get("nocache") == "true"
-
         try:
             domain = self.checker.validate_domain(url)
         except Exception as ex:
@@ -191,7 +193,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             if not via_carbon_txt:
                 self.clear_from_caches(domain)
 
-            if http_response := self.build_response_from_full_network_lookup(domain):
+            if http_response := self.build_response_from_full_network_lookup(domain, refresh_carbon_txt_cache=skip_cache):
                 return http_response
 
         # Try the database green domain cache table first:
@@ -199,7 +201,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             return http_response
 
         # not in cache table cache, try full lookup using network
-        if http_response := self.build_response_from_full_network_lookup(domain):
+        if http_response := self.build_response_from_full_network_lookup(domain, refresh_carbon_txt_cache=skip_cache):
             return http_response
 
         # not in database or the cache, nor can we find it with

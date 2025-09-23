@@ -1,5 +1,4 @@
 import datetime
-import hashlib
 import logging
 import secrets
 import typing
@@ -7,8 +6,9 @@ from urllib.parse import urlparse
 from anymail.message import AnymailMessage
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models
+from django.db.models import Q
+from django.db.models.functions import Now
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -21,15 +21,14 @@ from guardian.shortcuts import get_users_with_perms
 from taggit import models as tag_models
 from taggit.managers import TaggableManager
 from model_utils.models import TimeStampedModel
+
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
 from ...permissions import manage_provider
-from ...validators import DomainNameValidator
 from ..choices import ModelType, PartnerChoice
 from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, Label
 
 logger = logging.getLogger(__name__)
-
 
 GREEN_VIA_CARBON_TXT = f"green:{GreenlistChoice.CARBONTXT.value}"
 
@@ -207,6 +206,11 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         through=ProviderVerificationBasis,
     )
 
+    carbon_txt_motivations = TaggableManager(
+        verbose_name="Motivations for using carbon.txt",
+        blank=True,
+        through="ProviderCarbonTxtMotivation",
+    )
     # this should not be exposed publicly to end users.
 
     # It's for internal use
@@ -306,6 +310,19 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
             return most_recent_evidence.first().valid_to
 
     @property
+    def valid_public_supporting_documents(self):
+        """
+        Return all publicly available (ie: marked as public, and with a non-null URL)
+        supporting documentents which are currently valid for this provider. Used to
+        populate the list of available evidence in the carbon.txt wizard.
+        """
+        return self.supporting_documents.filter(
+                public = True,
+                valid_from__lte = Now(),
+                valid_to__gte = Now(),
+        ).all()
+
+    @property
     def ip_range_count(self) -> int:
         """
         Convenience method for counting IP ranges.
@@ -338,25 +355,6 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
             return self.website
         else:
             return f"https://{self.website}"
-
-    @property
-    def primary_linked_domain(self) -> typing.Optional["LinkedDomain"]:
-        try:
-            return self.linkeddomain_set.valid.filter(
-                        is_primary=True,
-                    ).first()
-        except LinkedDomain.DoesNotExist:
-            pass
-
-    def linked_domain_for(self, domain: str) -> typing.Optional["LinkedDomain"]:
-        try:
-            return self.linkeddomain_set.valid.filter(
-                domain=domain,
-            ).first()
-        except LinkedDomain.DoesNotExist:
-                pass
-
-
 
     # Mutators
     def refresh_shared_secret(self) -> str:
@@ -436,10 +434,8 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         """
         active_green_ips = self.greencheckip_set.filter(active=True)
         active_green_asns = self.greencheckasn_set.filter(active=True)
-        active_linked_domains = self.linkeddomain_set.filter(active=True)
         active_green_ips.update(active=False)
         active_green_asns.update(active=False)
-        active_linked_domains.update(active=False)
 
         # When providers are archived, any domains they host cease to be green, so we should
         # Remove them from the cache of green domains. This ensures that the next time the are
@@ -489,6 +485,10 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         if a provider counts as green in multiple places
         """
         return (not self.archived)
+
+    @property
+    def has_carbon_txt(self):
+        return hasattr(self, "carbon_txt") and self.carbon_txt is not None
 
     def outstanding_approval_requests(self):
         """
@@ -611,7 +611,7 @@ class NonArchivedEvidenceManager(models.Manager):
     """
 
     def get_queryset(self) -> models.QuerySet:
-        return super().get_queryset().filter(archived=False)
+        return super().get_queryset().filter(archived=False).order_by("valid_to")
 
 
 class HostingProviderSupportingDocument(AbstractSupportingDocument):
@@ -711,113 +711,3 @@ class HostingproviderStats(models.Model):
         # managed = False
 
 
-class LinkedDomainState(models.TextChoices):
-    """
-    Status of a LinkedDomain, visible to staff and the associated provider.
-    Meaning of each value:
-    - PENDING_REVIEW: GWF staff need to verify the domain link
-    - APPROVED: GWF staff have verified the domain link
-    """
-    PENDING_REVIEW = "Pending review"
-    APPROVED = "Approved"
-
-class LinkedDomain(DirtyFieldsMixin, TimeStampedModel):
-    """
-    A linked domain asserts that a given domain is hosted by a given provider.
-    It is used to verify that a domain is hosted by a provider, and referred to when
-    the platform is looking up a specific domain to see if a provider has control over it.
-    """
-    class Manager(models.Manager):
-        @property
-        def valid(self):
-            """
-            valid LinkedDomains are both
-            1) APPROVED (in that they have been verified manually by GWF support), and
-            2) ACTIVE (in that they are not related to an archived Provider).
-            """
-            return self.filter(state=LinkedDomainState.APPROVED, active=True)
-
-    objects = Manager()
-
-    domain = models.CharField(max_length=255, unique=True, validators=[DomainNameValidator()])
-
-    provider = models.ForeignKey(
-        "Hostingprovider",
-        on_delete=models.CASCADE,
-    )
-
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-    )
-
-    is_primary = models.BooleanField(default=False, verbose_name="This domain represents this hosting provider itself.")
-
-    active = models.BooleanField(default=True)
-
-    state = models.CharField(
-        choices=LinkedDomainState.choices,
-        default=LinkedDomainState.PENDING_REVIEW,
-        max_length=255,
-    )
-
-
-    @classmethod
-    def get_for_domain(cls, domain : str) -> typing.Optional["LinkedDomain"]:
-        try:
-            return LinkedDomain.objects.valid.get(domain=domain)
-        except LinkedDomain.DoesNotExist:
-            return None
-
-    def _clear_cached_greendomains(self):
-        """
-        Make sure any previous greencheck results for this domain are cleared
-        """
-        from apps.greencheck.models import GreenDomain # Avoid circular import
-        GreenDomain.objects.filter(url=self.domain).delete()
-
-    def creation_callback(self):
-        from ...utils import send_email # Imported here to avoid circular import.
-        if self.created_by:
-            send_email(
-                address=self.created_by.email,
-                subject=f"Your domain link request: {self.domain} (provider: {self.provider})",
-                context={"provider": self.provider, "domain": self.domain},
-                template_html="emails/new-linked-domain-notify.html",
-                template_txt="emails/new-linked-domain-notify.txt",
-                bcc=settings.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS,
-            )
-
-    def state_change_callback(self, from_state, to_state):
-        transitioning_to_approved = (
-            from_state == LinkedDomainState.PENDING_REVIEW and
-            to_state == LinkedDomainState.APPROVED
-        )
-        if transitioning_to_approved:
-            self._clear_cached_greendomains()
-            if self.created_by:
-                from ...utils import send_email # Imported here to avoid circular import.
-                send_email(
-                    address=self.created_by.email,
-                    subject=f"Domain link request approved: {self.domain} (provider: {self.provider})",
-                    context={"provider": self.provider, "domain": self.domain},
-                    template_html="emails/approve-linked-domain-notify.html",
-                    template_txt="emails/approve-linked-domain-notify.txt",
-                    bcc=settings.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS,
-                )
-
-    def save(self, *args, **kwargs):
-        if self.pk is None:
-            self.creation_callback()
-        if self.is_dirty():
-            dirty_fields = self.get_dirty_fields()
-            if "state" in dirty_fields:
-                self.state_change_callback(dirty_fields["state"], self.state)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.domain} - {self.provider.name}"
-
-    class Meta:
-        verbose_name_plural = "Linked Domains"

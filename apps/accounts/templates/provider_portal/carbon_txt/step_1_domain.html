@@ -1,0 +1,13 @@
+{% extends "provider_portal/carbon_txt/base.html" %}
+
+{% block content_section %}
+  {% include "provider_portal/carbon_txt/partials/steps.html" with active_step=1 %}
+  <h3>Your primary domain</h3>
+  <p>
+Your <em>primary domain</em> is the domain where we will host the carbon.txt file we create for your business. You will need access to host files there, and ideally it should be the main website that represents your business.
+  </p>
+{% endblock content_section %}
+
+{% block submit_button_text %}
+  Save and continue to create your carbon.txt file
+{% endblock submit_button_text %}

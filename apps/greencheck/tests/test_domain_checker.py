@@ -20,81 +20,57 @@ def checker():
     return domain_check.GreenDomainChecker()
 
 class TestDomainChecker:
-    def test_with_green_domain_by_linked_domain_and_green_provider(self, hosting_provider_factory, linked_domain_factory, checker):
+
+    @mock.patch("apps.greencheck.domain_check.ProviderCarbonTxt")
+    def test_with_green_domain_by_carbon_txt(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):
         """
-        A valid hosting provider and linked domain produce a green result
+        Given a domain with a valid carbon.txt and unarchived provider,
+        do we return a green sitecheck?
         """
 
-        #GIVEN a provider which is shown on the website and not archived
-        #AND an approved LinkedDomain for that provider
-        provider = hosting_provider_factory.create(country="DE", is_listed=True, archived=False)
-        ld = linked_domain_factory(
-            provider=provider,
-            domain="example.com",
-        )
-        # WHEN I perform a domain check for the linkeddomain
+        carbon_txt = provider_carbon_txt_factory(domain="example.com")
+        provider_carbon_txt_mock.find_for_domain.return_value = carbon_txt
+
         res = checker.check_domain("example.com")
-        # THEN the result is green
+
+        assert isinstance(res, legacy_workers.SiteCheck)
+        assert res.match_type == "carbontxt"
         assert res.green
 
-    def test_with_green_domain_by_linked_domain_and_hidden_provider(self, hosting_provider_factory, linked_domain_factory, checker):
+
+    @mock.patch("apps.greencheck.domain_check.ProviderCarbonTxt")
+    def test_with_grey_domain_by_invalid_carbon_txt(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):
         """
-        A hidden hosting provider with a linked domain produces a green result -
-        now we have linked domains, we need the ability to add "Green providers" who may
-        not be listed in the directory, as they don't actually provide hosting services
-        to third parties
+        Given a domain with an invalid carbon.txt and unarchived provider,
+        do we return a grey sitecheck?
         """
 
-        #GIVEN a provider which is not shown on the website
-        #AND an approved LinkedDomain for that provider
-        provider = hosting_provider_factory.create(country="DE", is_listed=False, archived=False)
-        ld = linked_domain_factory(
-            provider=provider,
-            domain="example.com",
-        )
+        carbon_txt = provider_carbon_txt_factory(domain="example.com", carbon_txt_url=None)
+        provider_carbon_txt_mock.find_for_domain.return_value = carbon_txt
 
-        # WHEN I perform a domain check for the linkeddomain
         res = checker.check_domain("example.com")
 
-        # THEN the result is green
-        assert res.green
-
-    def test_with_grey_domain_by_linked_domain_and_archived_provider(self, hosting_provider_factory, linked_domain_factory, checker):
-        """
-        An archived hosting provider with a linked domain produces a grey result
-        """
-
-        #GIVEN a provider which is archived
-        #AND an approved LinkedDomain for that provider
-        provider = hosting_provider_factory.create(country="DE", is_listed=True, archived=True)
-        ld = linked_domain_factory(
-            provider=provider,
-            domain="example.com",
-        )
-
-        # WHEN I perform a domain check for the linkeddomain
-        res = checker.check_domain("example.com")
-
-        # THEN the result is grey
+        assert isinstance(res, legacy_workers.SiteCheck)
+        assert res.match_type == "ip"
         assert not res.green
 
-    def test_with_grey_domain_by_pending_linked_domain(self, hosting_provider_factory, linked_domain_factory, checker):
+    @mock.patch("apps.greencheck.domain_check.ProviderCarbonTxt")
+    def test_with_grey_domain_by_valid_carbon_txt_with_archived_provider(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):
         """
-            A green provider with a pending linked domain produces a grey result
+        Given a domain with a valid carbon.txt and archived provider,
+        do we return a grey sitecheck?
         """
 
-        #GIVEN a provider which is valid and green
-        #AND an pending LinkedDomain for that provider
-        provider = hosting_provider_factory.create(country="DE", is_listed=True, archived=False)
-        ld = linked_domain_factory(
-            provider=provider,
-            domain="example.com",
-            state=ac_models.LinkedDomainState.PENDING_REVIEW,
-        )
-        # WHEN I perform a domain check for the linkeddomain
+        carbon_txt = provider_carbon_txt_factory(domain="example.com")
+        carbon_txt.provider.archived = True
+        carbon_txt.provider.save()
+
+        provider_carbon_txt_mock.find_for_domain.return_value = carbon_txt
+
         res = checker.check_domain("example.com")
 
-        # THEN the result is grey
+        assert isinstance(res, legacy_workers.SiteCheck)
+        assert res.match_type == "ip"
         assert not res.green
 
 
@@ -219,6 +195,87 @@ class TestDomainChecker:
         res = checker.check_domain("100.113.75.254")
 
         assert isinstance(res, legacy_workers.SiteCheck)
+
+
+class TestDomainCheckerCarbonTxtCacheBehaviour:
+
+
+    @mock.patch("apps.accounts.models.hosting.carbon_txt.ProviderCarbonTxt")
+    def test_with_cached_green_domain_by_carbon_txt(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):
+        """
+        WHEN I query a domain with a valid carbon.txt and unarchived provider,
+        AND I do not explicitly refresh the domain cache
+        THEN the cached carbon.txt result should be used.
+        """
+
+        carbon_txt = provider_carbon_txt_factory(domain="example.com")
+        provider_carbon_txt_mock._find_for_domain_uncached.return_value = carbon_txt
+
+        checker.check_domain("example.com")
+
+        old_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        checker.check_domain("example.com")
+
+        new_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        assert old_modified == new_modified
+
+    @mock.patch("apps.accounts.models.hosting.carbon_txt.ProviderCarbonTxt")
+    def test_with_uncached_green_domain_by_carbon_txt(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):
+        """
+        WHEN I query a domain with a valid carbon.txt and unarchived provider,
+        AND I do explicitly refresh the domain cache
+        THEN the cached carbon.txt result should not be used.
+        """
+
+        carbon_txt = provider_carbon_txt_factory(domain="example.com")
+        provider_carbon_txt_mock._find_for_domain_uncached.return_value = carbon_txt
+
+        checker.check_domain("example.com")
+
+        old_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        checker.check_domain("example.com", refresh_carbon_txt_cache=True)
+
+        new_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        assert old_modified < new_modified
+
+    def test_with_cached_grey_domain_by_carbon_txt(self, checker):
+        """
+        WHEN I query a domain without a valid carbon.txt,
+        AND I do not explicitly refresh the domain cache
+        THEN the cached null carbon.txt result should be used.
+        """
+
+        checker.check_domain("example.com")
+
+        old_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        checker.check_domain("example.com")
+
+        new_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        assert old_modified == new_modified
+
+    def test_with_uncached_grey_domain_by_carbon_txt(self, checker):
+        """
+        WHEN I query a domain without a valid carbon.txt,
+        AND I do explicitly refresh the domain cache
+        THEN the cached null carbon.txt result should not be used.
+        """
+
+        checker.check_domain("example.com")
+
+        old_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        checker.check_domain("example.com", refresh_carbon_txt_cache=True)
+
+        new_modified = ac_models.CarbonTxtDomainResultCache.objects.filter(domain="example.com").first().modified
+
+        assert old_modified < new_modified
+
 
 
 class TestDomainCheckerOrderBySize:
