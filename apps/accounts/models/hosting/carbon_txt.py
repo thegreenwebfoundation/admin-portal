@@ -127,6 +127,8 @@ class ProviderCarbonTxt(TimeStampedModel):
         load on the greenchecker API endpoint, and also to ensure we don't DOS the servers being
         checked. The cache can be busted with the refresh_cache argument.
         """
+        if domain is None:
+            return
         cached_domain = CarbonTxtDomainResultCache.objects.filter(domain=domain).first()
         if cached_domain and not refresh_cache:
             return cached_domain.carbon_txt
