@@ -141,7 +141,7 @@
       # Note: when changing the schedule here, be sure to update the sentry configuration
     # in apps/accounts/management/commands/sweep_carbon_txt_domain_cache.py to match,
     # otherwise we risk getting spurious error alerts.
-    - name: Ensure job to export green domains is present
+    - name: Ensure job to sweep carbon.txt domain cache
       ansible.builtin.cron:
         name: "hour at ten past the hour  sweep the carbon.txt cache"
         state: present
