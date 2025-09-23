@@ -26,14 +26,14 @@
     project_finalize: true
 
     # setting this to true will fetch the latest version of nodejs
-    install_node: false
+    install_node: true
     # run an update of our front end dependencies as part of the deploy. This is better
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
     update_front_end_deps: true
 
     # create new dotenv file in shared directory (use when adding new env vars)
-    update_dotenv: false
+    update_dotenv: true
 
     service_restart: true
     service_user: "deploy"
@@ -43,7 +43,8 @@
     compile_assets: true
 
     # See "dramatiq_threads" and "dramatiq_processes"
-    # in the inventory
+    # in the inventory to set specific numbers of
+    # processes and threads
 
   roles:
     - f500.project_deploy
