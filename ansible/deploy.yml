@@ -26,7 +26,7 @@
     project_finalize: true
 
     # setting this to true will fetch the latest version of nodejs
-    install_node: true
+    install_node: false
     # run an update of our front end dependencies as part of the deploy. This is better
     # handled in source control, but if the front end will not build in deployment, this
     # is a workaround
