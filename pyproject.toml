@@ -79,6 +79,7 @@ dependencies = [
 
 [tool.uv]
 dev-dependencies = [
+    "ansible-core~=2.17.14",
     "ansible-lint>=6.8.7",
     "black>=24.10.0",
     "coverage>=7.6.4",
