@@ -1,6 +1,18 @@
 
+  {% if active_step == 1 %}
   <p><strong>Problems with your Green Web Check results showing the wrong hosting provider name?</strong>
     This solution using carbon.txt is for you. It has three key steps:</p>
+  {% elif active_step == 2 %}
+    <p><strong>Your primary domain has been set succesfully.</strong>
+    You can now move on create and upload your carbon.txt file, which will ensure that the Green Web Check shows the correct provider for your primary domain.</p>
+  {% elif active_step == 3 %}
+    <p><strong>We've succesfully validated your carbon.txt file.</strong>
+    The website at your primary domain should now show the correct provider in the Green Web Check.</p>
+    <p>Finally, we'll configure your customer domains to point to the carbon.txt you just created, so that they are also correctly attributed to you.</p>
+  {% else %}
+    <p><strong>Congratulations, you've successfully set up carbon.txt!</strong>
+    All your domains should now show the correct provider name in Green Web Check - you can verify this using the form below.</p>
+  {% endif %}
 
   <ol>
     <li class="{% if active_step == 1 %}font-bold{% else %}text-neutral-500{% endif %}">
@@ -17,6 +29,20 @@
     </li>
   </ol>
 
+  {% if active_step == 1 %}
+  <p><strong>To complete the process, you will need to:</strong></p>
+  <ul>
+    <li>
+      Have the ability/permission to upload a carbon.txt file to your main business site.
+    </li>
+    <li>
+      Know what public sustainability disclosures your organisation has already made and at what URLs – our portal can help with this.
+    </li>
+    <li>
+      Have the ability to set an HTTP header or DNS TXT record for any other domains you host.
+    </li>
+  </ul>
+  {% endif %}
   <p>
-  <a href="#"> What problems does carbon.txt solve?</a> | <a href="#">Overview of the process</a> | <a href="#">Background on carbon.txt</a>
+  <a href="https://www.thegreenwebfoundation.org/support/using-carbon-txt-to-improve-green-web-check-results/" target="_blank"> What problems does carbon.txt solve?</a> | <a href="https://www.thegreenwebfoundation.org/support/using-carbon-txt-to-improve-green-web-check-results/#overview" target="_blank">Overview of the process</a> | <a href="https://carbontxt.org" target="_blank">Background on carbon.txt</a>
   </p>
