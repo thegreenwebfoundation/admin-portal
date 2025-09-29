@@ -33,8 +33,7 @@ class CarbonTxtStep1Form(forms.Form):
         label=mark_safe(
             """
                 <span class='text-base leading-none block mb-3'>
-                    Tell us a little bit about your business.
-                    This will help us tailor the rest of this process to your specific needs.
+                    Do any of the following situations apply to you?
                 </span>
             """
         ),

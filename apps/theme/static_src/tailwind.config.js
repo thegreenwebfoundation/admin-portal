@@ -91,7 +91,7 @@ module.exports = {
 					900: '#2E4F81',
 					DEFAULT: '#0066FF',
 				},
-            },			
+            },
 			fontFamily: {
 				sans: ['TWKEverett', 'sans-serif'],
 				serif: ['TWKEverett', 'serif'],
@@ -125,6 +125,12 @@ module.exports = {
 							fontSize: theme('fontSize.2xl'),
 							fontWeight: 400,
 						},
+            'code::before': {
+              content: '""'
+            },
+            'code::after': {
+              content: '""'
+            },
 					},
 				},
 			}),

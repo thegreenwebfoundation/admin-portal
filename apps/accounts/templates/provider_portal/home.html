@@ -38,12 +38,6 @@
 
 		<h3 class="text-xl pt-10">Your verified providers</h3>
 
-		{% flag "verified_domains" %}
-			<div class="alert__warning not-prose">
-        <p>Your name missing in Green Web Check? <a href="https://carbontxt.org" target="_blank">carbon.txt</a> makes sure your hosted domains show up as yours. Click <strong>setup carbon.txt</strong> below to start.</p>
-			</div>
-		{% endflag %}
-
     {% if request.user.is_admin %}
 			<div class="alert__warning">
 				<p>You belong to the admin group, which gives you permission to manage all providers in the database.

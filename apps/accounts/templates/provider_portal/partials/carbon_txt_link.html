@@ -1,0 +1,14 @@
+{% load guardian_tags waffle_tags static %}
+{% get_obj_perms request.user for provider as "provider_perms" %}
+{% flag "verified_domains" %}
+  {% if "manage_provider" in provider_perms %}
+    <img class="my-0 mr-1 inline-block" width="14" height="14" src="{% static 'img/carbontxt-logo.svg' %}" alt="carbon.txt logo"/>
+    <a class="text-sm" href="{% url 'provider-carbon-txt' provider.id %}">
+      {% if provider.has_carbon_txt %}
+        Setup carbon.txt for your domains
+      {% else %}
+        Fix provider name for your hosted domains
+      {% endif %}
+    </a>
+  {% endif %}
+{% endflag %}
