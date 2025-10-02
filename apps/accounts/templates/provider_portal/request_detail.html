@@ -50,13 +50,15 @@
               </div>
             </div>
           </div>
+        {% else %}
+          {% include "provider_portal/partials/carbon_txt_link.html" with provider=object %}
         {% endif %}
 
       </header>
 
       <article class="pb-12">
 
-        <h2>Details submitted</h2>
+        <h2 class="mt-7">Details submitted</h2>
 
         <h3 class="text-2xl">About this provider</h3>
         <table class="table-fixed">

@@ -12,14 +12,8 @@ Create a carbon.txt file containing key evidence or documentation of your commit
 <p>
 Your carbon.txt file collates links to your organization's key public sustainability documents, such as sustainability or CSR declarations, annual reports, or renewable energy certificates, and must contain at least one link.
 </p>
-{% if provider.valid_public_supporting_documents|length > 0 %}
-  <p>
-  Below is a table of the public supporting documentation you provided to us when you registered as a verified green provider, for you to consider including in your carbon.txt file.
-  </p>
 
-  {% include "provider_portal/carbon_txt/partials/supporting_documentation.html" with provider=provider %}
-
-{% endif %}
+{% include "provider_portal/carbon_txt/partials/supporting_documentation.html" with provider=provider %}
 
 <p>
   <a target="_blank" href="https://carbontxt.org/tools/builder" class="btn btn-sm btn-white mt-4 mb-4 w-full">
