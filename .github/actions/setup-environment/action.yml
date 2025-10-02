@@ -43,7 +43,7 @@ runs:
         shell: bash
         run: |
           uv venv
-          uv sync
+          uv sync --locked
 
       - name: Eco CI Energy Estimation - Get Measurement
         uses: green-coding-solutions/eco-ci-energy-estimation@v5

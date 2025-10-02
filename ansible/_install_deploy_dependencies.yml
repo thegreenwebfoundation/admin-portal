@@ -7,7 +7,7 @@
   tags: [uv]
 
 - name: Install python dependencies with uv
-  ansible.builtin.shell: /home/deploy/.local/bin/uv sync
+  ansible.builtin.shell: /home/deploy/.local/bin/uv sync --locked
   args:
     chdir: "{{ project_root }}/current"
     executable: "/usr/bin/bash"
