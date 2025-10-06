@@ -1,8 +1,8 @@
 from enum import StrEnum
 from datetime import datetime, timedelta
-
+from time import sleep
 from django.conf import settings
-from django.db import models, transaction
+from django.db import models, transaction, IntegrityError, OperationalError
 from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 from taggit import models as tag_models
@@ -114,7 +114,7 @@ class ProviderCarbonTxt(TimeStampedModel):
 
 
     @classmethod
-    def find_for_domain(cls, domain, refresh_cache=False):
+    def find_for_domain(cls, domain, refresh_cache=False, retry=False):
         """
         Method to identify if a valid provider carbon.txt exists for a given domain.
         First it performs a carbon.txt delegation lookup, attempting to resolve a canonical
@@ -137,11 +137,22 @@ class ProviderCarbonTxt(TimeStampedModel):
             # We need to wrap this in a transaction to ensure that we don't get two
             # threads trying to create the same cache entry at once and failing because
             # of the uniqueness constraint on the domain name
-            with transaction.atomic():
-                CarbonTxtDomainResultCache.objects.filter(domain=domain).delete()
-                cached_domain = CarbonTxtDomainResultCache(domain=domain, carbon_txt=carbon_txt)
-                cached_domain.save()
-            return carbon_txt
+            try:
+                with transaction.atomic():
+                    CarbonTxtDomainResultCache.objects.filter(domain=domain).delete()
+                    cached_domain = CarbonTxtDomainResultCache(domain=domain, carbon_txt=carbon_txt)
+                    cached_domain.save()
+                    return carbon_txt
+            except (OperationalError, IntegrityError) as e:
+                # In the case of a race, the second thread waits a short amount of time
+                # and retries WITHOUT refreshing the cache. We retry a maximum of one time.
+                if not retry:
+                    sleep(0.2)
+                    return cls.find_for_domain(domain, retry=True)
+                else:
+                    # In the case where the second lookup fails, we re-raise the error,
+                    # as this should never happen, and we should be alerted
+                    raise e
 
     @classmethod
     def _find_for_domain_uncached(cls, domain):
