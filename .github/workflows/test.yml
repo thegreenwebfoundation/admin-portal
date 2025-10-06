@@ -24,7 +24,7 @@ on:
 jobs:
   run_tests:
     environment: "${{ inputs.environment }}"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     permissions:
       pull-requests: write # this allows to show table and charts in PRs

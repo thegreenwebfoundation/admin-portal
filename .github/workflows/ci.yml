@@ -57,7 +57,7 @@ jobs:
   # is run on the *target* branch of the PR, we need to explicitly check this out, once we've
   # verified the user permissions, and manually reviewed the code.
   determine-user-role:
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-22.04
       outputs:
         is-collaborator: ${{ steps.check-collaborator.outputs.is-collaborator }}
         ref: ${{ steps.check-collaborator.outputs.ref }}
