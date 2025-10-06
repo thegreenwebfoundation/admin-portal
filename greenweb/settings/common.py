@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import os
 import environ
 import pathlib
+import structlog
 from dramatiq import middleware as dramatiq_middleware
 
 # Environ
@@ -423,15 +424,30 @@ LOGGING = {
         },
         "httpx": {
             "level": "WARNING",
+            "handlers": ["console"],
         },
         "httpcore": {
             "level": "WARNING",
+            "handlers": ["console"],
+        },
+        "pika": {
+            "level": "WARNING",
+            "handlers": ["console"],
         },
     },
 }
 
-SITE_URL = "https://admin.thegreenwebfoundation.org"
 
+# By default, the httpx library used in the Carbon.txt finder
+# logs colourful structlog "rich exceptions" which fill up our logs
+# and are pretty useless in this context. Therefore, we explicitly
+# use the default python plain traceback renderer.
+cr = structlog.dev.ConsoleRenderer(
+    exception_formatter=structlog.dev.plain_traceback
+)
+structlog.configure(processors=structlog.get_config()["processors"][:-1]+[cr])
+
+SITE_URL = "https://admin.thegreenwebfoundation.org"
 
 TAGGIT_CASE_INSENSITIVE = True
 
