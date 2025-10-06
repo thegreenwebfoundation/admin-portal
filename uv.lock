@@ -192,7 +192,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "ansible-core", specifier = "~=2.17.14" },
+    { name = "ansible-core", specifier = "<=2.18" },
     { name = "ansible-lint", specifier = ">=6.8.7" },
     { name = "black", specifier = ">=24.10.0" },
     { name = "coverage", specifier = ">=7.6.4" },
