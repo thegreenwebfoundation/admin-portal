@@ -114,7 +114,7 @@ class ProviderCarbonTxt(TimeStampedModel):
 
 
     @classmethod
-    def find_for_domain(cls, domain, refresh_cache=False):
+    def find_for_domain(cls, domain, refresh_cache=False, retry=False):
         """
         Method to identify if a valid provider carbon.txt exists for a given domain.
         First it performs a carbon.txt delegation lookup, attempting to resolve a canonical
@@ -143,11 +143,16 @@ class ProviderCarbonTxt(TimeStampedModel):
                     cached_domain = CarbonTxtDomainResultCache(domain=domain, carbon_txt=carbon_txt)
                     cached_domain.save()
                     return carbon_txt
-            except (OperationalError, IntegrityError):
+            except (OperationalError, IntegrityError) as e:
                 # In the case of a race, the second thread waits a short amount of time
-                # and retries WITHOUT refreshing the cache.
-                sleep(0.2)
-                return cls.find_for_domain(domain)
+                # and retries WITHOUT refreshing the cache. We retry a maximum of one time.
+                if not retry:
+                    sleep(0.2)
+                    return cls.find_for_domain(domain, retry=True)
+                else:
+                    # In the case where the second lookup fails, we re-raise the error,
+                    # as this should never happen, and we should be alerted
+                    raise e
 
     @classmethod
     def _find_for_domain_uncached(cls, domain):
