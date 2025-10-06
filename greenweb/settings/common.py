@@ -420,7 +420,13 @@ LOGGING = {
             # uncomment to see all queries
             # 'level': 'DEBUG',
             "handlers": ["console"],
-        }
+        },
+        "httpx": {
+            "level": "WARNING",
+        },
+        "httpcore": {
+            "level": "WARNING",
+        },
     },
 }
 
