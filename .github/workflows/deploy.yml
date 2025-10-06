@@ -14,7 +14,7 @@ on:
 jobs:
   deploy:
     environment: "${{ inputs.environment }}"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     env:
       ANSIBLE_STDOUT_CALLBACK: yaml

@@ -46,6 +46,19 @@
     # in the inventory to set specific numbers of
     # processes and threads
 
+  pre_tasks:
+    - name: Print Ansible version
+      debug:
+        msg: "Ansible version is  {{ ansible_version.full }}"
+
+    - name: Print python interpreter
+      debug:
+        msg: "Current python is  {{ ansible_playbook_python }}"
+
+    - name: Check Ansible version is less than 2.19
+      assert:
+        that: "{{ansible_version.full is version_compare('2.19', '<') }}"
+
   roles:
     - f500.project_deploy
 
