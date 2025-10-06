@@ -51,9 +51,13 @@
       debug:
         msg: "Ansible version is  {{ ansible_version.full }}"
 
-    - name: Check Ansible version is less than or equal to 2.18
+    - name: Print python interpreter
+      debug:
+        msg: "Current python is  {{ ansible_playbook_python }}"
+
+    - name: Check Ansible version is less than 2.19
       assert:
-        that: "{{ansible_version.full is version_compare('2.18', '<=') }}"
+        that: "{{ansible_version.full is version_compare('2.19', '<') }}"
 
   roles:
     - f500.project_deploy
