@@ -73,6 +73,8 @@ jobs:
         run: |
           source .venv/bin/activate
           python manage.py migrate --check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_READ_ONLY_PUBLIC }}
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
