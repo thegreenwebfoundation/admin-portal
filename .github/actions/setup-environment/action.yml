@@ -5,6 +5,11 @@
 
 name: 'Setup environment'
 description: 'Set up a test environment for the GWF admin portal'
+inputs:
+  python-version:
+    description: 'Version of python to install'
+    required: false
+    default: '3.12'
 runs:
   using: "composite"
   steps:
@@ -15,10 +20,10 @@ runs:
           label: "checkout"
         continue-on-error: true # Failing to estimate SCI doesn't mean a test failure.
 
-      - name: Use Python ${{ matrix.python-version }}
+      - name: Use Python ${{ inputs.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ inputs.python-version }}
 
       - name: Eco CI Energy Estimation - Get Measurement
         uses: green-coding-solutions/eco-ci-energy-estimation@v5

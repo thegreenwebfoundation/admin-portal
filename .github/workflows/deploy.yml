@@ -50,7 +50,6 @@ jobs:
       TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS: ${{ secrets.TRELLO_REGISTRATION_EMAIL_TO_BOARD_ADDRESS }}
       CARBON_TXT_RESOLUTION_TIMEOUT: ${{ secrets.CARBON_TXT_RESOLUTION_TIMEOUT }}
       CARBON_TXT_CACHE_TTL: ${{ secrets.CARBON_TXT_CACHE_TTL }}
-
     steps:
 
       - name: Eco CI Energy Estimation - Initialize
