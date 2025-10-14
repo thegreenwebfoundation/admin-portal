@@ -178,6 +178,44 @@ class GreenWebAdmin(AdminSite):
         }
         app_list.insert(0, verification_request_item)
 
+
+        # Display carbon.txt related apps in their own sublist, in order not to clutter the main accounts list!
+        accounts_app = next(app for app in app_list if app["app_label"] == "accounts")
+
+        provider_carbon_txt = next(
+                (model for model in accounts_app["models"] if model["object_name"] == "ProviderCarbonTxt"),
+                None
+        )
+        provider_carbon_txt_motivation = next(
+                (model for model in accounts_app["models"] if model["object_name"] == "ProviderCarbonTxtMotivation"),
+                None
+        )
+        carbon_txt_motivation = next(
+                (model for model in accounts_app["models"] if model["object_name"] == "CarbonTxtMotivation"),
+                None
+        )
+
+        carbon_txt_models = []
+
+        if provider_carbon_txt:
+            accounts_app["models"].remove(provider_carbon_txt)
+            carbon_txt_models.append(provider_carbon_txt)
+
+        if provider_carbon_txt_motivation:
+            accounts_app["models"].remove(provider_carbon_txt_motivation)
+            carbon_txt_models.append(provider_carbon_txt_motivation)
+
+        if carbon_txt_motivation:
+            accounts_app["models"].remove(carbon_txt_motivation)
+            carbon_txt_models.append(carbon_txt_motivation)
+
+        app_list.insert(2, {
+                "name": "Carbon.txt",
+                "app_label": "carbontxt",
+                "models": carbon_txt_models,
+            },
+        )
+
         app_list += [
             {
                 "name": "Try out greencheck",
