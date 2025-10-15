@@ -339,6 +339,9 @@ GOOGLE_DATASET_ENDPOINT = env(
     "GOOGLE_DATASET_ENDPOINT", default="https://www.gstatic.com/ipranges/cloud.json"
 )
 
+CLOUDFLARE_PROVIDER_ID = env("CLOUDFLARE_PROVIDER_ID", default=None)
+CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4 = env("CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4", default="https://www.cloudflare.com/ips-v4/")
+CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6 = env("CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6", default="https://www.cloudflare.com/ips-v6/")
 
 CARBON_TXT_VALIDATOR_API_ENDPOINT = env(
     "CARBON_TXT_VALIDATOR_API_ENDPOINT", default="https://carbon-txt-api.greenweb.org/api/validate/domain"
