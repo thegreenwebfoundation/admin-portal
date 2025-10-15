@@ -48,9 +48,14 @@ GUNICORN_THREADS={{ gunicorn_threads }}
 
 # Note: wrapping these values in strings means that when we have an empty values
 # django environ will see not a float like 0.0, but a an empty string, and throw an exception
-# TODO: consider failing when early when these are not set instead of sending 
+# TODO: consider failing when early when these are not set instead of sending
 # empty strings with the lookup('KEY', errors='strict') option
 # https://docs.ansible.com/ansible/latest/plugins/lookup.html#using-lookup-plugins
 
 CARBON_TXT_RESOLUTION_TIMEOUT="{{ lookup('env', 'CARBON_TXT_RESOLUTION_TIMEOUT') }}"
 CARBON_TXT_CACHE_TTL="{{ lookup('env', 'CARBON_TXT_CACHE_TTL') }}"
+
+CLOUDFLARE_PROVIDER_ID = "{{ lookup('env', 'CLOUDFLARE_PROVIDER_ID') }}"
+CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4 = "{{ lookup('env', 'CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4') }}"
+CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6 = "{{ lookup('env', 'CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6') }}"
+
