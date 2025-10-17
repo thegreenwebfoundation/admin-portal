@@ -21,6 +21,13 @@ EndOfMessage
     exit 2;
 fi
 
+if command -v mcli >/dev/null 2>&1
+then
+  mcli_command=mcli
+else
+  mcli_command=mc
+fi
+
 DATABASE_USER=$(echo $DATABASE_URL | grep -oP "mysql://\K(.+?):" | cut -d: -f1)
 DATABASE_PASSWORD=$(echo $DATABASE_URL | grep -oP "mysql://.*:\K(.+?)@" | cut -d@ -f1)
 DATABASE_HOST=$(echo $DATABASE_URL | grep -oP "mysql://.*@\K(.+?):" | cut -d: -f1)
@@ -45,7 +52,7 @@ if [ "$confirm_host" = "$DATABASE_HOST" ] && [ "$confirm_database" = "$DATABASE_
     printf "\nCloning database...\n"
     mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $DATABASE_HOST -P $DATABASE_PORT $DATABASE_NAME < $CLONE_FROM_DB_DUMP
     printf "Cloning S3 bucket...\n"
-    mcli mirror s3/$CLONE_FROM_OBJECT_STORAGE_BUCKET s3/$OBJECT_STORAGE_BUCKET_NAME --overwrite
+    $mcli_command mirror s3/$CLONE_FROM_OBJECT_STORAGE_BUCKET s3/$OBJECT_STORAGE_BUCKET_NAME --overwrite
     printf "Done!\n"
 else
     printf "\nAborting!\n"
