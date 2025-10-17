@@ -53,4 +53,9 @@ GUNICORN_THREADS={{ gunicorn_threads }}
 # https://docs.ansible.com/ansible/latest/plugins/lookup.html#using-lookup-plugins
 
 CARBON_TXT_RESOLUTION_TIMEOUT="{{ lookup('env', 'CARBON_TXT_RESOLUTION_TIMEOUT', errors='strict') }}"
-CARBON_TXT_CACHE_TTL="{{ lookup('env', 'CARBON_TXT_CACHE_TTL', errors='strict') }}"
+CARBON_TXT_CACHE_TTL="{{ lookup('env', 'CARBON_TXT_CACHE_TTL') }}"
+
+CLOUDFLARE_PROVIDER_ID = "{{ lookup('env', 'CLOUDFLARE_PROVIDER_ID') }}"
+CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4 = "{{ lookup('env', 'CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4') }}"
+CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6 = "{{ lookup('env', 'CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6') }}"
+

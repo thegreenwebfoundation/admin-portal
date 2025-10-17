@@ -121,7 +121,7 @@ requires-dist = [
     { name = "awscli", specifier = ">=1.35.20" },
     { name = "awscli-plugin-endpoint", specifier = ">=0.4" },
     { name = "boto3", specifier = ">=1.35.54" },
-    { name = "carbon-txt", specifier = "==0.0.18" },
+    { name = "carbon-txt", specifier = "==0.0.19" },
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "dateutils", specifier = ">=0.6.12" },
     { name = "db-to-sqlite", specifier = ">=1.5" },
@@ -676,7 +676,7 @@ wheels = [
 
 [[package]]
 name = "carbon-txt"
-version = "0.0.18"
+version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arelle-release" },
@@ -692,11 +692,12 @@ dependencies = [
     { name = "pydantic-extra-types" },
     { name = "rich" },
     { name = "sentry-sdk", extra = ["django"] },
+    { name = "tldextract" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8e/d1/85392978ad664ac23d91d87340f88449a05eea0b7587e01f593757799ee7/carbon_txt-0.0.18.tar.gz", hash = "sha256:b438a9ed5b68904a2c0e249e74a1cbd43e8feeec71c22d1481193dc539efe693", size = 2972334, upload-time = "2025-09-16T10:42:32.121Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/a6/41bd96b9b94ff45d1855bc2095d3120964a560d0278931f8c67ad9da4304/carbon_txt-0.0.19.tar.gz", hash = "sha256:3ca2648ed976e0ab170c559517596b934e9d06312ac2607e1414cd9cd2daa89a", size = 2976176, upload-time = "2025-10-13T09:55:51.318Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/90/7fcf85b222e7bca9a4c5c5115faeff9c899e1dfcdcaee0cd411e5c223348/carbon_txt-0.0.18-py3-none-any.whl", hash = "sha256:8fe5929d1725d2ce89b5be28c6069796097d647cf4c55e40b4ff15d482acd234", size = 40354, upload-time = "2025-09-16T10:42:30.523Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/a5/2d4a914c42fc672dc0c608c1f891bc83f419a4b748d7c7829c10ac352217/carbon_txt-0.0.19-py3-none-any.whl", hash = "sha256:35ad2332b354b1c81efab95b3b3acdfb5f85000068bb5b631545acc636e58d6b", size = 41269, upload-time = "2025-10-13T09:55:49.961Z" },
 ]
 
 [[package]]
@@ -3306,6 +3307,18 @@ wheels = [
 ]
 
 [[package]]
+name = "requests-file"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/72/97/bf44e6c6bd8ddbb99943baf7ba8b1a8485bcd2fe0e55e5708d7fee4ff1ae/requests_file-2.1.0.tar.gz", hash = "sha256:0f549a3f3b0699415ac04d167e9cb39bccfb730cb832b4d20be3d9867356e658", size = 6891, upload-time = "2024-05-21T16:28:00.24Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d7/25/dd878a121fcfdf38f52850f11c512e13ec87c2ea72385933818e5b6c15ce/requests_file-2.1.0-py2.py3-none-any.whl", hash = "sha256:cf270de5a4c5874e84599fc5778303d496c10ae5e870bfa378818f35d21bda5c", size = 4244, upload-time = "2024-05-21T16:27:57.733Z" },
+]
+
+[[package]]
 name = "resolvelib"
 version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3790,6 +3803,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/19/2b/678082222bc1d2823ea8384c6806085b85226ff73885c703fe0c7143ef64/tld-0.13.tar.gz", hash = "sha256:93dde5e1c04bdf1844976eae440706379d21f4ab235b73c05d7483e074fb5629", size = 446824, upload-time = "2023-02-27T21:06:48.888Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ea/75/779ddeaf4d847ba0021ad99d1b615a853f2a5762bd5d118273c7f7673c38/tld-0.13-py2.py3-none-any.whl", hash = "sha256:f75b2be080f767ed17c2338a339eaa4fab5792586319ca819119da252f9f3749", size = 263789, upload-time = "2023-02-27T21:06:46.27Z" },
+]
+
+[[package]]
+name = "tldextract"
+version = "5.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "filelock" },
+    { name = "idna" },
+    { name = "requests" },
+    { name = "requests-file" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/97/78/182641ea38e3cfd56e9c7b3c0d48a53d432eea755003aa544af96403d4ac/tldextract-5.3.0.tar.gz", hash = "sha256:b3d2b70a1594a0ecfa6967d57251527d58e00bb5a91a74387baa0d87a0678609", size = 128502, upload-time = "2025-04-22T06:19:37.491Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/67/7c/ea488ef48f2f544566947ced88541bc45fae9e0e422b2edbf165ee07da99/tldextract-5.3.0-py3-none-any.whl", hash = "sha256:f70f31d10b55c83993f55e91ecb7c5d84532a8972f22ec578ecfbe5ea2292db2", size = 107384, upload-time = "2025-04-22T06:19:36.304Z" },
 ]
 
 [[package]]
