@@ -5,7 +5,7 @@
 # from another environment, given as a mysql dump file with CLONE_FROM_DB_DUMP
 # and the name of a source bucket, given in CLONE_FROM_OBJECT_STORAGE_BUCKET.
 
-set -euo pipefail
+set -eo pipefail
 
 if [[ -z $CLONE_FROM_DB_DUMP || -z $CLONE_FROM_OBJECT_STORAGE_BUCKET ]]; then
     cat << EndOfMessage
@@ -36,15 +36,17 @@ If you continue, the following will happen:
 Are you sure you want to continue?
 EndOfMessage
 
-read  -n 1 -p "Confirm (y/N):" confirm
+read -p "Confirm TARGET database name ($DATABASE_NAME): " confirm_database
+read -p "Confirm TARGET object storage bucket name ($OBJECT_STORAGE_BUCKET_NAME): " confirm_bucket_name
+read -n 1 -p "Start the clone operation? (y/N): " confirm
 
-if [ "$confirm" = "y" ]; then
-    echo "\nCloning database..."
+if [ "$confirm_database" = "$DATABASE_NAME" ] && [ "$confirm_bucket_name" = "$OBJECT_STORAGE_BUCKET_NAME" ] && [ "$confirm" = "y" ]; then
+    printf "\nCloning database...\n"
     mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $DATABASE_HOST -P $DATABASE_PORT $DATABASE_NAME < $CLONE_FROM_DB_DUMP
-    echo "Cloning S3 bucket..."
+    printf "Cloning S3 bucket...\n"
     mcli mirror s3/$CLONE_FROM_OBJECT_STORAGE_BUCKET s3/$OBJECT_STORAGE_BUCKET_NAME --overwrite
-    echo "Done!"
+    printf "Done!\n"
 else
-    echo "\nAborting!"
+    printf "\nAborting!\n"
     exit 1;
 fi
