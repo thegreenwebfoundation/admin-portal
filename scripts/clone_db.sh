@@ -36,11 +36,12 @@ If you continue, the following will happen:
 Are you sure you want to continue?
 EndOfMessage
 
+read -p "Confirm TARGET database host ($DATABASE_HOST): " confirm_host
 read -p "Confirm TARGET database name ($DATABASE_NAME): " confirm_database
 read -p "Confirm TARGET object storage bucket name ($OBJECT_STORAGE_BUCKET_NAME): " confirm_bucket_name
 read -n 1 -p "Start the clone operation? (y/N): " confirm
 
-if [ "$confirm_database" = "$DATABASE_NAME" ] && [ "$confirm_bucket_name" = "$OBJECT_STORAGE_BUCKET_NAME" ] && [ "$confirm" = "y" ]; then
+if [ "$confirm_host" = "$DATABASE_HOST" ] && [ "$confirm_database" = "$DATABASE_NAME" ] && [ "$confirm_bucket_name" = "$OBJECT_STORAGE_BUCKET_NAME" ] && [ "$confirm" = "y" ]; then
     printf "\nCloning database...\n"
     mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $DATABASE_HOST -P $DATABASE_PORT $DATABASE_NAME < $CLONE_FROM_DB_DUMP
     printf "Cloning S3 bucket...\n"
