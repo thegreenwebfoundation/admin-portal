@@ -26,6 +26,8 @@ from .api.asn_viewset import ASNViewSet  # noqa
 from . import models as gc_models
 from ..accounts.models import CarbonTxtDomainResultCache
 from . import serializers as gc_serializers
+from .badges.image_generator import GreencheckImageV3
+
 
 # import (
 # from .serializers import (
@@ -150,6 +152,11 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             return self.legacy_grey_response(domain)
         except UnicodeError:
             return self.legacy_grey_response(domain)
+        finally:
+            if domain:
+                greencheck_image = GreencheckImageV3()
+                greencheck_image.generate_greencheck_image(domain, res)
+
 
     def build_response_from_database_lookup(self, domain):
         instance = gc_models.GreenDomain.objects.filter(url=domain).first()
@@ -160,8 +167,15 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         """
         Clear any trace of a domain from local caches.
         """
+        # Clear from the Greendomains table
         if fetched_domain := gc_models.GreenDomain.objects.filter(url=domain).first():
             fetched_domain.delete()
+        # Clear rendered Greenweb images
+        greencheck_image = GreencheckImageV3()
+        greencheck_image.delete_greenweb_image_cache(domain)
+        # Clear the carbon.txt lookup cache
+        CarbonTxtDomainResultCache.objects.filter(domain=domain).delete()
+
 
     def retrieve(self, request, *args, **kwargs):
         """

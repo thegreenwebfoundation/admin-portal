@@ -1,5 +1,10 @@
 import logging
+
+from io import BytesIO
 from pathlib import Path
+
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -149,6 +154,35 @@ class GreencheckImageV3:
     font_path = app_dir / "badges" / "TWKEverett-Regular.otf"
     font_settings_green = ImageFont.truetype(str(font_path), 9)
     font_settings_grey = ImageFont.truetype(str(font_path), 9)
+
+
+    def image_path_for(self, domain):
+        return f"greenweb_badges/{domain}.png"
+
+    def delete_greenweb_image_cache(self, domain):
+        image_name = self.image_path_for(domain)
+        if default_storage.exists(image_name):
+            default_storage.delete(image_name)
+
+
+    def generate_greencheck_image(self, domain, check):
+        green = check and check.green
+        provider = check and check.hosting_provider
+        image_name = self.image_path_for(domain)
+        img = self.fetch_template_image(green=green)
+        annotated_img = self.annotate_img(
+            img, domain, green=green, provider=provider
+        ).convert("RGB")
+
+        image_io = BytesIO()
+        annotated_img.save(image_io, format='PNG')
+        image_file = ContentFile(image_io.getvalue())
+        if default_storage.exists(image_name):
+            default_storage.delete(image_name)
+        default_storage.save(image_name, image_file)
+        return image_name
+
+
 
     def normalise_domain_name_length(self, domain: str) -> str:
         """

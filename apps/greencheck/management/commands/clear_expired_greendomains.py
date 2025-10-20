@@ -5,6 +5,7 @@ from sentry_sdk.crons import monitor
 
 from apps.accounts.models import Hostingprovider
 from ...models import GreenDomain
+from ...badges.image_generator import GreencheckImageV3
 
 
 class Command(BaseCommand):
@@ -22,6 +23,9 @@ class Command(BaseCommand):
         providers = Hostingprovider.objects.filter(archived=True).all()
         provider_ids = [p.id for p in providers]
         query_set=GreenDomain.objects.filter(hosted_by_id__in=provider_ids)
+        image = GreencheckImageV3()
+        for domain in query_set:
+            image.delete_greenweb_image_cache(domain.url)
         provider_count = len(providers)
         domain_count = query_set.count()
         query_set.delete()
@@ -38,6 +42,9 @@ class Command(BaseCommand):
                 datetime.datetime.now() - datetime.timedelta(days=self.TIME_TO_LIVE_DAYS)
         ).replace(hour=0, minute=0, second=0, microsecond=0)
         query_set = GreenDomain.objects.filter(created__lte=cutoff_date)
+        image = GreencheckImageV3()
+        for domain in query_set:
+            image.delete_greenweb_image_cache(domain.url)
         domain_count = query_set.count()
         query_set.delete()
         cutoff_date_string = cutoff_date.isoformat()
