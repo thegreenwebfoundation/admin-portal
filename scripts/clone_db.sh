@@ -3,15 +3,15 @@
 # This script entirely resets the current database (given in DATABASE_URL)
 # and object storage bucket (given in OBJECT_STORAGE_BUCKET_NAME)
 # from another environment, given as a mysql dump file with CLONE_FROM_DB_DUMP
-# and the name of a source bucket, given in CLONE_FROM_OBJECT_STORAGE_BUCKET.
+# and the name of a source bucket, given in CLONE_FROM_OBJECT_STORAGE_BUCKET_NAME.
 
 set -eo pipefail
 
-if [[ -z $CLONE_FROM_DB_DUMP || -z $CLONE_FROM_OBJECT_STORAGE_BUCKET ]]; then
+if [[ -z $CLONE_FROM_DB_DUMP || -z $CLONE_FROM_OBJECT_STORAGE_BUCKET_NAME ]]; then
     cat << EndOfMessage
 clone_db.sh requires the following environment variables to be set:
    - CLONE_FROM_DB_DUMP: The path to the db dump file to import
-   - CLONE_FROM_OBJECT_STORAGE_BUCKET: The name of the object storage bucket to import assets from.
+   - CLONE_FROM_OBJECT_STORAGE_BUCKET_NAME: The name of the object storage bucket to import assets from.
 In addition, it assumes the following environment variables, taken from your .env file:
    - DATABASE_URL: The connection url for the database you want to import TO
    - OBJECT_STORAGE_BUCKET_NAME: The name of the object storage bucket to clone assets TO
@@ -39,7 +39,7 @@ WARNING! clone_db.sh is a DESTRUCTIVE operation!
 If you continue, the following will happen:
 - Your database at ${DATABASE_URL} will be cleared.
 - The database dump at ${CLONE_FROM_DB_DUMP} will be imported into ${DATABASE_URL}
-- All the files in the object storage bucket "${CLONE_FROM_OBJECT_STORAGE_BUCKET}" will be cloned into "${OBJECT_STORAGE_BUCKET_NAME}", overwriting any existing files with the same key.
+- All the files in the object storage bucket "${CLONE_FROM_OBJECT_STORAGE_BUCKET_NAME}" will be cloned into "${OBJECT_STORAGE_BUCKET_NAME}", overwriting any existing files with the same key.
 Are you sure you want to continue?
 EndOfMessage
 
@@ -52,7 +52,7 @@ if [ "$confirm_host" = "$DATABASE_HOST" ] && [ "$confirm_database" = "$DATABASE_
     printf "\nCloning database...\n"
     mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $DATABASE_HOST -P $DATABASE_PORT $DATABASE_NAME < $CLONE_FROM_DB_DUMP
     printf "Cloning S3 bucket...\n"
-    $mcli_command mirror s3/$CLONE_FROM_OBJECT_STORAGE_BUCKET s3/$OBJECT_STORAGE_BUCKET_NAME --overwrite
+    $mcli_command mirror s3/$CLONE_FROM_OBJECT_STORAGE_BUCKET_NAME s3/$OBJECT_STORAGE_BUCKET_NAME --overwrite
     printf "Done!\n"
 else
     printf "\nAborting!\n"
