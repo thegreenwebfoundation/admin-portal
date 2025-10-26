@@ -532,7 +532,6 @@ class HostingAdmin(
                         "verification_bases",
                         "carbon_txt_motivations",
                         "created_by",
-                        "is_listed",
                     )
                 },
             ),
