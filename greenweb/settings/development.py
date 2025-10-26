@@ -55,20 +55,10 @@ MEDIA_ROOT = ROOT("media")
 MEDIA_URL = "/media/"
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-
-# Scaleway deets
-AWS_ACCESS_KEY_ID = env("OBJECT_STORAGE_ACCESS_KEY_ID")  # noqa
-AWS_SECRET_ACCESS_KEY = env("OBJECT_STORAGE_SECRET_ACCESS_KEY")  # noqa
-AWS_STORAGE_BUCKET_NAME = env("OBJECT_STORAGE_BUCKET_NAME")  # noqa
-AWS_S3_REGION_NAME = env("OBJECT_STORAGE_REGION")  # noqa
-AWS_S3_ENDPOINT_URL = env("OBJECT_STORAGE_ENDPOINT")  # noqa
-# do not overwrite files (upload files with the same name as separate files)
-AWS_S3_FILE_OVERWRITE = False
-
 DOMAIN_SNAPSHOT_BUCKET = "tgwf-green-domains-test"
