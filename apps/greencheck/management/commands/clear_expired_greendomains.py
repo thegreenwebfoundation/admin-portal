@@ -4,8 +4,7 @@ from django.core.management.base import BaseCommand
 from sentry_sdk.crons import monitor
 
 from apps.accounts.models import Hostingprovider
-from ...models import GreenDomain
-from ...badges.image_generator import GreencheckImageV3
+from ...models import GreenDomain, GreenDomainBadge
 
 
 class Command(BaseCommand):
@@ -23,11 +22,10 @@ class Command(BaseCommand):
         providers = Hostingprovider.objects.filter(archived=True).all()
         provider_ids = [p.id for p in providers]
         query_set=GreenDomain.objects.filter(hosted_by_id__in=provider_ids)
-        image = GreencheckImageV3()
-        for domain in query_set:
-            image.delete_greenweb_image_cache(domain.url)
         provider_count = len(providers)
         domain_count = query_set.count()
+        for green_domain in query_set:
+            GreenDomainBadge.clear_cache(green_domain.url)
         query_set.delete()
         self.stdout.write(
             f"Cleared archived providers: Deleted {domain_count} green domains for {provider_count} archived providers."
@@ -42,14 +40,28 @@ class Command(BaseCommand):
                 datetime.datetime.now() - datetime.timedelta(days=self.TIME_TO_LIVE_DAYS)
         ).replace(hour=0, minute=0, second=0, microsecond=0)
         query_set = GreenDomain.objects.filter(created__lte=cutoff_date)
-        image = GreencheckImageV3()
-        for domain in query_set:
-            image.delete_greenweb_image_cache(domain.url)
         domain_count = query_set.count()
+        for green_domain in query_set:
+            GreenDomainBadge.clear_cache(green_domain.url)
         query_set.delete()
         cutoff_date_string = cutoff_date.isoformat()
         self.stdout.write(
-            f"Cleared archived providers: Deleted {domain_count} green domains created before {cutoff_date_string}."
+            f"Cleared expired domains: Deleted {domain_count} green domains created before {cutoff_date_string}."
+        )
+
+    def _clear_expired_badges(self):
+        """
+        Clears all green web badge image caches created more than TIME_TO_LIVE_DAYS days ago
+        """
+        cutoff_date = (
+                datetime.datetime.now() - datetime.timedelta(days=self.TIME_TO_LIVE_DAYS)
+        ).replace(hour=0, minute=0, second=0, microsecond=0)
+        query_set = GreenDomainBadge.objects.filter(created__lte=cutoff_date)
+        badge_count = query_set.count()
+        query_set.delete()
+        cutoff_date_string = cutoff_date.isoformat()
+        self.stdout.write(
+            f"Cleared expired greenweb badges: Deleted {badge_count} badge images created before {cutoff_date_string}."
         )
 
     # This is called by a cronjob which runs at 1AM every day, as specified in
@@ -61,3 +73,4 @@ class Command(BaseCommand):
     def handle(self, *args, **options) -> None:
         self._clear_archived_provider_domains()
         self._clear_expired_domains()
+        self._clear_expired_badges()

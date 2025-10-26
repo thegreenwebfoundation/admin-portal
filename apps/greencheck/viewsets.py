@@ -26,7 +26,6 @@ from .api.asn_viewset import ASNViewSet  # noqa
 from . import models as gc_models
 from ..accounts.models import CarbonTxtDomainResultCache
 from . import serializers as gc_serializers
-from .badges.image_generator import GreencheckImageV3
 
 
 # import (
@@ -152,11 +151,6 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
             return self.legacy_grey_response(domain)
         except UnicodeError:
             return self.legacy_grey_response(domain)
-        finally:
-            if domain:
-                greencheck_image = GreencheckImageV3()
-                greencheck_image.generate_greencheck_image(domain, res)
-
 
     def build_response_from_database_lookup(self, domain):
         instance = gc_models.GreenDomain.objects.filter(url=domain).first()
@@ -167,14 +161,9 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         """
         Clear any trace of a domain from local caches.
         """
-        # Clear from the Greendomains table
-        if fetched_domain := gc_models.GreenDomain.objects.filter(url=domain).first():
-            fetched_domain.delete()
-        # Clear rendered Greenweb images
-        greencheck_image = GreencheckImageV3()
-        greencheck_image.delete_greenweb_image_cache(domain)
-        # Clear the carbon.txt lookup cache
-        CarbonTxtDomainResultCache.objects.filter(domain=domain).delete()
+        gc_models.GreenDomain.clear_cache(domain)
+        gc_models.GreenDomainBadge.clear_cache(domain)
+        CarbonTxtDomainResultCache.clear_cache(domain)
 
 
     def retrieve(self, request, *args, **kwargs):
@@ -197,16 +186,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
         if skip_cache:
             # try to fetch domain the long way, clearing it from the
-            # any caches if already present
-            try:
-                green_domain = gc_models.GreenDomain.objects.get(url=domain)
-                via_carbon_txt = green_domain.added_via_carbontxt
-            except gc_models.GreenDomain.DoesNotExist:
-                via_carbon_txt = False
-
-            if not via_carbon_txt:
-                self.clear_from_caches(domain)
-
+            self.clear_from_caches(domain)
             if http_response := self.build_response_from_full_network_lookup(domain, refresh_carbon_txt_cache=skip_cache):
                 return http_response
 

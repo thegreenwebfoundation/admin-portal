@@ -6,6 +6,7 @@ import factory
 import factory.django as dj_factory
 import factory.fuzzy as facfuzzy
 from django.contrib.auth import get_user_model
+from django.db.models import signals
 from django.utils import timezone
 
 from apps.accounts import models as ac_models
@@ -193,3 +194,12 @@ class GreenDomainFactory(dj_factory.DjangoModelFactory):
     class Meta:
         model = GreenDomain
         django_get_or_create = ("url",)
+
+
+@factory.django.mute_signals(signals.pre_save)
+class GreenDomainBadgeFactory(dj_factory.DjangoModelFactory):
+    domain = factory.Faker("domain_name")
+    path = factory.LazyAttribute(lambda b: f"greenweb_badges/{b.domain}.png")
+
+    class Meta:
+        model = gc_models.GreenDomainBadge
