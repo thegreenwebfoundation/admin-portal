@@ -524,14 +524,13 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         def _network_footprint_initial_data(hosting_provider: Hostingprovider):
             hp_provider_request = hosting_provider.request
             network_dict = {
-                # TODO: all IP ranges / ASNs or only active ones?
                 "ips": [
                     {"start": range.ip_start, "end": range.ip_end}
-                    for range in hosting_provider.greencheckip_set.all()
+                    for range in hosting_provider.greencheckip_set.filter(active=True).all()
                 ],
                 "asns": [
                     {"asn": item.asn}
-                    for item in hosting_provider.greencheckasn_set.all()
+                    for item in hosting_provider.greencheckasn_set.filter(active=True).all()
                 ],
             }
             if hp_provider_request:
