@@ -19,7 +19,7 @@ from apps.greencheck.views import GreenUrlsView
 
 from ..greencheck import domain_check
 from ..greencheck import models as gc_models
-
+from ..greencheck.network_utils import validate_domain, convert_domain_to_ip
 
 checker = domain_check.GreenDomainChecker()
 logger = logging.getLogger(__name__)
@@ -46,12 +46,12 @@ class CheckUrlForm(forms.Form):
         domain database.
         """
         url = self.cleaned_data["url"]
-        domain_to_check = checker.validate_domain(url)
+        domain_to_check = validate_domain(url)
 
         # check if we can resolve to an IP - this catches when
         # people provide an IP address
         try:
-            checker.convert_domain_to_ip(domain_to_check)
+            convert_domain_to_ip(domain_to_check)
         except Exception as err:
             logger.warning(err)
             raise ValidationError(

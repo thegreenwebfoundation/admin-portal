@@ -270,7 +270,7 @@ class TestGreenDomainViewset:
         # mock our network lookup, so we get a consistent response when
         # looking up our domains
         mocked_network_function = mocker.patch(
-            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+            "apps.greencheck.domain_check.convert_domain_to_ip",
             return_value="172.217.168.238",
         )
 

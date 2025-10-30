@@ -26,7 +26,7 @@ class TestAdminHelper:
         # if we don't mock `convert_domain_to_ip`, then end up doing a
         # dns lookup each time we run this test.
         mock_method = mocker.patch(
-            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+            "apps.theme.templatetags.admin_helpers.convert_domain_to_ip",
             return_value="8.8.8.8",
         )
         assert "8.8.8.8" in admin_helpers.link_to_ripe_stat("https://google.com")

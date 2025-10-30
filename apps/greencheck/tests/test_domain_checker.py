@@ -10,6 +10,8 @@ from apps.accounts import models as ac_models
 from .. import domain_check, legacy_workers
 from .. import models as gc_models
 
+from ..network_utils import convert_domain_to_ip
+
 pytestmark = pytest.mark.django_db
 
 logger = logging.getLogger(__name__)
@@ -99,7 +101,7 @@ class TestDomainChecker:
         When we check a a domain that resolves to an IPv6 address
         Do we get the appropriate response back?
         """
-        res = checker.convert_domain_to_ip(domain)
+        res = convert_domain_to_ip(domain)
 
         assert isinstance(res, ipaddress.IPv6Address) or isinstance(
             res, ipaddress.IPv4Address
@@ -119,9 +121,9 @@ class TestDomainChecker:
         """
 
         with pytest.raises((ipaddress.AddressValueError, socket.gaierror)):
-            checker.convert_domain_to_ip(domain)
+            convert_domain_to_ip(domain)
 
-    def test_with_green_domain_by_asn(self, green_asn, checker):
+    def test_with_green_domain_by_asn(self, green_asn, checker, mocker):
         """
         Given a matching ASN, do we return a green sitecheck?
         """
@@ -129,7 +131,7 @@ class TestDomainChecker:
 
         # mock response for GreenDomainChecker.asn_from_ip, to avoid
         # making dns lookups
-        checker.asn_from_ip = mock.MagicMock(return_value=green_asn.asn)
+        mocker.patch("apps.greencheck.domain_check.asn_from_ip", return_value=green_asn.asn)
 
         res = checker.check_domain("172.217.168.238")
 
@@ -147,42 +149,15 @@ class TestDomainChecker:
         assert res.url == "172.217.168.238"
         assert res.ip == "172.217.168.238"
 
-    def test_with_green_domain_by_asn_double(self, green_asn, checker):
+    def test_with_green_domain_by_asn_double(self, green_asn, checker, mocker):
         """ """
         green_asn.save()
-        checker.asn_from_ip = mock.MagicMock(return_value=f"{green_asn.asn} 12345")
+        mocker.patch("apps.greencheck.domain_check.asn_from_ip", return_value=f"{green_asn.asn} 12345")
 
         res = checker.check_domain("172.217.168.238")
 
         assert isinstance(res, legacy_workers.SiteCheck)
         assert res.hosting_provider_id == green_asn.hostingprovider.id
-
-    @pytest.mark.parametrize(
-        "error_type",
-        (
-            domain_check.ASNLookupError,
-            domain_check.ASNParseError,
-            domain_check.ASNRegistryError,
-            domain_check.ASNOriginLookupError,
-            domain_check.IPDefinedError,
-        ),
-    )
-    def test_asn_from_ip_fails_gracefully_with_bad_asn_lookup(
-        self, checker, caplog, error_type
-    ):
-        """
-        Sometimes calling lookup() on an IP address raises a ASNParseError.
-        Do we catch this exception and log it?
-        """
-
-        checker.asn_from_ip = mock.MagicMock(side_effect=error_type)
-        with caplog.at_level(logging.WARNING):
-            res = checker.check_for_matching_asn("23.32.24.203")
-
-        assert res is False
-        logged_error = caplog.text
-
-        assert error_type.__name__ in logged_error
 
     def test_with_green_domain_by_non_resolving_asn(self, green_asn, checker):
         """
@@ -195,10 +170,6 @@ class TestDomainChecker:
         res = checker.check_domain("100.113.75.254")
 
         assert isinstance(res, legacy_workers.SiteCheck)
-
-
-class TestDomainCheckerCarbonTxtCacheBehaviour:
-
 
     @mock.patch("apps.accounts.models.hosting.carbon_txt.ProviderCarbonTxt")
     def test_with_cached_green_domain_by_carbon_txt(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):
@@ -276,51 +247,116 @@ class TestDomainCheckerCarbonTxtCacheBehaviour:
 
         assert old_modified < new_modified
 
-
-
-class TestDomainCheckerOrderBySize:
-    """
-    Check that we can return the ip ranges from a check in the
-    ascending correct order of size.
-    """
-
-    def test_order_ip_range_by_size(
-        self,
-        hosting_provider: ac_models.Hostingprovider,
-        checker: domain_check.GreenDomainChecker,
-        db,
+    def test_lookup_green_domain(
+        self, green_domain_factory, green_ip_factory, mocker, checker
     ):
-        hosting_provider.save()
-        small_ip_range = gc_models.GreencheckIp.objects.create(
-            active=True,
-            ip_start="127.0.1.2",
-            ip_end="127.0.1.3",
-            hostingprovider=hosting_provider,
-        )
-        small_ip_range.save()
+        # mock our network lookup, so we get a consistent response when
+        # looking up our domains
+        green_ip = green_ip_factory.create()
 
-        large_ip_range = gc_models.GreencheckIp.objects.create(
-            active=True,
-            ip_start="127.0.1.2",
-            ip_end="127.0.1.200",
-            hostingprovider=hosting_provider,
-        )
-        large_ip_range.save()
-
-        ip_matches = gc_models.GreencheckIp.objects.filter(
-            ip_end__gte="127.0.1.2",
-            ip_start__lte="127.0.1.2",
+        # mock our request to avoid the network call
+        mocker.patch(
+            "apps.greencheck.domain_check.convert_domain_to_ip",
+            return_value=green_ip.ip_start,
         )
 
-        res = checker.order_ip_range_by_size(ip_matches)
+        domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
+        provider = domain.hosting_provider
 
-        assert res[0].ip_end == "127.0.1.3"
+        # look up for domain.com
+        res = checker.check_domain(domain.url)
+
+        # check that we return the provider in the return value
+        assert res.hosting_provider_id == provider.id
+
+    def test_lookup_green_domain_with_no_provider(
+        self, green_domain_factory, green_ip_factory, mocker, checker
+    ):
+        """
+        When a domain has no provider, do we still return none?
+        """
+        green_ip = green_ip_factory.create()
+
+        # mock our request to avoid the network call
+        mocker.patch(
+            "apps.greencheck.domain_check.convert_domain_to_ip",
+            return_value=green_ip.ip_start,
+        )
+
+        domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
+        domain.hosting_provider.delete()
+        domain.save()
+
+        # look up for domain.com
+        res = checker.check_domain(domain.url)
+
+        # check that we get a response back and a grey result,
+        # as there is no evidence left to support the green result
+        assert res.green is False
+
+    def test_lookup_green_domain_with_no_ip_lookup(
+        self, green_domain_factory, green_ip_factory, mocker, checker
+    ):
+        """"""
+        green_ip_factory.create()
+
+        # mock our request to avoid the network call
+        # mocker.patch(
+        #     "apps.greencheck.domain_check.convert_domain_to_ip",
+        #     return_value=green_ip.ip_start,
+        # )
+
+        # domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
+        # domain.hosting_provider.delete()
+        # domain.save()
+
+        # look up for domain.com
+        res = checker.check_domain("portail.numerique-educatif.fr")
+
+        from apps.greencheck.workers import SiteCheckLogger
+
+        # saving with None fails, as does "None", but passing 0 works,
+        # and we want to log the fact that a check took place, instead
+        # of silently erroring
+        # res.ip = 0
+
+        site_logger = SiteCheckLogger()
+        site_logger.log_sitecheck_to_database(res)
+        # check that we get a response back and a grey result,
+        # as there is no evidence left to support the green result
+        assert res.green is False
+
+    @pytest.mark.parametrize(
+        "error_type",
+        (
+            domain_check.ASNLookupError,
+            domain_check.ASNParseError,
+            domain_check.ASNRegistryError,
+            domain_check.ASNOriginLookupError,
+            domain_check.IPDefinedError,
+        ),
+    )
+    def test_asn_from_ip_fails_gracefully_with_bad_asn_lookup(
+        self, checker, caplog, error_type, mocker
+    ):
+        """
+        Sometimes calling lookup() on an IP address raises a ASNParseError.
+        Do we catch this exception and log it?
+        """
+
+        mocker.patch("apps.greencheck.domain_check.asn_from_ip", side_effect=error_type)
+        with caplog.at_level(logging.WARNING):
+            res = checker.check_for_matching_asn("23.32.24.203")
+
+        assert res is False
+        logged_error = caplog.text
+
+        assert error_type.__name__ in logged_error
 
     def test_return_org_with_smallest_ip_range_first(
         self,
+        checker,
         hosting_provider: ac_models.Hostingprovider,
-        checker: domain_check.GreenDomainChecker,
-        db,
     ):
         """
         When we have two hosting providers, where one provider is using a
@@ -364,85 +400,3 @@ class TestDomainCheckerOrderBySize:
 
         assert res.hosting_provider_id == small_hosting_provider.id
 
-
-class TestDomainCheckByCarbonTxt:
-    """Test that lookups via carbon txt work as expected"""
-
-    def test_lookup_green_domain(
-        self, green_domain_factory, green_ip_factory, mocker, checker
-    ):
-        # mock our network lookup, so we get a consistent response when
-        # looking up our domains
-        green_ip = green_ip_factory.create()
-
-        # mock our request to avoid the network call
-        mocker.patch(
-            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
-            return_value=green_ip.ip_start,
-        )
-
-        domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
-        provider = domain.hosting_provider
-
-        # look up for domain.com
-        res = checker.check_domain(domain.url)
-
-        # check that we return the provider in the return value
-        assert res.hosting_provider_id == provider.id
-
-    def test_lookup_green_domain_with_no_provider(
-        self, green_domain_factory, green_ip_factory, mocker, checker
-    ):
-        """
-        When a domain has no provider, do we still return none?
-        """
-        green_ip = green_ip_factory.create()
-
-        # mock our request to avoid the network call
-        mocker.patch(
-            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
-            return_value=green_ip.ip_start,
-        )
-
-        domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
-        domain.hosting_provider.delete()
-        domain.save()
-
-        # look up for domain.com
-        res = checker.check_domain(domain.url)
-
-        # check that we get a response back and a grey result,
-        # as there is no evidence left to support the green result
-        assert res.green is False
-
-    def test_lookup_green_domain_with_no_ip_lookup(
-        self, green_domain_factory, green_ip_factory, mocker, checker
-    ):
-        """"""
-        green_ip_factory.create()
-
-        # mock our request to avoid the network call
-        # mocker.patch(
-        #     "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
-        #     return_value=green_ip.ip_start,
-        # )
-
-        # domain = green_domain_factory.create(hosted_by=green_ip.hostingprovider)
-        # domain.hosting_provider.delete()
-        # domain.save()
-
-        # look up for domain.com
-        res = checker.check_domain("portail.numerique-educatif.fr")
-
-        from apps.greencheck.workers import SiteCheckLogger
-
-        # saving with None fails, as does "None", but passing 0 works,
-        # and we want to log the fact that a check took place, instead
-        # of silently erroring
-        # res.ip = 0
-
-        site_logger = SiteCheckLogger()
-        site_logger.log_sitecheck_to_database(res)
-        # check that we get a response back and a grey result,
-        # as there is no evidence left to support the green result
-        assert res.green is False

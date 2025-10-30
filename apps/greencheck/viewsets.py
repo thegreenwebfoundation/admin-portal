@@ -26,6 +26,7 @@ from .api.asn_viewset import ASNViewSet  # noqa
 from . import models as gc_models
 from ..accounts.models import CarbonTxtDomainResultCache
 from . import serializers as gc_serializers
+from .network_utils import validate_domain
 
 
 # import (
@@ -178,7 +179,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         # hits an app server
         skip_cache = request.GET.get("nocache") == "true"
         try:
-            domain = self.checker.validate_domain(url)
+            domain = validate_domain(url)
         except Exception as ex:
             # not a valid domain, OR a valid IP. Get rid of it.
             logger.warning(f"unable to extract domain from {url}, exception was: {ex}")

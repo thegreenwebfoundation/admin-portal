@@ -6,11 +6,10 @@ from django import template
 from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
 
-from apps.greencheck import domain_check
+from apps.greencheck.network_utils import validate_domain, convert_domain_to_ip
 
 logger = logging.getLogger(__name__)
 register = template.Library()
-checker = domain_check.GreenDomainChecker()
 console = logging.StreamHandler()
 
 
@@ -37,10 +36,10 @@ def link_to_ripe_stat(website_string: str) -> str:
     """
 
     url = make_url(website_string)
-    domain = checker.validate_domain(url)
+    domain = validate_domain(url)
 
     try:
-        resolved_ip = checker.convert_domain_to_ip(domain)
+        resolved_ip = convert_domain_to_ip(domain)
     except socket.gaierror as err:
         logger.warning(f"Could not resolve domain {domain}: error was {err}")
         resolved_ip = None

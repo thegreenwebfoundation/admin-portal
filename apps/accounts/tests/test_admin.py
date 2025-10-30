@@ -620,7 +620,7 @@ def test_extended_lookup_green_domain(
     green_domain.save()
 
     mocker.patch(
-        "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+        "apps.greencheck.domain_check.convert_domain_to_ip",
         return_value=GOOGLE_COM_IP,
     )
 

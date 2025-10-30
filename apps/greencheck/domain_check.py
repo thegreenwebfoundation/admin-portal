@@ -17,15 +17,12 @@ import ipaddress
 import logging
 import socket
 import typing
-import urllib
 from urllib.parse import urlparse
 
 import dns.resolver
 import httpx
 import ipwhois
-import tld
 from django.utils import timezone
-from ipwhois.asn import IPASN
 from ipwhois.exceptions import (
     ASNLookupError,
     ASNOriginLookupError,
@@ -33,14 +30,15 @@ from ipwhois.exceptions import (
     ASNRegistryError,
     IPDefinedError,
 )
-from ipwhois.net import Net
 
 from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
+from .network_utils import asn_from_ip, convert_domain_to_ip, order_ip_range_by_size
 from ..accounts.models import ProviderCarbonTxt
 
 logger = logging.getLogger(__name__)
 
+UNRESOLVED_ADDRESS = "0.0.0.0"
 
 class GreenDomainChecker:
     """
@@ -48,35 +46,6 @@ class GreenDomainChecker:
     matching SiteCheck result, that we might log.
     """
 
-    def validate_domain(self, url) -> typing.Union[str, None]:
-        """
-        Attempt to clean the provided url, and pull
-        return the domain, or ip address
-        """
-
-        try:
-            fetched_tld = tld.get_tld(url, fix_protocol=True)
-            has_valid_tld = tld.is_tld(fetched_tld)
-            if has_valid_tld:
-                # note: we fetch this "as an object" this time
-                res = tld.get_tld(url, fix_protocol=True, as_object=True)
-                return res.parsed_url.netloc
-        except tld.exceptions.TldDomainNotFound:
-            pass
-
-        # not a domain, try ip address, ending early if not
-        try:
-            ipaddress.ip_address(url)
-        except ValueError:
-            # not an ip address either, return an empty result
-            return None
-
-        parsed_url = urllib.parse.urlparse(url)
-        if not parsed_url.netloc:
-            # add the //, so that our url reading code
-            # parses it properly
-            parsed_url = urllib.parse.urlparse(f"//{url}")
-        return parsed_url.netloc
 
     def perform_full_lookup(self, domain: str, refresh_carbon_txt_cache : bool = False) -> GreenDomain:
         """
@@ -105,7 +74,7 @@ class GreenDomainChecker:
         that the returned result is accurate.
         """
         try:
-            ip_address = self.convert_domain_to_ip(domain_to_check)
+            ip_address = convert_domain_to_ip(domain_to_check)
         except (socket.gaierror, ipaddress.AddressValueError) as err:
             logger.warning(f"Unable to lookup domain: {domain_to_check} - error: {err}")
         except Exception as err:
@@ -126,56 +95,6 @@ class GreenDomainChecker:
             "site_check": site_check,
             "whois_info": rdap,
         }
-
-    def asn_from_ip(self, ip_address):
-        """
-        Check the IP against the IP 2 ASN service provided by the
-        Team Cymru IP to ASN Mapping Service
-        https://ipwhois.readthedocs.io/en/latest/ASN.html#asn-origin-lookups
-        """
-        network = Net(ip_address)
-        obj = IPASN(network)
-        res = obj.lookup()
-        return res["asn"]
-
-    def convert_domain_to_ip(
-        self, domain
-    ) -> typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]:
-        """
-        Accepts a domain name or IP address, and returns an IPV4 or IPV6
-        address, raising an exception if not resolution occurs.
-        """
-
-        # TODO: support multiple addresses being returned:
-        # `getaddrinfo`` actually returns a list of possible addresses,
-        # but our current code only assumes a domain would resolve to a single IP
-        # address when we look up a domain.
-        # Ideally we'd check that ALL the IP addresses resolved are within our
-        # green IP ranges but until we know how much this impacts performance
-        # we choose the first one.
-        ip_info = socket.getaddrinfo(domain, None)
-
-        # each item in the list is a tuple containing:
-
-        # Address family (like socket.AF_INET for IPv4 or socket.AF_INET6 for IPv6)
-        # Socket type (like socket.SOCK_STREAM for TCP or socket.SOCK_DGRAM for UDP)
-        # Protocol (usually just 0)
-        # Canonical name (an alias for the host, if applicable)
-        # Socket address (a tuple containing the IP address and port number)
-
-        ip_address_list = [
-            # we are fetching the ip address in our socket address returned above
-            ip[4][0]
-            for ip in ip_info
-        ]
-
-        ip = ipaddress.ip_address(ip_address_list[0])
-        logger.debug(ip)
-
-        if ip:
-            return ip
-
-        raise ipaddress.AddressValueError(f"Unable to convert domain to IP: {domain}")
 
     def green_sitecheck_by_ip_range(self, domain, ip_address, ip_match):
         """
@@ -253,7 +172,6 @@ class GreenDomainChecker:
         the best matching IP range for the ip address it resolves to,
         or a 'grey' Sitecheck
         """
-        UNRESOLVED_ADDRESS = "0.0.0.0"
 
         if carbon_txt_sitecheck := self.green_sitecheck_by_carbon_txt(domain, refresh_cache=refresh_carbon_txt_cache):
             return carbon_txt_sitecheck
@@ -292,7 +210,7 @@ class GreenDomainChecker:
         # order matches by ascending range size
         # we can't do this in the database because we need to work out the
         # size of the Ip ranges in order to order them properly
-        ordered_matches = self.order_ip_range_by_size(ip_matches)
+        ordered_matches = order_ip_range_by_size(ip_matches)
 
         if ordered_matches:
             return ordered_matches[0]
@@ -304,7 +222,7 @@ class GreenDomainChecker:
         from .models import GreencheckASN
 
         try:
-            asn_result = self.asn_from_ip(ip_address)
+            asn_result = asn_from_ip(ip_address)
 
         except (
             ASNLookupError,
@@ -362,24 +280,4 @@ class GreenDomainChecker:
         evaluated_green_queryset = green_list[::1]
 
         return evaluated_green_queryset + grey_domains
-
-    def order_ip_range_by_size(self, ip_matches):
-        """
-        Returns a queryset's worth of Green IP Ranges, ordered
-        from smallest range first, as a list.
-        This allows resellers to show up in a supply chain check
-        on a site.
-        """
-        range_list = [
-            {"ip_range": ip_range, "range_length": ip_range.ip_range_length()}
-            for ip_range in ip_matches
-        ]
-
-        # now sort by the length, in ascending order
-        ascending_ip_ranges = sorted(
-            range_list, key=lambda ip_obj: ip_obj.get("range_length")
-        )
-
-        # sort to return the smallest first
-        return [obj["ip_range"] for obj in ascending_ip_ranges]
 
