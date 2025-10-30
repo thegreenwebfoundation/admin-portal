@@ -7,7 +7,7 @@ import pytest
 
 from apps.accounts import models as ac_models
 
-from .. import domain_check, legacy_workers
+from .. import domain_check
 from .. import models as gc_models
 
 from ..network_utils import convert_domain_to_ip
@@ -35,7 +35,7 @@ class TestDomainChecker:
 
         res = checker.check_domain("example.com")
 
-        assert isinstance(res, legacy_workers.SiteCheck)
+        assert isinstance(res, gc_models.SiteCheck)
         assert res.match_type == "carbontxt"
         assert res.green
 
@@ -52,7 +52,7 @@ class TestDomainChecker:
 
         res = checker.check_domain("example.com")
 
-        assert isinstance(res, legacy_workers.SiteCheck)
+        assert isinstance(res, gc_models.SiteCheck)
         assert res.match_type == "ip"
         assert not res.green
 
@@ -71,7 +71,7 @@ class TestDomainChecker:
 
         res = checker.check_domain("example.com")
 
-        assert isinstance(res, legacy_workers.SiteCheck)
+        assert isinstance(res, gc_models.SiteCheck)
         assert res.match_type == "ip"
         assert not res.green
 
@@ -83,7 +83,7 @@ class TestDomainChecker:
 
         res = checker.check_domain("172.217.168.238")
 
-        assert isinstance(res, legacy_workers.SiteCheck)
+        assert isinstance(res, gc_models.SiteCheck)
         assert res.ip in (green_ip.ip_start, green_ip.ip_end)
 
     # this came out of a discussion with the folks at mythic beasts
@@ -135,7 +135,7 @@ class TestDomainChecker:
 
         res = checker.check_domain("172.217.168.238")
 
-        assert isinstance(res, legacy_workers.SiteCheck)
+        assert isinstance(res, gc_models.SiteCheck)
         assert res.hosting_provider_id == green_asn.hostingprovider.id
 
     def test_with_grey_domain(self, checker):
@@ -144,7 +144,7 @@ class TestDomainChecker:
         """
         res = checker.check_domain("172.217.168.238")
 
-        assert isinstance(res, legacy_workers.SiteCheck)
+        assert isinstance(res, gc_models.SiteCheck)
         assert res.green is False
         assert res.url == "172.217.168.238"
         assert res.ip == "172.217.168.238"
@@ -156,7 +156,7 @@ class TestDomainChecker:
 
         res = checker.check_domain("172.217.168.238")
 
-        assert isinstance(res, legacy_workers.SiteCheck)
+        assert isinstance(res, gc_models.SiteCheck)
         assert res.hosting_provider_id == green_asn.hostingprovider.id
 
     def test_with_green_domain_by_non_resolving_asn(self, green_asn, checker):
@@ -169,7 +169,7 @@ class TestDomainChecker:
 
         res = checker.check_domain("100.113.75.254")
 
-        assert isinstance(res, legacy_workers.SiteCheck)
+        assert isinstance(res, gc_models.SiteCheck)
 
     @mock.patch("apps.accounts.models.hosting.carbon_txt.ProviderCarbonTxt")
     def test_with_cached_green_domain_by_carbon_txt(self, provider_carbon_txt_mock, checker, provider_carbon_txt_factory):

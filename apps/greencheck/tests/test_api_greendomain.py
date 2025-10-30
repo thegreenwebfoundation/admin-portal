@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIRequestFactory
 
-from ..legacy_workers import LegacySiteCheckLogger
+from ..workers import SiteCheckLogger
 from ..models import GreencheckIp, GreenDomain
 
 from ...accounts import models as ac_models
@@ -60,7 +60,7 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
+        sitecheck_logger = SiteCheckLogger()
 
         domain = "google.com"
 
@@ -92,7 +92,7 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
+        sitecheck_logger = SiteCheckLogger()
 
         domain = "google.com"
         now = timezone.now()
@@ -144,7 +144,7 @@ class TestGreenDomainViewset:
         When we show responses, do we only the ones that are public?
         """
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
+        sitecheck_logger = SiteCheckLogger()
 
         domain = "google.com"
         now = timezone.now()
@@ -194,7 +194,7 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
+        sitecheck_logger = SiteCheckLogger()
 
         domains = ["google.com", "anothergreendomain.com"]
         COMMA_SEPARATOR = ","
@@ -230,7 +230,7 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
+        sitecheck_logger = SiteCheckLogger()
 
         domains = ["google.com", "anothergreendomain.com"]
 

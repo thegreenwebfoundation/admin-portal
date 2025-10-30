@@ -6,7 +6,7 @@ import webbrowser
 from django.utils import timezone
 
 from ...accounts import models as ac_models
-from .. import legacy_workers
+from ..workers import SiteCheckLogger
 from .. import models as gc_models
 
 
@@ -52,7 +52,7 @@ def setup_domains(
     Set up our domains, with the corrsponding cache tables
 
     """
-    sitecheck_logger = legacy_workers.LegacySiteCheckLogger()
+    sitecheck_logger = SiteCheckLogger()
 
     for domain in domains:
         sitecheck = greencheck_sitecheck(domain, hosting_provider, ip_range)
