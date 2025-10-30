@@ -45,7 +45,7 @@ def test_high_traffic_api_requests_are_not_logged(live_server):
     # and: a request has been made to our endpoint for generating images -
     # which also sees a lot of use
     requests.get(
-        f"{live_server.url}{reverse('legacy-greencheck-image', args=['example.com'])}"
+        f"{live_server.url}{reverse('greencheck-image', args=['example.com'])}"
     )
 
     # and: our API request logger's logging interval has had time to log the requests
@@ -88,7 +88,7 @@ def test_api_request_for_invalid_endpoint_not_logged(client, mocker):
     client.get(reverse("green-domain-detail", args=["example.com"]))
 
     # and: a request is made to second high traffic endpoint for generating images
-    client.get(reverse("legacy-greencheck-image", args=["example.com"]))
+    client.get(reverse("greencheck-image", args=["example.com"]))
 
     # then: we should see no attemps to log requests
     assert mocked_api_logger.call_count == 0

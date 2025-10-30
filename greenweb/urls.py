@@ -128,11 +128,6 @@ urlpatterns += [
         name="green-domain-detail",
     ),
     path(
-        "checks/latest/",
-        legacy_views.latest_greenchecks,
-        name="legacy-latest-greenchecks",
-    ),
-    path(
         "data/directory/",
         legacy_views.directory,
         name="legacy-directory-listing",
@@ -141,16 +136,6 @@ urlpatterns += [
         "data/hostingprovider/<id>",
         legacy_views.directory_provider,
         name="legacy-directory-detail",
-    ),
-    path(
-        "greencheckimage/<url>",
-        legacy_views.legacy_greencheck_image,
-        name="legacy-greencheck-image",
-    ),
-    path(
-        "v2/greencheckmulti/<url_list>",
-        legacy_views.greencheck_multi,
-        name="legacy-greencheck-multi",
     ),
     path("stats/", include(greencheck_urls)),
     path("directory/", include(directory_urls)),
