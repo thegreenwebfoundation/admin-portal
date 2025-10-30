@@ -2,7 +2,6 @@ import decimal
 import ipaddress
 import logging
 import typing
-from dataclasses import dataclass
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -37,30 +36,6 @@ GLOBAL_AVG_CO2_INTENSITY = 442.23
 # wait for reply on these.
 - greenenergy - also an old table
 """
-
-
-now = timezone.now()
-yesterday = now - relativedelta(days=1)
-
-
-@dataclass
-class SiteCheck:
-    """
-    A representation of the Sitecheck object from the PHP app.
-    We use it as a basis for logging to the Greencheck, but also maintaining
-    our green_domains tables.
-    """
-
-    url: str
-    ip: str
-    data: bool
-    green: bool
-    hosting_provider_id: int
-    checked_at: str
-    match_type: str
-    match_ip_range: int
-    cached: bool
-
 
 class IpAddressField(Field):
     default_error_messages = {

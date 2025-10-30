@@ -22,7 +22,6 @@ from urllib.parse import urlparse
 import dns.resolver
 import httpx
 import ipwhois
-from django.utils import timezone
 from ipwhois.exceptions import (
     ASNLookupError,
     ASNOriginLookupError,
@@ -31,7 +30,6 @@ from ipwhois.exceptions import (
     IPDefinedError,
 )
 
-from .choices import GreenlistChoice
 from .models import GreenDomain, SiteCheck
 from .network_utils import asn_from_ip, convert_domain_to_ip, order_ip_range_by_size
 from ..accounts.models import ProviderCarbonTxt
@@ -96,75 +94,6 @@ class GreenDomainChecker:
             "whois_info": rdap,
         }
 
-    def green_sitecheck_by_ip_range(self, domain, ip_address, ip_match):
-        """
-        Return a SiteCheck object, that has been marked as green by
-        looking up against an IP range
-        """
-        return SiteCheck(
-            url=domain,
-            ip=str(ip_address),
-            data=True,
-            green=True,
-            hosting_provider_id=ip_match.hostingprovider.id,
-            match_type=GreenlistChoice.IP.value,
-            match_ip_range=ip_match.id,
-            cached=False,
-            checked_at=timezone.now(),
-        )
-
-    def green_sitecheck_by_asn(self, domain, ip_address, matching_asn):
-        return SiteCheck(
-            url=domain,
-            ip=str(ip_address),
-            data=True,
-            green=True,
-            hosting_provider_id=matching_asn.hostingprovider.id,
-            match_type=GreenlistChoice.ASN.value,
-            match_ip_range=matching_asn.id,
-            cached=False,
-            checked_at=timezone.now(),
-        )
-
-    def grey_sitecheck(
-        self,
-        domain,
-        ip_address,
-    ):
-        return SiteCheck(
-            url=domain,
-            ip=str(ip_address),
-            data=False,
-            green=False,
-            hosting_provider_id=None,
-            match_type=GreenlistChoice.IP.value,
-            match_ip_range=None,
-            cached=False,
-            checked_at=timezone.now(),
-        )
-
-    def green_sitecheck_by_carbon_txt(
-            self, domain: str, refresh_cache : bool = False
-    ) -> typing.Optional[SiteCheck]:
-        """
-        Return a green site check, based the information we
-        are showing via linked domains for a provider
-        calls to find_for_domain are cached internally for
-        CARBON_TXT_CACHE_TTL seconds (defaults to 24 hours)
-        """
-        if carbon_txt := ProviderCarbonTxt.find_for_domain(domain, refresh_cache=refresh_cache):
-            if carbon_txt.is_valid and carbon_txt.provider.counts_as_green:
-                return SiteCheck(
-                    url=domain,
-                    ip=None,
-                    data=True,
-                    green=True,
-                    hosting_provider_id=carbon_txt.provider_id,
-                    match_type=GreenlistChoice.CARBONTXT.value,
-                    match_ip_range=None,
-                    cached=False,
-                    checked_at=timezone.now(),
-                )
 
     def check_domain(self, domain: str, refresh_carbon_txt_cache : bool = False) -> SiteCheck:
         """
@@ -172,29 +101,24 @@ class GreenDomainChecker:
         the best matching IP range for the ip address it resolves to,
         or a 'grey' Sitecheck
         """
+        # First, check for a green provider match by carbon_txt
+        if carbon_txt := self.check_for_matching_carbon_txt(domain, refresh_carbon_txt_cache):
+                return SiteCheck.green_sitecheck_by_carbon_txt(domain, carbon_txt)
 
-        if carbon_txt_sitecheck := self.green_sitecheck_by_carbon_txt(domain, refresh_cache=refresh_carbon_txt_cache):
-            return carbon_txt_sitecheck
-        try:
-            ip_address = self.convert_domain_to_ip(domain)
-        except (ipaddress.AddressValueError, socket.gaierror):
+        # If this fails, attempt to resolve the IP address for the domain
+        if ip_address := self.ip_for_domain(domain):
+            # If we get a matching IP, check whether it matches the known ranges for a green provider
+            if ip_match := self.check_for_matching_ip_ranges(ip_address):
+                return SiteCheck.green_sitecheck_by_ip_range(domain, ip_address, ip_match)
+
+            # If this fails, fallback to check whether it matches a known ASN for a green provider
+            if matching_asn := self.check_for_matching_asn(ip_address):
+                return SiteCheck.green_sitecheck_by_asn(domain, ip_address, matching_asn)
+
+        # otherwise, we return a grey rseult.
+        if not ip_address:
             ip_address = UNRESOLVED_ADDRESS
-            return self.grey_sitecheck(domain, ip_address)
-        except Exception as err:
-            logger.warning(
-                f"Unexpected exception looking up: {domain} - error was: {err}"
-            )
-            ip_address = UNRESOLVED_ADDRESS
-            return self.grey_sitecheck(domain, ip_address)
-
-        if ip_match := self.check_for_matching_ip_ranges(ip_address):
-            return self.green_sitecheck_by_ip_range(domain, ip_address, ip_match)
-
-        if matching_asn := self.check_for_matching_asn(ip_address):
-            return self.green_sitecheck_by_asn(domain, ip_address, matching_asn)
-
-        # otherwise, return a 'grey' result
-        return self.grey_sitecheck(domain, ip_address)
+        return SiteCheck.grey_sitecheck(domain, ip_address)
 
     def check_for_matching_ip_ranges(self, ip_address):
         """
@@ -214,6 +138,11 @@ class GreenDomainChecker:
 
         if ordered_matches:
             return ordered_matches[0]
+
+    def check_for_matching_carbon_txt(self, domain, refresh_carbon_txt_cache):
+        if carbon_txt := ProviderCarbonTxt.find_for_domain(domain, refresh_cache=refresh_carbon_txt_cache):
+            if carbon_txt.is_valid and carbon_txt.provider.counts_as_green:
+                return carbon_txt
 
     def check_for_matching_asn(self, ip_address):
         """
@@ -281,3 +210,14 @@ class GreenDomainChecker:
 
         return evaluated_green_queryset + grey_domains
 
+    def ip_for_domain(self, domain):
+        try:
+            ip_address = convert_domain_to_ip(domain)
+            return ip_address
+        except (ipaddress.AddressValueError, socket.gaierror):
+            pass
+        except Exception as err:
+            logger.warning(
+                f"Unexpected exception looking up: {domain} - error was: {err}"
+            )
+            pass
