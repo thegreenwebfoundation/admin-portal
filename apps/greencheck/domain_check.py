@@ -17,10 +17,7 @@ import ipaddress
 import logging
 import socket
 import typing
-from urllib.parse import urlparse
 
-import dns.resolver
-import httpx
 import ipwhois
 from ipwhois.exceptions import (
     ASNLookupError,
@@ -184,31 +181,6 @@ class GreenDomainChecker:
             if asn_match:
                 # we have a match, return the result
                 return asn_match.first()
-
-    def grey_urls_only(self, urls_list, queryset) -> list:
-        """
-        Accept a list of domain names, and a queryset of checked green
-        domain objects, and return a list of only the grey domains.
-        """
-        green_list = [domain_object.url for domain_object in queryset]
-
-        return [url for url in urls_list if url not in green_list]
-
-    def build_green_greylist(self, grey_list: list, green_list) -> list:
-        """
-        Create a list of green and grey domains, to serialise and deliver.
-        """
-        from .models import GreenDomain
-
-        grey_domains = []
-
-        for domain in grey_list:
-            gp = GreenDomain.grey_result(domain=domain)
-            grey_domains.append(gp)
-
-        evaluated_green_queryset = green_list[::1]
-
-        return evaluated_green_queryset + grey_domains
 
     def ip_for_domain(self, domain):
         try:

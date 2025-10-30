@@ -222,6 +222,34 @@ class GreenDomainBatchView(CreateAPIView):
     parser_classes = [parsers.FormParser, parsers.MultiPartParser]
     renderer_classes = [drf_csv_rndr.CSVRenderer]
 
+
+
+    def grey_urls_only(self, urls_list, queryset) -> list:
+        """
+        Accept a list of domain names, and a queryset of checked green
+        domain objects, and return a list of only the grey domains.
+        """
+        green_list = [domain_object.url for domain_object in queryset]
+
+        return [url for url in urls_list if url not in green_list]
+
+    def build_green_greylist(self, grey_list: list, green_list) -> list:
+        """
+        Create a list of green and grey domains, to serialise and deliver.
+        """
+        from .models import GreenDomain
+
+        grey_domains = []
+
+        for domain in grey_list:
+            gp = GreenDomain.grey_result(domain=domain)
+            grey_domains.append(gp)
+
+        evaluated_green_queryset = green_list[::1]
+
+        return evaluated_green_queryset + grey_domains
+
+
     def collect_urls(self, request: request.Request) -> list:
         """
         Accept a request object, parse any attached CSV file, and
@@ -253,9 +281,9 @@ class GreenDomainBatchView(CreateAPIView):
         if urls_list:
             queryset = gc_models.GreenDomain.objects.filter(url__in=urls_list)
 
-        grey_list = checker.grey_urls_only(urls_list, queryset)
+        grey_list = self.grey_urls_only(urls_list, queryset)
 
-        combined_batch_check_results = checker.build_green_greylist(grey_list, queryset)
+        combined_batch_check_results = self.build_green_greylist(grey_list, queryset)
 
         serialized = gc_serializers.GreenDomainSerializer(
             combined_batch_check_results, many=True
