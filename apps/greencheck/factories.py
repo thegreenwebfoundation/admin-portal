@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from apps.accounts import models as ac_models
 from apps.accounts.models import choices as ac_choices
-from apps.greencheck.models.checks import GreenDomain
+from apps.greencheck.models.green_domain import GreenDomain
 
 from . import models as gc_models
 

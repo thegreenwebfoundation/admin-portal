@@ -9,7 +9,7 @@ from apps.accounts.models import (
     HostingProviderSupportingDocument,
     ProviderSharedSecret,
 )
-from apps.greencheck.models.checks import CO2Intensity
+from apps.greencheck.models.co2_intensity import CO2Intensity
 
 from .models import GreencheckASN, GreencheckIp, GreenDomain
 

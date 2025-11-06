@@ -8,7 +8,7 @@ from rest_framework import permissions, views
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.response import Response
 
-from apps.greencheck.models.checks import CO2Intensity
+from apps.greencheck.models.co2_intensity import CO2Intensity
 
 from ..serializers import (
     CO2IntensitySerializer,

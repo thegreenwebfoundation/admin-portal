@@ -3,7 +3,7 @@ import logging
 
 from iso3166 import countries
 
-from apps.greencheck.models.checks import CO2Intensity
+from apps.greencheck.models.co2_intensity import CO2Intensity
 
 logger = logging.getLogger(__name__)
 

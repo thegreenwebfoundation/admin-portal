@@ -36,7 +36,7 @@ Currently the following APIs are documented there:
 
 ## Source code
 
-The core source code for all API endpoints can be found in [/models/checks.py](/apps/greencheck/models/checks.py).
+The core source code for all API endpoints can be found in [/models/](/apps/greencheck/models/).
 
 Views (endpoint routes) are all declared in [/api/views.py](/apps/greencheck/api/views.py).
 
