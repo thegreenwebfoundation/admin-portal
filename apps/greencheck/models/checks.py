@@ -378,33 +378,6 @@ class GreencheckIpApprove(mu_models.TimeStampedModel):
         verbose_name = "Greencheck IP Range Submission"
         # managed = False
 
-
-class GreencheckLinked(models.Model):
-    # waiting for use case first...
-    pass
-
-
-class GreenList(models.Model):
-    greencheck = models.ForeignKey(
-        Greencheck, on_delete=models.CASCADE, db_column="id_greencheck"
-    )
-    hostingprovider = models.ForeignKey(
-        ac_models.Hostingprovider, on_delete=models.CASCADE, db_column="id_hp"
-    )
-    last_checked = models.DateTimeField()
-    name = models.CharField(max_length=255, db_column="naam")
-    type = dj_mysql_models.EnumField(choices=gc_choices.ActionChoice.choices)
-    url = models.CharField(max_length=255)
-    website = models.CharField(max_length=255)
-
-    class Meta:
-        # managed = False
-        db_table = "greenlist"
-        indexes = [
-            models.Index(fields=["url"], name="url"),
-        ]
-
-
 class GreencheckTLD(models.Model):
     checked_domains = models.IntegerField()
     green_domains = models.IntegerField()
