@@ -1,31 +1,29 @@
 import logging
 
-import dateutil.parser as date_parser
-import datetime
 import dramatiq
 import MySQLdb
 
+from .models import Greencheck, GreenDomain
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-# console = logging.StreamHandler()
-# logger.addHandler(console)
-
 
 @dramatiq.actor
-def process_log(domain):
-    from .workers import SiteCheckLogger
+def process_log(green_domain_args):
 
-    check_logger = SiteCheckLogger()
+    green_domain = GreenDomain.from_dict(green_domain_args)
 
-    logger.debug(f"logging a check for {domain}")
-    if domain is not None:
+    logger.debug(f"logging a check for {green_domain.url}")
+
+    if green_domain is not None:
         try:
-            check_logger.log_sitecheck_for_domain(domain)
+
+            Greencheck.log_for_green_domain(green_domain)
         except MySQLdb.OperationalError as err:
             logger.warning(
                 (
                     f"Problem reported by the database when trying to "
-                    f"log domain: {domain}"
+                    f"log domain: {green_domain.url}"
                 )
             )
             logger.warning(err)

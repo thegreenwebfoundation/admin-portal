@@ -2,12 +2,15 @@ import decimal
 import ipaddress
 import logging
 import typing
+from datetime import datetime
 
-from dateutil.relativedelta import relativedelta
+import tld
+import ipaddress
 from django import forms
 from django.core import exceptions, validators
 from django.db import models
 from django.db.models.fields import Field
+from django.core.serializers import serialize
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.text import capfirst
@@ -241,6 +244,63 @@ class Greencheck(mysql_models.Model):
 
     def __str__(self):
         return f"{self.url} - {self.ip}"
+
+    @classmethod
+    def log_for_green_domain(cls, green_domain):
+        try:
+            fixed_tld = tld.get_tld(green_domain.url, fix_protocol=True)
+        except tld.exceptions.TldDomainNotFound:
+            if green_domain.url == "localhost":
+                return {
+                    "status": "We can't look up localhost. Skipping.",
+                    "green_domain": green_domain,
+                }
+
+            try:
+                ipaddress.ip_address(green_domain.url)
+                fixed_tld = ""
+            except Exception:
+                logger.warning(
+                    (
+                        "not a domain, or an IP address, not logging. "
+                        f"Sitecheck results: {green_domain}"
+                    )
+                )
+                return {"status": "Error", "green_domain": green_domain}
+
+        except Exception:
+            logger.exception(
+                (
+                    "Unexpected error. Not logging the result. "
+                    f"Sitecheck results: {green_domain}"
+                )
+            )
+            return {"status": "Error", "green_domain": green_domain}
+
+        if green_domain.hosting_provider_id is not None:
+            check = Greencheck.objects.create(
+                hostingprovider=green_domain.hosting_provider_id,
+                greencheck_ip=green_domain.match_ip_range or 0,
+                date=green_domain.checked_at,
+                green="yes",
+                ip=green_domain.ip or 0,
+                tld=fixed_tld,
+                type=green_domain.match_type,
+                url=green_domain.url,
+            )
+            logger.debug(f"Greencheck logged: {check}")
+        else:
+            check = Greencheck.objects.create(
+                date=green_domain.checked_at,
+                green="no",
+                ip=green_domain.ip or 0,
+                tld=fixed_tld,
+                url=green_domain.url,
+            )
+            logger.debug(f"Greencheck logged: {check}")
+
+        # return result so we can inspect if need be
+        return { "status": "OK", "green_domain": green_domain, "check": check }
 
 
 class GreencheckIpApprove(mu_models.TimeStampedModel):
@@ -573,6 +633,27 @@ class GreenDomain(models.Model):
         if obj := cls.objects.filter(url=domain).first():
             obj.delete()
 
+
+    @classmethod
+    def from_serializable_dict(cls, serialized):
+        created = serialized.get("created") and datetime.fromisoformat(serialized["created"])
+        modified = serialized.get("modified") and datetime.fromisoformat(serialized["modified"])
+        kwargs = {
+            **serialized,
+            **{ "created": created, "modified": modified }
+        }
+        return cls(**kwargs)
+
+    def to_serializable_dict(self):
+        serialized = serialize("python", [self])[0]
+        attributes = serialized["fields"]
+        created = attributes.get("created") and attributes["created"].isoformat()
+        modified = attributes.get("modified") and attributes["modified"].isoformat()
+        id = serialized.get("pk")
+        return {
+            **attributes,
+            **{ "id": id, "created": created, "modified":  modified }
+        }
 
     # Queries
     @property

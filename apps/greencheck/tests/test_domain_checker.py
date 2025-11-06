@@ -313,15 +313,6 @@ class TestDomainChecker:
         # look up for domain.com
         res = checker.check_domain("portail.numerique-educatif.fr")
 
-        from apps.greencheck.workers import SiteCheckLogger
-
-        # saving with None fails, as does "None", but passing 0 works,
-        # and we want to log the fact that a check took place, instead
-        # of silently erroring
-        # res.ip = 0
-
-        site_logger = SiteCheckLogger()
-        site_logger.log_sitecheck_to_database(res)
         # check that we get a response back and a grey result,
         # as there is no evidence left to support the green result
         assert res.green is False

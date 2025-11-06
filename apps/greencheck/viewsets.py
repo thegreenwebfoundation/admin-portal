@@ -1,15 +1,11 @@
 import csv
 import logging
 import socket
-import json
 import pika
 import dramatiq
 from io import TextIOWrapper
 
 import tld
-import urllib
-from django.utils import timezone
-from django.conf import settings
 from rest_framework import pagination, parsers, request, response, viewsets
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.generics import CreateAPIView
@@ -22,18 +18,12 @@ from rest_framework_csv import renderers as drf_csv_rndr  # noqa
 from .api.ip_range_viewset import IPRangeViewSet  # noqa
 from .api.asn_viewset import ASNViewSet  # noqa
 
-# from ...accounts.models import ac_models
 from . import models as gc_models
 from ..accounts.models import CarbonTxtDomainResultCache
 from . import serializers as gc_serializers
 from .network_utils import validate_domain
 
 
-# import (
-# from .serializers import (
-#     gc_serializers.GreenDomainBatchSerializer,
-#     gc_serializers.GreenDomainSerializer,
-# )
 from .domain_check import GreenDomainChecker
 
 
@@ -47,7 +37,7 @@ def log_domain_safely(domain):
     from .tasks import process_log
 
     try:
-        process_log.send(domain)
+        process_log.send(domain.to_serializable_dict())
     except (
         pika.exceptions.AMQPConnectionError,
         dramatiq.errors.ConnectionClosed,

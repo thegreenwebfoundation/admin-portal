@@ -12,13 +12,12 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIRequestFactory
 
-from ..workers import SiteCheckLogger
 from ..models import GreencheckIp, GreenDomain
 
 from ...accounts import models as ac_models
 
 from ..viewsets import GreenDomainViewset
-from . import greencheck_sitecheck, setup_domains
+from . import greencheck_sitecheck, setup_domains, create_greendomain
 
 User = get_user_model()
 
@@ -60,13 +59,12 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = SiteCheckLogger()
 
         domain = "google.com"
 
         sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+        create_greendomain(hosting_provider, sitecheck)
 
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
 
         rf = APIRequestFactory()
         url_path = reverse("green-domain-detail", kwargs={"url": domain})
@@ -92,7 +90,6 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = SiteCheckLogger()
 
         domain = "google.com"
         now = timezone.now()
@@ -112,7 +109,7 @@ class TestGreenDomainViewset:
 
         sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
 
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+        create_greendomain(hosting_provider, sitecheck)
 
         # assume we just have a link to a url, no uploading of files
         rf = APIRequestFactory()
@@ -144,7 +141,6 @@ class TestGreenDomainViewset:
         When we show responses, do we only the ones that are public?
         """
         hosting_provider.save()
-        sitecheck_logger = SiteCheckLogger()
 
         domain = "google.com"
         now = timezone.now()
@@ -163,8 +159,7 @@ class TestGreenDomainViewset:
         )
 
         sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+        create_greendomain(hosting_provider, sitecheck)
 
         # assume we just have a link to a url, no uploading of files
         rf = APIRequestFactory()
@@ -194,7 +189,6 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = SiteCheckLogger()
 
         domains = ["google.com", "anothergreendomain.com"]
         COMMA_SEPARATOR = ","
@@ -202,7 +196,7 @@ class TestGreenDomainViewset:
 
         for domain in domains:
             sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-            sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+            create_greendomain(hosting_provider, sitecheck)
 
         rf = APIRequestFactory()
         url_path = reverse("green-domain-list")
@@ -230,13 +224,12 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = SiteCheckLogger()
 
         domains = ["google.com", "anothergreendomain.com"]
 
         for domain in domains:
             sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-            sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+            create_greendomain(hosting_provider, sitecheck)
 
         rf = APIRequestFactory()
         url_path = reverse("green-domain-list")

@@ -40,30 +40,12 @@ class CheckUrlForm(forms.Form):
 
     url = forms.URLField()
 
-    def clean_url(self) -> typing.Union[gc_models.GreenDomain, gc_models.SiteCheck]:
+    def clean_url(self) -> str:
         """
-        Check the submitted url against the TGWF green
-        domain database.
+        Parse a domain name from the provided URL
         """
         url = self.cleaned_data["url"]
-        domain_to_check = validate_domain(url)
-
-        # check if we can resolve to an IP - this catches when
-        # people provide an IP address
-        try:
-            convert_domain_to_ip(domain_to_check)
-        except Exception as err:
-            logger.warning(err)
-            raise ValidationError(
-                (
-                    f"Provided url {url} does not appear have a "
-                    f"valid domain: {domain_to_check}. "
-                    "Please check and try again."
-                )
-            )
-
-        return domain_to_check
-
+        return validate_domain(url)
 
 class CheckUrlView(FormView):
     template_name = "try_out.html"
