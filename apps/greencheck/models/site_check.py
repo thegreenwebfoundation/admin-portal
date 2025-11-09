@@ -1,8 +1,14 @@
 from dataclasses import dataclass
+import logging
 
+import dramatiq
+import pika
 from django.utils import timezone
 
 from ..choices import GreenlistChoice
+from ..tasks import process_log
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class SiteCheck:
@@ -21,6 +27,22 @@ class SiteCheck:
     match_type: str
     match_ip_range: int
     cached: bool
+
+
+
+    @classmethod
+    def log_sitecheck(sitecheck):
+
+        try:
+            process_log.send(sitecheck.asdict())
+        except (
+            pika.exceptions.AMQPConnectionError,
+            dramatiq.errors.ConnectionClosed,
+        ):
+            logger.warn("RabbitMQ not available, not logging to RabbitMQ")
+        except Exception as err:
+            logger.exception(f"Unexpected error of type {err}")
+
 
 
     @classmethod

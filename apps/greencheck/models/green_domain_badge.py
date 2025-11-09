@@ -68,18 +68,19 @@ class GreenDomainBadge(TimeStampedModel):
         This method is called when the badge object is created (via django signals),
         and creates and saves the badge image.
         """
+        checker = GreenDomainChecker()
+
         self.path = self.path_for_domain()
 
-        checker = GreenDomainChecker()
-        green_domain = checker.check_domain(self.domain)
+        sitecheck = checker.check_domain(self.domain)
 
-        if green_domain.hosting_provider_id:
-            hosting_provider_name = Hostingprovider.objects.get(pk=green_domain.hosting_provider_id).name
+        if sitecheck.hosting_provider_id:
+            hosting_provider_name = Hostingprovider.objects.get(pk=sitecheck.hosting_provider_id).name
         else:
             hosting_provider_name = None
 
         image = GreencheckImageV3.generate_greencheck_image(
-                self.domain, green_domain.green, hosting_provider_name
+                self.domain, sitecheck.green, hosting_provider_name
         )
 
         self.save_image_file(image)

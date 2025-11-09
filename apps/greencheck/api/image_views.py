@@ -2,7 +2,7 @@ import logging
 
 from django.shortcuts import redirect
 
-from ..models.images  import GreenDomainBadge
+from ..models.green_domain_badge  import GreenDomainBadge
 from ..network_utils import validate_domain
 
 logger = logging.getLogger(__name__)

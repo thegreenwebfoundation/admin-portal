@@ -16,9 +16,7 @@ This follows largely the same approach:
 import ipaddress
 import logging
 import socket
-import typing
 
-import ipwhois
 from ipwhois.exceptions import (
     ASNLookupError,
     ASNOriginLookupError,
@@ -27,7 +25,7 @@ from ipwhois.exceptions import (
     IPDefinedError,
 )
 
-from .models import GreenDomain, SiteCheck
+from .models.site_check import SiteCheck
 from .network_utils import asn_from_ip, convert_domain_to_ip, order_ip_range_by_size
 from ..accounts.models import ProviderCarbonTxt
 
@@ -41,76 +39,29 @@ class GreenDomainChecker:
     matching SiteCheck result, that we might log.
     """
 
-
-    def perform_full_lookup(self, domain: str, refresh_carbon_txt_cache : bool = False) -> GreenDomain:
-        """
-        Return a Green Domain object from doing a lookup.
-        """
-        from .models import GreenDomain
-
-        res = self.check_domain(domain, refresh_carbon_txt_cache=refresh_carbon_txt_cache)
-
-        if not res.green:
-            return GreenDomain.grey_result(domain=res.url)
-
-        # return a domain result, but don't save it,
-        # as persisting it is handled asynchronously
-        # by another worker, and logged to both the greencheck
-        # table and this 'cache' table
-        return GreenDomain.from_sitecheck(res)
-
-    def extended_domain_info_lookup(self, domain_to_check: str) -> typing.Dict:
-        """
-        Accept an domain or IP address, and return extended information
-        about it, like extended whois data, and any relevant sitecheck
-        or green domain objects.
-
-        An extended greencheck ALWAYS refreshes the carbon.txt cache to make sure
-        that the returned result is accurate.
-        """
-        try:
-            ip_address = convert_domain_to_ip(domain_to_check)
-        except (socket.gaierror, ipaddress.AddressValueError) as err:
-            logger.warning(f"Unable to lookup domain: {domain_to_check} - error: {err}")
-        except Exception as err:
-            logger.warning(f"Unable to lookup domain: {domain_to_check} - error: {err}")
-
-        # fetch our sitecheck object
-        site_check = self.check_domain(domain_to_check, refresh_carbon_txt_cache=True)
-        # fetch our GreendDomain object
-        green_domain = self.perform_full_lookup(domain_to_check, refresh_carbon_txt_cache=True)
-
-        # carry out our extended whois lookup
-        whois_lookup = ipwhois.IPWhois(ip_address)
-        rdap = whois_lookup.lookup_rdap(depth=1)
-
-        return {
-            "domain": domain_to_check,
-            "green_domain": green_domain,
-            "site_check": site_check,
-            "whois_info": rdap,
-        }
-
-
     def check_domain(self, domain: str, refresh_carbon_txt_cache : bool = False) -> SiteCheck:
         """
         Accept a domain name and return either a GreenDomain Object,
         the best matching IP range for the ip address it resolves to,
         or a 'grey' Sitecheck
         """
-        # First, check for a green provider match by carbon_txt
-        if carbon_txt := self.check_for_matching_carbon_txt(domain, refresh_carbon_txt_cache):
-                return SiteCheck.green_sitecheck_by_carbon_txt(domain, carbon_txt)
+        ip_address = None
+        try:
+            # First, check for a green provider match by carbon_txt
+            if carbon_txt := self.check_for_matching_carbon_txt(domain, refresh_carbon_txt_cache):
+                    return SiteCheck.green_sitecheck_by_carbon_txt(domain, carbon_txt)
 
-        # If this fails, attempt to resolve the IP address for the domain
-        if ip_address := self.ip_for_domain(domain):
-            # If we get a matching IP, check whether it matches the known ranges for a green provider
-            if ip_match := self.check_for_matching_ip_ranges(ip_address):
-                return SiteCheck.green_sitecheck_by_ip_range(domain, ip_address, ip_match)
+            # If this fails, attempt to resolve the IP address for the domain
+            if ip_address := self.ip_for_domain(domain):
+                # If we get a matching IP, check whether it matches the known ranges for a green provider
+                if ip_match := self.check_for_matching_ip_ranges(ip_address):
+                    return SiteCheck.green_sitecheck_by_ip_range(domain, ip_address, ip_match)
 
-            # If this fails, fallback to check whether it matches a known ASN for a green provider
-            if matching_asn := self.check_for_matching_asn(ip_address):
-                return SiteCheck.green_sitecheck_by_asn(domain, ip_address, matching_asn)
+                # If this fails, fallback to check whether it matches a known ASN for a green provider
+                if matching_asn := self.check_for_matching_asn(ip_address):
+                    return SiteCheck.green_sitecheck_by_asn(domain, ip_address, matching_asn)
+        except (socket.gaierror, UnicodeError):
+            pass
 
         # otherwise, we return a grey rseult.
         if not ip_address:

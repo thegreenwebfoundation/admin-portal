@@ -9,6 +9,9 @@ from django_mysql import models as dj_mysql_models
 
 from ...accounts import models as ac_models
 from .. import choices as gc_choices
+from ..network_utils import validate_domain
+
+from .green_domain_badge import GreenDomainBadge
 
 logger = logging.getLogger(__name__)
 
@@ -35,41 +38,32 @@ class GreenDomain(models.Model):
     def __str__(self):
         return f"{self.url} - {self.modified}"
 
-    # Factories
     @classmethod
-    def create_for_provider(cls, domain: str, provider: ac_models.Hostingprovider, type=gc_choices.GreenlistChoice.NONE.value):
-        """
-        Create a new green domain for the domain passed in,  and allocate
-        it  to the given provider.
-        """
-
-        dom = GreenDomain(
-            green=True,
-            url=domain,
-            hosted_by=provider.name,
-            hosted_by_id=provider.id,
-            hosted_by_website=provider.website,
-            listed_provider=provider.is_listed,
-            partner=ac_models.PartnerChoice.NONE,
-            modified=timezone.now(),
-            type=type,
-        )
-        dom.save()
-        return dom
-
-    @classmethod
-    def upsert_for_provider(cls, domain: str, provider: ac_models.Hostingprovider, type=gc_choices.GreenlistChoice.NONE.value):
-        """
-        Try to fetch given domain if it exists, and link it given provider,
-        otherwise create a new green domain, allocated to said provider.
-        """
+    def green_domain_for(cls, url, skip_cache=False):
+        from ..domain_check import GreenDomainChecker # Prevent circular import error
+        checker = GreenDomainChecker()
         try:
-            green_domain = GreenDomain.objects.get(url=domain)
-            green_domain.allocate_to_provider(provider, type)
-        except GreenDomain.DoesNotExist:
-            green_domain = GreenDomain.create_for_provider(domain, provider, type)
+            domain = validate_domain(url)
+        except Exception as ex:
+            # not a valid domain, OR a valid IP. Get rid of it.
+            logger.warning(f"unable to extract domain from {url}, exception was: {ex}")
+            return cls.grey_result(url)
 
-        return green_domain
+        if not skip_cache:
+            # Try the database green domain cache table first:
+            if green_domain := cls.objects.filter(url=domain).first():
+                return green_domain
+
+        # Otherwise, there is no cached domain OR we are explicitly refreshing the cache,
+        # try full lookup using network:
+        cls.clear_from_all_caches(domain)
+        sitecheck = checker.check_domain(domain, refresh_carbon_txt_cache=skip_cache)
+        if sitecheck.green:
+            green_domain = cls.from_sitecheck(sitecheck)
+            green_domain.save()
+            return green_domain
+        else:
+            return cls.grey_result(domain=sitecheck.url)
 
     @classmethod
     def grey_result(cls, domain=None, type=gc_choices.GreenlistChoice.NONE.value):
@@ -77,6 +71,7 @@ class GreenDomain(models.Model):
         Return a grey domain with just the domain name added,
         the time of the and the rest empty.
         """
+        modified = ac_models.CarbonTxtDomainResultCache.last_modified(domain) or timezone.now()
         return GreenDomain(
             green=False,
             url=domain,
@@ -86,7 +81,7 @@ class GreenDomain(models.Model):
             listed_provider=False,
             partner=None,
             type=type,
-            modified=timezone.now(),
+            modified=modified,
         )
 
     @classmethod
@@ -119,31 +114,18 @@ class GreenDomain(models.Model):
         )
 
     @classmethod
+    def clear_from_all_caches(cls, domain):
+        """
+        Clear any trace of a domain from local caches.
+        """
+        cls.clear_cache(domain)
+        GreenDomainBadge.clear_cache(domain)
+        ac_models.CarbonTxtDomainResultCache.clear_cache(domain)
+
+    @classmethod
     def clear_cache(cls, domain):
         if obj := cls.objects.filter(url=domain).first():
             obj.delete()
-
-
-    @classmethod
-    def from_serializable_dict(cls, serialized):
-        created = serialized.get("created") and datetime.fromisoformat(serialized["created"])
-        modified = serialized.get("modified") and datetime.fromisoformat(serialized["modified"])
-        kwargs = {
-            **serialized,
-            **{ "created": created, "modified": modified }
-        }
-        return cls(**kwargs)
-
-    def to_serializable_dict(self):
-        serialized = serialize("python", [self])[0]
-        attributes = serialized["fields"]
-        created = attributes.get("created") and attributes["created"].isoformat()
-        modified = attributes.get("modified") and attributes["modified"].isoformat()
-        id = serialized.get("pk")
-        return {
-            **attributes,
-            **{ "id": id, "created": created, "modified":  modified }
-        }
 
     # Queries
     @property
@@ -175,30 +157,6 @@ class GreenDomain(models.Model):
         linked domain, otherwise return false.
         """
         return self.type == gc_choices.GreenlistChoice.CARBONTXT.value
-
-    @classmethod
-    def check_for_domain(cls, domain, skip_cache=False, refresh_carbon_txt_cache=None):
-        """
-        Accept a domain, or object that resolves to an IP and check.
-        Accepts skip_cache option to perform a full DNS lookup
-        instead of looking up a domain by key.
-        We also allow the main greendomains cache to be skipped, while NOT
-        skipping the separate carbon.txt domain cache - this is used in the
-        carbon.txt image generation view, as image embed code has historiclaly been provided
-        to end users **with** the nocache parameter set, and we want to ensure that the carbon.txt
-        cache is **not** skipped, even in this case.
-        """
-        from ..domain_check import GreenDomainChecker
-
-        checker = GreenDomainChecker()
-
-        if refresh_carbon_txt_cache is None:
-            refresh_carbon_txt_cache = skip_cache
-
-        if skip_cache:
-            return checker.perform_full_lookup(domain, refresh_carbon_txt_cache=refresh_carbon_txt_cache)
-
-        return GreenDomain.objects.filter(url=domain).first()
 
     # Mutators
     def allocate_to_provider(self, provider: ac_models.Hostingprovider, type=gc_choices.GreenlistChoice.NONE.value):

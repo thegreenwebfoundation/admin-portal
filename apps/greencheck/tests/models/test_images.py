@@ -5,13 +5,13 @@ from django.db.models import signals
 from PIL import Image
 from unittest import mock
 
-from apps.greencheck.models import GreenDomainBadge
+from apps.greencheck.models.green_domain_badge import GreenDomainBadge
 
 @pytest.mark.django_db
 class TestGreenDomainBadge():
-    @mock.patch("apps.greencheck.models.images.default_storage")
-    @mock.patch("apps.greencheck.models.images.GreenDomainChecker")
-    @mock.patch("apps.greencheck.models.images.GreencheckImageV3")
+    @mock.patch("apps.greencheck.models.green_domain_badge.default_storage")
+    @mock.patch("apps.greencheck.models.green_domain_badge.GreenDomainChecker")
+    @mock.patch("apps.greencheck.models.green_domain_badge.GreencheckImageV3")
     def test_caches_badge(self,
             green_check_image_mock, green_domain_checker_mock, default_storage_mock,
             site_check_factory, hosting_provider_factory
@@ -40,9 +40,9 @@ class TestGreenDomainBadge():
         green_check_image_mock.generate_greencheck_image.assert_called_with(domain, True, provider_name)
         default_storage_mock.save.assert_called()
 
-    @mock.patch("apps.greencheck.models.images.default_storage")
-    @mock.patch("apps.greencheck.models.images.GreenDomainChecker")
-    @mock.patch("apps.greencheck.models.images.GreencheckImageV3")
+    @mock.patch("apps.greencheck.models.green_domain_badge.default_storage")
+    @mock.patch("apps.greencheck.models.green_domain_badge.GreenDomainChecker")
+    @mock.patch("apps.greencheck.models.green_domain_badge.GreencheckImageV3")
     def test_uses_cached_badge(self,
             green_check_image_mock, green_domain_checker_mock, default_storage_mock,
             green_domain_badge_factory,
@@ -70,7 +70,7 @@ class TestGreenDomainBadge():
         default_storage_mock.save.assert_not_called()
 
 
-    @mock.patch("apps.greencheck.models.images.default_storage")
+    @mock.patch("apps.greencheck.models.green_domain_badge.default_storage")
     def test_clearing_cache_deletes_cache_entry(self,
         default_storage_mock, green_domain_badge_factory
     ):
@@ -90,7 +90,7 @@ class TestGreenDomainBadge():
         assert count_after == count_before - 1
         default_storage_mock.delete.assert_called_with(badge.path)
 
-    @mock.patch("apps.greencheck.models.images.default_storage")
+    @mock.patch("apps.greencheck.models.green_domain_badge.default_storage")
     def test_url_property_returns_default_storage_url(self,
         default_storage_mock, green_domain_badge_factory
     ):

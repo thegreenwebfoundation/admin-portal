@@ -132,61 +132,61 @@ class Greencheck(mysql_models.Model):
         return f"{self.url} - {self.ip}"
 
     @classmethod
-    def log_for_green_domain(cls, green_domain):
+    def log_for_sitecheck(cls, sitecheck):
         try:
-            fixed_tld = tld.get_tld(green_domain.url, fix_protocol=True)
+            fixed_tld = tld.get_tld(sitecheck.url, fix_protocol=True)
         except tld.exceptions.TldDomainNotFound:
-            if green_domain.url == "localhost":
+            if sitecheck.url == "localhost":
                 return {
                     "status": "We can't look up localhost. Skipping.",
-                    "green_domain": green_domain,
+                    "sitecheck": sitecheck,
                 }
 
             try:
-                ipaddress.ip_address(green_domain.url)
+                ipaddress.ip_address(sitecheck.url)
                 fixed_tld = ""
             except Exception:
                 logger.warning(
                     (
                         "not a domain, or an IP address, not logging. "
-                        f"Sitecheck results: {green_domain}"
+                        f"Sitecheck results: {sitecheck}"
                     )
                 )
-                return {"status": "Error", "green_domain": green_domain}
+                return {"status": "Error", "sitecheck": sitecheck}
 
         except Exception:
             logger.exception(
                 (
                     "Unexpected error. Not logging the result. "
-                    f"Sitecheck results: {green_domain}"
+                    f"Sitecheck results: {sitecheck}"
                 )
             )
-            return {"status": "Error", "green_domain": green_domain}
+            return {"status": "Error", "sitecheck": sitecheck}
 
-        if green_domain.hosting_provider_id is not None:
+        if sitecheck.hosting_provider_id is not None:
             check = Greencheck.objects.create(
-                hostingprovider=green_domain.hosting_provider_id,
-                greencheck_ip=green_domain.match_ip_range or 0,
-                date=green_domain.checked_at,
+                hostingprovider=sitecheck.hosting_provider_id,
+                greencheck_ip=sitecheck.match_ip_range or 0,
+                date=sitecheck.checked_at,
                 green="yes",
-                ip=green_domain.ip or 0,
+                ip=sitecheck.ip or 0,
                 tld=fixed_tld,
-                type=green_domain.match_type,
-                url=green_domain.url,
+                type=sitecheck.match_type,
+                url=sitecheck.url,
             )
             logger.debug(f"Greencheck logged: {check}")
         else:
             check = Greencheck.objects.create(
-                date=green_domain.checked_at,
+                date=sitecheck.checked_at,
                 green="no",
-                ip=green_domain.ip or 0,
+                ip=sitecheck.ip or 0,
                 tld=fixed_tld,
-                url=green_domain.url,
+                url=sitecheck.url,
             )
             logger.debug(f"Greencheck logged: {check}")
 
         # return result so we can inspect if need be
-        return { "status": "OK", "green_domain": green_domain, "check": check }
+        return { "status": "OK", "sitecheck": sitecheck, "res": check }
 
 
 class GreencheckIpApprove(mu_models.TimeStampedModel):

@@ -255,9 +255,7 @@ class TestGreenDomainViewset:
         """
         Exercise the checking code, when we don't have our domain cached already,
         and the domain resolves to an IP range associated with a green
-        hosting provider.
-        We don't persist the newly discovered green domain here to the database, but
-        in prod, we would do so via delegating this work to another worker process.
+        hosting provider. The result is cached in the greendomains table.
         """
 
         # mock our network lookup, so we get a consistent response when
@@ -266,8 +264,6 @@ class TestGreenDomainViewset:
             "apps.greencheck.domain_check.convert_domain_to_ip",
             return_value="172.217.168.238",
         )
-
-        setup_domains(["google.com"], hosting_provider_with_sample_user, green_ip)
 
         # this serves as a url that corresponds to the green IP
         # but isn't a domain we already have listed

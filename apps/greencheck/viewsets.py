@@ -1,8 +1,5 @@
 import csv
 import logging
-import socket
-import pika
-import dramatiq
 from io import TextIOWrapper
 
 import tld
@@ -21,30 +18,9 @@ from .api.asn_viewset import ASNViewSet  # noqa
 from . import models as gc_models
 from ..accounts.models import CarbonTxtDomainResultCache
 from . import serializers as gc_serializers
-from .network_utils import validate_domain
-
-
-from .domain_check import GreenDomainChecker
 
 
 logger = logging.getLogger(__name__)
-
-
-checker = GreenDomainChecker()
-
-
-def log_domain_safely(domain):
-    from .tasks import process_log
-
-    try:
-        process_log.send(domain.to_serializable_dict())
-    except (
-        pika.exceptions.AMQPConnectionError,
-        dramatiq.errors.ConnectionClosed,
-    ):
-        logger.warn("RabbitMQ not available, not logging to RabbitMQ")
-    except Exception as err:
-        logger.exception(f"Unexpected error of type {err}")
 
 
 class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
@@ -66,8 +42,6 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
     lookup_field = "url"
-
-    checker = GreenDomainChecker()
 
     def list(self, request, *args, **kwargs):
         """
@@ -96,65 +70,18 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return response.Response(serializer.data)
 
-    def legacy_grey_response(self, domain: str, log_check=True):
-        """
-        Return the response we historically send when
-        a check doesn't return a green result.
-        """
 
-        if log_check:
-            log_domain_safely(domain)
-
-        modified = CarbonTxtDomainResultCache.last_modified(domain)
-        return response.Response({"green": False, "url": domain, "data": False, "modified": modified })
-
-    def return_green_response(self, instance, log_check=True):
+    def response_for_greendomain(self, green_domain):
         """
-        Return the response we historically made when returning
-        a green result
+        Format the greendomain object as the appropriate HTTP response
         """
-
-        if log_check:
-            log_domain_safely(instance.url)
-        serializer = self.get_serializer(instance)
-        return response.Response(serializer.data)
-
-    def build_response_from_cache(self, instance, log_check=True):
-        """
-        Return the response we historically made when returning
-        a green result
-        """
-
-        if log_check:
-            log_domain_safely(instance.url)
-        serializer = self.get_serializer(instance)
-        return response.Response(serializer.data)
-
-    def build_response_from_full_network_lookup(self, domain, refresh_carbon_txt_cache):
-        """
-        Build a response
-        """
-        try:
-            res = checker.perform_full_lookup(domain, refresh_carbon_txt_cache=refresh_carbon_txt_cache)
-            if res.green:
-                return self.return_green_response(res)
-        except socket.gaierror:
-            return self.legacy_grey_response(domain)
-        except UnicodeError:
-            return self.legacy_grey_response(domain)
-
-    def build_response_from_database_lookup(self, domain):
-        instance = gc_models.GreenDomain.objects.filter(url=domain).first()
-        if instance:
-            return self.return_green_response(instance)
-
-    def clear_from_caches(self, domain):
-        """
-        Clear any trace of a domain from local caches.
-        """
-        gc_models.GreenDomain.clear_cache(domain)
-        gc_models.GreenDomainBadge.clear_cache(domain)
-        CarbonTxtDomainResultCache.clear_cache(domain)
+        if green_domain.green:
+            serializer = self.get_serializer(green_domain)
+            return response.Response(serializer.data)
+        else:
+            return response.Response({
+                "green": False, "url": green_domain.url, "data": False, "modified": green_domain.modified
+            })
 
 
     def retrieve(self, request, *args, **kwargs):
@@ -162,38 +89,13 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         Fetch entry matching the provided URL, like a 'detail' view
         """
         url = self.kwargs.get("url")
-        domain = None
 
         # `nocache=true` is the same string used by nginx. Using the same params
         # means we won't have to worry about nginx caching our request before it
         # hits an app server
         skip_cache = request.GET.get("nocache") == "true"
-        try:
-            domain = validate_domain(url)
-        except Exception as ex:
-            # not a valid domain, OR a valid IP. Get rid of it.
-            logger.warning(f"unable to extract domain from {url}, exception was: {ex}")
-            return self.legacy_grey_response(url, log_check=False)
-
-        if skip_cache:
-            # try to fetch domain the long way, clearing it from the
-            self.clear_from_caches(domain)
-            if http_response := self.build_response_from_full_network_lookup(domain, refresh_carbon_txt_cache=skip_cache):
-                return http_response
-
-        # Try the database green domain cache table first:
-        if http_response := self.build_response_from_database_lookup(domain):
-            return http_response
-
-        # not in cache table cache, try full lookup using network
-        if http_response := self.build_response_from_full_network_lookup(domain, refresh_carbon_txt_cache=skip_cache):
-            return http_response
-
-        # not in database or the cache, nor can we find it with
-        # any third party lookups. Fall back to saying we couldn't find anything,
-        # the way the API used to work.
-        return self.legacy_grey_response(url)
-
+        green_domain = gc_models.GreenDomain.green_domain_for(url, skip_cache)
+        return self.response_for_greendomain(green_domain)
 
 class GreenDomainBatchView(CreateAPIView):
     """

@@ -19,7 +19,9 @@ from apps.greencheck.views import GreenUrlsView
 
 from ..greencheck import domain_check
 from ..greencheck import models as gc_models
-from ..greencheck.network_utils import validate_domain, convert_domain_to_ip
+from ..greencheck.extended_domain_check import extended_domain_info_lookup
+from ..greencheck.network_utils import validate_domain
+
 
 checker = domain_check.GreenDomainChecker()
 logger = logging.getLogger(__name__)
@@ -69,7 +71,7 @@ class CheckUrlView(FormView):
 
         if form.is_valid():
             domain_name = form.cleaned_data["url"]
-            lookup_result = checker.extended_domain_info_lookup(domain_name)
+            lookup_result = extended_domain_info_lookup(domain_name)
 
             site_check = lookup_result["site_check"]
             green_domain = lookup_result["green_domain"]
