@@ -289,6 +289,47 @@ class TestGreenDomainViewset:
         # persistence til later, typically outside the request/response lifecycle
         assert GreenDomain.objects.all().count() == 1
 
+    def test_check_single_ip_address(
+        self,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: GreencheckIp,
+        mocker,
+    ):
+        """
+        Exercise the checking code, ensuring a greencheck for an IP address
+        returns the correct response
+        """
+
+        # mock our network lookup, so we get a consistent response when
+        # looking up our domains
+        mocked_network_function = mocker.patch(
+            "apps.greencheck.domain_check.convert_domain_to_ip",
+            return_value="172.217.168.238",
+        )
+
+
+        ip = "172.217.168.238"
+
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-detail", kwargs={"url": ip})
+        logger.info(f"url_path: {url_path}")
+
+        request = rf.get(url_path)
+
+        view = GreenDomainViewset.as_view({"get": "retrieve"})
+
+        response = view(request, url=ip)
+
+        assert response.status_code == 200
+        assert response.data["green"] is True
+
+        # did we really do a network lookup
+        assert mocked_network_function.call_count == 1
+
+        # do we still have the same number of green domains listed? We defer
+        # persistence til later, typically outside the request/response lifecycle
+        assert GreenDomain.objects.all().count() == 1
+
     def test_nocache_clears_all_caches(
         self,
         hosting_provider_with_sample_user: ac_models.Hostingprovider,
