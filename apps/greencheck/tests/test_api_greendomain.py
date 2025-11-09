@@ -289,6 +289,50 @@ class TestGreenDomainViewset:
         # persistence til later, typically outside the request/response lifecycle
         assert GreenDomain.objects.all().count() == 1
 
+    def test_nocache_clears_all_caches(
+        self,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: GreencheckIp,
+        mocker,
+    ):
+        """
+        Ensure all caches are cleared when the nocache flag is passed
+        """
+
+        mocker.patch(
+            "apps.greencheck.domain_check.convert_domain_to_ip",
+            return_value="172.217.168.238",
+        )
+
+        green_domain_cache_mock = mocker.patch("apps.greencheck.models.green_domain.GreenDomain.clear_cache")
+        green_domain_badge_cache_mock = mocker.patch("apps.greencheck.models.green_domain.GreenDomainBadge.clear_cache")
+        carbon_txt_cache_mock = mocker.patch("apps.greencheck.models.green_domain.ac_models.CarbonTxtDomainResultCache.clear_cache")
+
+        # this serves as a url that corresponds to the green IP
+        # but isn't a domain we already have listed
+        new_domain = "a-new-domain-that-resolves-to-our-green-ip.com"
+
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-detail", kwargs={"url": new_domain})
+        logger.info(f"url_path: {url_path}")
+
+
+        view = GreenDomainViewset.as_view({"get": "retrieve"})
+
+        # Make a first request to populate the caches
+        request = rf.get(url_path)
+        response = view(request, url=new_domain)
+
+        # Then call again to bust the cache
+        request = rf.get(url_path, data={"nocache": "true"})
+        response = view(request, url=new_domain)
+
+        assert response.status_code == 200
+
+        green_domain_cache_mock.assert_called_with(new_domain)
+        green_domain_badge_cache_mock.assert_called_with(new_domain)
+        carbon_txt_cache_mock.assert_called_with(new_domain)
+
 
 class TestGreenDomainBatchView:
     def test_check_multple_urls_via_post(

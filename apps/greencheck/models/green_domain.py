@@ -49,14 +49,15 @@ class GreenDomain(models.Model):
             logger.warning(f"unable to extract domain from {url}, exception was: {ex}")
             return cls.grey_result(url)
 
-        if not skip_cache:
+        if skip_cache:
+            cls.clear_from_all_caches(domain)
+        else:
             # Try the database green domain cache table first:
             if green_domain := cls.objects.filter(url=domain).first():
                 return green_domain
 
         # Otherwise, there is no cached domain OR we are explicitly refreshing the cache,
         # try full lookup using network:
-        cls.clear_from_all_caches(domain)
         sitecheck = checker.check_domain(domain, refresh_carbon_txt_cache=skip_cache)
         if sitecheck.green:
             green_domain = cls.from_sitecheck(sitecheck)
