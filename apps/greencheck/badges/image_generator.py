@@ -158,7 +158,7 @@ class GreencheckImageV3:
         img = generator.fetch_template_image(green=green)
         annotated_img = generator.annotate_img(
             img, domain, green=green, provider=hosting_provider_name
-        ).convert("RGB")
+        ).convert("RGBA")
         return annotated_img
 
     def normalise_domain_name_length(self, domain: str) -> str:
