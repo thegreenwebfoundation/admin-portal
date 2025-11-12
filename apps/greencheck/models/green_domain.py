@@ -12,6 +12,7 @@ from .. import choices as gc_choices
 from ..network_utils import validate_domain
 
 from .green_domain_badge import GreenDomainBadge
+from .green_check import Greencheck
 
 logger = logging.getLogger(__name__)
 
@@ -62,11 +63,13 @@ class GreenDomain(models.Model):
         else:
             # Try the database green domain cache table first:
             if green_domain := cls.objects.filter(url=domain).first():
+                Greencheck.log_greendomain(green_domain)
                 return green_domain
 
         # Otherwise, there is no cached domain OR we are explicitly refreshing the cache,
         # try full lookup using network:
         sitecheck = checker.check_domain(domain, refresh_carbon_txt_cache=skip_cache)
+        Greencheck.log_sitecheck(sitecheck)
         if sitecheck.green:
             green_domain = cls.from_sitecheck(sitecheck)
             green_domain.save()

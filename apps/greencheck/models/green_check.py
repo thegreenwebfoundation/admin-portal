@@ -1,7 +1,10 @@
 import ipaddress
 import logging
 
+import dramatiq
+import pika
 import tld
+
 from django.db import models
 from django.utils import timezone
 from django_mysql import models as dj_mysql_models
@@ -12,8 +15,10 @@ from apps.greencheck.validators import validate_ip_range
 
 from ...accounts import models as ac_models
 from .. import choices as gc_choices
+from ..tasks import process_log
 
 from .fields import IpAddressField
+from .site_check import SiteCheck
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +137,32 @@ class Greencheck(mysql_models.Model):
         return f"{self.url} - {self.ip}"
 
     @classmethod
+    def log_sitecheck(cls, sitecheck):
+        """
+        Asynchronously logs a sitecheck to the greencheck table
+        """
+        try:
+            process_log.send(sitecheck.asdict())
+        except (
+            pika.exceptions.AMQPConnectionError,
+            dramatiq.errors.ConnectionClosed,
+        ):
+            logger.warn("RabbitMQ not available, not logging to RabbitMQ")
+        except Exception as err:
+            logger.exception(f"Unexpected error of type {err}")
+
+
+    @classmethod
+    def log_greendomain(cls, green_domain):
+        sitecheck = SiteCheck.from_greendomain(green_domain)
+        cls.log_sitecheck(sitecheck)
+
+    @classmethod
     def log_for_sitecheck(cls, sitecheck):
+        """
+        Synchronously logs a sitecheck to the greencheck table - called from
+        within the dramatiq worker
+        """
         try:
             fixed_tld = tld.get_tld(sitecheck.url, fix_protocol=True)
         except tld.exceptions.TldDomainNotFound:

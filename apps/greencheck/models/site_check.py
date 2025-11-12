@@ -1,12 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import logging
 
-import dramatiq
-import pika
 from django.utils import timezone
 
 from ..choices import GreenlistChoice
-from ..tasks import process_log
 
 logger = logging.getLogger(__name__)
 
@@ -28,22 +25,24 @@ class SiteCheck:
     match_ip_range: int
     cached: bool
 
-
+    # Factories
 
     @classmethod
-    def log_sitecheck(sitecheck):
-
-        try:
-            process_log.send(sitecheck.asdict())
-        except (
-            pika.exceptions.AMQPConnectionError,
-            dramatiq.errors.ConnectionClosed,
-        ):
-            logger.warn("RabbitMQ not available, not logging to RabbitMQ")
-        except Exception as err:
-            logger.exception(f"Unexpected error of type {err}")
-
-
+    def from_greendomain(cls, green_domain):
+        """
+        Returns a Sitecheck object, populated from the fields of an existing greendomain:
+        """
+        return cls(
+            url=green_domain.url,
+            ip=None,
+            data=green_domain.green,
+            green=green_domain.green,
+            hosting_provider_id=green_domain.hosted_by_id,
+            checked_at=timezone.now(),
+            match_type=green_domain.type,
+            match_ip_range=None,
+            cached=True,
+        )
 
     @classmethod
     def green_sitecheck_by_carbon_txt(cls, domain,  carbon_txt):
@@ -117,3 +116,8 @@ class SiteCheck:
             cached=False,
             checked_at=timezone.now(),
         )
+
+    # Queries
+
+    def asdict(self):
+        return asdict(self)
