@@ -25,6 +25,7 @@ from ipwhois.exceptions import (
     IPDefinedError,
 )
 
+from .instrument import instrument
 from .models.site_check import SiteCheck
 from .network_utils import asn_from_ip, convert_domain_to_ip, order_ip_range_by_size
 from ..accounts.models import ProviderCarbonTxt
@@ -33,12 +34,14 @@ logger = logging.getLogger(__name__)
 
 UNRESOLVED_ADDRESS = "0.0.0.0"
 
+
 class GreenDomainChecker:
     """
     The checking class. Used to run a check against a domain, to find the
     matching SiteCheck result, that we might log.
     """
 
+    @instrument("Full domain check", "domain")
     def check_domain(self, domain: str, refresh_carbon_txt_cache : bool = False) -> SiteCheck:
         """
         Accept a domain name and return either a GreenDomain Object,
@@ -68,6 +71,7 @@ class GreenDomainChecker:
             ip_address = UNRESOLVED_ADDRESS
         return SiteCheck.grey_sitecheck(domain, ip_address)
 
+    @instrument("IP range check", "ip_address")
     def check_for_matching_ip_ranges(self, ip_address):
         """
         Look up the IP ranges that include this IP address, and return
@@ -87,11 +91,13 @@ class GreenDomainChecker:
         if ordered_matches:
             return ordered_matches[0]
 
+    @instrument("Carbon.txt check", "domain")
     def check_for_matching_carbon_txt(self, domain, refresh_carbon_txt_cache):
         if carbon_txt := ProviderCarbonTxt.find_for_domain(domain, refresh_cache=refresh_carbon_txt_cache):
             if carbon_txt.is_valid and carbon_txt.provider.counts_as_green:
                 return carbon_txt
 
+    @instrument("ASN check", "ip_address")
     def check_for_matching_asn(self, ip_address):
         """
         Return the Green ASN that this IP address 'belongs' to.
@@ -133,6 +139,8 @@ class GreenDomainChecker:
                 # we have a match, return the result
                 return asn_match.first()
 
+
+    @instrument("IP lookup for domain name", "domain")
     def ip_for_domain(self, domain):
         try:
             ip_address = convert_domain_to_ip(domain)
