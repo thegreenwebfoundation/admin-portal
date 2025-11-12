@@ -27,6 +27,7 @@ from . import models as gc_models
 from ..accounts.models import CarbonTxtDomainResultCache
 from . import serializers as gc_serializers
 
+
 # import (
 # from .serializers import (
 #     gc_serializers.GreenDomainBatchSerializer,
@@ -160,8 +161,10 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         """
         Clear any trace of a domain from local caches.
         """
-        if fetched_domain := gc_models.GreenDomain.objects.filter(url=domain).first():
-            fetched_domain.delete()
+        gc_models.GreenDomain.clear_cache(domain)
+        gc_models.GreenDomainBadge.clear_cache(domain)
+        CarbonTxtDomainResultCache.clear_cache(domain)
+
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -183,16 +186,7 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
 
         if skip_cache:
             # try to fetch domain the long way, clearing it from the
-            # any caches if already present
-            try:
-                green_domain = gc_models.GreenDomain.objects.get(url=domain)
-                via_carbon_txt = green_domain.added_via_carbontxt
-            except gc_models.GreenDomain.DoesNotExist:
-                via_carbon_txt = False
-
-            if not via_carbon_txt:
-                self.clear_from_caches(domain)
-
+            self.clear_from_caches(domain)
             if http_response := self.build_response_from_full_network_lookup(domain, refresh_carbon_txt_cache=skip_cache):
                 return http_response
 

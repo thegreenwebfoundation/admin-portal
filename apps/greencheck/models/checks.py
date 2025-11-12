@@ -592,6 +592,13 @@ class GreenDomain(models.Model):
             green=True,
             type=sitecheck.match_type,
         )
+
+    @classmethod
+    def clear_cache(cls, domain):
+        if obj := cls.objects.filter(url=domain).first():
+            obj.delete()
+
+
     # Queries
     @property
     def hosting_provider(self) -> typing.Union[ac_models.Hostingprovider, None]:

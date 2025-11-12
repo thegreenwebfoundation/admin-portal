@@ -36,6 +36,12 @@ class CarbonTxtDomainResultCache(TimeStampedModel):
         threshold_time = datetime.now() - timedelta(seconds=ttl)
         cls.objects.filter(created__lte=threshold_time).delete()
 
+    @classmethod
+    def clear_cache(cls, domain):
+        if obj := cls.objects.filter(domain=domain).first():
+            obj.delete()
+
+
 
 class CarbonTxtMotivation(tag_models.TagBase):
     """

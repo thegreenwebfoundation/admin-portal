@@ -1,5 +1,7 @@
 import logging
+
 from pathlib import Path
+
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -149,6 +151,15 @@ class GreencheckImageV3:
     font_path = app_dir / "badges" / "TWKEverett-Regular.otf"
     font_settings_green = ImageFont.truetype(str(font_path), 9)
     font_settings_grey = ImageFont.truetype(str(font_path), 9)
+
+    @classmethod
+    def generate_greencheck_image(cls, domain, green, hosting_provider_name):
+        generator = cls()
+        img = generator.fetch_template_image(green=green)
+        annotated_img = generator.annotate_img(
+            img, domain, green=green, provider=hosting_provider_name
+        ).convert("RGB")
+        return annotated_img
 
     def normalise_domain_name_length(self, domain: str) -> str:
         """
