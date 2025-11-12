@@ -38,8 +38,16 @@ class GreenDomain(models.Model):
     def __str__(self):
         return f"{self.url} - {self.modified}"
 
+    # Factories
+
     @classmethod
     def green_domain_for(cls, url, skip_cache=False):
+        """
+        This is the principal method to look up a domain for checking, using the cache.
+        It validates the URL, then EITHER returns a cached greendomain result, OR performs a full
+        lookup, if no cached result is availble (or if the caller has passed the skip_cache flag).
+        Green results are cached to the greendomains table, while grey results are returned without saving.
+        """
         from ..domain_check import GreenDomainChecker # Prevent circular import error
         checker = GreenDomainChecker()
         try:
@@ -88,8 +96,8 @@ class GreenDomain(models.Model):
     @classmethod
     def from_sitecheck(cls, sitecheck):
         """
-        Return a grey domain with just the domain name added,
-        the time of the and the rest empty.
+        Return a greendomain model for a given sitecheck. Note that this can represent
+        either a green or a grey domain, depending on the result of the sitecheck itself.
         """
         hosting_provider = None
         try:

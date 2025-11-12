@@ -153,7 +153,10 @@ class GreencheckImageV3:
     font_settings_grey = ImageFont.truetype(str(font_path), 9)
 
     @classmethod
-    def generate_greencheck_image(cls, domain, green, hosting_provider_name):
+    def generate_greencheck_image(cls, domain : str, green : bool, hosting_provider_name : str) -> Image:
+        """
+        Generates and returns the green web badge image for a given domain.
+        """
         generator = cls()
         img = generator.fetch_template_image(green=green)
         annotated_img = generator.annotate_img(

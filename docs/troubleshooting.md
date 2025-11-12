@@ -38,9 +38,11 @@ https://greenweb.sentry.io/issues/
 
 Still, exceptions where possible should be caught, to that isn't unsuably noisy.
 
-Where possible, we aim to follow the guidance in the Octopus Energy Style guide listed below
+## Style and coding conventions.
 
-https://github.com/octoenergy/public-conventions/blob/master/conventions/python.md#catching-exceptions
+Where possible, we aim to follow the guidance in the Octopus Energy Style guide for [python](https://github.com/octoenergy/public-conventions/blob/master/conventions/python.md), and [django](https://github.com/octoenergy/public-conventions/blob/main/conventions/django.md). We also prefer our functions to be type annotated where possible.
+
+There's a lot of legacy code in the codebase, so our current rule of thumb is that in any given PR, if we touch a given file of code, we bring it up to standard, rather than attempting to do the whole app at once.
 
 ### See also:
 
