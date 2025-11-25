@@ -132,6 +132,8 @@ class BatchViewHelpers:
     def response_for_urls_list(self, urls_list):
         if urls_list:
             queryset = gc_models.GreenDomain.objects.filter(url__in=urls_list)
+        else:
+            queryset = []
 
         grey_list = self.grey_urls_only(urls_list, queryset)
 
