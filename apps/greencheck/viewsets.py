@@ -1,11 +1,12 @@
 import csv
+import json
 import logging
 from io import TextIOWrapper
 
 import tld
 from rest_framework import pagination, parsers, request, response, viewsets
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema  # noqa
 
@@ -97,24 +98,11 @@ class GreenDomainViewset(viewsets.ReadOnlyModelViewSet):
         green_domain = gc_models.GreenDomain.green_domain_for(url, skip_cache)
         return self.response_for_greendomain(green_domain)
 
-class GreenDomainBatchView(CreateAPIView):
+class BatchViewHelpers:
     """
-    A batch API for checking domains in bulk, rather than individually.
-
-    Upload a CSV file containing a list of domains, to get back the status of each domain.
-
-    If you just want a list of green domains to check against, we publish a daily snapshot of all the green domains we have, for offline use and analysis, at https://datasets.thegreenwebfoundation.org
-    """  # noqa
-
-    queryset = gc_models.GreenDomain.objects.all()
-    serializer_class = gc_serializers.GreenDomainBatchSerializer
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [AllowAny]
-    pagination_class = pagination.PageNumberPagination
-    parser_classes = [parsers.FormParser, parsers.MultiPartParser]
-    renderer_classes = [drf_csv_rndr.CSVRenderer]
-
-
+    This is a base class for views which perform greenchecks over multiple domains simultaneously,
+    containing shared logic and helpers.
+    """
 
     def grey_urls_only(self, urls_list, queryset) -> list:
         """
@@ -141,6 +129,61 @@ class GreenDomainBatchView(CreateAPIView):
 
         return evaluated_green_queryset + grey_domains
 
+    def response_for_urls_list(self, urls_list):
+        if urls_list:
+            queryset = gc_models.GreenDomain.objects.filter(url__in=urls_list)
+
+        grey_list = self.grey_urls_only(urls_list, queryset)
+
+        combined_batch_check_results = self.build_green_greylist(grey_list, queryset)
+
+        serialized = gc_serializers.GreenDomainSerializer(
+            combined_batch_check_results, many=True
+        )
+
+        return serialized
+
+class LegacyMultiView(RetrieveAPIView, BatchViewHelpers):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [AllowAny]
+
+    def retrieve(self, *args, **kwargs):
+        """
+        This is an undocumented legacy view which is still used by the browser extension - it
+        accepts a JSON formatted list of URLS and returns an array of results.
+        """
+        try:
+            urls = json.loads(kwargs["url_list"])
+        except Exception:
+            urls = []
+
+        # fallback if the url list is not usable
+        if urls is None:
+            urls = []
+
+        serialized = self.response_for_urls_list(urls)
+
+        return response.Response(serialized.data)
+
+
+
+class GreenDomainBatchView(CreateAPIView, BatchViewHelpers):
+    """
+    A batch API for checking domains in bulk, rather than individually.
+
+    Upload a CSV file containing a list of domains, to get back the status of each domain.
+
+    If you just want a list of green domains to check against, we publish a daily snapshot of all the green domains we have, for offline use and analysis, at https://datasets.thegreenwebfoundation.org
+    """  # noqa
+
+    queryset = gc_models.GreenDomain.objects.all()
+    serializer_class = gc_serializers.GreenDomainBatchSerializer
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [AllowAny]
+    pagination_class = pagination.PageNumberPagination
+    parser_classes = [parsers.FormParser, parsers.MultiPartParser]
+    renderer_classes = [drf_csv_rndr.CSVRenderer]
+
 
     def collect_urls(self, request: request.Request) -> list:
         """
@@ -163,6 +206,7 @@ class GreenDomainBatchView(CreateAPIView):
 
         return urls_list
 
+
     def create(self, request, *args, **kwargs):
         """"""
 
@@ -170,16 +214,7 @@ class GreenDomainBatchView(CreateAPIView):
 
         logger.debug(f"urls_list: {urls_list}")
 
-        if urls_list:
-            queryset = gc_models.GreenDomain.objects.filter(url__in=urls_list)
-
-        grey_list = self.grey_urls_only(urls_list, queryset)
-
-        combined_batch_check_results = self.build_green_greylist(grey_list, queryset)
-
-        serialized = gc_serializers.GreenDomainSerializer(
-            combined_batch_check_results, many=True
-        )
+        serialized = self.response_for_urls_list(urls_list)
 
         headers = self.get_success_headers(serialized.data)
 
