@@ -12,13 +12,12 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIRequestFactory
 
-from ..legacy_workers import LegacySiteCheckLogger
 from ..models import GreencheckIp, GreenDomain
 
 from ...accounts import models as ac_models
 
 from ..viewsets import GreenDomainViewset
-from . import greencheck_sitecheck, setup_domains
+from . import greencheck_sitecheck, setup_domains, create_greendomain
 
 User = get_user_model()
 
@@ -60,13 +59,12 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
 
         domain = "google.com"
 
         sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
+        create_greendomain(hosting_provider, sitecheck)
 
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
 
         rf = APIRequestFactory()
         url_path = reverse("green-domain-detail", kwargs={"url": domain})
@@ -92,7 +90,6 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
 
         domain = "google.com"
         now = timezone.now()
@@ -112,7 +109,7 @@ class TestGreenDomainViewset:
 
         sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
 
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+        create_greendomain(hosting_provider, sitecheck)
 
         # assume we just have a link to a url, no uploading of files
         rf = APIRequestFactory()
@@ -144,7 +141,6 @@ class TestGreenDomainViewset:
         When we show responses, do we only the ones that are public?
         """
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
 
         domain = "google.com"
         now = timezone.now()
@@ -163,8 +159,7 @@ class TestGreenDomainViewset:
         )
 
         sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+        create_greendomain(hosting_provider, sitecheck)
 
         # assume we just have a link to a url, no uploading of files
         rf = APIRequestFactory()
@@ -194,7 +189,6 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
 
         domains = ["google.com", "anothergreendomain.com"]
         COMMA_SEPARATOR = ","
@@ -202,7 +196,7 @@ class TestGreenDomainViewset:
 
         for domain in domains:
             sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-            sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+            create_greendomain(hosting_provider, sitecheck)
 
         rf = APIRequestFactory()
         url_path = reverse("green-domain-list")
@@ -230,13 +224,12 @@ class TestGreenDomainViewset:
         """
 
         hosting_provider.save()
-        sitecheck_logger = LegacySiteCheckLogger()
 
         domains = ["google.com", "anothergreendomain.com"]
 
         for domain in domains:
             sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-            sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+            create_greendomain(hosting_provider, sitecheck)
 
         rf = APIRequestFactory()
         url_path = reverse("green-domain-list")
@@ -262,19 +255,15 @@ class TestGreenDomainViewset:
         """
         Exercise the checking code, when we don't have our domain cached already,
         and the domain resolves to an IP range associated with a green
-        hosting provider.
-        We don't persist the newly discovered green domain here to the database, but
-        in prod, we would do so via delegating this work to another worker process.
+        hosting provider. The result is cached in the greendomains table.
         """
 
         # mock our network lookup, so we get a consistent response when
         # looking up our domains
         mocked_network_function = mocker.patch(
-            "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+            "apps.greencheck.domain_check.convert_domain_to_ip",
             return_value="172.217.168.238",
         )
-
-        setup_domains(["google.com"], hosting_provider_with_sample_user, green_ip)
 
         # this serves as a url that corresponds to the green IP
         # but isn't a domain we already have listed
@@ -299,6 +288,91 @@ class TestGreenDomainViewset:
         # do we still have the same number of green domains listed? We defer
         # persistence til later, typically outside the request/response lifecycle
         assert GreenDomain.objects.all().count() == 1
+
+    def test_check_single_ip_address(
+        self,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: GreencheckIp,
+        mocker,
+    ):
+        """
+        Exercise the checking code, ensuring a greencheck for an IP address
+        returns the correct response
+        """
+
+        # mock our network lookup, so we get a consistent response when
+        # looking up our domains
+        mocked_network_function = mocker.patch(
+            "apps.greencheck.domain_check.convert_domain_to_ip",
+            return_value="172.217.168.238",
+        )
+
+
+        ip = "172.217.168.238"
+
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-detail", kwargs={"url": ip})
+        logger.info(f"url_path: {url_path}")
+
+        request = rf.get(url_path)
+
+        view = GreenDomainViewset.as_view({"get": "retrieve"})
+
+        response = view(request, url=ip)
+
+        assert response.status_code == 200
+        assert response.data["green"] is True
+
+        # did we really do a network lookup
+        assert mocked_network_function.call_count == 1
+
+        # do we still have the same number of green domains listed? We defer
+        # persistence til later, typically outside the request/response lifecycle
+        assert GreenDomain.objects.all().count() == 1
+
+    def test_nocache_clears_all_caches(
+        self,
+        hosting_provider_with_sample_user: ac_models.Hostingprovider,
+        green_ip: GreencheckIp,
+        mocker,
+    ):
+        """
+        Ensure all caches are cleared when the nocache flag is passed
+        """
+
+        mocker.patch(
+            "apps.greencheck.domain_check.convert_domain_to_ip",
+            return_value="172.217.168.238",
+        )
+
+        green_domain_cache_mock = mocker.patch("apps.greencheck.models.green_domain.GreenDomain.clear_cache")
+        green_domain_badge_cache_mock = mocker.patch("apps.greencheck.models.green_domain.GreenDomainBadge.clear_cache")
+        carbon_txt_cache_mock = mocker.patch("apps.greencheck.models.green_domain.ac_models.CarbonTxtDomainResultCache.clear_cache")
+
+        # this serves as a url that corresponds to the green IP
+        # but isn't a domain we already have listed
+        new_domain = "a-new-domain-that-resolves-to-our-green-ip.com"
+
+        rf = APIRequestFactory()
+        url_path = reverse("green-domain-detail", kwargs={"url": new_domain})
+        logger.info(f"url_path: {url_path}")
+
+
+        view = GreenDomainViewset.as_view({"get": "retrieve"})
+
+        # Make a first request to populate the caches
+        request = rf.get(url_path)
+        response = view(request, url=new_domain)
+
+        # Then call again to bust the cache
+        request = rf.get(url_path, data={"nocache": "true"})
+        response = view(request, url=new_domain)
+
+        assert response.status_code == 200
+
+        green_domain_cache_mock.assert_called_with(new_domain)
+        green_domain_badge_cache_mock.assert_called_with(new_domain)
+        carbon_txt_cache_mock.assert_called_with(new_domain)
 
 
 class TestGreenDomainBatchView:

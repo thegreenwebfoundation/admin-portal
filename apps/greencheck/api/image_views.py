@@ -2,11 +2,10 @@ import logging
 
 from django.shortcuts import redirect
 
-from ..domain_check import GreenDomainChecker
-from ..models.images  import GreenDomainBadge
+from ..models.green_domain_badge  import GreenDomainBadge
+from ..network_utils import validate_domain
 
 logger = logging.getLogger(__name__)
-checker = GreenDomainChecker()
 
 
 def greencheck_image(_request, url):
@@ -20,7 +19,7 @@ def greencheck_image(_request, url):
     checking for the presence of the image file, and creating import
     if necessary.
     """
-    domain = checker.validate_domain(url)
+    domain = validate_domain(url)
     badge = GreenDomainBadge.for_domain(domain)
     return redirect(badge.url)
 

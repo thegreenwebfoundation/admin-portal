@@ -16,6 +16,7 @@ from apps.accounts.permissions import manage_datacenter, manage_provider
 from apps.greencheck.tests import setup_domains
 
 from ...greencheck import domain_check
+from ...greencheck.extended_domain_check import extended_domain_info_lookup
 from .. import admin as ac_admin
 from .. import admin_site
 from .. import models as ac_models
@@ -620,13 +621,13 @@ def test_extended_lookup_green_domain(
     green_domain.save()
 
     mocker.patch(
-        "apps.greencheck.domain_check.GreenDomainChecker.convert_domain_to_ip",
+        "apps.greencheck.domain_check.convert_domain_to_ip",
         return_value=GOOGLE_COM_IP,
     )
 
     setup_domains(["google.com"], green_provider, green_ip)
 
-    result = checker.extended_domain_info_lookup(domain)
+    result = extended_domain_info_lookup(domain)
 
     assert result["domain"] == domain
 

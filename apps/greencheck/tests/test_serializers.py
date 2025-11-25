@@ -9,10 +9,9 @@ from rest_framework import serializers
 
 
 from ...accounts import models as ac_models
-from .. import legacy_workers
 from .. import models as gc_models
 from .. import serializers as gc_serializers
-from . import greencheck_sitecheck
+from . import greencheck_sitecheck, create_greendomain
 
 logger = logging.getLogger(__name__)
 
@@ -246,7 +245,6 @@ class TestGreenDomainSerialiser:
         """
         hosting_provider.save()
         domain = "google.com"
-        sitecheck_logger = legacy_workers.LegacySiteCheckLogger()
 
         now = timezone.now()
         a_year_from_now = now + relativedelta(years=1)
@@ -267,7 +265,7 @@ class TestGreenDomainSerialiser:
         )
 
         sitecheck = greencheck_sitecheck(domain, hosting_provider, green_ip)
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+        create_greendomain(hosting_provider, sitecheck)
 
         # save a doamin as belonging to a provider
         green_dom = gc_models.GreenDomain.objects.all().first()

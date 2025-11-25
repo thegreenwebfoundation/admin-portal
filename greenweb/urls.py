@@ -18,6 +18,7 @@ from django.conf import settings
 from django.urls import path, include, reverse_lazy
 from django.views.generic.base import RedirectView
 from django.conf.urls.static import static
+from django.shortcuts import redirect
 from rest_framework.routers import DefaultRouter
 
 
@@ -26,6 +27,7 @@ from apps.greencheck.viewsets import (
     ASNViewSet,
     GreenDomainViewset,
     GreenDomainBatchView,
+    LegacyMultiView,
 )
 
 from apps.greencheck.swagger import TGWFSwaggerView
@@ -95,6 +97,11 @@ urlpatterns += [
         name="green-domain-batch",
     ),
     path(
+        "v2/greencheckmulti/<url_list>",
+        LegacyMultiView.as_view(),
+        name="legacy-greencheck-multi",
+    ),
+    path(
         "api/v3/ip-to-co2intensity/",
         api_views.IPCO2Intensity.as_view(),
         name="ip-to-co2intensity",
@@ -114,6 +121,11 @@ urlpatterns += [
         image_views.greencheck_image,
         name="greencheck-image",
     ),
+    path(
+        "greencheckimage/<url>",
+        lambda request, url: redirect("greencheck-image", url),
+        name="greencheck-image-legacy",
+    ),
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
     path(
         "api-docs/",
@@ -128,11 +140,6 @@ urlpatterns += [
         name="green-domain-detail",
     ),
     path(
-        "checks/latest/",
-        legacy_views.latest_greenchecks,
-        name="legacy-latest-greenchecks",
-    ),
-    path(
         "data/directory/",
         legacy_views.directory,
         name="legacy-directory-listing",
@@ -141,16 +148,6 @@ urlpatterns += [
         "data/hostingprovider/<id>",
         legacy_views.directory_provider,
         name="legacy-directory-detail",
-    ),
-    path(
-        "greencheckimage/<url>",
-        legacy_views.legacy_greencheck_image,
-        name="legacy-greencheck-image",
-    ),
-    path(
-        "v2/greencheckmulti/<url_list>",
-        legacy_views.greencheck_multi,
-        name="legacy-greencheck-multi",
     ),
     path("stats/", include(greencheck_urls)),
     path("directory/", include(directory_urls)),

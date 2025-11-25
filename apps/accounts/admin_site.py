@@ -19,6 +19,8 @@ from apps.greencheck.views import GreenUrlsView
 
 from ..greencheck import domain_check
 from ..greencheck import models as gc_models
+from ..greencheck.extended_domain_check import extended_domain_info_lookup
+from ..greencheck.network_utils import validate_domain
 
 
 checker = domain_check.GreenDomainChecker()
@@ -40,30 +42,12 @@ class CheckUrlForm(forms.Form):
 
     url = forms.URLField()
 
-    def clean_url(self) -> typing.Union[gc_models.GreenDomain, gc_models.SiteCheck]:
+    def clean_url(self) -> str:
         """
-        Check the submitted url against the TGWF green
-        domain database.
+        Parse a domain name from the provided URL
         """
         url = self.cleaned_data["url"]
-        domain_to_check = checker.validate_domain(url)
-
-        # check if we can resolve to an IP - this catches when
-        # people provide an IP address
-        try:
-            checker.convert_domain_to_ip(domain_to_check)
-        except Exception as err:
-            logger.warning(err)
-            raise ValidationError(
-                (
-                    f"Provided url {url} does not appear have a "
-                    f"valid domain: {domain_to_check}. "
-                    "Please check and try again."
-                )
-            )
-
-        return domain_to_check
-
+        return validate_domain(url)
 
 class CheckUrlView(FormView):
     template_name = "try_out.html"
@@ -87,7 +71,7 @@ class CheckUrlView(FormView):
 
         if form.is_valid():
             domain_name = form.cleaned_data["url"]
-            lookup_result = checker.extended_domain_info_lookup(domain_name)
+            lookup_result = extended_domain_info_lookup(domain_name)
 
             site_check = lookup_result["site_check"]
             green_domain = lookup_result["green_domain"]

@@ -374,34 +374,6 @@ class TestHostingProviderSendsNotification:
 
 class TestGreenDomainCreation:
     @pytest.mark.django_db
-    def test_create_for_provider(self, db, hosting_provider_factory):
-        #GIVEN a provider and a url
-        provider = hosting_provider_factory.create()
-        url = "example.com"
-
-        #WHEN we create a greendomain for the given url and provider
-        green_domain = models.GreenDomain.create_for_provider(url, provider)
-
-        #THEN the corrrect properties of the provider are cached on the greendomain
-        assert green_domain.hosted_by == provider.name
-        assert green_domain.hosted_by_id == provider.id
-        assert green_domain.hosted_by_website == provider.website
-        assert green_domain.listed_provider == provider.is_listed
-
-    def test_grey_result(self):
-        #GIVEN  a url
-        url = "example.com"
-
-        #WHEN we create a greendomain for the given url as a grey result
-        green_domain = models.GreenDomain.grey_result(url)
-
-        #THEN the hosted_by properties are set to sensible defaults
-        assert green_domain.hosted_by == None
-        assert green_domain.hosted_by_id == None
-        assert green_domain.hosted_by_website == None
-        assert green_domain.listed_provider == False
-
-    @pytest.mark.django_db
     def test_add_from_sitecheck(self, db, hosting_provider_factory):
         #GIVEN a provider and a sitecheck
         provider = hosting_provider_factory.create()

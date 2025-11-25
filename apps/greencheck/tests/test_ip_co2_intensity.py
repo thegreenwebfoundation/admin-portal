@@ -87,8 +87,8 @@ class TestIPCO2IntensitySerializer:
             "country_code_iso_2": "xx",
             "country_code_iso_3": "xxx",
             "carbon_intensity_type": "avg",
-            "carbon_intensity": models.checks.GLOBAL_AVG_CO2_INTENSITY,
-            "generation_from_fossil": models.checks.GLOBAL_AVG_FOSSIL_SHARE,
+            "carbon_intensity": models.co2_intensity.GLOBAL_AVG_CO2_INTENSITY,
+            "generation_from_fossil": models.co2_intensity.GLOBAL_AVG_FOSSIL_SHARE,
             "year": 2021,
         }
 

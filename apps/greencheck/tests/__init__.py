@@ -6,7 +6,6 @@ import webbrowser
 from django.utils import timezone
 
 from ...accounts import models as ac_models
-from .. import legacy_workers
 from .. import models as gc_models
 
 
@@ -52,11 +51,10 @@ def setup_domains(
     Set up our domains, with the corrsponding cache tables
 
     """
-    sitecheck_logger = legacy_workers.LegacySiteCheckLogger()
 
     for domain in domains:
         sitecheck = greencheck_sitecheck(domain, hosting_provider, ip_range)
-        sitecheck_logger.update_green_domain_caches(sitecheck, hosting_provider)
+        create_greendomain(hosting_provider, sitecheck)
 
     # assert gc_models.GreenDomain.objects.all().count() == len(domains)
 

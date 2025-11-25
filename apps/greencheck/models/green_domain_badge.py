@@ -13,9 +13,9 @@ from ...accounts.validators import DomainNameValidator
 class GreenDomainBadge(TimeStampedModel):
     """
     A cache entry for a GreenWebBadge image - The presence of a row in this table indicates that there
-    is a corresponding cached green web badge in object storage. This allows us to decide whether we
-    need to generate an image, or simply redirect to the existing cached one, without having to make
-    a request to the object storage in order to query for the image's presence.
+    is a corresponding cached green web badge available in whatever file or object storage service
+    is configured in the application. This allows us to decide whether we need to generate an image,
+    or simply redirect to the existing cached one.
     """
 
     domain = models.CharField(
@@ -68,9 +68,10 @@ class GreenDomainBadge(TimeStampedModel):
         This method is called when the badge object is created (via django signals),
         and creates and saves the badge image.
         """
+        checker = GreenDomainChecker()
+
         self.path = self.path_for_domain()
 
-        checker = GreenDomainChecker()
         sitecheck = checker.check_domain(self.domain)
 
         if sitecheck.hosting_provider_id:
