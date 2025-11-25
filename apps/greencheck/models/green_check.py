@@ -137,7 +137,7 @@ class Greencheck(mysql_models.Model):
         return f"{self.url} - {self.ip}"
 
     @classmethod
-    def log_sitecheck(cls, sitecheck):
+    def log_sitecheck_asynchronous(cls, sitecheck):
         """
         Asynchronously logs a sitecheck to the greencheck table
         """
@@ -153,12 +153,12 @@ class Greencheck(mysql_models.Model):
 
 
     @classmethod
-    def log_greendomain(cls, green_domain):
+    def log_greendomain_asynchronous(cls, green_domain):
         sitecheck = SiteCheck.from_greendomain(green_domain)
-        cls.log_sitecheck(sitecheck)
+        cls.log_sitecheck_asynchronous(sitecheck)
 
     @classmethod
-    def log_for_sitecheck(cls, sitecheck):
+    def log_sitecheck_synchronous(cls, sitecheck):
         """
         Synchronously logs a sitecheck to the greencheck table - called from
         within the dramatiq worker

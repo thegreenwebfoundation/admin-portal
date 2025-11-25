@@ -16,7 +16,7 @@ def process_log(sitecheck_args):
     if sitecheck is not None:
         try:
 
-            Greencheck.log_for_sitecheck(sitecheck)
+            Greencheck.log_sitecheck_synchronous(sitecheck)
         except MySQLdb.OperationalError as err:
             logger.warning(
                 (

@@ -63,13 +63,13 @@ class GreenDomain(models.Model):
         else:
             # Try the database green domain cache table first:
             if green_domain := cls.objects.filter(url=domain).first():
-                Greencheck.log_greendomain(green_domain)
+                Greencheck.log_greendomain_asynchronous(green_domain)
                 return green_domain
 
         # Otherwise, there is no cached domain OR we are explicitly refreshing the cache,
         # try full lookup using network:
         sitecheck = checker.check_domain(domain, refresh_carbon_txt_cache=skip_cache)
-        Greencheck.log_sitecheck(sitecheck)
+        Greencheck.log_sitecheck_asynchronous(sitecheck)
         if sitecheck.green:
             green_domain = cls.from_sitecheck(sitecheck)
             green_domain.save()
