@@ -42,7 +42,7 @@ class GreencheckImageV3:
         Truncate the domain name if it's too long,
         to fit in the badge
         """
-        if len(domain) > 30:
+        if domain and len(domain) > 30:
             shortened_name = domain[:30]
             # add the ellipsis to show it's been shortened
             return f"{shortened_name}..."
