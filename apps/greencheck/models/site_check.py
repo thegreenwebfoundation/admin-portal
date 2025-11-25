@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+from datetime import datetime
 import logging
 
 from django.utils import timezone
@@ -26,6 +27,12 @@ class SiteCheck:
     cached: bool
 
     # Factories
+
+    @classmethod
+    def from_dict(cls, sitecheck_args):
+        if not isinstance(sitecheck_args["checked_at"], datetime):
+            sitecheck_args["checked_at"] = datetime.fromisoformat(sitecheck_args["checked_at"])
+        return cls(**sitecheck_args)
 
     @classmethod
     def from_greendomain(cls, green_domain):
@@ -120,4 +127,8 @@ class SiteCheck:
     # Queries
 
     def asdict(self):
-        return asdict(self)
+        dict_repr = asdict(self)
+        if isinstance(dict_repr["checked_at"], datetime):
+            dict_repr["checked_at"] = dict_repr["checked_at"].isoformat()
+
+        return dict_repr

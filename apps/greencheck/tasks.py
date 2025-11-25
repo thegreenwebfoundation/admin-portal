@@ -9,7 +9,7 @@ logger.setLevel(logging.INFO)
 @dramatiq.actor
 def process_log(sitecheck_args):
     from .models import Greencheck, SiteCheck # Prevent circular import error
-    sitecheck = SiteCheck(**sitecheck_args)
+    sitecheck = SiteCheck.from_dict(**sitecheck_args)
 
     logger.debug(f"logging a check for {sitecheck.url}")
 
