@@ -163,6 +163,12 @@ class Greencheck(mysql_models.Model):
         Synchronously logs a sitecheck to the greencheck table - called from
         within the dramatiq worker
         """
+        if sitecheck.url is None:
+            return {
+                "status": "Sitecheck has no URL. Skipping.",
+                "sitechcek": sitecheck,
+            }
+
         try:
             fixed_tld = tld.get_tld(sitecheck.url, fix_protocol=True)
         except tld.exceptions.TldDomainNotFound:
