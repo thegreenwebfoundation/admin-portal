@@ -144,8 +144,11 @@ class BatchViewHelpers:
         return serialized
 
 class LegacyMultiView(RetrieveAPIView, BatchViewHelpers):
+    queryset = gc_models.GreenDomain.objects.all()
+    serializer_class = gc_serializers.GreenDomainBatchSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
+    pagination_class = pagination.PageNumberPagination
 
     def retrieve(self, *args, **kwargs):
         """
