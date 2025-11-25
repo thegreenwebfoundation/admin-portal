@@ -166,7 +166,7 @@ class Greencheck(mysql_models.Model):
         if sitecheck.url is None:
             return {
                 "status": "Sitecheck has no URL. Skipping.",
-                "sitechcek": sitecheck,
+                "sitecheck": sitecheck,
             }
 
         try:
