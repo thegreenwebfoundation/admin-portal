@@ -44,6 +44,9 @@ env = environ.Env(
     CARBON_TXT_RESOLUTION_TIMEOUT = (float, os.getenv("CARBON_TXT_RESOLUTION_TIMEOUT")),
     CARBON_TXT_CACHE_TTL = (int, os.getenv("CARBON_TXT_CACHE_TTL")),
     CARBON_TXT_USER_AGENT = (str, os.getenv("CARBON_TXT_USER_AGENT")),
+    BREVO_API_KEY = (str, os.getenv("BREVO_API_KEY")),
+    BREVO_LIST_ID = (str, os.getenv("BREVO_LIST_ID")),
+    BREVO_SOURCE = (str, os.getenv("BREVO_SOURCE")),
 )
 
 # in some cases we don't have a .env file to work from - the environment
@@ -362,6 +365,10 @@ CARBON_TXT_CACHE_TTL = env(
 CARBON_TXT_USER_AGENT = env(
         "CARBON_TXT_USER_AGENT", default="GreenWebChecker/1.0 (https://www.thegreenwebfoundation.org/green-web-checker-faq/)"
 )
+
+BREVO_API_KEY = env("BREVO_API_KEY", default=None)
+BREVO_LIST_ID = env("BREVO_LIST_ID", default=None)
+BREVO_SOURCE = env("BREVO_SOURCE", default=None)
 
 RABBITMQ_URL = env("RABBITMQ_URL", default=None)
 
