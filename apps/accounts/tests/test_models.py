@@ -127,6 +127,87 @@ class TestHostingProvider:
         provider.save()
         provider.description = "a new description"
 
+    @pytest.mark.django_db
+    def test_last_open_request_with_no_request(self, db, hosting_provider_factory):
+        """
+        Given a provider with no open requests
+        When I get the last open request for the provider
+        It should return None.
+        """
+        provider = hosting_provider_factory.create()
+        provider.save()
+        assert provider.last_open_request is None
+
+    @pytest.mark.django_db
+    def test_last_open_request_with_open_request(self, db, hosting_provider_factory, provider_request_factory):
+        """
+        Given a provider with a single open request
+        When I get the last open request for the provider
+        It should return the request
+        """
+        provider = hosting_provider_factory.create()
+        provider.save()
+        request = provider_request_factory(
+            provider = provider,
+            status = ac_models.ProviderRequestStatus.OPEN
+        )
+        request.save()
+        assert provider.last_open_request == request
+
+    @pytest.mark.django_db
+    def test_last_open_request_with_pending_request(self, db, hosting_provider_factory, provider_request_factory):
+        """
+        Given a provider with a single pending request
+        When I get the last open request for the provider
+        It should return the request
+        """
+        provider = hosting_provider_factory.create()
+        provider.save()
+        request = provider_request_factory(
+            provider = provider,
+            status = ac_models.ProviderRequestStatus.PENDING_REVIEW
+        )
+        request.save()
+        assert provider.last_open_request == request
+
+    @pytest.mark.django_db
+    def test_last_open_request_with_non_open_request(self, db, hosting_provider_factory, provider_request_factory):
+        """
+        Given a provider with a single non-open and non-pending request
+        When I get the last open request for the provider
+        It should return None
+        """
+        provider = hosting_provider_factory.create()
+        provider.save()
+        request = provider_request_factory(
+            provider = provider,
+            status = ac_models.ProviderRequestStatus.APPROVED
+        )
+        request.save()
+        assert provider.last_open_request is None
+
+    @pytest.mark.django_db
+    def test_last_open_request_with_two_open_requests(self, db, hosting_provider_factory, provider_request_factory):
+        """
+        Given a provider with two non-open request
+        When I get the last open request for the provider
+        It should return the most recent of thethe most recent of the two.
+        """
+        provider = hosting_provider_factory.create()
+        provider.save()
+        request1 = provider_request_factory(
+            provider = provider,
+            status = ac_models.ProviderRequestStatus.OPEN,
+            modified = timezone.now() - relativedelta(days=-1)
+        )
+        request1.save()
+        request2 = provider_request_factory(
+            provider = provider,
+            status = ac_models.ProviderRequestStatus.OPEN,
+            modified = timezone.now()
+        )
+        request2.save()
+        assert provider.last_open_request == request2
 
 class TestHostingProviderEvidence:
     """

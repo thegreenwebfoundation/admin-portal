@@ -509,6 +509,20 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         )
         return approval_requests
 
+    @property
+    def last_open_request(self) -> typing.Optional["ProviderRequest"]:
+        """
+        If the provider has a currently OPEN or PENDING REVIEW
+        provider request, we return it, otherwise we return None.
+        """
+        from ..provider_request import ProviderRequestStatus # prevent circular import
+        return self.providerrequest_set.filter(
+                    status__in=[
+                        ProviderRequestStatus.OPEN,
+                        ProviderRequestStatus.PENDING_REVIEW
+                    ]
+                ).order_by("-modified").first()
+
     def notify_admins(self, subject: str, email_txt: str, email_html: str = None):
         """
         Send an email to the admins with the provided subject, email content.

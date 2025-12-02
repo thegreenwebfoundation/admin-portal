@@ -23,7 +23,14 @@
 
   <div class="flex gap-2 text-right items-right items-center">
     {% if "manage_provider" in provider_perms %}
-      <a href="{% url 'provider_edit' provider.id %}" class="btn btn-white px-2 text-sm">📝 Update listing</a>
+      {% if provider.last_open_request %}
+        <div class="flex flex-col">
+          <small class="mt-1"> ⚠️ You have an update awaiting approval!</small>
+          <a href="{% url 'provider_request_edit' provider.last_open_request.id %}" class="btn btn-white px-2 text-sm w-full mt-1">📝 Edit update request</a>
+        </div>
+      {% else %}
+        <a href="{% url 'provider_edit' provider.id %}" class="btn btn-white px-2 text-sm">📝 Update listing</a>
+      {% endif %}
     {% endif %}
 
   </div>
