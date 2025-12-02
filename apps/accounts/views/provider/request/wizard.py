@@ -38,6 +38,8 @@ from ....models import (
 
 from ....permissions import manage_provider
 
+from ....tasks import process_newsletter_registration
+
 from ....utils import send_email
 
 logger = logging.getLogger(__name__)
@@ -276,6 +278,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         newsletter_opt_in = consent_form.cleaned_data.get("newsletter_opt_in")
         pr.data_processing_opt_in = bool(data_processing_opt_in)
         pr.newsletter_opt_in = bool(newsletter_opt_in)
+        if pr.newsletter_opt_in:
+            process_newsletter_registration.send(pr.created_by.email)
         pr.save()
 
         # if this view was used to edit an existing hosting provider,

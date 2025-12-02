@@ -75,6 +75,7 @@ dependencies = [
     "pytest-httpx>=0.35.0",
     "carbon-txt==0.0.19",
     "truststore>=0.10.4",
+    "brevo-python>=1.2.0",
 ]
 
 [tool.uv]
