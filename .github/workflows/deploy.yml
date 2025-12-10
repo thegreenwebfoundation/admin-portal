@@ -53,6 +53,9 @@ jobs:
       CLOUDFLARE_PROVIDER_ID: ${{ secrets.CLOUDFLARE_PROVIDER_ID }}
       CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4: ${{ secrets.CLOUDFLARE_REMOTE_API_ENDPOINT_IPV4 }}
       CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6: ${{ secrets.CLOUDFLARE_REMOTE_API_ENDPOINT_IPV6 }}
+      BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+      BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID }}
+      BREVO_SOURCE: ${{ secrets.BREVO_SOURCE }}
     steps:
 
       - name: Eco CI Energy Estimation - Initialize
