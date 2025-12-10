@@ -11,6 +11,12 @@ def process_newsletter_registration(email : str):
     and adds the "source" tag in Brevo to identify that the user
     came from a admin portal signup.
     """
+    if settings.BREVO_API_KEY is None:
+        raise RuntimeError(
+                """Brevo API Key is not configured in the
+                environment! Failed to process newsletter
+                registration."""
+        )
     configuration = Configuration()
     configuration.api_key["api-key"] = settings.BREVO_API_KEY
 
