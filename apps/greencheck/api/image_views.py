@@ -2,7 +2,7 @@ import logging
 
 from django.shortcuts import redirect
 
-from ..models.green_domain_badge  import GreenDomainBadge
+from ..models.green_domain_badge  import GreenDomainBadge, GreenDomainBadge
 from ..network_utils import validate_domain
 
 logger = logging.getLogger(__name__)
@@ -23,3 +23,12 @@ def greencheck_image(_request, url):
     badge = GreenDomainBadge.for_domain(domain)
     return redirect(badge.url)
 
+def legacy_greencheck_image(_request, url):
+    """
+    We explicitly publically committed to keeping the old design
+    available at the previous URL, so this has to stay for now:
+    https://www.thegreenwebfoundation.org/news/rebranded-green-web-badges/
+    """
+    domain = validate_domain(url)
+    badge = GreenDomainBadge.for_domain(domain, legacy=True)
+    return redirect(badge.url)
