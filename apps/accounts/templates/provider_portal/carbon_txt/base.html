@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% load i18n static breakpoint %}
-{% block content %}
 {% block extrahead %}
   <script src="{% static "accounts/js/provider_carbon_txt.js"  %}"></script>
 {% endblock %}
+{% block prenav %}
+{% include "provider_portal/carbon_txt/partials/beta_banner.html" %}
+{% endblock %}
+{% block content %}
 <div class="container mx-auto prose">
     {% block header_section %}
       <header class="">
