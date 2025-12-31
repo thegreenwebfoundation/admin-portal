@@ -7,15 +7,44 @@
 <h3>Configure carbon.txt sharing</h3>
 <p>
 Your secondary domains are the domains of your customers, or any other domain which you want to be attributed to you in the Green Web platform.
-</p><p>
-For providers who resell other services, we recommend doing this by setting up a custom <strong>HTTP response header</strong> on all the domains you host, advertising the carbon.txt hosted on your primary domain. Configure your web server or proxy to add the <strong>CarbonTxt-Location</strong> header listed below (see <a href="https://carbontxt.org/quickstart" target="_blank">the carbon.txt documentation</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/> for further details</a>, and <a href="https://github.com/thegreenwebfoundation/carbon.txt/tree/master/examples" target="_blank">instructions for some popular web servers</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/> such as Apache, Nginx and Caddy).
 </p>
-<div class="p-2 bg-neutral-200 flex justify-between">
-  <code class="content">CarbonTxt-Location: {{provider.carbon_txt.domain}}</code>
+<p>In order to attribute these domains correctly to your provider, we need to link them to your primary domain's carbon.txt file. You can do this by returning a special HTTP response header, or setting up a DNS TXT record.</p>
+<div class="tabbedview my-5 py-5">
+  <ul role="tablist" class="tablist flex flex-wrap text-sm font-medium text-center list-none w-full justify-items-stretch pl-0 m-0">
+      <li class="pl-0 m-0 grow">
+          <a href="#" role="tab" aria-selected="true" aria-controls="carbontxt-http-panel" id="carbontxt-http-tab" class="tab inline-block py-4 px-2 border rounded-tl-lg w-full m-0 no-underline hover:underline">Use an HTTP Header</a>
+      </li>
+      <li class="pl-0 m-0 grow">
+          <a href="#" role="tab" aria-selected="false" aria-controls="carbontxt-dns-panel" id="carbontxt-dns-tab" class="tab inline-block py-4 px-2 border-t border-r border-b rounded-tr-lg bg-neutral-200 hover:bg-neutral-100 w-full m-0 no-underline hover:underline">Use a DNS TXT record</a>
+      </li>
+  </ul>
+  <div role="tabpanel" id="carbontxt-http-panel" aria-labelledby="carbontxt-http-tab" class="panel border-l border-r border-b p-5 border-t-none">
+      <h6 class="my-0">Link this domain to an existing carbon.txt file using HTTP Headers</h6>
+      <p class="mb-6">
+        For providers who resell other services, we recommend doing this by setting up a custom <strong>HTTP response header</strong> on all the domains you host, advertising the carbon.txt hosted on your primary domain.
+      </p>
+      <p>
+        Configure your web server or proxy to add the <strong>CarbonTxt-Location</strong> header listed below (see <a href="https://carbontxt.org/quickstart" target="_blank">the carbon.txt documentation</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/> for further details</a>, and <a href="https://github.com/thegreenwebfoundation/carbon.txt/tree/master/examples" target="_blank">instructions for some popular web servers</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/> such as Apache, Nginx and Caddy).
+      </p>
+    <div class="copyable bg-neutral-200 flex justify-between px-4 py-2 w-full">
+      <code class="content">CarbonTxt-Location: {{provider.carbon_txt.domain}}</code>
+      <a href="#" class="copy no-underline">📋</a>
+    </div>
+  </div>
+  <div role="tabpanel" id="carbontxt-dns-panel" aria-labelledby="carbontxt-dns-tab" class="panel border-l border-r border-b p-5 border-t-none hidden">
+      <h6 class="my-0">Link this domain to an existing carbon.txt file using DNS</h6>
+      <p class="mb-6">
+        If you are unable to set up an HTTP response header easily, you also have the option of setting up a DNS TXT record for each of your secondary domains (or asking your customers to do so if you do not have access to their DNS records).
+      </p>
+      <p>
+        Add a DNS TXT record for each secondary domain, with the following content, <a href="https://carbontxt.org/faq#upload" target="_blank">see the documentation for further details</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>:
+      </p>
+    <div class="copyable bg-neutral-200 flex justify-between px-4 py-2 w-full">
+      <code class="content">carbon-txt-location={{provider.carbon_txt.domain}}</code>
+      <a href="#" class="copy no-underline">📋</a>
+    </div>
+  </div>
 </div>
-<p>
-If you are unable to set an HTTP header, you can also advertise the carbon.txt location by setting a DNS TXT record, <a href="https://carbontxt.org/faq#upload" target="_blank">see the documentation for further details</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>.
-</p>
 {% endblock content_section %}
 
 {% block submit_button_text %}
