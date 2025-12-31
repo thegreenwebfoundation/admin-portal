@@ -34,10 +34,10 @@ Your secondary domains are the domains of your customers, or any other domain wh
   <div role="tabpanel" id="carbontxt-dns-panel" aria-labelledby="carbontxt-dns-tab" class="panel border-l border-r border-b p-5 border-t-none hidden">
       <h6 class="my-0">Link this domain to an existing carbon.txt file using DNS</h6>
       <p class="mb-6">
-        If you are unable to set up an HTTP response header easily, you also have the option of setting up a DNS TXT record for each of your secondary domains (or asking your customers to do so if you do not have access to their DNS records).
+        If you are unable to set up an HTTP response header easily, you also have the option of setting up a DNS TXT record for each of your secondary domains (or asking your customers to do so if you do not have access to their DNS records - <a href="https://www.thegreenwebfoundation.org/support/using-carbon-txt-to-improve-green-web-check-results/#customer-dns" target="_blank">read more about what to request in our FAQ</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>).
       </p>
       <p>
-        Add a DNS TXT record for each secondary domain, with the following content, <a href="https://carbontxt.org/faq#upload" target="_blank">see the documentation for further details</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>:
+        Add a DNS TXT record for each secondary domain, with the following content, <a href="https://carbontxt.org/faq#upload" target="_blank">see the carbon.txt documentation for further details</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>:
       </p>
     <div class="copyable bg-neutral-200 flex justify-between px-4 py-2 w-full">
       <code class="content">carbon-txt-location={{provider.carbon_txt.domain}}</code>
