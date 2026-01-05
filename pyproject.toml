@@ -19,7 +19,7 @@ dependencies = [
     "django-mysql>=4.15.0",
     "django-registration==3.1.2",
     "django-unixdatetimefield==1.0.3",
-    "django[bcrypt]~=5.0.0",
+    "django[bcrypt]~=5.2.0",
     "djangorestframework-csv>=3.0.2",
     "djangorestframework>=3.15.2",
     "dramatiq[rabbitmq]>=1.17.1",
