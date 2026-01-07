@@ -1,8 +1,10 @@
+import re
 from enum import StrEnum
 from datetime import datetime, timedelta
 from time import sleep
 from django.conf import settings
 from django.db import models, transaction, IntegrityError, OperationalError
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 from taggit import models as tag_models
@@ -116,8 +118,36 @@ class ProviderCarbonTxt(TimeStampedModel):
         message = "You must provider a domain to validate!"
 
     class CarbonTxtNotValidatedError(CarbonTxtValidationError):
-        message = "Could not find a valid carbon.txt at your domain."
+        def __init__(self, domain, underlying_errors=[]):
+            self.domain = domain
+            self.underlying_errors = underlying_errors
+            super().__init__()
 
+        @property
+        def message(self):
+            def format_message(error):
+                if isinstance(error, BaseException):
+                    return error.message
+                else:
+                    return str(error)
+            if self.underlying_errors:
+                message = ", ".join(format_message(e) for e in self.underlying_errors)
+            else:
+                message = "Could not find a valid carbon.txt at your domain."
+            # Remove the exception class name from the message, if present, as it doesn'the
+            # offer any useful user-facing context:
+            message = re.sub(r"[A-Z][A-Za-z]+:", "", message, count=1)
+            return mark_safe(f"""
+            We encountered an error while validating your carbon.txt! Details:
+            <br class="mb-2" />
+            {message}
+            <br class="mb-2" />
+            For further details, you can consult the
+            <a
+                href="https://carbontxt.org/tools/validator?domain={self.domain}&auto=true"
+                target="_blank"
+            >carbontxt.org validator tool</a>.
+            """)
 
     @classmethod
     def find_for_domain(cls, domain, refresh_cache=False):
@@ -212,9 +242,9 @@ class ProviderCarbonTxt(TimeStampedModel):
                 self.carbon_txt_url = result.url
                 return True
             else:
-                raise self.CarbonTxtNotValidatedError
+                raise self.CarbonTxtNotValidatedError(self.domain, result.exceptions)
 
-        except (UnreachableCarbonTxtFile, HTTPError):
-            raise self.CarbonTxtNotValidatedError
+        except (UnreachableCarbonTxtFile, HTTPError) as error:
+            raise self.CarbonTxtNotValidatedError(self.domain, [error])
 
 
