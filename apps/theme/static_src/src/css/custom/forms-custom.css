@@ -37,6 +37,10 @@ ul.errorlist {
   @apply mb-0;
 }
 
+.errorlist a {
+  @apply text-purple;
+}
+
 /* 0.2 HELPTEXT                   */
 .helptext {
   @apply text-base;
