@@ -510,7 +510,11 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         return approval_requests
 
     @property
-    def last_open_request(self):
+    def last_open_request(self) -> typing.Optional["ProviderRequest"]:
+        """
+        If the provider has a currently OPEN or PENDING REVIEW
+        provider request, we return it, otherwise we return None.
+        """
         from ..provider_request import ProviderRequestStatus # prevent circular import
         return self.providerrequest_set.filter(
                     status__in=[
