@@ -148,7 +148,6 @@ data
 *.prod.json
 .DS_Store
 cloud-auth.json
-*.png
 
 cruft
 staticfiles
