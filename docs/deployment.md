@@ -4,7 +4,6 @@
 
 The Green Web Foundation Admin Portal uses GitHub Actions for continuous integration and deployment. The deployment process is automated through a series of reusable workflows that handle testing, permission checks, and deployment to both staging and production environments.
 
-## GitHub Actions Deployment Flow
 
 The deployment process is orchestrated through three main workflows:
 
@@ -12,7 +11,37 @@ The deployment process is orchestrated through three main workflows:
 2. **Test Workflow** (`test.yml`) - Runs the test suite
 3. **Deploy Workflow** (`deploy.yml`) - Handles deployment to servers
 
-### Deployment Process Flowchart
+
+
+### What is happening with each automated deploy via Github Actions?
+
+The way a Github Actions driven deployment is handled depends on who is making it.
+
+Pull requests from external contributors require manual approval before tests run. Collaborators and owners have tests run automatically, allowing them to get changes into staging or production in one go.
+
+#### Once a workflow starting with tests begins running
+
+Once a decision to run a test made, the tests are run:
+
+**Testing:**
+- Tests run in a matrix against Python 3.11 and 3.12
+- MariaDB 10.11 and RabbitMQ 3.8 services are automatically started, then the tests run against the services they have exposed.
+- Energy consumption for each CI run is tracked with Eco CI
+
+**Deployment:**
+
+Deploys happen upon push to master or staging branches, and they only happen if tests, and a few safety checks pass like checking for pending migrations, or whether there is already an existing deployment in progress.
+
+### Representing this process visually
+
+The (rather imposing) flowchart below is intended to help you trace progress through a deploy triggered by an update to the staging or master branches. 
+
+
+<details>
+<summary>
+GitHub Actions Deployment Flow (Click to expand)
+</summary>
+
 
 ```{mermaid}
 flowchart TD
@@ -106,24 +135,8 @@ flowchart TD
     style MigrationFail2 fill:#fff3cd
     style WaitApproval fill:#fff3cd
 ```
+</details>
 
-### What is happening with each deploy?
-
-The way a pull request is handled dependsw on who is making it.
-
-Pull requests from external contributors require manual approval before tests run. Collaborators and owners have tests run automatically.
-
-Once a decision to run a test made, the tests are run:
-
-**Testing:**
-- Tests run in a matrix against Python 3.11 and 3.12
-- MariaDB 10.11 and RabbitMQ 3.8 services are automatically started, then the tests run against the services they have exposed.
-- Energy consumption for each CI run is tracked with Eco CI
-
-
-**Deployment:**
-
-Deploys happen upon push to master or staging branches, and they only happen if tests, and a few safety checks pass like checking for pending migrations, or whether there is already an existing deployment in progress.
 
 
 ## Manual Deployment with Ansible
@@ -183,18 +196,18 @@ ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy-workers.yml
 
 **Important:** The GitHub Actions workflow includes a migration check that will prevent deployment if migrations are pending. This is a safety feature - always run migrations explicitly using `just release_migrate` or the migrate playbook.
 
-## GitHub Actions Configuration
+### If you need to make changes to how Github actions are set up
 
 The deployment system consists of three coordinated workflows:
 
-### Main CI Workflow (`.github/workflows/ci.yml`)
+#### Main CI Workflow (`.github/workflows/ci.yml`)
 
 The main coordinator that:
 - Determines user permissions (collaborator vs external contributor)
 - Routes to appropriate test environment
 - Triggers deployment for push events to `master` or `staging`
 
-### Test Workflow (`.github/workflows/test.yml`)
+#### Test Workflow (`.github/workflows/test.yml`)
 
 A reusable workflow that:
 - Accepts `environment` (test or test-external) and `ref` parameters
@@ -202,7 +215,7 @@ A reusable workflow that:
 - Runs pytest against Python 3.11 and 3.12
 - Requires approval for external contributors via the `test-external` environment
 
-### Deploy Workflow (`.github/workflows/deploy.yml`)
+#### Deploy Workflow (`.github/workflows/deploy.yml`)
 
 A reusable workflow that:
 - Accepts `environment` (staging or prod) parameter
@@ -211,7 +224,7 @@ A reusable workflow that:
 - Runs Ansible playbooks against the specified inventory
 - Tracks energy consumption with Eco CI
 
-### Setup Environment Action (`.github/actions/setup-environment`)
+#### Setup Environment Action (`.github/actions/setup-environment`)
 
 A shared composite action that:
 - Installs specified Python version
@@ -219,33 +232,11 @@ A shared composite action that:
 - Creates virtual environment and syncs locked dependencies
 - Used by both test and deploy workflows
 
-## Viewing Mermaid Diagrams in VS Code
-
-To view Mermaid diagrams rendered in VS Code's Markdown preview, you have two options:
-
-### Option 1: Install Markdown Preview Mermaid Support Extension (Recommended)
-
-Install the [Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid) extension:
-
-1. Open VS Code Extensions (⇧⌘X)
-2. Search for "Markdown Preview Mermaid Support"
-3. Install the extension by Matt Bierner
-4. Reload VS Code if needed
-5. Open any markdown file with mermaid diagrams and open the preview (⇧⌘V)
-
-The diagrams will now render directly in the preview pane.
-
-### Option 2: Use the Mermaid Editor Extension
-
-Alternatively, you can use a dedicated Mermaid editor:
-
-1. Install the [Mermaid Editor](https://marketplace.visualstudio.com/items?itemName=tomoyukim.vscode-mermaid-editor) extension
-2. Right-click on a mermaid code block
-3. Select "Open Mermaid Editor" to see a live preview
 
 ### Note on MyST Markdown Syntax
 
-This documentation uses MyST (Markedly Structured Text) syntax with ` ```{mermaid} ` fences. This is compatible with Sphinx documentation but may not render in the standard VS Code markdown preview without the Mermaid extension. The extension handles both standard ` ```mermaid ` and MyST ` ```{mermaid} ` syntax.
+This documentation uses MyST (Markedly Structured Text) syntax with ` ```{mermaid} ` fences. This is compatible with Sphinx documentation but may not render in the standard VS Code markdown preview without the Mermaid extension.
+
 
 ### Understanding our infrastructure
 
