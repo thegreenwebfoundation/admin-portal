@@ -1,47 +1,251 @@
 # Deployment
 
-### Github conventions
+## Overview
 
-....
+The Green Web Foundation Admin Portal uses GitHub Actions for continuous integration and deployment. The deployment process is automated through a series of reusable workflows that handle testing, permission checks, and deployment to both staging and production environments.
 
-### Using Ansible
+## GitHub Actions Deployment Flow
 
-We use Ansible to deploy versions of the site to our servers.
+The deployment process is orchestrated through three main workflows:
 
-More specifically, when we merge into the main/master branch, it triggers a deploy to production automatically, running the `deploy` playbook.
+1. **CI Workflow** (`ci.yml`) - Coordinates testing and deployment
+2. **Test Workflow** (`test.yml`) - Runs the test suite
+3. **Deploy Workflow** (`deploy.yml`) - Handles deployment to servers
 
-This runs through the following steps:
+### Deployment Process Flowchart
 
-- check python and nodejs installed at recent versions
-- fetch dependencies for both cases
-- run build steps to generate static files for django and any artefacts needed in front end pipelines
-- reload the servers
-- if necessary, update caddy/nginx (for static files and webserver), gunicorn (for serving web requests), or dramatiq (for our queue and workers)
-
-See `deploy.yml` and `deploy-workers.yml`, for more information.
-
-Assuming you have ssh access set up for the correct servers, you deploy with the following command:
-
+```{mermaid}
+flowchart TD
+    Start([Code Push or PR Event]) --> EventCheck{Event Type?}
+    
+    EventCheck -->|Push to master/staging| PushFlow[Direct Push]
+    EventCheck -->|Pull Request| PRFlow[Pull Request]
+    
+    PushFlow --> IsCollab1[User is Collaborator]
+    IsCollab1 --> SetRef1[Set ref to branch]
+    
+    PRFlow --> CheckCollab{Is Collaborator?}
+    CheckCollab -->|Yes| IsCollab2[Collaborator Status]
+    CheckCollab -->|No| NotCollab[External Contributor]
+    
+    IsCollab2 --> SetRef2[Set ref to PR head SHA]
+    NotCollab --> SetRef3[Set ref to PR head SHA]
+    
+    SetRef1 --> TestEnv1[Environment: test]
+    SetRef2 --> TestEnv2[Environment: test]
+    SetRef3 --> TestEnv3[Environment: test-external]
+    
+    TestEnv3 --> WaitApproval[Wait for Manual Approval]
+    WaitApproval --> RunTests3
+    
+    TestEnv1 --> RunTests1[Run Test Suite]
+    TestEnv2 --> RunTests2[Run Test Suite]
+    
+    RunTests1 --> Matrix1[Matrix: Python 3.11, 3.12]
+    RunTests2 --> Matrix2[Matrix: Python 3.11, 3.12]
+    RunTests3[Run Test Suite] --> Matrix3[Matrix: Python 3.11, 3.12]
+    
+    Matrix1 --> Services1[Start Services:<br/>MariaDB, RabbitMQ]
+    Matrix2 --> Services2[Start Services:<br/>MariaDB, RabbitMQ]
+    Matrix3 --> Services3[Start Services:<br/>MariaDB, RabbitMQ]
+    
+    Services1 --> Setup1[Setup Environment:<br/>Python, uv, dependencies]
+    Services2 --> Setup2[Setup Environment:<br/>Python, uv, dependencies]
+    Services3 --> Setup3[Setup Environment:<br/>Python, uv, dependencies]
+    
+    Setup1 --> Pytest1[Run pytest]
+    Setup2 --> Pytest2[Run pytest]
+    Setup3 --> Pytest3[Run pytest]
+    
+    Pytest1 --> TestResult1{Tests Pass?}
+    Pytest2 --> TestResult2{Tests Pass?}
+    Pytest3 --> TestResult3{Tests Pass?}
+    
+    TestResult1 -->|No| Fail1[CI Failed]
+    TestResult2 -->|No| Fail2[CI Failed]
+    TestResult3 -->|No| Fail3[CI Failed]
+    
+    TestResult1 -->|Yes| DeployCheck{Push Event?}
+    TestResult2 -->|Yes| PRSuccess[PR Tests Passed]
+    TestResult3 -->|Yes| PRSuccess2[PR Tests Passed]
+    
+    DeployCheck -->|No - PR| PRSuccess
+    DeployCheck -->|Yes| BranchCheck{Which Branch?}
+    
+    BranchCheck -->|master| DeployProd[Deploy to Production]
+    BranchCheck -->|staging| DeployStaging[Deploy to Staging]
+    
+    DeployProd --> CheckMigrations1[Check No Pending Migrations]
+    DeployStaging --> CheckMigrations2[Check No Pending Migrations]
+    
+    CheckMigrations1 --> MigrationCheck1{Migrations OK?}
+    CheckMigrations2 --> MigrationCheck2{Migrations OK?}
+    
+    MigrationCheck1 -->|No| MigrationFail1[Deploy Failed:<br/>Run migrations manually]
+    MigrationCheck2 -->|No| MigrationFail2[Deploy Failed:<br/>Run migrations manually]
+    
+    MigrationCheck1 -->|Yes| Serialize1[Serialize Deploy<br/>with turnstyle]
+    MigrationCheck2 -->|Yes| Serialize2[Serialize Deploy<br/>with turnstyle]
+    
+    Serialize1 --> AnsibleDeploy1[Run Ansible: deploy.yml]
+    Serialize2 --> AnsibleDeploy2[Run Ansible: deploy.yml]
+    
+    AnsibleDeploy1 --> AnsibleWorkers1[Run Ansible: deploy-workers.yml]
+    AnsibleDeploy2 --> AnsibleWorkers2[Run Ansible: deploy-workers.yml]
+    
+    AnsibleWorkers1 --> DeployComplete1[Deployment Complete]
+    AnsibleWorkers2 --> DeployComplete2[Deployment Complete]
+    
+    style Start fill:#e1f5ff
+    style DeployComplete1 fill:#d4edda
+    style DeployComplete2 fill:#d4edda
+    style Fail1 fill:#f8d7da
+    style Fail2 fill:#f8d7da
+    style Fail3 fill:#f8d7da
+    style MigrationFail1 fill:#fff3cd
+    style MigrationFail2 fill:#fff3cd
+    style WaitApproval fill:#fff3cd
 ```
+
+### What is happening with each deploy?
+
+The way a pull request is handled dependsw on who is making it.
+
+Pull requests from external contributors require manual approval before tests run. Collaborators and owners have tests run automatically.
+
+Once a decision to run a test made, the tests are run:
+
+**Testing:**
+- Tests run in a matrix against Python 3.11 and 3.12
+- MariaDB 10.11 and RabbitMQ 3.8 services are automatically started, then the tests run against the services they have exposed.
+- Energy consumption for each CI run is tracked with Eco CI
+
+
+**Deployment:**
+
+Deploys happen upon push to master or staging branches, and they only happen if tests, and a few safety checks pass like checking for pending migrations, or whether there is already an existing deployment in progress.
+
+
+## Manual Deployment with Ansible
+
+While deployment is automated via GitHub Actions when pushing to `master` or `staging` branches, you can still deploy manually when needed.
+
+### Standard Deployment Process
+
+The automated deployment (and manual deployment) runs through the following steps:
+
+1. Check Python and Node.js are installed at recent versions
+2. Fetch dependencies using `uv` and npm
+3. Run build steps to generate static files for Django and frontend pipelines
+4. Reload the servers
+5. Update caddy/nginx (static files), gunicorn (web requests), and dramatiq (queue workers)
+
+See [ansible/deploy.yml](/ansible/deploy.yml) and [ansible/deploy-workers.yml](/ansible/deploy-workers.yml) for more information.
+
+### When to Deploy Manually
+
+**Database Migrations:** If your code includes database migrations, the automatic deployment will fail with a migration check error. You must deploy manually with migrations.
+
+**Emergency Fixes:** When you need to deploy outside the normal GitHub Actions flow.
+
+**Staging Testing:** To test changes in the staging environment before merging to master.
+
+### Manual Deployment Commands
+
+Assuming you have SSH access set up for the correct servers:
+
+**Standard deployment (no migrations):**
+```bash
+# Production
+just release
+
+# Staging
+just release staging
+
+# Or run ansible directly:
 ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml
 ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy-workers.yml
 ```
-... or just run `just release` which will run these two commands.
 
-Alternatively, merging code into master triggers the same ansible script via github actions.
+**Deployment with migrations:**
+```bash
+# Production
+just release_migrate
 
-If you are releasing code which requires a database migration, the automatic deploy trigger on merge will fail, and you will have to deploy manually.
+# Staging  
+just release_migrate staging
 
-In this case, run:
-
-```
+# Or run ansible directly:
 ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy.yml
 ansible-playbook -i ansible/inventories/prod.yml ./ansible/migrate.yml
 ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy-workers.yml
 ```
-... or just run `just release_migrate` which will run these two commands.
 
-You can also deploy to our staging environment, by pushing to the `staging` branch, running the above ansible playbooks with the `staging.yml` inventory instead of `prod.yml`, or running `just release staging` or `just release_migrate staging`
+**Important:** The GitHub Actions workflow includes a migration check that will prevent deployment if migrations are pending. This is a safety feature - always run migrations explicitly using `just release_migrate` or the migrate playbook.
+
+## GitHub Actions Configuration
+
+The deployment system consists of three coordinated workflows:
+
+### Main CI Workflow (`.github/workflows/ci.yml`)
+
+The main coordinator that:
+- Determines user permissions (collaborator vs external contributor)
+- Routes to appropriate test environment
+- Triggers deployment for push events to `master` or `staging`
+
+### Test Workflow (`.github/workflows/test.yml`)
+
+A reusable workflow that:
+- Accepts `environment` (test or test-external) and `ref` parameters
+- Sets up MariaDB and RabbitMQ services
+- Runs pytest against Python 3.11 and 3.12
+- Requires approval for external contributors via the `test-external` environment
+
+### Deploy Workflow (`.github/workflows/deploy.yml`)
+
+A reusable workflow that:
+- Accepts `environment` (staging or prod) parameter
+- Checks for pending migrations (fails if any exist)
+- Uses turnstyle to serialize deployments
+- Runs Ansible playbooks against the specified inventory
+- Tracks energy consumption with Eco CI
+
+### Setup Environment Action (`.github/actions/setup-environment`)
+
+A shared composite action that:
+- Installs specified Python version
+- Installs `uv` for dependency management
+- Creates virtual environment and syncs locked dependencies
+- Used by both test and deploy workflows
+
+## Viewing Mermaid Diagrams in VS Code
+
+To view Mermaid diagrams rendered in VS Code's Markdown preview, you have two options:
+
+### Option 1: Install Markdown Preview Mermaid Support Extension (Recommended)
+
+Install the [Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid) extension:
+
+1. Open VS Code Extensions (⇧⌘X)
+2. Search for "Markdown Preview Mermaid Support"
+3. Install the extension by Matt Bierner
+4. Reload VS Code if needed
+5. Open any markdown file with mermaid diagrams and open the preview (⇧⌘V)
+
+The diagrams will now render directly in the preview pane.
+
+### Option 2: Use the Mermaid Editor Extension
+
+Alternatively, you can use a dedicated Mermaid editor:
+
+1. Install the [Mermaid Editor](https://marketplace.visualstudio.com/items?itemName=tomoyukim.vscode-mermaid-editor) extension
+2. Right-click on a mermaid code block
+3. Select "Open Mermaid Editor" to see a live preview
+
+### Note on MyST Markdown Syntax
+
+This documentation uses MyST (Markedly Structured Text) syntax with ` ```{mermaid} ` fences. This is compatible with Sphinx documentation but may not render in the standard VS Code markdown preview without the Mermaid extension. The extension handles both standard ` ```mermaid ` and MyST ` ```{mermaid} ` syntax.
 
 ### Understanding our infrastructure
 
