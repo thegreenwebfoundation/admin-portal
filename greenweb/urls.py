@@ -123,7 +123,7 @@ urlpatterns += [
     ),
     path(
         "greencheckimage/<url>",
-        lambda request, url: redirect("greencheck-image", url),
+        image_views.legacy_greencheck_image,
         name="greencheck-image-legacy",
     ),
     path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
