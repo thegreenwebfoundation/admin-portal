@@ -118,23 +118,18 @@ class ProviderCarbonTxt(TimeStampedModel):
         message = "You must provider a domain to validate!"
 
     class CarbonTxtNotValidatedError(CarbonTxtValidationError):
-        def __init__(self, domain, underlying_errors=[]):
+        def __init__(self, domain, underlying_errors=None):
             self.domain = domain
-            self.underlying_errors = underlying_errors
+            self.underlying_errors = underlying_errors or []
             super().__init__()
 
         @property
         def message(self):
-            def format_message(error):
-                if isinstance(error, BaseException):
-                    return error.message
-                else:
-                    return str(error)
             if self.underlying_errors:
-                message = ", ".join(format_message(e) for e in self.underlying_errors)
+                message = ", ".join(getattr(e, "message", str(e)) for e in self.underlying_errors)
             else:
                 message = "Could not find a valid carbon.txt at your domain."
-            # Remove the exception class name from the message, if present, as it doesn'the
+            # Remove the exception class name from the message, if present, as it doesn't
             # offer any useful user-facing context:
             message = re.sub(r"[A-Z][A-Za-z]+:", "", message, count=1)
             return mark_safe(f"""
