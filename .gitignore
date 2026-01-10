@@ -68,7 +68,8 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
-
+some_green_site.com.png
+some_grey_site.com.png
 # Translations
 *.mo
 

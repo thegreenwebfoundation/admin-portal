@@ -11,6 +11,7 @@ from taggit import models as tag_models
 from carbon_txt.finders import FileFinder
 from carbon_txt.validators import CarbonTxtValidator
 from carbon_txt.exceptions import UnreachableCarbonTxtFile
+from carbon_txt.web.validation_logging.models import ValidationLogEntry
 from httpx import HTTPError
 
 from ...validators import DomainNameValidator
@@ -233,6 +234,13 @@ class ProviderCarbonTxt(TimeStampedModel):
         validator = CarbonTxtValidator(http_timeout=settings.CARBON_TXT_RESOLUTION_TIMEOUT)
         try:
             result = validator.validate_domain(self.domain)
+            log_entry = ValidationLogEntry(
+                source=ValidationLogEntry.Source.PROVIDER_PORTAL,
+                domain=self.domain,
+                url=result.url,
+                success=result.result is not None
+            )
+            log_entry.save()
             if len(result.exceptions) == 0:
                 self.carbon_txt_url = result.url
                 return True
