@@ -350,6 +350,8 @@ class TestProviderCarbonTxt:
         )
 
         validation_result = MagicMock()
+        validation_result.result = None
+        validation_result.url = None
         validation_result.exceptions = ["An exception raised while validating the carbon.txt"]
         validator = validator_factory_mock.return_value
         validator.validate_domain.return_value = validation_result
@@ -375,6 +377,7 @@ class TestProviderCarbonTxt:
 
         validation_result = MagicMock()
         validation_result.exceptions = []
+        validation_result.result = MagicMock()
         validation_result.url = "https://examples/.well-known/carbon.txt"
 
         validator = validator_factory_mock.return_value
