@@ -123,7 +123,7 @@ requires-dist = [
     { name = "awscli-plugin-endpoint", specifier = ">=0.4" },
     { name = "boto3", specifier = ">=1.35.54" },
     { name = "brevo-python", specifier = ">=1.2.0" },
-    { name = "carbon-txt", specifier = "==0.0.23" },
+    { name = "carbon-txt", specifier = "==0.0.24" },
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "dateutils", specifier = ">=0.6.12" },
     { name = "db-to-sqlite", specifier = ">=1.5" },
@@ -690,7 +690,7 @@ wheels = [
 
 [[package]]
 name = "carbon-txt"
-version = "0.0.23"
+version = "0.0.24"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arelle-release" },
@@ -709,9 +709,9 @@ dependencies = [
     { name = "tldextract" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/19/0a/3135bfa85b38f0679fda22b3afde9806996b0cec57f02eb58770dee9a9c5/carbon_txt-0.0.23.tar.gz", hash = "sha256:9dcf540d1b17a13513cecfe6d321651c503a9f6e46da4495578b14232f1880c2", size = 2979010, upload-time = "2026-01-10T08:30:40.388Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/a2/1d328c9b5ccdb63d3fdc7b87786fb519c84b524063439b3c5c7caf492c47/carbon_txt-0.0.24.tar.gz", hash = "sha256:0b4308e4bbc3c2b87ee5bdc3f81a54dba12c710a92a3cb59fcf8abd559f5c2f0", size = 2979177, upload-time = "2026-01-11T14:06:44.508Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/ed/dace574402ebeb30896591ae1e9dc4d270c919f94323a46ff7e83b0543e1/carbon_txt-0.0.23-py3-none-any.whl", hash = "sha256:8dc02bc44ce18600cb6a433e291170527672f261e949d0fdff93857ee75fde85", size = 45646, upload-time = "2026-01-10T08:30:38.733Z" },
+    { url = "https://files.pythonhosted.org/packages/10/ca/e288166c93d017a22b64a8f709a204299af59d54ac0aa0a268d250a472f9/carbon_txt-0.0.24-py3-none-any.whl", hash = "sha256:685bde973cff4d00089da424eb7f2f1508dbc15ef552419d068147d88e439bc6", size = 45680, upload-time = "2026-01-11T14:06:43.133Z" },
 ]
 
 [[package]]
