@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version < '3.12'",
@@ -123,7 +123,7 @@ requires-dist = [
     { name = "awscli-plugin-endpoint", specifier = ">=0.4" },
     { name = "boto3", specifier = ">=1.35.54" },
     { name = "brevo-python", specifier = ">=1.2.0" },
-    { name = "carbon-txt", specifier = "==0.0.19" },
+    { name = "carbon-txt", specifier = "==0.0.24" },
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "dateutils", specifier = ">=0.6.12" },
     { name = "db-to-sqlite", specifier = ">=1.5" },
@@ -690,7 +690,7 @@ wheels = [
 
 [[package]]
 name = "carbon-txt"
-version = "0.0.19"
+version = "0.0.24"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arelle-release" },
@@ -709,9 +709,9 @@ dependencies = [
     { name = "tldextract" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/06/a6/41bd96b9b94ff45d1855bc2095d3120964a560d0278931f8c67ad9da4304/carbon_txt-0.0.19.tar.gz", hash = "sha256:3ca2648ed976e0ab170c559517596b934e9d06312ac2607e1414cd9cd2daa89a", size = 2976176, upload-time = "2025-10-13T09:55:51.318Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/a2/1d328c9b5ccdb63d3fdc7b87786fb519c84b524063439b3c5c7caf492c47/carbon_txt-0.0.24.tar.gz", hash = "sha256:0b4308e4bbc3c2b87ee5bdc3f81a54dba12c710a92a3cb59fcf8abd559f5c2f0", size = 2979177, upload-time = "2026-01-11T14:06:44.508Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f8/a5/2d4a914c42fc672dc0c608c1f891bc83f419a4b748d7c7829c10ac352217/carbon_txt-0.0.19-py3-none-any.whl", hash = "sha256:35ad2332b354b1c81efab95b3b3acdfb5f85000068bb5b631545acc636e58d6b", size = 41269, upload-time = "2025-10-13T09:55:49.961Z" },
+    { url = "https://files.pythonhosted.org/packages/10/ca/e288166c93d017a22b64a8f709a204299af59d54ac0aa0a268d250a472f9/carbon_txt-0.0.24-py3-none-any.whl", hash = "sha256:685bde973cff4d00089da424eb7f2f1508dbc15ef552419d068147d88e439bc6", size = 45680, upload-time = "2026-01-11T14:06:43.133Z" },
 ]
 
 [[package]]

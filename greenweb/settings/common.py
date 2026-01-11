@@ -116,6 +116,8 @@ INSTALLED_APPS = [
     "explorer",
     # tracking inbound API usage
     'drf_api_logger',
+    # Logging carbon.txt requests
+    "carbon_txt.web.validation_logging",
     # project specific
     "apps.theme",
     "apps.accounts",
