@@ -34,7 +34,7 @@ Deploys happen upon push to master or staging branches, and they only happen if 
 
 ### Representing this process visually
 
-The (rather imposing) flowchart below is intended to help you trace progress through a deploy triggered by an update to the staging or master branches. 
+The (rather imposing) flowchart below is intended to help you trace progress through a deploy triggered by an update to the staging or master branches.
 
 
 <details>
@@ -46,85 +46,85 @@ GitHub Actions Deployment Flow (Click to expand)
 ```{mermaid}
 flowchart TD
     Start([Code Push or PR Event]) --> EventCheck{Event Type?}
-    
+
     EventCheck -->|Push to master/staging| PushFlow[Direct Push]
     EventCheck -->|Pull Request| PRFlow[Pull Request]
-    
+
     PushFlow --> IsCollab1[User is Collaborator]
     IsCollab1 --> SetRef1[Set ref to branch]
-    
+
     PRFlow --> CheckCollab{Is Collaborator?}
     CheckCollab -->|Yes| IsCollab2[Collaborator Status]
     CheckCollab -->|No| NotCollab[External Contributor]
-    
+
     IsCollab2 --> SetRef2[Set ref to PR head SHA]
     NotCollab --> SetRef3[Set ref to PR head SHA]
-    
+
     SetRef1 --> TestEnv1[Environment: test]
     SetRef2 --> TestEnv2[Environment: test]
     SetRef3 --> TestEnv3[Environment: test-external]
-    
+
     TestEnv3 --> WaitApproval[Wait for Manual Approval]
     WaitApproval --> RunTests3
-    
+
     TestEnv1 --> RunTests1[Run Test Suite]
     TestEnv2 --> RunTests2[Run Test Suite]
-    
+
     RunTests1 --> Matrix1[Matrix: Python 3.11, 3.12]
     RunTests2 --> Matrix2[Matrix: Python 3.11, 3.12]
     RunTests3[Run Test Suite] --> Matrix3[Matrix: Python 3.11, 3.12]
-    
+
     Matrix1 --> Services1[Start Services:<br/>MariaDB, RabbitMQ]
     Matrix2 --> Services2[Start Services:<br/>MariaDB, RabbitMQ]
     Matrix3 --> Services3[Start Services:<br/>MariaDB, RabbitMQ]
-    
+
     Services1 --> Setup1[Setup Environment:<br/>Python, uv, dependencies]
     Services2 --> Setup2[Setup Environment:<br/>Python, uv, dependencies]
     Services3 --> Setup3[Setup Environment:<br/>Python, uv, dependencies]
-    
+
     Setup1 --> Pytest1[Run pytest]
     Setup2 --> Pytest2[Run pytest]
     Setup3 --> Pytest3[Run pytest]
-    
+
     Pytest1 --> TestResult1{Tests Pass?}
     Pytest2 --> TestResult2{Tests Pass?}
     Pytest3 --> TestResult3{Tests Pass?}
-    
+
     TestResult1 -->|No| Fail1[CI Failed]
     TestResult2 -->|No| Fail2[CI Failed]
     TestResult3 -->|No| Fail3[CI Failed]
-    
+
     TestResult1 -->|Yes| DeployCheck{Push Event?}
     TestResult2 -->|Yes| PRSuccess[PR Tests Passed]
     TestResult3 -->|Yes| PRSuccess2[PR Tests Passed]
-    
+
     DeployCheck -->|No - PR| PRSuccess
     DeployCheck -->|Yes| BranchCheck{Which Branch?}
-    
+
     BranchCheck -->|master| DeployProd[Deploy to Production]
     BranchCheck -->|staging| DeployStaging[Deploy to Staging]
-    
+
     DeployProd --> CheckMigrations1[Check No Pending Migrations]
     DeployStaging --> CheckMigrations2[Check No Pending Migrations]
-    
+
     CheckMigrations1 --> MigrationCheck1{Migrations OK?}
     CheckMigrations2 --> MigrationCheck2{Migrations OK?}
-    
+
     MigrationCheck1 -->|No| MigrationFail1[Deploy Failed:<br/>Run migrations manually]
     MigrationCheck2 -->|No| MigrationFail2[Deploy Failed:<br/>Run migrations manually]
-    
+
     MigrationCheck1 -->|Yes| Serialize1[Serialize Deploy<br/>with turnstyle]
     MigrationCheck2 -->|Yes| Serialize2[Serialize Deploy<br/>with turnstyle]
-    
+
     Serialize1 --> AnsibleDeploy1[Run Ansible: deploy.yml]
     Serialize2 --> AnsibleDeploy2[Run Ansible: deploy.yml]
-    
+
     AnsibleDeploy1 --> AnsibleWorkers1[Run Ansible: deploy-workers.yml]
     AnsibleDeploy2 --> AnsibleWorkers2[Run Ansible: deploy-workers.yml]
-    
+
     AnsibleWorkers1 --> DeployComplete1[Deployment Complete]
     AnsibleWorkers2 --> DeployComplete2[Deployment Complete]
-    
+
     style Start fill:#e1f5ff
     style DeployComplete1 fill:#d4edda
     style DeployComplete2 fill:#d4edda
@@ -165,7 +165,12 @@ See [ansible/deploy.yml](/ansible/deploy.yml) and [ansible/deploy-workers.yml](/
 
 ### Manual Deployment Commands
 
-Assuming you have SSH access set up for the correct servers:
+To deploy manually, you will need the following prerequisites:
+
+ - SSH access set up for the correct servers:
+ - A copy of the most up to date env file **for the environment you're deploying to**, (`env.staging`, or `env.prod`) copied to your `.env` file in your current **local** working directory. These are available from the GWF 1Password account. **Remember to replace this with your local env file again after deploying!**
+
+
 
 **Standard deployment (no migrations):**
 ```bash
@@ -185,7 +190,7 @@ ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy-workers.yml
 # Production
 just release_migrate
 
-# Staging  
+# Staging
 just release_migrate staging
 
 # Or run ansible directly:
