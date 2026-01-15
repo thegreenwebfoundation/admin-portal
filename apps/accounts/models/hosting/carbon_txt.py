@@ -92,7 +92,7 @@ class ProviderCarbonTxt(TimeStampedModel):
     and used to resolve linked domains via DNS / HTTP header.
     """
     domain = models.CharField(max_length=255, unique=True, validators=[DomainNameValidator()])
-    carbon_txt_url = models.URLField(max_length=512, unique=True, null=True)
+    carbon_txt_url = models.URLField(max_length=255, unique=True, null=True)
     is_delegation_set = models.BooleanField(default=False)
 
     provider = models.OneToOneField(
