@@ -14,14 +14,16 @@
           <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt; Back to provider portal</a></p>
         {% endblock back_link %}
 
-        <h1 class="text-center mb-1 mt-6 pt-3">Fix hosted domains</h1>
+
+        <h1 class="text-center mb-1 mt-6 pt-3">
+            Fix displayed provider name
+        </h1>
 
         <h6 class="text-center my-3">
           Setup carbon.txt for provider: {{provider.name}}
         </h6>
         </header>
     {% endblock %}
-
 
     <article>
       <div class="prose mx-auto mt-8">

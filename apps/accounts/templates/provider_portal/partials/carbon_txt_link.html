@@ -2,13 +2,17 @@
 {% get_obj_perms request.user for provider as "provider_perms" %}
 {% flag "verified_domains" %}
   {% if "manage_provider" in provider_perms %}
-    <img class="my-0 mr-1 inline-block" width="14" height="14" src="{% static 'img/carbontxt-logo.svg' %}" alt="carbon.txt logo"/>
-    <a class="text-sm" href="{% url 'provider-carbon-txt' provider.id %}">
-      {% if provider.has_carbon_txt %}
-        Setup carbon.txt for your domains
-      {% else %}
-        Fix provider name for your hosted domains
-      {% endif %}
-    </a>
+    <span class="px-2">
+      <img class="my-0 mr-1 inline-block" width="14" height="14" src="{% static 'img/carbontxt-logo.svg' %}" alt="carbon.txt logo"/>
+      <a class="text-sm" href="{% url 'provider-carbon-txt' provider.id %}">
+        {% if provider.has_carbon_txt and provider.carbon_txt.state == "Active"  %}
+          Manage carbon.txt
+        {% elif provider.has_carbon_txt %}
+          Finish carbon.txt setup
+        {% else %}
+          Fix displayed provider name
+        {% endif %}
+      </a>
+    </span>
   {% endif %}
 {% endflag %}
