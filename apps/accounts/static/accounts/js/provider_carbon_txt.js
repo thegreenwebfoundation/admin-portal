@@ -99,8 +99,28 @@ function setupEmbeddedGreenchecker() {
   }
 }
 
+function setupTabbedViews() {
+  const tablist = document.querySelector(".tabbedview");
+  for (const tab of tablist.querySelectorAll(".tab")) {
+    tab.addEventListener("click", (event) => {
+      for (const tab2 of tablist.querySelectorAll(".tab")) {
+        tab2.setAttribute("aria-expanded", "false");
+        tab2.classList.add("bg-neutral-200", "hover:bg-neutral-100");
+      };
+      event.preventDefault();
+      for(const panel of tablist.querySelectorAll(".panel")) {
+        panel.classList.add("hidden");
+      };
+      const panel = document.getElementById(tab.getAttribute("aria-controls"));
+      panel.classList.remove("hidden");
+      tab.setAttribute("aria-expanded", "true")
+      tab.classList.remove("bg-neutral-200", "hover:bg-neutral-100");
+    });
+  };
+}
 
 document.addEventListener("DOMContentLoaded", (event) => {
+  setupTabbedViews();
   setupOptionalDescriptionForms();
   setupCopyables();
   setupEmbeddedGreenchecker();

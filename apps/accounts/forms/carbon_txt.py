@@ -62,7 +62,17 @@ class CarbonTxtStep1Form(forms.Form):
         try:
             carbon_txt.save()
         except IntegrityError:
-            self.add_error("domain", "This domain has already been claimed by another provider")
+            self.add_error("domain",
+                mark_safe("""
+                    Another provider has already created a carbon.txt file for this domain.
+                    <a
+                        href="https://www.thegreenwebfoundation.org/support-form/?wpf2192_9=Help%20using%20the%20Provider%20Portal"
+                        target="_blank"
+                    >
+                        Contact support
+                    </a> if that's not you.
+                """)
+            )
 
         for slug in self.cleaned_data["carbon_txt_motivations"]:
             motivation = CarbonTxtMotivation.objects.filter(slug=slug).first()

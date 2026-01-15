@@ -1,37 +1,32 @@
 {% load guardian_tags waffle_tags static %}
 {% get_obj_perms request.user for provider as "provider_perms" %}
-<div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2 flex justify-between gap-4">
-  <div>
+<div class="provider_listing odd:bg-neutral-100 even:bg-neutral-200 p-3 md:flex md:items-center border-green border-t-2 last-of-type:border-b-2 justify-between gap-4">
+  <div class="mb-2 md:mb-0">
     <p class="my-0">
       {% if provider.last_approved_verification_req %}
         <a class="font-bold" href="{% url 'provider_request_detail' provider.last_approved_verification_req.id %}">{{ provider }}</a>
       {% else %}
         <span class="font-bold">{{ provider }}</span>
       {% endif %}
-      {% flag "verified_domains" %}
-        {% if "manage_provider" in provider_perms %}
-          <br />
-          {% include "provider_portal/partials/carbon_txt_link.html" %}
-        {% endif %}
-      {% endflag %}
     </p>
-
     {% if provider.request and provider.request.approved_at %}
     <p class="my-0 text-sm">Last updated: {{ provider.request.approved_at }}</p>
     {% endif %}
+    {% if provider.last_open_request %}
+        <small class="mt-1"> ⚠️ You have an update awaiting approval!</small>
+    {% endif %}
   </div>
 
-  <div class="flex gap-2 text-right items-right items-center">
+  <div class="flex flex-col md:text-center items-stretch md:w-1/3">
     {% if "manage_provider" in provider_perms %}
       {% if provider.last_open_request %}
-        <div class="flex flex-col">
-          <small class="mt-1"> ⚠️ You have an update awaiting approval!</small>
-          <a href="{% url 'provider_request_edit' provider.last_open_request.id %}" class="btn btn-white px-2 text-sm w-full mt-1">📝 Edit update request</a>
-        </div>
+          <a href="{% url 'provider_request_edit' provider.last_open_request.id %}" class="btn btn-white px-2 text-sm w-full my-2">📝 Edit update request</a>
       {% else %}
-        <a href="{% url 'provider_edit' provider.id %}" class="btn btn-white px-2 text-sm">📝 Update listing</a>
+        <a href="{% url 'provider_edit' provider.id %}" class="btn btn-white px-2 text-sm my-2">📝 Update listing</a>
       {% endif %}
+      {% flag "verified_domains" %}
+          {% include "provider_portal/partials/carbon_txt_link.html" %}
+      {% endflag %}
     {% endif %}
-
   </div>
 </div>

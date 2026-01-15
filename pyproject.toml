@@ -73,7 +73,7 @@ dependencies = [
     "urllib3>=2.2.3",
     "httpx>=0.28.1",
     "pytest-httpx>=0.35.0",
-    "carbon-txt==0.0.19",
+    "carbon-txt==0.0.24",
     "truststore>=0.10.4",
     "brevo-python>=1.2.0",
 ]

@@ -5,19 +5,14 @@
 {% include "provider_portal/carbon_txt/partials/primary_domain.html" with provider=provider show_edit_button=True %}
 <h3>Create your carbon.txt file</h3>
 <p>
-Create a carbon.txt file containing key evidence or documentation of your commitment to hosting powered by 100% green energy, and host it on your primary domain, using <a href="https://carbontxt.org/tools/builder" target="_blank" class="font-bold">the carbon.txt builder tool</a>
-  <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>.
-</p>
-
-<p>
-Your carbon.txt file collates links to your organization's key public sustainability documents, such as sustainability or CSR declarations, annual reports, or renewable energy certificates, and must contain at least one link.
+Your carbon.txt file should link to at least one piece of public evidence/documentation demonstrating your commitment to hosting powered by 100% green energy. You could link to annual reports, sustainability web pages, renewable energy certificates or CSRD declarations.
 </p>
 
 {% include "provider_portal/carbon_txt/partials/supporting_documentation.html" with provider=provider %}
 
 <p>
   <a target="_blank" href="https://carbontxt.org/tools/builder" class="btn btn-sm btn-white mt-4 mb-4 w-full">
-    <span class="text-xs">Open the carbon.txt builder</span>
+    <span class="text-xs">Build your carbon.txt file</span>
       <img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>
   </a>
 </p>
@@ -25,14 +20,18 @@ Your carbon.txt file collates links to your organization's key public sustainabi
 
 <h3>Upload your carbon.txt file</h3>
 
-<p>
-  Upload your completed carbon.txt file to the root of your primary domain at <strong class="whitespace-nowrap">https://{{provider.carbon_txt.domain}}/carbon.txt</strong>, making sure it is publicly accessible on the web.
+<p class="mb-0">
+  Upload your completed carbon.txt file, making sure it is publicly accessible on the web at either of the these locations:
 </p>
+<ul class="mt-0">
+  <li class="mt-0">At the root of your primary domain: <br /><strong class="whitespace-nowrap">https://{{provider.carbon_txt.domain}}/carbon.txt</strong>.</li>
+  <li>In your primary domain's well-known directory: <strong class="whitespace-nowrap">https://{{provider.carbon_txt.domain}}/.well-known/carbon.txt</strong>.</li>
+</ul>
 <p>
- This step ensures that your sustainability evidence can be automatically discovered and verified by the Green Web tools. It also allows your hosted domains to be correctly attributed to your provider in Green Web Check.
+Once you've done this, please click the button below to verify we can see it's there.
 </p>
 {% endblock content_section %}
 
 {% block submit_button_text %}
-Submit for verification
+Verify uploaded carbon.txt file
 {% endblock submit_button_text %}

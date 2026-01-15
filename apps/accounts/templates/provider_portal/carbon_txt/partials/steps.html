@@ -1,17 +1,21 @@
-
+{% load i18n static %}
   {% if active_step == 1 %}
   <p><strong>Problems with your Green Web Check results showing the wrong hosting provider name?</strong>
     This solution using carbon.txt is for you. It has three key steps:</p>
   {% elif active_step == 2 %}
     <p><strong>Your primary domain has been set succesfully.</strong>
-    You can now move on create and upload your carbon.txt file, which will ensure that the Green Web Check shows the correct provider for your primary domain.</p>
+    Now create and upload your carbon.txt file.</p>
   {% elif active_step == 3 %}
     <p><strong>We've succesfully validated your carbon.txt file.</strong>
     The website at your primary domain should now show the correct provider in the Green Web Check.</p>
     <p>Finally, we'll configure your customer domains to point to the carbon.txt you just created, so that they are also correctly attributed to you.</p>
   {% else %}
-    <p><strong>Congratulations, you've successfully set up carbon.txt!</strong>
-    All your domains should now show the correct provider name in Green Web Check - you can verify this using the form below.</p>
+      <div class="flex align-start">
+
+        <img class="mb-0 mr-4 mt-5" width="40" height="40" src="{% static 'img/carbontxt-logo.svg' %}" alt="carbon.txt logo"/>
+      <p class="mb-0"><strong>Congratulations, you've successfully set up carbon.txt!</strong>
+        Your domains should now show the correct provider name in Green Web Check.</p>
+      </div>
   {% endif %}
 
   <ol>

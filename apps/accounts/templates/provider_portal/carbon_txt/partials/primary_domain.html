@@ -5,10 +5,14 @@
   <p class="mt-0"><a href="https://{{provider.carbon_txt.domain}}" target="_blank">{{provider.carbon_txt.domain}}</a><br /><span class="text-neutral-500 text-sm">Last updated: {{provider.carbon_txt.modified}}</span></p>
   </div>
   {% if show_check_button %}
-    <div>
-      <a target="_blank" href="https://www.thegreenwebfoundation.org/green-web-check/?url={{provider.carbon_txt.domain}}&nocache=1" class="btn btn-sm btn-white mt-0">
-        <span class="text-xs">Check</span>
+    <div class="flex flex-col items-stretch text-center">
+      <a target="_blank" href="https://www.thegreenwebfoundation.org/green-web-check/?url={{provider.carbon_txt.domain}}&nocache=1" class="btn btn-sm btn-white my-1">
+        <span class="text-xs">Green web check</span>
         <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>
+      </a>
+      <a target="_blank" href="https://carbontxt.org/tools/validator?domain={{provider.carbon_txt.domain}}&auto=true" class="text-xs mt-1 px-2">
+        <span>View carbon.txt details</span>
+        <img class="utility-icon external-link-icon" width="10px" height="10px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>
       </a>
     </div>
   {% endif %}

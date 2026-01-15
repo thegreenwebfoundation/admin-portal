@@ -1,21 +1,10 @@
 {% extends "provider_portal/carbon_txt/base.html" %}
-{% load i18n static breakpoint %}
+{% load i18n static %}
 {% block content_section %}
 {% include "provider_portal/carbon_txt/partials/steps.html" with active_step=3 %}
 {% include "provider_portal/carbon_txt/partials/primary_domain.html" with provider=provider show_check_button=True %}
-{% include "provider_portal/carbon_txt/partials/carbon_txt_badge.html" with provider=provider %}
 <h3>Configure carbon.txt sharing</h3>
-<p>
-Your secondary domains are the domains of your customers, or any other domain which you want to be attributed to you in the Green Web platform.
-</p><p>
-For providers who resell other services, we recommend doing this by setting up a custom <strong>HTTP response header</strong> on all the domains you host, advertising the carbon.txt hosted on your primary domain. Configure your web server or proxy to add the <strong>CarbonTxt-Location</strong> header listed below (see <a href="https://carbontxt.org/quickstart" target="_blank">the carbon.txt documentation</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/> for further details</a>, and <a href="https://github.com/thegreenwebfoundation/carbon.txt/tree/master/examples" target="_blank">instructions for some popular web servers</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/> such as Apache, Nginx and Caddy).
-</p>
-<div class="p-2 bg-neutral-200 flex justify-between">
-  <code class="content">CarbonTxt-Location: {{provider.carbon_txt.domain}}</code>
-</div>
-<p>
-If you are unable to set an HTTP header, you can also advertise the carbon.txt location by setting a DNS TXT record, <a href="https://carbontxt.org/faq#upload" target="_blank">see the documentation for further details</a> <img class="utility-icon external-link-icon" width="14px" height="14px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>.
-</p>
+{% include "provider_portal/carbon_txt/partials/secondary_domains.html" with provider=provider %}
 {% endblock content_section %}
 
 {% block submit_button_text %}
