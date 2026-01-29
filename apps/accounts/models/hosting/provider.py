@@ -1,3 +1,4 @@
+import carbon_txt
 import datetime
 import logging
 import secrets
@@ -566,6 +567,17 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         self.notify_admins(
             notification_subject, notification_email_copy, notification_email_html
         )
+
+    def build_carbon_txt_file(self):
+        disclosures = self.valid_public_supporting_documents
+        if len(disclosures) > 0:
+            return carbon_txt.build_from_dict({
+                "org": {
+                    "disclosures": [
+                        d.carbon_txt_disclosure_dict for d in disclosures
+                    ]
+                }
+            })
 
     def save(self, *args, **kwargs):
         # The is_listed flag, name and website url are denormalized into the

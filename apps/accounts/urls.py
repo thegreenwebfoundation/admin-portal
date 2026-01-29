@@ -14,6 +14,7 @@ from apps.accounts.views import (
     ProviderRequestWizardView,
     ProviderAutocompleteView,
     ProviderCarbonTxtView,
+    ProviderCarbonTxtBuilderView,
 )
 
 urlpatterns = [
@@ -156,5 +157,10 @@ urlpatterns = [
         "providers/<int:provider_id>/carbon_txt/",
         ProviderCarbonTxtView.as_view(),
         name="provider-carbon-txt"
+    ),
+    path(
+        "providers/<int:provider_id>/carbon_txt/download",
+        ProviderCarbonTxtBuilderView.as_view(),
+        name="provider-download-carbon-txt"
     )
 ]
