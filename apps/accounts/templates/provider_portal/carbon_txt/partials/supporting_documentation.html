@@ -1,30 +1,25 @@
 <ul class="list-none p-0">
-  {% if provider.valid_public_supporting_documents.count > 0 %}
-    <p>
-    Below is a table of the public supporting documentation you provided to us when you registered as a verified green provider, for you to consider including in your carbon.txt file.
-    </p>
-    {% for document in provider.valid_public_supporting_documents %}
-        <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 px-5 border-neutral border-t last-of-type:border-b">
-          <div class="columns-2 mt-1">
+  {% for document in provider.valid_public_supporting_documents %}
+      <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 px-5 border-neutral border-t last-of-type:border-b">
+        <div class="columns-2 mt-1">
+          <div>
+            <span class="copyable">
+              <a class="font-bold content" href="{{document.link}}" target="_blank">{{document.title}}</a>
+              <a class="copy no-underline" href="#">📋</a>
+            </span>
+          </div>
+          <div class="flex justify-between">
             <div>
-              <span class="copyable">
-                <a class="font-bold content" href="{{document.link}}" target="_blank">{{document.title}}</a>
-                <a class="copy no-underline" href="#">📋</a>
-              </span>
+              <strong>Type: </strong>{{document.type}}
             </div>
-            <div class="flex justify-between">
-              <div>
-                <strong>Type: </strong>{{document.type}}
-              </div>
-              <div>
-                <strong>Valid to: </strong>{{document.valid_to}}
-              </div>
+            <div>
+              <strong>Valid to: </strong>{{document.valid_to}}
             </div>
           </div>
-          <div class="mt-2 mb-2">
-            <p class="my-0">{{document.description}}</p>
-          </div>
-        </li>
-    {% endfor %}
-  {% endif %}
+        </div>
+        <div class="mt-2 mb-2">
+          <p class="my-0">{{document.description}}</p>
+        </div>
+      </li>
+  {% endfor %}
 </ul>
