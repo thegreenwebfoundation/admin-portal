@@ -4,6 +4,7 @@ import secrets
 import typing
 from urllib.parse import urlparse
 from anymail.message import AnymailMessage
+from carbon_txt import build_carbontxt_file
 
 from django.conf import settings
 from django.db import models
@@ -566,6 +567,17 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         self.notify_admins(
             notification_subject, notification_email_copy, notification_email_html
         )
+
+    def build_carbontxt(self):
+        disclosures = self.valid_public_supporting_documents
+        if len(disclosures) > 0:
+            return build_carbontxt_file({
+                "org": {
+                    "disclosures": [
+                        d.carbon_txt_disclosure_dict for d in disclosures
+                    ]
+                }
+            })
 
     def save(self, *args, **kwargs):
         # The is_listed flag, name and website url are denormalized into the

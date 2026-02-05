@@ -123,7 +123,7 @@ requires-dist = [
     { name = "awscli-plugin-endpoint", specifier = ">=0.4" },
     { name = "boto3", specifier = ">=1.35.54" },
     { name = "brevo-python", specifier = ">=1.2.0" },
-    { name = "carbon-txt", specifier = "==0.0.24" },
+    { name = "carbon-txt", specifier = "==0.0.25" },
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "dateutils", specifier = ">=0.6.12" },
     { name = "db-to-sqlite", specifier = ">=1.5" },
@@ -690,7 +690,7 @@ wheels = [
 
 [[package]]
 name = "carbon-txt"
-version = "0.0.24"
+version = "0.0.25"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arelle-release" },
@@ -707,11 +707,12 @@ dependencies = [
     { name = "rich" },
     { name = "sentry-sdk", extra = ["django"] },
     { name = "tldextract" },
+    { name = "tomlkit" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cc/a2/1d328c9b5ccdb63d3fdc7b87786fb519c84b524063439b3c5c7caf492c47/carbon_txt-0.0.24.tar.gz", hash = "sha256:0b4308e4bbc3c2b87ee5bdc3f81a54dba12c710a92a3cb59fcf8abd559f5c2f0", size = 2979177, upload-time = "2026-01-11T14:06:44.508Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/47/5ae058e55d96f891eb2e2af3c58f497f889ccedfacf06d7644f8fc1e8f42/carbon_txt-0.0.25.tar.gz", hash = "sha256:2ec86fe9a33e876d2b31724d3d63c5b23981cb69673da45dad034e8a64aeee62", size = 2983239, upload-time = "2026-02-05T10:20:19.643Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/10/ca/e288166c93d017a22b64a8f709a204299af59d54ac0aa0a268d250a472f9/carbon_txt-0.0.24-py3-none-any.whl", hash = "sha256:685bde973cff4d00089da424eb7f2f1508dbc15ef552419d068147d88e439bc6", size = 45680, upload-time = "2026-01-11T14:06:43.133Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/ff/e06b84910beb8e31d477763d76f779029e65c831e40fc39b86c6c95f6969/carbon_txt-0.0.25-py3-none-any.whl", hash = "sha256:242155e9e944ffb7f56b40cb8d37627b81534e97c93be0cab70c5a7733229408", size = 47696, upload-time = "2026-02-05T10:20:17.688Z" },
 ]
 
 [[package]]
@@ -3863,11 +3864,11 @@ wheels = [
 
 [[package]]
 name = "tomlkit"
-version = "0.13.2"
+version = "0.14.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b1/09/a439bec5888f00a54b8b9f05fa94d7f901d6735ef4e55dcec9bc37b5d8fa/tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79", size = 192885, upload-time = "2024-08-14T08:19:41.488Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/af/14b24e41977adb296d6bd1fb59402cf7d60ce364f90c890bd2ec65c43b5a/tomlkit-0.14.0.tar.gz", hash = "sha256:cf00efca415dbd57575befb1f6634c4f42d2d87dbba376128adb42c121b87064", size = 187167, upload-time = "2026-01-13T01:14:53.304Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/b6/a447b5e4ec71e13871be01ba81f5dfc9d0af7e473da256ff46bc0e24026f/tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde", size = 37955, upload-time = "2024-08-14T08:19:40.05Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/11/87d6d29fb5d237229d67973a6c9e06e048f01cf4994dee194ab0ea841814/tomlkit-0.14.0-py3-none-any.whl", hash = "sha256:592064ed85b40fa213469f81ac584f67a4f2992509a7c3ea2d632208623a3680", size = 39310, upload-time = "2026-01-13T01:14:51.965Z" },
 ]
 
 [[package]]

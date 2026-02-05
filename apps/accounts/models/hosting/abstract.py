@@ -96,12 +96,27 @@ class AbstractSupportingDocument(models.Model):
         ),
     )
 
+    CARBON_TXT_DOC_TYPES = {
+        EvidenceType.ANNUAL_REPORT: "annual-report",
+        EvidenceType.WEB_PAGE: "web-page",
+        EvidenceType.CERTIFICATE: "certificate",
+        EvidenceType.OTHER: "other"
+    }
+
     def __str__(self):
         return f"{self.valid_from} - {self.title}"
 
     class Meta:
         abstract = True
         verbose_name = "Supporting Document"
+
+    @property
+    def carbon_txt_doc_type(self):
+        return self.CARBON_TXT_DOC_TYPES[self.type]
+
+    @property
+    def carbon_txt_disclosure_dict(self):
+        return {"url": self.type, "doc_type": self.carbon_txt_doc_type,  "title": self.title, "valid_until": self.valid_to }
 
 class Certificate(models.Model):
     energyprovider = models.CharField(max_length=255)
