@@ -1,5 +1,5 @@
 {% extends "provider_portal/carbon_txt/base.html" %}
-{% load i18n static breakpoint %}
+{% load i18n static breakpoint waffle_tags %}
 {% block content_section %}
 {% include "provider_portal/carbon_txt/partials/steps.html" with active_step=2 %}
 {% include "provider_portal/carbon_txt/partials/primary_domain.html" with provider=provider show_edit_button=True %}
@@ -14,28 +14,35 @@ Your carbon.txt file should link to at least one piece of public evidence/docume
     Below is a table of the public supporting documentation you provided to us when you registered as a verified green provider, for you to consider including in your carbon.txt file.
     </p>
   {% include "provider_portal/carbon_txt/partials/supporting_documentation.html" with provider=provider %}
-  <p class="mt-6">You can download a pre-built carbon.txt file containing this evidence, or use our builder tool to make a new carbon.txt file by hand:</p>
-  <p class="mb-0">
-    <a href="{% url "provider-download-carbon-txt" provider.id %}" download="carbon.txt" class="btn btn-sm btn-white mt-2 w-full">
-      <span class="text-xs">Download carbon.txt file</span>
-        <img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/carbontxt-logo.svg' %}" alt=""/>
-    </a>
-  </p>
-  <p class="mt-0">
-    <a target="_blank" href="https://carbontxt.org/tools/builder" class="btn btn-sm btn-white mb-4 w-full">
-      <span class="text-xs">Build carbon.txt file manually</span>
-        <img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>
-    </a>
-  </p>
+  {% flag "carbon_txt_builder" %}
+    <p class="mt-6">You can download a pre-built carbon.txt file containing this evidence, or use our builder tool to make a new carbon.txt file by hand:</p>
+    <p class="mb-0">
+      <a href="{% url "provider-download-carbon-txt" provider.id %}" download="carbon.txt" class="btn btn-sm btn-white mt-2 w-full">
+        <span class="text-xs">Download carbon.txt file</span>
+          <img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/carbontxt-logo.svg' %}" alt=""/>
+      </a>
+    </p>
+    <p class="mt-0">
+      <a target="_blank" href="https://carbontxt.org/tools/builder" class="btn btn-sm btn-white mb-4 w-full">
+        <span class="text-xs">Build carbon.txt file manually</span>
+          <img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>
+      </a>
+    </p>
+  {% else %}
+    <p>
+      <a target="_blank" href="https://carbontxt.org/tools/builder" class="btn btn-sm btn-white mt-4 mb-4 w-full">
+        <span class="text-xs">Build your carbon.txt file</span>
+          <img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>
+      </a>
+    </p>
+  {% endflag %}
 {% else %}
-
   <p>
     <a target="_blank" href="https://carbontxt.org/tools/builder" class="btn btn-sm btn-white mt-4 mb-4 w-full">
       <span class="text-xs">Build your carbon.txt file</span>
         <img class="utility-icon external-link-icon" width="16px" height="16px" src="{% static 'img/icon-external-link.svg' %}" alt=""/>
     </a>
   </p>
-
 {% endif %}
 
 
