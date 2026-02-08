@@ -1,7 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "admin-portal"
 version = "0.1.0"
-description = "Add your description here"
+description = "Green Web Foundation Admin Portal - Django application and data models"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -110,4 +114,8 @@ dev-dependencies = [
     "sphinx>=5.3.0",
     "sphinxcontrib-mermaid>=1.0.0",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["apps*", "greenweb*"]
 
