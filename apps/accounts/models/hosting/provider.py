@@ -27,7 +27,7 @@ from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
 from ...permissions import manage_provider
 from ..choices import ModelType, PartnerChoice
-from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, Label
+from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, EvidenceType, Label
 
 logger = logging.getLogger(__name__)
 
@@ -659,6 +659,13 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         related_name="supporting_documents",
     )
 
+    CARBON_TXT_DOC_TYPES = {
+        EvidenceType.ANNUAL_REPORT: "annual-report",
+        EvidenceType.WEB_PAGE: "web-page",
+        EvidenceType.CERTIFICATE: "certificate",
+        EvidenceType.OTHER: "other"
+    }
+
     def archive(self) -> "HostingProviderSupportingDocument":
         self.archived = True
         self.save()
@@ -693,6 +700,14 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
             return self.attachment.url
 
         return self.url
+
+    @property
+    def carbon_txt_doc_type(self):
+        return self.CARBON_TXT_DOC_TYPES[self.type]
+
+    @property
+    def carbon_txt_disclosure_dict(self):
+        return {"url": self.link, "doc_type": self.carbon_txt_doc_type,  "title": self.title, "valid_until": self.valid_to }
 
 
 class HostingCommunication(TimeStampedModel):
