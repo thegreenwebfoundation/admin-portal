@@ -25,6 +25,7 @@ from model_utils.models import TimeStampedModel
 
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
+from apps.greencheck.object_storage import object_storage_bucket, public_url
 from ...permissions import manage_provider
 from ..choices import ModelType, PartnerChoice
 from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, EvidenceType, Label
@@ -574,7 +575,7 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
             return build_carbontxt_file({
                 "org": {
                     "disclosures": [
-                        d.carbon_txt_disclosure_dict for d in disclosures
+                        d.build_carbontxt_disclosure_dict() for d in disclosures
                     ]
                 }
             })
@@ -701,13 +702,24 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
 
         return self.url
 
-    @property
-    def carbon_txt_doc_type(self):
-        return self.CARBON_TXT_DOC_TYPES[self.type]
+    def build_carbontxt_disclosure_dict(self):
+        doc_type = self.CARBON_TXT_DOC_TYPES[self.type]
+        url = self.public_url_for_carbon_txt()
+        return {
+            "url": url,
+            "doc_type": doc_type,
+            "title": self.title,
+            "valid_until": self.valid_to
+        }
 
-    @property
-    def carbon_txt_disclosure_dict(self):
-        return {"url": self.link, "doc_type": self.carbon_txt_doc_type,  "title": self.title, "valid_until": self.valid_to }
+    def public_url_for_carbon_txt(self):
+        if self.attachment:
+            bucket = object_storage_bucket(settings.CARBON_TXT_DISCLOSURE_BUCKET)
+            key = f"{self.hostingprovider_id}/{self.attachment.name}"
+            object = bucket.put_object(ACL="public-read", Key=key, Body=self.attachment.read())
+            return public_url(settings.CARBON_TXT_DISCLOSURE_BUCKET, object.key)
+        else:
+            return self.url
 
 
 class HostingCommunication(TimeStampedModel):
