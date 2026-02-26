@@ -22,6 +22,7 @@ from guardian.shortcuts import get_users_with_perms
 from taggit import models as tag_models
 from taggit.managers import TaggableManager
 from model_utils.models import TimeStampedModel
+from storages.backends.s3 import S3Storage
 
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
@@ -713,11 +714,15 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         }
 
     def public_url_for_carbon_txt(self):
-        if self.attachment:
-            bucket = object_storage_bucket(settings.CARBON_TXT_DISCLOSURE_BUCKET)
-            key = f"{self.hostingprovider_id}/{self.attachment.name}"
-            object = bucket.put_object(ACL="public-read", Key=key, Body=self.attachment.read())
-            return public_url(settings.CARBON_TXT_DISCLOSURE_BUCKET, object.key)
+        if not self.public:
+            return None
+        elif self.attachment and isinstance(self.attachment.storage, S3Storage):
+            key = self.attachment.name
+            bucket = object_storage_bucket(settings.AWS_STORAGE_BUCKET_NAME)
+            bucket.Object(key).Acl().put(ACL="public-read")
+            return public_url(settings.CARBON_TXT_DISCLOSURE_BUCKET, key)
+        elif self.attachment:
+            return self.attachment.url
         else:
             return self.url
 
