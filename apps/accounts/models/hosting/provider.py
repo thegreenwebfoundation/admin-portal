@@ -704,6 +704,9 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         return self.url
 
     def build_carbontxt_disclosure_dict(self):
+        """
+        Returns a dictionary representing this document as a carbon.txt disclosure.
+        """
         doc_type = self.CARBON_TXT_DOC_TYPES[self.type]
         url = self.public_url_for_carbon_txt()
         return {
@@ -714,16 +717,30 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         }
 
     def public_url_for_carbon_txt(self):
+        """
+        For public disclosures, this returns a publicly accessible URL to this piece of evidence.
+        Where the disclosure has a URL rather than an attachment, it returns the URL directly.
+        Where the URL has an attachment it first ensures that that attachment is publicly readable
+        in S3, then returns an unsigned (and therefore persistent) URL to the document.
+        In the case of private disclosures, this is a no-op, and None is returned.
+        """
         if not self.public:
+            # private evidence should not be exposed, nor have its ACL modified
             return None
         elif self.attachment and isinstance(self.attachment.storage, S3Storage):
+            # public evidence with an attachment, when the attachment is stored in an S3
+            # compatible object store, is marked with the `public-read` ACL, and and
+            # unsigned URL returned.
             key = self.attachment.name
             bucket = object_storage_bucket(settings.AWS_STORAGE_BUCKET_NAME)
             bucket.Object(key).Acl().put(ACL="public-read")
-            return public_url(settings.CARBON_TXT_DISCLOSURE_BUCKET, key)
+            return public_url(settings.AWS_STORAGE_BUCKET_NAME, key)
         elif self.attachment:
+            # public evidence with an attachment, when the attachment is not stored in an S3
+            # compatible object store, has its url returned directly.
             return self.attachment.url
         else:
+            # public evidence with a URL simply returns the provided URL.
             return self.url
 
 
