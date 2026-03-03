@@ -36,4 +36,9 @@ def public_url(bucket: str, key: str) -> str:
     # https://[bucket-name].s3.[scaleway-region].scw.cloud/[object_path]
     """
     region = settings.OBJECT_STORAGE_REGION
-    return f"https://{bucket}.s3.{region}.scw.cloud/{key}"
+    if bucket == settings.OBJECT_STORAGE_BUCKET_NAME:
+        hostname = settings.OBJECT_STORAGE_HOSTNAME
+    else:
+        hostname = f"{bucket}.s3.{region}.scw.cloud"
+    return f"https://{hostname}/{key}"
+

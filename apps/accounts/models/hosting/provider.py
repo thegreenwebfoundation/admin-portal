@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Now
+from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -439,7 +440,8 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         active_green_asns = self.greencheckasn_set.filter(active=True)
         active_green_ips.update(active=False)
         active_green_asns.update(active=False)
-
+        for doc in self.supporting_documents.all():
+            doc.archive()
         # When providers are archived, any domains they host cease to be green, so we should
         # Remove them from the cache of green domains. This ensures that the next time the are
         # checked, the correct (grey) result will be returned.
@@ -689,18 +691,29 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         return self.hostingprovider
 
     @property
+    def has_attachment_in_object_store(self):
+        """
+        This indicates whether the disclosure's attachment is stored in the object store, which
+        is not the case in all environments. We need to be able to selectively decide how to
+        build the link to the document, and whether or not to set the permissions, based on this.
+        """
+        return self.attachment and isinstance(self.attachment.storage, S3Storage)
+
+    @property
     def link(self) -> str:
         """
         Return either the hyperlink to the attachment url, or the plain url.
         If an item has both, we assume the attachment takes priority.
+        If the disclosure is public, we generate an unsigned, persistent URL.
         """
 
         # NOTE this shouldn't trigger any more db queries, so it
         # ought to be okay as a property. We probably should
         # change if it does trigger them.
-        if self.attachment:
+        if self.has_attachment_in_object_store and self.public:
+            return public_url(settings.AWS_STORAGE_BUCKET_NAME, self.attachment.name)
+        elif self.attachment:
             return self.attachment.url
-
         return self.url
 
     def build_carbontxt_disclosure_dict(self):
@@ -708,41 +721,35 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         Returns a dictionary representing this document as a carbon.txt disclosure.
         """
         doc_type = self.CARBON_TXT_DOC_TYPES[self.type]
-        url = self.public_url_for_carbon_txt()
         return {
-            "url": url,
+            "url": self.link,
             "doc_type": doc_type,
             "title": self.title,
             "valid_until": self.valid_to
         }
 
-    def public_url_for_carbon_txt(self):
+    def set_object_store_privacy(self):
         """
-        For public disclosures, this returns a publicly accessible URL to this piece of evidence.
-        Where the disclosure has a URL rather than an attachment, it returns the URL directly.
-        Where the URL has an attachment it first ensures that that attachment is publicly readable
-        in S3, then returns an unsigned (and therefore persistent) URL to the document.
-        In the case of private disclosures, this is a no-op, and None is returned.
+        For public unarchived disclosures, this ensures that the attachment is available publicly in the object store,
+        and can be linked to without a persistent, unsigned URL, which is necessary when generating carbon.txts
+        The receiver is fired any time a model is saved, so that it is updated, when the privacy flag is changed
+        or the disclosure is archived.
         """
-        if not self.public:
-            # private evidence should not be exposed, nor have its ACL modified
-            return None
-        elif self.attachment and isinstance(self.attachment.storage, S3Storage):
-            # public evidence with an attachment, when the attachment is stored in an S3
-            # compatible object store, is marked with the `public-read` ACL, and and
-            # unsigned URL returned.
+        if self.has_attachment_in_object_store:
             key = self.attachment.name
             bucket = object_storage_bucket(settings.AWS_STORAGE_BUCKET_NAME)
-            bucket.Object(key).Acl().put(ACL="public-read")
-            return public_url(settings.AWS_STORAGE_BUCKET_NAME, key)
-        elif self.attachment:
-            # public evidence with an attachment, when the attachment is not stored in an S3
-            # compatible object store, has its url returned directly.
-            return self.attachment.url
-        else:
-            # public evidence with a URL simply returns the provided URL.
-            return self.url
+            if self.public and not self.archived:
+                bucket.Object(key).Acl().put(ACL="public-read")
+            else:
+                bucket.Object(key).Acl().put(ACL="private")
 
+@receiver(models.signals.post_save, sender=HostingProviderSupportingDocument)
+def set_object_store_privacy(instance, **_kwargs):
+    """
+    This ensures that the object store privacy is updated when the state of an attachment
+    is changed from "private" to "public"
+    """
+    instance.set_object_store_privacy()
 
 class HostingCommunication(TimeStampedModel):
     template = models.CharField(max_length=128)

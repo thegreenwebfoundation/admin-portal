@@ -245,7 +245,7 @@ class TestHostingProviderEvidence:
         # can we read the file again?
         assert evidence.attachment.read() == attachment_contents
 
-    def test_public_url_for_carbon_txt_makes_public_file_public(self, db, mocker):
+    def test_saving_makes_public_file_public(self, db, mocker):
         """
         This test ensures that the url provided in carbon.txt is publicly available and persistent,
         when the provided evidence is public and is an attached file. It marks the object in S3 with
@@ -253,18 +253,15 @@ class TestHostingProviderEvidence:
         """
 
         # GIVEN a public Provider Evidence with an attached file
-        public_url_mock = mocker.patch("apps.accounts.models.hosting.provider.public_url")
         object_storage_bucket_mock = mocker.patch("apps.accounts.models.hosting.provider.object_storage_bucket")
         settings_mock = mocker.patch("apps.accounts.models.hosting.provider.settings")
 
         now = timezone.now()
         one_year_from_now = now + relativedelta(years=1)
-        url = "https://example.com/django_test.txt"
         bucket_name = "bucket-name"
 
         bucket = MagicMock()
         object_storage_bucket_mock.return_value = bucket
-        public_url_mock.return_value = url
         settings_mock.AWS_STORAGE_BUCKET_NAME = bucket_name
 
         evidence = ac_models.HostingProviderSupportingDocument(
@@ -274,6 +271,7 @@ class TestHostingProviderEvidence:
             title="Title",
             public=True,
         )
+
         evidence.save()
 
         attachment_contents = b"text-content"
@@ -284,16 +282,11 @@ class TestHostingProviderEvidence:
         # Pretend this is stored in S3, even though we don't use it in tests
         evidence.attachment.storage = MagicMock(spec=S3Storage)
 
-        # WHEN I request a public URL for carbon.txt
-        returned = evidence.public_url_for_carbon_txt()
+        # WHEN I save the document
+        evidence.save()
 
-
-        #THEN the public URL is returned
-        assert returned == url
-
-        # AND the object in S3 is marked as public
+        # THEN the object in S3 is marked as public
         object_storage_bucket_mock.assert_called_with(bucket_name)
-        public_url_mock.assert_called_with(bucket_name, evidence.attachment.name)
         bucket.Object.assert_called_with(evidence.attachment.name)
         bucket.Object.return_value.Acl.return_value.put.assert_called_with(ACL="public-read")
 
@@ -306,13 +299,16 @@ class TestHostingProviderEvidence:
 
         # GIVEN a private Provider Evidence with an attached file
         object_storage_bucket_mock = mocker.patch("apps.accounts.models.hosting.provider.object_storage_bucket")
+        settings_mock = mocker.patch("apps.accounts.models.hosting.provider.settings")
 
         now = timezone.now()
         one_year_from_now = now + relativedelta(years=1)
+        bucket_name = "bucket-name"
 
 
         bucket = MagicMock()
         object_storage_bucket_mock.return_value = bucket
+        settings_mock.AWS_STORAGE_BUCKET_NAME = bucket_name
 
         evidence = ac_models.HostingProviderSupportingDocument(
             valid_from=now,
@@ -333,44 +329,63 @@ class TestHostingProviderEvidence:
         evidence.attachment.storage = MagicMock(spec=S3Storage)
 
 
-        # WHEN I request a public URL for carbon.txt
-        returned = evidence.public_url_for_carbon_txt()
+        # WHEN I save the document
+        evidence.save()
 
 
-        # THEN nothing is returned
-        assert returned is None
+        # THEN the object in S3 is marked as private
+        object_storage_bucket_mock.assert_called_with(bucket_name)
+        bucket.Object.assert_called_with(evidence.attachment.name)
+        bucket.Object.return_value.Acl.return_value.put.assert_called_with(ACL="private")
 
-        #AND the object is NOT marked as public in S3
-        bucket.Object.assert_not_called()
-        bucket.Object.return_value.Acl.return_value.put.assert_not_called()
-
-    def test_public_url_for_carbon_txt_returns_url_when_url_given(self, db):
+    def archiving_public_url_for_carbon_txt_makes_file_private(self, db, mocker):
         """
-        This test ensures that provided URL is exposed for use in carbon.txt, when the evidence
-        is public and was supplied with a reference to a URL.
+        This test ensures that no URL is provided for inclusion in carbon.txt,
+        when the provided evidence is private and is an attached file. It also
+        ensures that the object ACL is NOT updated, to maintain privacy of the resource.
         """
 
-        # GIVEN a public Provider Evidence with an associated URL
+        # GIVEN a public Provider Evidence with an attached file
+        object_storage_bucket_mock = mocker.patch("apps.accounts.models.hosting.provider.object_storage_bucket")
+        settings_mock = mocker.patch("apps.accounts.models.hosting.provider.settings")
+
         now = timezone.now()
         one_year_from_now = now + relativedelta(years=1)
+        bucket_name = "bucket-name"
 
-        url = "https://example.com/django_test.txt"
+
+        bucket = MagicMock()
+        object_storage_bucket_mock.return_value = bucket
+        settings_mock.AWS_STORAGE_BUCKET_NAME = bucket_name
 
         evidence = ac_models.HostingProviderSupportingDocument(
             valid_from=now,
             valid_to=one_year_from_now,
             description="some description",
-            url=url,
             title="Title",
             public=True,
         )
         evidence.save()
 
-        # WHEN I request a public URL for carbon.txt
-        returned = evidence.public_url_for_carbon_txt()
+        attachment_contents = b"text-content"
+        evidence.attachment.save(
+            "django_test.txt", dj_files.ContentFile(attachment_contents)
+        )
 
-        # THEN the URL is returned directly.
-        assert returned == url
+
+        # Pretend this is stored in S3, even though we don't use it in tests
+        evidence.attachment.storage = MagicMock(spec=S3Storage)
+
+
+        # WHEN I archive the document
+        evidence.archive()
+
+
+        # THEN the object in S3 is marked as private
+        object_storage_bucket_mock.assert_called_with(bucket_name)
+        bucket.Object.assert_called_with(evidence.attachment.name)
+        bucket.Object.return_value.Acl.return_value.put.assert_called_with(ACL="private")
+
 
 class TestUser:
     def test_create_user_has_password_and_legacy_password_set(
