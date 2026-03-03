@@ -8,7 +8,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print("Resetting S3 ACL privacy for all documents with attachments")
-        documents = HostingProviderSupportingDocument.objects.filter(attachment__isnull=False).exclude(attachment__exact="").all()
+        documents = HostingProviderSupportingDocument.objects_all.filter(attachment__isnull=False).exclude(attachment__exact="").all()
         for document in documents:
             print(".", end="")
             try:
