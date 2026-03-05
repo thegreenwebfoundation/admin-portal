@@ -61,6 +61,11 @@
 
         <section class="my-10">
           <h3>Green evidence</h3>
+          <div class="alert__warning">
+            <p><strong>Please ensure that your evidence is correctly marked as public or private!</strong></p>
+            <p>Public evidence will be made available online once the verification process is completed.</p>
+          </div>
+
           {% for evidence_form in preview_forms.4.forms %}
             {% if not evidence_form.DELETE.value %}
               {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
