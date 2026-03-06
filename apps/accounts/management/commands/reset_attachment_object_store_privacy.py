@@ -4,7 +4,7 @@ from apps.accounts.models import HostingProviderSupportingDocument
 
 
 class Command(BaseCommand):
-    help = "Ensure that the S3 ACL privacy for all Supporting Documents relects their privacy settings in the Database"
+    help = "Ensure that the S3 ACL privacy for all Supporting Documents reflects their privacy settings in the Database"
 
     def handle(self, *args, **options):
         print("Resetting S3 ACL privacy for all documents with attachments")

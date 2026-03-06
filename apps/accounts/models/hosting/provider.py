@@ -10,7 +10,6 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Now
-from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -673,17 +672,11 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
     def archive(self) -> "HostingProviderSupportingDocument":
         self.archived = True
         self.save()
-        # TODO if we are using object storage, use the boto3 API to mark the
-        # file as no longer public
-
         return self
 
     def unarchive(self) -> "HostingProviderSupportingDocument":
         self.archived = False
         self.save()
-        # TODO if we are using object storage, use the boto3 API to mark the
-        # file as no longer public
-
         return self
 
     @property
@@ -739,17 +732,22 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
             key = self.attachment.name
             bucket = object_storage_bucket(settings.AWS_STORAGE_BUCKET_NAME)
             if self.public and not self.archived:
+
+                logger.debug(f"Setting attachment ACL of attachment '{key}' for supporting document {self.id} to 'public-read'")
                 bucket.Object(key).Acl().put(ACL="public-read")
             else:
+                logger.debug(f"Setting attachment ACL of attachment '{key}' for supporting document {self.id} to 'private'")
                 bucket.Object(key).Acl().put(ACL="private")
 
-@receiver(models.signals.post_save, sender=HostingProviderSupportingDocument)
-def set_object_store_privacy(instance, **_kwargs):
-    """
-    This ensures that the object store privacy is updated when the state of an attachment
-    is changed from "private" to "public"
-    """
-    instance.set_object_store_privacy()
+    def save(self, *args, **kwargs):
+        """
+        This ensures that the object store privacy is updated when the state of an attachment
+        is changed from "private" to "public"
+        """
+        super().save(*args, **kwargs)
+        # TODO ensure that we're not sending unneeded HTTP requests here, in the case where
+        # the document privacy has not changed.
+        self.set_object_store_privacy()
 
 class HostingCommunication(TimeStampedModel):
     template = models.CharField(max_length=128)
