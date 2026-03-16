@@ -22,9 +22,11 @@ from guardian.shortcuts import get_users_with_perms
 from taggit import models as tag_models
 from taggit.managers import TaggableManager
 from model_utils.models import TimeStampedModel
+from storages.backends.s3 import S3Storage
 
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
+from apps.greencheck.object_storage import object_storage_bucket, public_url
 from ...permissions import manage_provider
 from ..choices import ModelType, PartnerChoice
 from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, EvidenceType, Label
@@ -437,7 +439,8 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         active_green_asns = self.greencheckasn_set.filter(active=True)
         active_green_ips.update(active=False)
         active_green_asns.update(active=False)
-
+        for doc in self.supporting_documents.all():
+            doc.archive()
         # When providers are archived, any domains they host cease to be green, so we should
         # Remove them from the cache of green domains. This ensures that the next time the are
         # checked, the correct (grey) result will be returned.
@@ -574,7 +577,7 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
             return build_carbontxt_file({
                 "org": {
                     "disclosures": [
-                        d.carbon_txt_disclosure_dict for d in disclosures
+                        d.build_carbontxt_disclosure_dict() for d in disclosures
                     ]
                 }
             })
@@ -669,17 +672,11 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
     def archive(self) -> "HostingProviderSupportingDocument":
         self.archived = True
         self.save()
-        # TODO if we are using object storage, use the boto3 API to mark the
-        # file as no longer public
-
         return self
 
     def unarchive(self) -> "HostingProviderSupportingDocument":
         self.archived = False
         self.save()
-        # TODO if we are using object storage, use the boto3 API to mark the
-        # file as no longer public
-
         return self
 
     @property
@@ -687,28 +684,70 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         return self.hostingprovider
 
     @property
+    def has_attachment_in_object_store(self):
+        """
+        This indicates whether the disclosure's attachment is stored in the object store, which
+        is not the case in all environments. We need to be able to selectively decide how to
+        build the link to the document, and whether or not to set the permissions, based on this.
+        """
+        return self.attachment and isinstance(self.attachment.storage, S3Storage)
+
+    @property
     def link(self) -> str:
         """
         Return either the hyperlink to the attachment url, or the plain url.
         If an item has both, we assume the attachment takes priority.
+        If the disclosure is public, we generate an unsigned, persistent URL.
         """
 
         # NOTE this shouldn't trigger any more db queries, so it
         # ought to be okay as a property. We probably should
         # change if it does trigger them.
-        if self.attachment:
+        if self.has_attachment_in_object_store and self.public:
+            return public_url(settings.AWS_STORAGE_BUCKET_NAME, self.attachment.name)
+        elif self.attachment:
             return self.attachment.url
-
         return self.url
 
-    @property
-    def carbon_txt_doc_type(self):
-        return self.CARBON_TXT_DOC_TYPES[self.type]
+    def build_carbontxt_disclosure_dict(self):
+        """
+        Returns a dictionary representing this document as a carbon.txt disclosure.
+        """
+        doc_type = self.CARBON_TXT_DOC_TYPES[self.type]
+        return {
+            "url": self.link,
+            "doc_type": doc_type,
+            "title": self.title,
+            "valid_until": self.valid_to
+        }
 
-    @property
-    def carbon_txt_disclosure_dict(self):
-        return {"url": self.link, "doc_type": self.carbon_txt_doc_type,  "title": self.title, "valid_until": self.valid_to }
+    def set_object_store_privacy(self):
+        """
+        For public unarchived disclosures, this ensures that the attachment is available publicly in the object store,
+        and can be linked to without a persistent, unsigned URL, which is necessary when generating carbon.txts
+        The receiver is fired any time a model is saved, so that it is updated, when the privacy flag is changed
+        or the disclosure is archived.
+        """
+        if self.has_attachment_in_object_store:
+            key = self.attachment.name
+            bucket = object_storage_bucket(settings.AWS_STORAGE_BUCKET_NAME)
+            if self.public and not self.archived:
 
+                logger.debug(f"Setting attachment ACL of attachment '{key}' for supporting document {self.id} to 'public-read'")
+                bucket.Object(key).Acl().put(ACL="public-read")
+            else:
+                logger.debug(f"Setting attachment ACL of attachment '{key}' for supporting document {self.id} to 'private'")
+                bucket.Object(key).Acl().put(ACL="private")
+
+    def save(self, *args, **kwargs):
+        """
+        This ensures that the object store privacy is updated when the state of an attachment
+        is changed from "private" to "public"
+        """
+        super().save(*args, **kwargs)
+        # TODO ensure that we're not sending unneeded HTTP requests here, in the case where
+        # the document privacy has not changed.
+        self.set_object_store_privacy()
 
 class HostingCommunication(TimeStampedModel):
     template = models.CharField(max_length=128)

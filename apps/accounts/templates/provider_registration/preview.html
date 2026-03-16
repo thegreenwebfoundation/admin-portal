@@ -61,6 +61,11 @@
 
         <section class="my-10">
           <h3>Green evidence</h3>
+          <div class="alert__warning">
+            <p>Please ensure that your evidence is correctly marked as public or private!</p>
+            <p>Evidence marked as public will be accessible to the general public via the Green Web Check, Directory, and our API.</p>
+          </div>
+
           {% for evidence_form in preview_forms.4.forms %}
             {% if not evidence_form.DELETE.value %}
               {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
