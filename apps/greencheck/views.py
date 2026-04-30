@@ -82,8 +82,10 @@ class DirectoryView(TemplateView):
         queryset = Hostingprovider.objects.filter(
             is_listed=True,
             archived=False
+        ).select_related(
+            "carbon_txt"
         ).prefetch_related(
-            "services"
+            "services", "supporting_documents"
         )
 
         ctx = super().get_context_data(**kwargs)
