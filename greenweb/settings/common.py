@@ -47,6 +47,7 @@ env = environ.Env(
     BREVO_API_KEY = (str, os.getenv("BREVO_API_KEY")),
     BREVO_LIST_ID = (str, os.getenv("BREVO_LIST_ID")),
     BREVO_SOURCE = (str, os.getenv("BREVO_SOURCE")),
+    DIRECTORY_CACHE_TIMEOUT = (int, os.getenv("DIRECTORY_CACHE_TIMEOUT")) # Default to one week
 )
 
 # in some cases we don't have a .env file to work from - the environment
@@ -118,6 +119,8 @@ INSTALLED_APPS = [
     'drf_api_logger',
     # Logging carbon.txt requests
     "carbon_txt.web.validation_logging",
+    # Compression of http responses
+    "django_http_compression",
     # project specific
     "apps.theme",
     "apps.accounts",
@@ -144,6 +147,7 @@ LOGIN_URL = "/accounts/login"
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 MIDDLEWARE = [
+    "django_http_compression.middleware.HttpCompressionMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "waffle.middleware.WaffleMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -370,6 +374,10 @@ CARBON_TXT_CACHE_TTL = env(
 
 CARBON_TXT_USER_AGENT = env(
         "CARBON_TXT_USER_AGENT", default="GreenWebChecker/1.0 (https://www.thegreenwebfoundation.org/green-web-checker-faq/)"
+)
+
+DIRECTORY_CACHE_TIMEOUT= env(
+    "DIRECTORY_CACHE_TIMEOUT", default=60*60*24*7 # 1 week
 )
 
 BREVO_API_KEY = env("BREVO_API_KEY", default=None)

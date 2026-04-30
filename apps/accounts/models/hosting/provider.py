@@ -602,6 +602,7 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
             models.Index(fields=["name"], name="hp_name"),
             models.Index(fields=["archived"], name="hp_archived"),
             models.Index(fields=["is_listed"], name="hp_is_listed"),
+            models.Index(fields=["archived", "is_listed", "country"], name="hp_directory_by_country"),
         ]
         permissions = (manage_provider.astuple(),)
 
