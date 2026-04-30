@@ -77,6 +77,7 @@ dependencies = [
     "truststore>=0.10.4",
     "brevo-python>=1.2.0",
     "altair>=6.0.0",
+    "django-http-compression[brotli]>=1.4.0",
 ]
 
 [dependency-groups]
