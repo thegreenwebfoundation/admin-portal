@@ -128,7 +128,7 @@ requires-dist = [
     { name = "awscli-plugin-endpoint", specifier = ">=0.4" },
     { name = "boto3", specifier = ">=1.35.54" },
     { name = "brevo-python", specifier = ">=1.2.0" },
-    { name = "carbon-txt", specifier = "==0.0.26" },
+    { name = "carbon-txt", specifier = "==0.0.27" },
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "dateutils", specifier = ">=0.6.12" },
     { name = "db-to-sqlite", specifier = ">=1.5" },
@@ -824,7 +824,7 @@ wheels = [
 
 [[package]]
 name = "carbon-txt"
-version = "0.0.26"
+version = "0.0.27"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arelle-release" },
@@ -846,9 +846,9 @@ dependencies = [
     { name = "tomlkit" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/3b/927d33398b7fad62c12f3b0fef513b43efb76d719232ee953b71dbf7673f/carbon_txt-0.0.26.tar.gz", hash = "sha256:28a2fa0c88becc5d68509dc884a79fee141ce4b30a7a3f04546d558bbb7740ec", size = 2988382, upload-time = "2026-03-19T05:34:16.383Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/6f/eeadd2d8f308905133da6cf2bccc6a17829c2226584dd88d4c1d23593a32/carbon_txt-0.0.27.tar.gz", hash = "sha256:d250e0d69f416acc3969510cbdcdfa7f6783ccc33f9dc2f5a5223aeee22d8ce9", size = 2989241, upload-time = "2026-04-30T07:52:33.797Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/2d/8a18059b7380bfa4539fc97118604e0063600afa82a32dc07279a6333849/carbon_txt-0.0.26-py3-none-any.whl", hash = "sha256:abc0ca57888a7f6d7af01eba0c594aaa2f2986cd71dabb738464b2a940a250ff", size = 53010, upload-time = "2026-03-19T05:34:14.764Z" },
+    { url = "https://files.pythonhosted.org/packages/04/96/33b6a2658388489fbd1645ed3e93f5c8165a81616d85441ca12e69887d29/carbon_txt-0.0.27-py3-none-any.whl", hash = "sha256:64c60761dc78d9220ab5c675edd7ed745d04fb44a27b7881c2d8d18ecbfcd881", size = 53032, upload-time = "2026-04-30T07:52:32.337Z" },
 ]
 
 [[package]]
