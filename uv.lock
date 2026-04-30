@@ -127,7 +127,7 @@ requires-dist = [
     { name = "awscli-plugin-endpoint", specifier = ">=0.4" },
     { name = "boto3", specifier = ">=1.35.54" },
     { name = "brevo-python", specifier = ">=1.2.0" },
-    { name = "carbon-txt", specifier = "==0.0.25" },
+    { name = "carbon-txt", specifier = "==0.0.26" },
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "dateutils", specifier = ">=0.6.12" },
     { name = "db-to-sqlite", specifier = ">=1.5" },
@@ -740,7 +740,7 @@ wheels = [
 
 [[package]]
 name = "carbon-txt"
-version = "0.0.25"
+version = "0.0.26"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arelle-release" },
@@ -752,17 +752,19 @@ dependencies = [
     { name = "dnspython" },
     { name = "granian" },
     { name = "httpx" },
+    { name = "mistletoe" },
     { name = "pluggy" },
     { name = "pydantic-extra-types" },
+    { name = "python-frontmatter" },
     { name = "rich" },
     { name = "sentry-sdk", extra = ["django"] },
     { name = "tldextract" },
     { name = "tomlkit" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6b/47/5ae058e55d96f891eb2e2af3c58f497f889ccedfacf06d7644f8fc1e8f42/carbon_txt-0.0.25.tar.gz", hash = "sha256:2ec86fe9a33e876d2b31724d3d63c5b23981cb69673da45dad034e8a64aeee62", size = 2983239, upload-time = "2026-02-05T10:20:19.643Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/3b/927d33398b7fad62c12f3b0fef513b43efb76d719232ee953b71dbf7673f/carbon_txt-0.0.26.tar.gz", hash = "sha256:28a2fa0c88becc5d68509dc884a79fee141ce4b30a7a3f04546d558bbb7740ec", size = 2988382, upload-time = "2026-03-19T05:34:16.383Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/ff/e06b84910beb8e31d477763d76f779029e65c831e40fc39b86c6c95f6969/carbon_txt-0.0.25-py3-none-any.whl", hash = "sha256:242155e9e944ffb7f56b40cb8d37627b81534e97c93be0cab70c5a7733229408", size = 47696, upload-time = "2026-02-05T10:20:17.688Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/2d/8a18059b7380bfa4539fc97118604e0063600afa82a32dc07279a6333849/carbon_txt-0.0.26-py3-none-any.whl", hash = "sha256:abc0ca57888a7f6d7af01eba0c594aaa2f2986cd71dabb738464b2a940a250ff", size = 53010, upload-time = "2026-03-19T05:34:14.764Z" },
 ]
 
 [[package]]
@@ -2869,6 +2871,15 @@ wheels = [
 ]
 
 [[package]]
+name = "mistletoe"
+version = "1.5.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/ae/d33647e2a26a8899224f36afc5e7b7a670af30f1fd87231e9f07ca19d673/mistletoe-1.5.1.tar.gz", hash = "sha256:c5571ce6ca9cfdc7ce9151c3ae79acb418e067812000907616427197648030a3", size = 111769, upload-time = "2025-12-07T16:19:01.066Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/60/0980fefdc4d12c18c1bbab9d62852f27aded8839233c7b0a9827aaf395f5/mistletoe-1.5.1-py3-none-any.whl", hash = "sha256:d3e97664798261503f685f6a6281b092628367cf3128fc68a015a993b0c4feb3", size = 55331, upload-time = "2025-12-07T16:18:59.65Z" },
+]
+
+[[package]]
 name = "mistralai"
 version = "1.9.11"
 source = { registry = "https://pypi.org/simple" }
@@ -3888,6 +3899,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bc/57/e84d88dfe0aec03b7a2d4327012c1627ab5f03652216c63d49846d7a6c58/python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca", size = 39115, upload-time = "2024-01-23T06:33:00.505Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/3e/b68c118422ec867fa7ab88444e1274aa40681c606d59ac27de5a5588f082/python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a", size = 19863, upload-time = "2024-01-23T06:32:58.246Z" },
+]
+
+[[package]]
+name = "python-frontmatter"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/96/de/910fa208120314a12f9a88ea63e03707261692af782c99283f1a2c8a5e6f/python-frontmatter-1.1.0.tar.gz", hash = "sha256:7118d2bd56af9149625745c58c9b51fb67e8d1294a0c76796dafdc72c36e5f6d", size = 16256, upload-time = "2024-01-16T18:50:04.052Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/49/87/3c8da047b3ec5f99511d1b4d7a5bc72d4b98751c7e78492d14dc736319c5/python_frontmatter-1.1.0-py3-none-any.whl", hash = "sha256:335465556358d9d0e6c98bbeb69b1c969f2a4a21360587b9873bfc3b213407c1", size = 9834, upload-time = "2024-01-16T18:50:00.911Z" },
 ]
 
 [[package]]

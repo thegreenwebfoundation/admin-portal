@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 from taggit import models as tag_models
 from carbon_txt.finders import FileFinder
+from carbon_txt.http_client import HTTPClient
 from carbon_txt.validators import CarbonTxtValidator
 from carbon_txt.exceptions import UnreachableCarbonTxtFile
 from carbon_txt.web.validation_logging.models import ValidationLogEntry
@@ -187,8 +188,10 @@ class ProviderCarbonTxt(TimeStampedModel):
     def _find_for_domain_uncached(cls, domain):
 
         finder = FileFinder(
-            http_timeout=settings.CARBON_TXT_RESOLUTION_TIMEOUT,
-            http_user_agent=settings.CARBON_TXT_USER_AGENT,
+            http_client=HTTPClient(
+                http_timeout=settings.CARBON_TXT_RESOLUTION_TIMEOUT,
+                http_user_agent=settings.CARBON_TXT_USER_AGENT,
+            )
         )
         try:
             result = finder.resolve_domain(domain)
