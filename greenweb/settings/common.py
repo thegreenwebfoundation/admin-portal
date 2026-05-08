@@ -21,6 +21,7 @@ ROOT = environ.Path(__file__) - 3
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, os.getenv("SECRET_KEY")),
+    GWF_SHARED_SECRET=(str, os.getenv("GWF_SHARED_SECRET")),
     DATABASE_URL=(str, os.getenv("DATABASE_URL")),
     DATABASE_URL_READ_ONLY=(str, os.getenv("DATABASE_URL_READ_ONLY")),
     DOMAIN_SNAPSHOT_BUCKET=(str, os.getenv("DOMAIN_SNAPSHOT_BUCKET")),
@@ -47,7 +48,8 @@ env = environ.Env(
     BREVO_API_KEY = (str, os.getenv("BREVO_API_KEY")),
     BREVO_LIST_ID = (str, os.getenv("BREVO_LIST_ID")),
     BREVO_SOURCE = (str, os.getenv("BREVO_SOURCE")),
-    DIRECTORY_CACHE_TIMEOUT = (int, os.getenv("DIRECTORY_CACHE_TIMEOUT")) # Default to one week
+    DIRECTORY_CACHE_TIMEOUT = (int, os.getenv("DIRECTORY_CACHE_TIMEOUT")), # Default to one week
+    MAX_API_KEYS_PER_USER = (int, os.getenv("MAX_API_KEYS_PER_USER"))
 )
 
 # in some cases we don't have a .env file to work from - the environment
@@ -63,6 +65,10 @@ if dotenv_file.exists():
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
+
+# This is used to authenticate other GWF services which need to access internal
+# APIs hosted by the provider portal, for example to introspect user API keys.
+GWF_SHARED_SECRET = env("GWF_SHARED_SECRET")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -96,6 +102,7 @@ INSTALLED_APPS = [
     "django_registration",
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_api_key",
     "drf_yasg",
     "corsheaders",
     "taggit",
@@ -378,6 +385,10 @@ CARBON_TXT_USER_AGENT = env(
 
 DIRECTORY_CACHE_TIMEOUT= env(
     "DIRECTORY_CACHE_TIMEOUT", default=60*60*24*7 # 1 week
+)
+
+MAX_API_KEYS_PER_USER = env(
+    "MAX_API_KEYS_PER_USER", default=3
 )
 
 BREVO_API_KEY = env("BREVO_API_KEY", default=None)

@@ -15,6 +15,7 @@ from apps.accounts.views import (
     ProviderAutocompleteView,
     ProviderCarbonTxtView,
     ProviderCarbonTxtBuilderView,
+    APIKeyIntrospectionView,
 )
 
 urlpatterns = [
@@ -162,5 +163,10 @@ urlpatterns = [
         "providers/<int:provider_id>/carbon_txt/download",
         ProviderCarbonTxtBuilderView.as_view(),
         name="provider-download-carbon-txt"
+    ),
+    path(
+        "internal/api/introspect_key",
+        APIKeyIntrospectionView.as_view(),
+        name="internal-introspect-api-key"
     )
 ]
