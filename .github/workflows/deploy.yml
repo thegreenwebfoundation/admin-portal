@@ -24,6 +24,7 @@ jobs:
       DATABASE_URL_READ_ONLY: ${{ secrets.DATABASE_URL_READ_ONLY }}
       EXPLORER_TOKEN: ${{ secrets.EXPLORER_TOKEN }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      GWF_SHARED_SECRET: ${{ secrets.GWF_SHARED_SECRET }}
       DJANGO_SETTINGS_MODULE: ${{ secrets.DJANGO_SETTINGS_MODULE }}
       RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
       SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
