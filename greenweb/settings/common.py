@@ -48,8 +48,9 @@ env = environ.Env(
     BREVO_API_KEY = (str, os.getenv("BREVO_API_KEY")),
     BREVO_LIST_ID = (str, os.getenv("BREVO_LIST_ID")),
     BREVO_SOURCE = (str, os.getenv("BREVO_SOURCE")),
-    DIRECTORY_CACHE_TIMEOUT = (int, os.getenv("DIRECTORY_CACHE_TIMEOUT")), # Default to one week
-    MAX_API_KEYS_PER_USER = (int, os.getenv("MAX_API_KEYS_PER_USER"))
+    DIRECTORY_CACHE_TIMEOUT = (int, os.getenv("DIRECTORY_CACHE_TIMEOUT")), # Default to one day
+    MAX_API_KEYS_PER_USER = (int, os.getenv("MAX_API_KEYS_PER_USER")),
+    API_KEY_PREFIX = (str, os.getenv("API_KEY_PREFIX"))
 )
 
 # in some cases we don't have a .env file to work from - the environment
@@ -384,11 +385,15 @@ CARBON_TXT_USER_AGENT = env(
 )
 
 DIRECTORY_CACHE_TIMEOUT= env(
-    "DIRECTORY_CACHE_TIMEOUT", default=60*60*24*7 # 1 week
+    "DIRECTORY_CACHE_TIMEOUT", default=60*60*24 # 1 day
 )
 
 MAX_API_KEYS_PER_USER = env(
     "MAX_API_KEYS_PER_USER", default=3
+)
+
+API_KEY_PREFIX = env(
+    "API_KEY_PREFIX", default="gwf"
 )
 
 BREVO_API_KEY = env("BREVO_API_KEY", default=None)
