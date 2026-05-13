@@ -110,8 +110,7 @@ def test_provider_portal_home_view_items_sorted_by_name(client):
     view = ProviderPortalHomeView()
     view.request = request
     qs = view.get_queryset()
-
     # then: verification requests are sorted by name
-    assert list(qs["requests"]) == sorted(qs["requests"], key=lambda item: item.name)
+    assert list(qs["requests"]) == sorted(qs["requests"], key=lambda item: item.name.lower())
     # then: hosting providers are sorted by name
-    assert list(qs["providers"]) == sorted(qs["providers"], key=lambda item: item.name)
+    assert list(qs["providers"]) == sorted(qs["providers"], key=lambda item: item.name.lower())

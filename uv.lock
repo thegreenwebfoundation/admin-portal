@@ -52,6 +52,7 @@ dependencies = [
     { name = "django-waffle" },
     { name = "django-widget-tweaks" },
     { name = "djangorestframework" },
+    { name = "djangorestframework-api-key" },
     { name = "djangorestframework-csv" },
     { name = "djangorestframework-jsonp" },
     { name = "dramatiq", extra = ["rabbitmq"] },
@@ -164,6 +165,7 @@ requires-dist = [
     { name = "django-waffle", specifier = ">=4.1.0" },
     { name = "django-widget-tweaks", specifier = ">=1.5.0" },
     { name = "djangorestframework", specifier = ">=3.15.2" },
+    { name = "djangorestframework-api-key", specifier = ">=3.1.0" },
     { name = "djangorestframework-csv", specifier = ">=3.0.2" },
     { name = "djangorestframework-jsonp", specifier = ">=1.0.2" },
     { name = "dramatiq", extras = ["rabbitmq"], specifier = ">=1.17.1" },
@@ -1698,6 +1700,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2c/ce/31482eb688bdb4e271027076199e1aa8d02507e530b6d272ab8b4481557c/djangorestframework-3.15.2.tar.gz", hash = "sha256:36fe88cd2d6c6bec23dca9804bab2ba5517a8bb9d8f47ebc68981b56840107ad", size = 1067420, upload-time = "2024-06-19T07:59:32.891Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7c/b6/fa99d8f05eff3a9310286ae84c4059b08c301ae4ab33ae32e46e8ef76491/djangorestframework-3.15.2-py3-none-any.whl", hash = "sha256:2b8871b062ba1aefc2de01f773875441a961fefbf79f5eed1e32b2f096944b20", size = 1071235, upload-time = "2024-06-19T07:59:26.106Z" },
+]
+
+[[package]]
+name = "djangorestframework-api-key"
+version = "3.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/95/d9/d187626f67eec3d8c7fb170009ffc323e70553dbac8832ca051f4c7e0a53/djangorestframework_api_key-3.1.0.tar.gz", hash = "sha256:7e9c88360933b3c46467d80645a50cf36697674c7856a737a1c674d570860ac9", size = 36922, upload-time = "2025-04-04T08:53:19.422Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/60/50/29fd576a9162ff3fcd0423ae5a30e7f9610a438329dd20081a60c758f100/djangorestframework_api_key-3.1.0-py3-none-any.whl", hash = "sha256:1b6ed7d89308cf872b29084cf68f9b7171f7efd2b8f84f480c09aa4232f910c1", size = 15664, upload-time = "2025-04-04T08:53:18.228Z" },
 ]
 
 [[package]]

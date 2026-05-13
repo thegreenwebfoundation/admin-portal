@@ -1,9 +1,11 @@
+from datetime import timedelta
 from carbon_txt.finders import UnreachableCarbonTxtFile
 import pytest
 from unittest.mock import patch, MagicMock, PropertyMock
 from apps.accounts.models.choices import ModelType
 from apps.accounts import models as ac_models
 from carbon_txt.exceptions import UnreachableCarbonTxtFile
+from django.conf import settings
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from django.core.files import base as dj_files
@@ -603,3 +605,101 @@ class TestProviderCarbonTxt:
 
         # Then no carbon.txt should be returned.
         assert result is None
+
+
+class TestAPIKey:
+    @pytest.mark.django_db
+    def test_revoked_keys_are_not_usable(self, user_factory):
+        """
+        Revoked API Keys are not usable for authentication
+        """
+        u = user_factory.create()
+        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u)
+        key.revoked = True
+        key.save()
+
+        assert key not in ac_models.APIKey.objects.get_usable_keys()
+
+    @pytest.mark.django_db
+    def test_expired_keys_are_not_usable(self, user_factory):
+        """
+        Expired API Keys are not usable for authentication
+        """
+        u = user_factory.create()
+        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u,
+            expiry_date=timezone.now() - timedelta(days=1)
+        )
+
+        assert key not in ac_models.APIKey.objects.get_usable_keys()
+
+    @pytest.mark.django_db
+    def test_future_expiring_keys_are_usable(self, user_factory):
+        """
+        Keys with a future expiry date are usable for authentication
+        """
+        u = user_factory.create()
+        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u,
+            expiry_date=timezone.now() + timedelta(days=1)
+        )
+
+        assert key in ac_models.APIKey.objects.get_usable_keys()
+
+    @pytest.mark.django_db
+    def test_non_expiring_keys_are_usable(self, user_factory):
+        """
+        Keys without an expiry date are usable for authentication
+        """
+        u = user_factory.create()
+        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u)
+
+        assert key in ac_models.APIKey.objects.get_usable_keys()
+
+    @pytest.mark.django_db
+    def test_user_can_only_create_three_keys(self, user_factory):
+        """
+        Users can create a maxmimum of three keys
+        """
+        u = user_factory.create()
+        for _i in range(settings.MAX_API_KEYS_PER_USER):
+            ac_models.APIKey.objects.create_key_for_user(u)
+
+        with pytest.raises(ValueError):
+            ac_models.APIKey.objects.create_key_for_user(u)
+
+
+
+    @pytest.mark.django_db
+    def test_revoked_keys_dont_count_towards_user_limit(self, user_factory):
+        """
+        Revoked keys do not count towards the three key limit
+        """
+        u = user_factory.create()
+        for _i in range(settings.MAX_API_KEYS_PER_USER - 1):
+            ac_models.APIKey.objects.create_key_for_user(u)
+
+        (revoked_key, _token) = ac_models.APIKey.objects.create_key_for_user(u)
+        revoked_key.revoked = True
+        revoked_key.save()
+
+        try:
+            ac_models.APIKey.objects.create_key_for_user(u)
+        except ValueError:
+            pytest.fail("Unexpected ValueError")
+
+    @pytest.mark.django_db
+    def test_expired_keys_dont_count_towards_user_limit(self, user_factory):
+        """
+        Expired keys do not count towards the three key limit
+        """
+        u = user_factory.create()
+        for _i in range(settings.MAX_API_KEYS_PER_USER - 1):
+            ac_models.APIKey.objects.create_key_for_user(u)
+
+        ac_models.APIKey.objects.create_key_for_user(u,
+            expiry_date=timezone.now() - timedelta(days=1)
+        )
+
+        try:
+            ac_models.APIKey.objects.create_key_for_user(u)
+        except ValueError:
+            pytest.fail("Unexpected ValueError")

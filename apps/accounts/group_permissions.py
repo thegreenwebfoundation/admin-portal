@@ -180,6 +180,11 @@ ADMIN_PERMS= [
     "change_datacenterlocation",
     "delete_datacenterlocation",
     "view_datacenterlocation",
+    # Can administer API keys
+    "add_apikey",
+    "change_apikey",
+    "delete_apikey",
+    "view_apikey",
 ]
 
 PERMS = {

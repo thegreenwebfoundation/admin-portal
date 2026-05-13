@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 
+from django.conf import settings
+from rest_framework.permissions import BasePermission
+
 
 @dataclass
 class Permission:
@@ -43,3 +46,8 @@ manage_provider = Permission(
 manage_datacenter = Permission(
     "manage_datacenter", "accounts.manage_datacenter", "Manage datacenter"
 )
+
+class HasGWFSharedSecret(BasePermission):
+    def has_permission(self, request, view):
+        secret = request.headers.get("X-GWF-Shared-Secret")
+        return secret == settings.GWF_SHARED_SECRET
