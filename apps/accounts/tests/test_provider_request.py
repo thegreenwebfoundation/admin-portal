@@ -116,6 +116,33 @@ def wizard_form_verification_bases_data():
         "3-verification_bases": bases_sample,
     }
 
+
+@pytest.fixture()
+def wizard_form_verification_bases_with_linked_provider_data():
+    """
+    Returns valid data for step BASIS FOR VERIFICATION including a linked provider.
+    """
+    for _ in range(5):
+        VerificationBasisFactory.create()
+
+    tags_choices = models.VerificationBasis.objects.all()
+    bases_sample = random.sample([tag.slug for tag in tags_choices], 3)
+
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Green Provider",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://example.com",
+    )
+
+    return {
+        "provider_request_wizard_view-current_step": "3",
+        "3-verification_bases": bases_sample,
+        "3-linked_providers": [str(upstream.id)],
+        "3-country": "GB",
+    }
+
 @pytest.fixture()
 def wizard_form_evidence_data(fake_evidence):
     """
@@ -2319,3 +2346,129 @@ def test_staff_review_is_logged(
     assert log_message.user == greenweb_staff_user
     assert log_message.action_flag == CHANGE
     assert log_message.change_message == expected_status
+
+
+@pytest.mark.django_db
+def test_wizard_submission_with_linked_providers(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_verification_bases_with_linked_provider_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    """
+    Given: a user submits a provider request selecting linked upstream providers
+    When: the wizard completes successfully
+    Then: the ProviderRequest is created with the linked providers persisted
+    """
+    form_data = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        wizard_form_verification_bases_with_linked_provider_data,
+        wizard_form_evidence_data,
+        wizard_form_network_data,
+        wizard_form_consent,
+        wizard_form_preview,
+    ]
+    client.force_login(user)
+
+    response = _create_provider_request(client, form_data)
+
+    pr = response.context_data["providerrequest"]
+    pr_from_db = models.ProviderRequest.objects.get(id=pr.id)
+
+    assert pr_from_db.linked_providers.count() == 1
+    assert pr_from_db.linked_providers.first().name == "Upstream Green Provider"
+
+
+@pytest.mark.django_db
+def test_wizard_submission_without_linked_providers(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_verification_bases_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    """
+    Given: a user submits a provider request without selecting linked providers
+    When: the wizard completes successfully
+    Then: the ProviderRequest is created with no linked providers
+    """
+    form_data = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        wizard_form_verification_bases_data,
+        wizard_form_evidence_data,
+        wizard_form_network_data,
+        wizard_form_consent,
+        wizard_form_preview,
+    ]
+    client.force_login(user)
+
+    response = _create_provider_request(client, form_data)
+
+    pr = response.context_data["providerrequest"]
+    pr_from_db = models.ProviderRequest.objects.get(id=pr.id)
+
+    assert pr_from_db.linked_providers.count() == 0
+
+
+@pytest.mark.django_db
+def test_wizard_country_injected_into_basis_step(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_verification_bases_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    """
+    Given: a user proceeds through the wizard past the location step
+    When: the basis-for-verification step is rendered
+    Then: the hidden country field is populated from the first location
+    """
+    # set a known country in location data
+    location_data = {
+        **wizard_form_org_location_data,
+        "locations__1-0-country": "NL",
+        "locations__1-0-city": "Amsterdam",
+        "locations__1-1-country": "NL",
+        "locations__1-1-city": "Rotterdam",
+    }
+
+    client.force_login(user)
+
+    # step 0: org details
+    response = client.post(urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True)
+    assert response.status_code == 200
+
+    # step 1: locations
+    response = client.post(urls.reverse("provider_registration"), location_data, follow=True)
+    assert response.status_code == 200
+
+    # step 2: services
+    response = client.post(urls.reverse("provider_registration"), wizard_form_services_data, follow=True)
+    assert response.status_code == 200
+
+    # step 3: basis for verification — inspect the hidden country field
+    assert response.context_data["wizard"]["steps"].current == "3"
+    form = response.context_data["form"]
+    assert "country" in form.fields
+    # the initial value should reflect the first location's country
+    assert form.initial.get("country") == "NL"

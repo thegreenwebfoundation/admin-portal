@@ -1,3 +1,5 @@
+from dal import autocomplete
+from dal import forward as dal_forward
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
@@ -10,7 +12,7 @@ from convenient_formsets import ConvenientBaseModelFormSet
 from django_countries.fields import CountryField
 from file_resubmit.widgets import ResubmitFileWidget
 
-from ..models import ProviderRequest, ProviderRequestEvidence, ProviderRequestIPRange, ProviderRequestASN, ProviderRequestLocation
+from ..models import Hostingprovider, ProviderRequest, ProviderRequestEvidence, ProviderRequestIPRange, ProviderRequestASN, ProviderRequestLocation
 
 class AlwaysChangedModelFormMixin:
     """
@@ -149,20 +151,42 @@ class BasisForVerificationForm(forms.ModelForm):
         ),
     )
 
+    linked_providers = forms.ModelMultipleChoiceField(
+        queryset=Hostingprovider.objects.filter(archived=False, is_listed=True),
+        required=False,
+        label="Which existing verified provider(s) do you rely on?",
+        help_text=mark_safe(
+            "[TODO: INSERT GUIDANCE ABOUT GREEN PROVIDER BEING VISIBLE] "
+            "This relationship may be publicly displayed and shared by the Green Web Foundation "
+            "through our online platforms and tools."
+        ),
+        widget=autocomplete.ModelSelect2Multiple(
+            url="linked-provider-autocomplete",
+            forward=(dal_forward.Field("country"),),
+            attrs={"data-placeholder": "Search for a verified provider..."},
+        ),
+    )
+
+    country = forms.CharField(
+        widget=forms.HiddenInput,
+        required=False,
+    )
+
     def __init__(self, *args, **kwargs):
         """
-        Implement injecting initial values for bases_for_verification field (for editing existing objects).
+        Implement injecting initial values for bases_for_verification and linked_providers fields.
         By default the initial value is passed as a queryset,
         but TaggableManager does not handle that well - we pass a list instead.
         """
         super().__init__(*args, **kwargs)
         instance = kwargs.get("instance")
         if instance:
-            self.initial = {"verification_bases": [b for b in instance.verification_bases.slugs()]}
+            self.initial["verification_bases"] = [b for b in instance.verification_bases.slugs()]
+            self.initial["linked_providers"] = [p.id for p in instance.linked_providers.all()]
 
     class Meta:
         model = ProviderRequest
-        fields = ["verification_bases"]
+        fields = ["verification_bases", "linked_providers", "country"]
 
 
 class ConsentForm(forms.ModelForm):
