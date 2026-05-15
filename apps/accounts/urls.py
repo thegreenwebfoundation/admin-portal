@@ -13,6 +13,7 @@ from apps.accounts.views import (
     ProviderRequestDetailView,
     ProviderRequestWizardView,
     ProviderAutocompleteView,
+    LinkedProviderAutocompleteView,
     ProviderCarbonTxtView,
     ProviderCarbonTxtBuilderView,
     APIKeyAccessView,
@@ -152,6 +153,11 @@ urlpatterns = [
         "provider-autocomplete/",
         ProviderAutocompleteView.as_view(),
         name="provider-autocomplete",
+    ),
+    path(
+        "linked-provider-autocomplete/",
+        LinkedProviderAutocompleteView.as_view(),
+        name="linked-provider-autocomplete",
     ),
     path(
         "before-starting/",
