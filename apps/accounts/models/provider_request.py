@@ -136,6 +136,13 @@ class ProviderRequest(TimeStampedModel):
     newsletter_opt_in = models.BooleanField(
         default=False, verbose_name="Newsletter signup"
     )
+    linked_providers = models.ManyToManyField(
+        Hostingprovider,
+        blank=True,
+        related_name="provider_requests_linked",
+        verbose_name="Linked providers (relies on)",
+        help_text="Active verified providers this request relies on for its green status.",
+    )
     # if this field is set, approving a request will update the provider instead of creating a new one
     provider = models.ForeignKey(
         to=Hostingprovider, on_delete=models.SET_NULL, null=True
