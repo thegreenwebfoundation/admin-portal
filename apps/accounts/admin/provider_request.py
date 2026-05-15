@@ -72,6 +72,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "newsletter_opt_in",
         "data_processing_opt_in",
         "provider",
+        "linked_providers",
     )
     actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"

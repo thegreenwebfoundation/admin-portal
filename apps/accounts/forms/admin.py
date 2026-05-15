@@ -3,6 +3,7 @@ import datetime
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
+from dal import autocomplete
 from dal_select2_taggit import widgets as dal_widgets
 from taggit_labels.widgets import LabelWidget
 
@@ -31,6 +32,10 @@ class HostingAdminForm(forms.ModelForm):
         widgets = {
             "services": LabelWidget(model=Service),
             "verification_bases": LabelWidget(model=VerificationBasis),
+            "linked_providers": autocomplete.ModelSelect2Multiple(
+                url="provider-autocomplete",
+                attrs={"data-placeholder": "Search for a provider..."},
+            ),
             "staff_labels": dal_widgets.TaggitSelect2("label-autocomplete"),
             "carbon_txt_motivations": LabelWidget(model=CarbonTxtMotivation)
         }
