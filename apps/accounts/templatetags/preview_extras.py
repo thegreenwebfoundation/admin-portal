@@ -1,7 +1,7 @@
 from django.template.defaultfilters import yesno
 from django import template
 from django.utils.safestring import mark_safe
-from apps.accounts.models import Service, VerificationBasis
+from apps.accounts.models import Hostingprovider, Service, VerificationBasis
 
 
 register = template.Library()
@@ -42,6 +42,21 @@ def render_as_verification_bases(value):
         list_items =  "\n".join([f"<li>{tag.name}</li>" for tag in tags])
         return mark_safe(f"<ul>{list_items}</ul>")
     return None
+
+@register.filter
+def render_as_linked_providers(value):
+    """
+    Attempts to map linked provider IDs to provider names
+    based on a database query.
+    """
+    if not value:
+        return None
+    providers = Hostingprovider.objects.filter(id__in=value)
+    if providers:
+        list_items = "\n".join([f"<li>{prov.name}</li>" for prov in providers])
+        return mark_safe(f"<ul>{list_items}</ul>")
+    return None
+
 
 @register.filter
 def exclude_preview_fields(form):
