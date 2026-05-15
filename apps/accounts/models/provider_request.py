@@ -296,6 +296,7 @@ class ProviderRequest(TimeStampedModel):
             hp.is_listed = True
 
         hp.verification_bases.set(self.verification_bases.all())
+        hp.linked_providers.set(self.linked_providers.all())
 
         hp.save()
 

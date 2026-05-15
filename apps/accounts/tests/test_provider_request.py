@@ -634,6 +634,61 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
 
 
 @pytest.mark.django_db
+def test_approve_creates_hosting_provider_with_linked_providers():
+    # given: a provider request with linked providers is created
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Green",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://upstream.example.com",
+    )
+    pr = ProviderRequestFactory.create(
+        services=faker.words(nb=4), verification_bases=faker.words(nb=4)
+    )
+    pr.linked_providers.set([upstream])
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+
+    # when: the request is approved
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+
+    # then: resulting Hostingprovider has the linked providers copied
+    assert hp.linked_providers.count() == 1
+    assert upstream in hp.linked_providers.all()
+
+
+@pytest.mark.django_db
+def test_approve_updates_existing_provider_with_linked_providers(
+    hosting_provider_with_sample_user,
+):
+    # given: an existing hosting provider and a new upstream provider
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Green",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://upstream.example.com",
+    )
+    pr = ProviderRequestFactory.create(
+        services=faker.words(nb=4), provider=hosting_provider_with_sample_user
+    )
+    pr.linked_providers.set([upstream])
+    ProviderRequestLocationFactory.create(request=pr)
+    ProviderRequestEvidenceFactory.create(request=pr)
+
+    # when: the request is approved
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+
+    # then: the existing provider is updated with the new linked providers
+    assert hp.id == pr.provider.id
+    assert hp.linked_providers.count() == 1
+    assert upstream in hp.linked_providers.all()
+
+
+@pytest.mark.django_db
 def test_approve_updates_existing_provider_without_deleting_asns(
     hosting_provider_with_sample_user,
 ):
