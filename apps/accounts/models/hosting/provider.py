@@ -230,6 +230,14 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
     )
     is_listed = models.BooleanField(verbose_name="List this provider in the greenweb directory?", default=False)
     website = models.URLField(max_length=255)
+    linked_providers = models.ManyToManyField(
+        "self",
+        symmetrical=False,
+        blank=True,
+        related_name="linked_by_providers",
+        verbose_name="Linked providers (relies on)",
+        help_text="Other active verified providers this provider relies on for its green status.",
+    )
     datacenter = models.ManyToManyField(
         "Datacenter",
         through="HostingproviderDatacenter",

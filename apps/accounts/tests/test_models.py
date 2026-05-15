@@ -212,6 +212,54 @@ class TestHostingProvider:
         request2.save()
         assert provider.last_open_request == request2
 
+class TestLinkedProviders:
+    @pytest.mark.django_db
+    def test_hostingprovider_can_have_linked_providers(self, db, hosting_provider_factory):
+        """Given a provider, when linked providers are added, then they are accessible."""
+        provider = hosting_provider_factory.create(country="GB", is_listed=True)
+        upstream1 = hosting_provider_factory.create(country="GB", is_listed=True)
+        upstream2 = hosting_provider_factory.create(country="GB", is_listed=True)
+
+        provider.linked_providers.set([upstream1, upstream2])
+
+        assert provider.linked_providers.count() == 2
+        assert upstream1 in provider.linked_providers.all()
+        assert upstream2 in provider.linked_providers.all()
+
+    @pytest.mark.django_db
+    def test_hostingprovider_linked_by_providers_reverse(self, db, hosting_provider_factory):
+        """Given upstream providers, when linked, downstream providers are visible via reverse relation."""
+        downstream = hosting_provider_factory.create(country="GB", is_listed=True)
+        upstream = hosting_provider_factory.create(country="GB", is_listed=True)
+
+        downstream.linked_providers.add(upstream)
+
+        assert downstream in upstream.linked_by_providers.all()
+        assert upstream.linked_by_providers.count() == 1
+
+    @pytest.mark.django_db
+    def test_linked_providers_self_referential_not_symmetrical(self, db, hosting_provider_factory):
+        """The self-referential M2M should not be symmetrical."""
+        a = hosting_provider_factory.create(country="GB", is_listed=True)
+        b = hosting_provider_factory.create(country="GB", is_listed=True)
+
+        a.linked_providers.add(b)
+
+        assert b in a.linked_providers.all()
+        assert a not in b.linked_providers.all()
+
+    @pytest.mark.django_db
+    def test_provider_request_can_have_linked_providers(self, db, hosting_provider_factory, provider_request_factory):
+        """Given a provider request, when linked providers are added, then they are accessible."""
+        upstream = hosting_provider_factory.create(country="GB", is_listed=True)
+        request = provider_request_factory.create()
+
+        request.linked_providers.set([upstream])
+
+        assert request.linked_providers.count() == 1
+        assert upstream in request.linked_providers.all()
+
+
 class TestHostingProviderEvidence:
     """
     Tests to check that we save files with scaleway
