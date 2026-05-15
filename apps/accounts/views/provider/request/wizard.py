@@ -242,10 +242,14 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         pr.created_by = self.request.user
         pr.save()
 
-        # process BASIS_FOR_VERIFICATION form: assign verification bases to ProviderRequest
+        # process BASIS_FOR_VERIFICATION form: assign verification bases and linked providers to ProviderRequest
         verification_bases_form = form_dict[steps.BASIS_FOR_VERIFICATION.value]
         verification_bases_slugs = verification_bases_form.cleaned_data["verification_bases"]
         pr.set_verification_bases_from_slugs(verification_bases_slugs)
+
+        linked_providers = verification_bases_form.cleaned_data.get("linked_providers")
+        if linked_providers:
+            pr.linked_providers.set(linked_providers)
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
@@ -372,6 +376,27 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         if self.kwargs.get("request_id") and step in affected_steps:
             return {"instance": self.get_form_instance(step)}
         return {}
+
+    def get_form_initial(self, step):
+        """
+        Provide initial data for specific wizard steps.
+
+        Injects the selected country into the basis-for-verification step
+        so the linked-provider autocomplete can filter by it.
+        """
+        initial = super().get_form_initial(step)
+
+        if step == self.Steps.BASIS_FOR_VERIFICATION.value:
+            location_step_data = self.storage.get_step_data(self.Steps.LOCATIONS.value)
+            if location_step_data:
+                # location step uses a MultiModelForm with a formset keyed "locations".
+                # First location country field is named like: locations__1-0-country
+                for key, value in location_step_data.items():
+                    if "-country" in key and "__prefix__" not in key:
+                        initial["country"] = str(value)
+                        break
+
+        return initial
 
     def _send_notification_email(self, provider_request: ProviderRequest):
         """
@@ -560,7 +585,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "services": [s for s in hp_instance.services.slugs()]
             },
             cls.Steps.BASIS_FOR_VERIFICATION.value: {
-                "verification_bases": [b for b in hp_instance.verification_bases.slugs()]
+                "verification_bases": [b for b in hp_instance.verification_bases.slugs()],
+                "linked_providers": [p.id for p in hp_instance.linked_providers.all()],
+                "country": str(hp_instance.country),
             },
             cls.Steps.GREEN_EVIDENCE.value: [
                 _evidence_initial_data(ev)
