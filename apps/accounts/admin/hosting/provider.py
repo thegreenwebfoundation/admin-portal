@@ -154,6 +154,7 @@ class HostingAdmin(
     readonly_fields = [
         "authorised_users",
         "data_centers",
+        "downstream_providers",
         "preview_email_button",
         "start_csv_import_button",
     ]
@@ -530,6 +531,7 @@ class HostingAdmin(
                         "city",
                         "services",
                         "verification_bases",
+                        "linked_providers",
                         "carbon_txt_motivations",
                         "created_by",
                     )
@@ -545,8 +547,12 @@ class HostingAdmin(
             "Associated datacenters",
             {"fields": ("data_centers",)},
         )
+        linked_by_fieldset = (
+            "Providers that rely on this provider",
+            {"fields": ("downstream_providers",)},
+        )
         if obj is not None:
-            fieldset.extend([users_fieldset, dc_fieldset])
+            fieldset.extend([users_fieldset, dc_fieldset, linked_by_fieldset])
 
         admin_editable = (
             "Admin only",
@@ -594,6 +600,20 @@ class HostingAdmin(
         if not dcs:
             return "There are no data centres associated with this hosting provider."
         return "<br>".join([f"<a href={dc.admin_url}>{dc.name}</a>" for dc in dcs])
+
+    @mark_safe
+    @admin.display(description="Providers that rely on this provider")
+    def downstream_providers(self, obj):
+        """
+        Returns markup for a list of providers that have linked to this provider
+        as their upstream green provider.
+        """
+        downstream = obj.linked_by_providers.all()
+        if not downstream:
+            return "No other providers are listed as relying on this provider."
+        return "<br>".join(
+            [f"<a href={hp.admin_url}>{hp.name}</a>" for hp in downstream]
+        )
 
     def services(self, obj):
         return ", ".join(o.name for o in obj.services.all())

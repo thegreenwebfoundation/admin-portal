@@ -417,6 +417,156 @@ class TestHostingProviderAdmin:
             )
 
 
+    @pytest.mark.django_db
+    def test_admin_change_page_shows_linked_providers_field(
+        self, db, client, greenweb_staff_user, hosting_provider_with_sample_user
+    ):
+        """
+        Given an admin user, when they visit a hosting provider change page,
+        then the linked_providers field is visible in the form.
+        """
+        client.force_login(greenweb_staff_user)
+
+        admin_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_change",
+            args=[hosting_provider_with_sample_user.id],
+        )
+        resp = client.get(admin_url)
+        assert resp.status_code == 200
+        assert "linked_providers" in resp.rendered_content
+
+    @pytest.mark.django_db
+    def test_admin_can_set_linked_providers(
+        self, db, client, greenweb_staff_user, hosting_provider_with_sample_user
+    ):
+        """
+        Given an admin user, when they set linked providers on a hosting provider,
+        then the changes are persisted.
+        """
+        upstream = ac_models.Hostingprovider.objects.create(
+            name="Upstream Green",
+            country="GB",
+            archived=False,
+            is_listed=True,
+            website="https://upstream.example.com",
+        )
+
+        client.force_login(greenweb_staff_user)
+
+        admin_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_change",
+            args=[hosting_provider_with_sample_user.id],
+        )
+
+        # Fetch the existing form to get all inline management form values
+        resp = client.get(admin_url)
+        assert resp.status_code == 200
+
+        # Extract all hidden/management form fields from the HTML so inline formsets validate
+        import re
+        post_data = {}
+        for match in re.finditer(br'<input[^>]*name="([^"]+)"[^>]*value="([^"]*)"[^>]*>', resp.content):
+            name = match.group(1).decode('utf-8')
+            value = match.group(2).decode('utf-8')
+            # Only include management form fields and non-button inputs
+            if 'TOTAL_FORMS' in name or 'INITIAL_FORMS' in name or 'MAX_NUM_FORMS' in name or 'csrfmiddlewaretoken' in name:
+                post_data[name] = value
+
+        # Add main form fields
+        post_data.update({
+            "name": hosting_provider_with_sample_user.name,
+            "website": hosting_provider_with_sample_user.website,
+            "description": hosting_provider_with_sample_user.description or "",
+            "country": str(hosting_provider_with_sample_user.country),
+            "model": hosting_provider_with_sample_user.model,
+            "linked_providers": [str(upstream.id)],
+            "_save": "Save",
+        })
+
+        resp = client.post(admin_url, post_data, follow=True)
+
+        # Django admin redirects to changelist on successful save.
+        if not resp.redirect_chain:
+            # form had errors, print them for debugging
+            for key in list(resp.context.keys()):
+                obj = resp.context[key]
+                if hasattr(obj, 'errors'):
+                    print(f"{key} errors:", obj.errors)
+
+        assert len(resp.redirect_chain) == 1, f"Expected redirect after save, got no redirect. Status: {resp.status_code}"
+        assert resp.redirect_chain[0][1] == 302
+
+        hosting_provider_with_sample_user.refresh_from_db()
+        assert hosting_provider_with_sample_user.linked_providers.count() == 1
+        assert upstream in hosting_provider_with_sample_user.linked_providers.all()
+
+    @pytest.mark.django_db
+    def test_admin_shows_linked_by_providers(
+        self, db, client, greenweb_staff_user
+    ):
+        """
+        Given an upstream provider that other providers rely on,
+        when an admin views its change page,
+        then the linked_by_providers field lists the downstream providers.
+        """
+        upstream = ac_models.Hostingprovider.objects.create(
+            name="Upstream Green",
+            country="GB",
+            archived=False,
+            is_listed=True,
+            website="https://upstream.example.com",
+        )
+        downstream = ac_models.Hostingprovider.objects.create(
+            name="Downstream Reseller",
+            country="GB",
+            archived=False,
+            is_listed=True,
+            website="https://downstream.example.com",
+        )
+        downstream.linked_providers.add(upstream)
+
+        client.force_login(greenweb_staff_user)
+
+        admin_url = urls.reverse(
+            "greenweb_admin:accounts_hostingprovider_change",
+            args=[upstream.id],
+        )
+        resp = client.get(admin_url)
+        assert resp.status_code == 200
+        assert downstream.name in resp.rendered_content
+        assert "Providers that rely on this provider" in resp.rendered_content
+        assert "downstream_providers" in resp.rendered_content
+
+    @pytest.mark.django_db
+    def test_provider_request_admin_shows_linked_providers(
+        self, db, client, greenweb_staff_user
+    ):
+        """
+        Given an admin user, when they view a provider request in admin,
+        then the linked_providers field is visible as a readonly field.
+        """
+        upstream = ac_models.Hostingprovider.objects.create(
+            name="Upstream Green",
+            country="GB",
+            archived=False,
+            is_listed=True,
+            website="https://upstream.example.com",
+        )
+        pr = ProviderRequestFactory.create()
+        pr.linked_providers.set([upstream])
+
+        client.force_login(greenweb_staff_user)
+
+        admin_url = urls.reverse(
+            "greenweb_admin:accounts_providerrequest_change",
+            args=[pr.id],
+        )
+        resp = client.get(admin_url)
+        assert resp.status_code == 200
+        # The linked provider name should appear in the readonly display
+        assert upstream.name in resp.rendered_content
+
+
 class TestArchivingHostingProviderAdmin:
 
     @pytest.mark.parametrize(
