@@ -1,6 +1,51 @@
-{% extends "./base_form.html" %}
-{% block header_section %}
+{% extends "./base_form.html" %} {% block header_section %}
 <section class="prose mt-10">
-	<h1 class="mb-0">Basis for verification</h1>
+    <h1 class="mb-0">Basis for verification</h1>
+
+    <div class="alert__warning mt-6">
+        <p class="font-bold">Linked providers</p>
+        <p>
+            If your organisation relies on one or more already verified green
+            providers, you can list them below. [TODO: INSERT GUIDANCE ABOUT
+            GREEN PROVIDER BEING VISIBLE].
+        </p>
+        <p class="mb-0">
+            This relationship may be publicly displayed and shared by the Green
+            Web Foundation through our online platforms and tools.
+        </p>
+    </div>
 </section>
+{% endblock %} {% block extra_js %}
+
+<script>
+    // TODO: this is hardcoded to an value string that we might change, RESELLER_STRING
+    // we ought to have a constant in the databae we can rely on instead
+    const RESELLER_STRING =
+        "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset";
+    const isReseller = document.querySelector(
+        `input[value="${RESELLER_STRING}"]`,
+    );
+
+    function toggleLinkedProvidersHelptext() {
+        if (isReseller.checked) {
+            document.querySelector(
+                "#id_3-linked_providers_helptext",
+            ).parentElement.style.display = "";
+        } else {
+            document.querySelector(
+                "#id_3-linked_providers_helptext",
+            ).parentElement.style.display = "none";
+        }
+    }
+
+    toggleLinkedProvidersHelptext();
+    addEventListener("DOMContentLoaded", () => {
+        if (isReseller) {
+            isReseller.addEventListener("change", () => {
+                toggleLinkedProvidersHelptext();
+            });
+        }
+    });
+</script>
+
 {% endblock %}

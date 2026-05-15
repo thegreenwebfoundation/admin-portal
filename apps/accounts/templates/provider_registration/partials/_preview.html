@@ -16,6 +16,12 @@
 				Expand verification slugs to their full names using custom template tag
 			{% endcomment %}
 			<p class="m-0">{{ field.value|render_as_verification_bases|conditional_yesno:"Yes,No,-" }}</p>
+		{% elif field.label|lower == "which existing verified provider(s) do you rely on?" %}
+			{% comment %}
+				Expand selected linked providers to their names
+				using custom template tag
+			{% endcomment %}
+			<p class="m-0">{{ field.value|render_as_linked_providers|default:"None selected" }}</p>
 		{% elif field.label|lower == "country" %}
 			{% comment %}
 				Expand country code to country name (e.g. "DE" -> "Germany")

@@ -98,6 +98,18 @@
               {% endfor %}
             </td>
           </tr>
+          <tr>
+            <td>Linked providers</td>
+            <td>
+              {% if object.linked_providers.exists %}
+                {% for provider in object.linked_providers.all %}
+                  {{ provider.name }}<br>
+                {% endfor %}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
         </table>
 
         <h3 class="text-2xl">Supporting evidence</h3>
