@@ -1,3 +1,5 @@
+from betterforms.multiform import MultiModelForm
+from convenient_formsets import ConvenientBaseModelFormSet
 from dal import autocomplete
 from dal import forward as dal_forward
 from django import forms
@@ -6,13 +8,18 @@ from django.db.models import QuerySet
 from django.forms.formsets import BaseFormSet
 from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
-
-from betterforms.multiform import MultiModelForm
-from convenient_formsets import ConvenientBaseModelFormSet
 from django_countries.fields import CountryField
 from file_resubmit.widgets import ResubmitFileWidget
 
-from ..models import Hostingprovider, ProviderRequest, ProviderRequestEvidence, ProviderRequestIPRange, ProviderRequestASN, ProviderRequestLocation
+from ..models import (
+    Hostingprovider,
+    ProviderRequest,
+    ProviderRequestASN,
+    ProviderRequestEvidence,
+    ProviderRequestIPRange,
+    ProviderRequestLocation,
+)
+
 
 class AlwaysChangedModelFormMixin:
     """
@@ -27,6 +34,7 @@ class AlwaysChangedModelFormMixin:
         Always returns True, so that the form is always marked as changed.
         """
         return True
+
 
 class BetterMultiModelForm(MultiModelForm):
     """
@@ -132,6 +140,7 @@ class MoreConvenientFormset(ConvenientBaseModelFormSet):
                 form.add_error(None, e)
             seen.append(form_data)
 
+
 class BasisForVerificationForm(forms.ModelForm):
     """
     Part of multi-step registration form (screen 3)
@@ -142,19 +151,19 @@ class BasisForVerificationForm(forms.ModelForm):
         widget=forms.CheckboxSelectMultiple,
         label="On what basis are you seeking verification?",
         help_text=mark_safe(
-          "The Green Web Dataset lists providers taking actions to <b>avoid</b>, <b>reduce</b>, or <b>offset</b> "
-          "the greenhouse gas emissions caused by using electricity to provide their services. "
-          "<p>On the next page, we will ask you to provide evidence that allows us to verify the steps you are taking. "
-          "So before continuing, we strongly recommend you understand the kinds of evidence required based on your organisations circumstances. "
-          "We've written about this on the <i><b><a target=\"_blank\" href=\"https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/\">What we accept as evidence of green power?</a></i></b> page on our website.</p>"
-          "<p>When you are ready to continue, please select one or more of the statements below that apply to your organisation.</p>"
+            "The Green Web Dataset lists providers taking actions to <b>avoid</b>, <b>reduce</b>, or <b>offset</b> "
+            "the greenhouse gas emissions caused by using electricity to provide their services. "
+            "<p>On the next page, we will ask you to provide evidence that allows us to verify the steps you are taking. "
+            "So before continuing, we strongly recommend you understand the kinds of evidence required based on your organisations circumstances. "
+            'We\'ve written about this on the <i><b><a target="_blank" href="https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/">What we accept as evidence of green power?</a></i></b> page on our website.</p>'
+            "<p>When you are ready to continue, please select one or more of the statements below that apply to your organisation.</p>"
         ),
     )
 
     linked_providers = forms.ModelMultipleChoiceField(
         queryset=Hostingprovider.objects.filter(archived=False, is_listed=True),
         required=False,
-        label="Which existing verified provider(s) do you rely on?",
+        label="Which existing verified provider(s) do you rely on as the basis the claim for using green energy?",
         help_text=mark_safe(
             "[TODO: INSERT GUIDANCE ABOUT GREEN PROVIDER BEING VISIBLE] "
             "This relationship may be publicly displayed and shared by the Green Web Foundation "
@@ -181,8 +190,12 @@ class BasisForVerificationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         instance = kwargs.get("instance")
         if instance:
-            self.initial["verification_bases"] = [b for b in instance.verification_bases.slugs()]
-            self.initial["linked_providers"] = [p.id for p in instance.linked_providers.all()]
+            self.initial["verification_bases"] = [
+                b for b in instance.verification_bases.slugs()
+            ]
+            self.initial["linked_providers"] = [
+                p.id for p in instance.linked_providers.all()
+            ]
 
     class Meta:
         model = ProviderRequest
@@ -250,7 +263,6 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
         widgets = {"file": ResubmitFileWidget}
 
 
-
 # Part of multi-step registration form (screen 3).
 # Uses ConvenientBaseFormSet to display add/delete buttons
 # and manage the forms inside the formset dynamically.
@@ -277,6 +289,7 @@ class GreenEvidenceForm(
         original_msg = "Please submit at least 1 form."
         target_msg = "Please submit at least one row of evidence."
         return ErrorList(error.replace(original_msg, target_msg) for error in errors)
+
 
 class IpRangeForm(AlwaysChangedModelFormMixin, forms.ModelForm):
     start = forms.GenericIPAddressField()
@@ -450,6 +463,7 @@ LocationsFormSet = forms.modelformset_factory(
     can_delete_extra=True,
 )
 
+
 class LocationExtraForm(forms.ModelForm):
     """
     A form for information relating to the location step, not a to a
@@ -603,4 +617,3 @@ class ServicesForm(forms.ModelForm):
     class Meta:
         model = ProviderRequest
         fields = ["services"]
-

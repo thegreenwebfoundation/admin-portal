@@ -1,8 +1,8 @@
-from django.template.defaultfilters import yesno
 from django import template
-from django.utils.safestring import mark_safe
-from apps.accounts.models import Hostingprovider, Service, VerificationBasis
+from django.template.defaultfilters import mark_safe, yesno
+from django.utils.html import format_html, format_html_join
 
+from apps.accounts.models import Hostingprovider, Service, VerificationBasis
 
 register = template.Library()
 
@@ -31,6 +31,7 @@ def render_as_services(value):
         return ", ".join([tag.name for tag in tags])
     return None
 
+
 @register.filter
 def render_as_verification_bases(value):
     """
@@ -39,9 +40,11 @@ def render_as_verification_bases(value):
     """
     tags = VerificationBasis.objects.filter(slug__in=value).distinct()
     if tags:
-        list_items =  "\n".join([f"<li>{tag.name}</li>" for tag in tags])
+        # TODO update to use format_html_join instead of mark_safe directly
+        list_items = "\n".join([f"<li>{tag.name}</li>" for tag in tags])
         return mark_safe(f"<ul>{list_items}</ul>")
     return None
+
 
 @register.filter
 def render_as_linked_providers(value):
@@ -53,8 +56,12 @@ def render_as_linked_providers(value):
         return None
     providers = Hostingprovider.objects.filter(id__in=value)
     if providers:
-        list_items = "\n".join([f"<li>{prov.name}</li>" for prov in providers])
-        return mark_safe(f"<ul>{list_items}</ul>")
+        # make sure name is safely included in the HTML
+        list_items = format_html(
+            "<ul>{}</ul>",
+            format_html_join(",", "<li>{}</li>", ((prov.name,) for prov in providers)),
+        )
+        return list_items
     return None
 
 

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0092_hostingprovider_hp_directory_by_country"),
     ]
@@ -18,7 +17,7 @@ class Migration(migrations.Migration):
                 help_text="Other active verified providers this provider relies on for its green status.",
                 related_name="linked_by_providers",
                 to="accounts.hostingprovider",
-                verbose_name="Linked providers (relies on)",
+                verbose_name="Upstream linked providers",
             ),
         ),
         migrations.AddField(
@@ -29,7 +28,7 @@ class Migration(migrations.Migration):
                 help_text="Active verified providers this request relies on for its green status.",
                 related_name="provider_requests_linked",
                 to="accounts.hostingprovider",
-                verbose_name="Linked providers (relies on)",
+                verbose_name="Upstream linked providers",
             ),
         ),
     ]

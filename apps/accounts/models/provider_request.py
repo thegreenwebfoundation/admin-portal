@@ -140,7 +140,7 @@ class ProviderRequest(TimeStampedModel):
         Hostingprovider,
         blank=True,
         related_name="provider_requests_linked",
-        verbose_name="Linked providers (relies on)",
+        verbose_name="Upstream linked providers",
         help_text="Active verified providers this request relies on for its green status.",
     )
     # if this field is set, approving a request will update the provider instead of creating a new one
@@ -180,12 +180,16 @@ class ProviderRequest(TimeStampedModel):
         services = Service.objects.filter(slug__in=service_slugs)
         self.services.set(services)
 
-    def set_verification_bases_from_slugs(self, verification_basis_slugs: Iterable[str]) -> None:
+    def set_verification_bases_from_slugs(
+        self, verification_basis_slugs: Iterable[str]
+    ) -> None:
         """
         Given list of verification_basis slugs (corresponding to Tag slugs)
         apply matching verification_bases to the ProviderRequest object
         """
-        verification_bases = VerificationBasis.objects.filter(slug__in=verification_basis_slugs).distinct()
+        verification_bases = VerificationBasis.objects.filter(
+            slug__in=verification_basis_slugs
+        ).distinct()
         self.verification_bases.set(verification_bases)
 
     @classmethod
@@ -432,7 +436,7 @@ class ProviderRequestLocation(models.Model):
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f"{self.request.name} | { self.name } {self.country.name}/{self.city}"
+        return f"{self.request.name} | {self.name} {self.country.name}/{self.city}"
 
 
 class ProviderRequestASN(models.Model):

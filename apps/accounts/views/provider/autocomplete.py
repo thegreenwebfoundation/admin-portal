@@ -25,6 +25,8 @@ class LinkedProviderAutocompleteView(autocomplete.Select2QuerySetView):
 
     Returns active, listed providers, optionally filtered by the country
     forwarded from the registration wizard's location step.
+    This is ok to publicly expose as it only returns active, listed providers we
+    showin the directory anyway.
     """
 
     def get_queryset(self):
@@ -57,4 +59,3 @@ class LabelAutocompleteView(dal_select2_views.Select2QuerySetView):
             qs = qs.filter(name__istartswith=self.q)
 
         return qs
-

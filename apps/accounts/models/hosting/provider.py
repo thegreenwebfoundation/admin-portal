@@ -3,33 +3,40 @@ import logging
 import secrets
 import typing
 from urllib.parse import urlparse
+
 from anymail.message import AnymailMessage
 from carbon_txt import build_carbontxt_file
-
+from dirtyfields import DirtyFieldsMixin
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Now
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
-from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from django_mysql.models import EnumField
-from dirtyfields import DirtyFieldsMixin
 from guardian.shortcuts import get_users_with_perms
-from taggit import models as tag_models
-from taggit.managers import TaggableManager
 from model_utils.models import TimeStampedModel
 from storages.backends.s3 import S3Storage
+from taggit import models as tag_models
+from taggit.managers import TaggableManager
 
 from apps.greencheck.choices import GreenlistChoice, StatusApproval
 from apps.greencheck.exceptions import NoSharedSecret
 from apps.greencheck.object_storage import object_storage_bucket, public_url
+
 from ...permissions import manage_provider
 from ..choices import ModelType, PartnerChoice
-from .abstract import AbstractNote, AbstractSupportingDocument, Certificate, EvidenceType, Label
+from .abstract import (
+    AbstractNote,
+    AbstractSupportingDocument,
+    Certificate,
+    EvidenceType,
+    Label,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,13 +103,11 @@ class VerificationBasis(tag_models.TagBase):
 
     """
 
-
     # Annoyingly, the only way to override the max_length in taggit appears to be to copy and adjust
     # these two field definitions wholesale: https://github.com/jazzband/django-taggit/issues/510
     name = models.CharField(
         verbose_name=pgettext_lazy("A tag name", "name"), unique=True, max_length=255
     )
-
 
     slug = models.SlugField(
         verbose_name=pgettext_lazy("A tag slug", "slug"),
@@ -112,8 +117,7 @@ class VerificationBasis(tag_models.TagBase):
     )
 
     required_evidence_link = models.URLField(
-        max_length=255, null=True, blank=True,
-        verbose_name="Required evidence link"
+        max_length=255, null=True, blank=True, verbose_name="Required evidence link"
     )
 
     class Meta:
@@ -123,10 +127,12 @@ class VerificationBasis(tag_models.TagBase):
     @property
     def label(self):
         label = self.name
-        if self.required_evidence_link is not None and self.required_evidence_link.strip() != "":
+        if (
+            self.required_evidence_link is not None
+            and self.required_evidence_link.strip() != ""
+        ):
             label += f" (<a href='{self.required_evidence_link}' target='_blank'>see required evidence</a>)"
         return mark_safe(label)
-
 
 
 class ProviderService(tag_models.TaggedItemBase):
@@ -145,6 +151,7 @@ class ProviderService(tag_models.TaggedItemBase):
         on_delete=models.CASCADE,
     )
 
+
 class ProviderVerificationBasis(tag_models.TaggedItemBase):
     """
     The corresponding through model for linking a Provider to
@@ -160,6 +167,7 @@ class ProviderVerificationBasis(tag_models.TaggedItemBase):
         related_name="%(app_label)s_%(class)s_items",
         on_delete=models.CASCADE,
     )
+
 
 class Hostingprovider(models.Model, DirtyFieldsMixin):
     archived = models.BooleanField(default=False)
@@ -228,14 +236,16 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         blank=True,
         related_name="labels",
     )
-    is_listed = models.BooleanField(verbose_name="List this provider in the greenweb directory?", default=False)
+    is_listed = models.BooleanField(
+        verbose_name="List this provider in the greenweb directory?", default=False
+    )
     website = models.URLField(max_length=255)
     linked_providers = models.ManyToManyField(
         "self",
         symmetrical=False,
         blank=True,
         related_name="linked_by_providers",
-        verbose_name="Linked providers (relies on)",
+        verbose_name="Upstream linked providers",
         help_text="Other active verified providers this provider relies on for its green status.",
     )
     datacenter = models.ManyToManyField(
@@ -256,7 +266,8 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         return self.name
 
     def _clear_cached_greendomains(self):
-        from apps.greencheck.models import GreenDomain # Avoid circular import
+        from apps.greencheck.models import GreenDomain  # Avoid circular import
+
         GreenDomain.objects.filter(hosted_by_id=self.id).delete()
 
     # Properties
@@ -328,9 +339,9 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         populate the list of available evidence in the carbon.txt wizard.
         """
         return self.supporting_documents.filter(
-                public = True,
-                valid_from__lte = Now(),
-                valid_to__gte = Now(),
+            public=True,
+            valid_from__lte=Now(),
+            valid_to__gte=Now(),
         ).all()
 
     @property
@@ -496,7 +507,7 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         needing to implement the logic for determining
         if a provider counts as green in multiple places
         """
-        return (not self.archived)
+        return not self.archived
 
     @property
     def has_carbon_txt(self):
@@ -527,13 +538,18 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         If the provider has a currently OPEN or PENDING REVIEW
         provider request, we return it, otherwise we return None.
         """
-        from ..provider_request import ProviderRequestStatus # prevent circular import
-        return self.providerrequest_set.filter(
-                    status__in=[
-                        ProviderRequestStatus.OPEN,
-                        ProviderRequestStatus.PENDING_REVIEW
-                    ]
-                ).order_by("-modified").first()
+        from ..provider_request import ProviderRequestStatus  # prevent circular import
+
+        return (
+            self.providerrequest_set.filter(
+                status__in=[
+                    ProviderRequestStatus.OPEN,
+                    ProviderRequestStatus.PENDING_REVIEW,
+                ]
+            )
+            .order_by("-modified")
+            .first()
+        )
 
     def notify_admins(self, subject: str, email_txt: str, email_html: str = None):
         """
@@ -582,13 +598,15 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
     def build_carbontxt(self):
         disclosures = self.valid_public_supporting_documents
         if len(disclosures) > 0:
-            return build_carbontxt_file({
-                "org": {
-                    "disclosures": [
-                        d.build_carbontxt_disclosure_dict() for d in disclosures
-                    ]
+            return build_carbontxt_file(
+                {
+                    "org": {
+                        "disclosures": [
+                            d.build_carbontxt_disclosure_dict() for d in disclosures
+                        ]
+                    }
                 }
-            })
+            )
 
     def save(self, *args, **kwargs):
         # The is_listed flag, name and website url are denormalized into the
@@ -597,7 +615,10 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         if self.is_dirty():
             dirty_fields = self.get_dirty_fields()
             greendomain_cache_expiring_fields = ["is_listed", "website", "name"]
-            any_cache_expiring_field_is_dirty = len(set(greendomain_cache_expiring_fields) & set(dirty_fields.keys())) > 0
+            any_cache_expiring_field_is_dirty = (
+                len(set(greendomain_cache_expiring_fields) & set(dirty_fields.keys()))
+                > 0
+            )
             if any_cache_expiring_field_is_dirty:
                 self._clear_cached_greendomains()
         super().save(*args, **kwargs)
@@ -610,7 +631,10 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
             models.Index(fields=["name"], name="hp_name"),
             models.Index(fields=["archived"], name="hp_archived"),
             models.Index(fields=["is_listed"], name="hp_is_listed"),
-            models.Index(fields=["archived", "is_listed", "country"], name="hp_directory_by_country"),
+            models.Index(
+                fields=["archived", "is_listed", "country"],
+                name="hp_directory_by_country",
+            ),
         ]
         permissions = (manage_provider.astuple(),)
 
@@ -675,7 +699,7 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         EvidenceType.ANNUAL_REPORT: "annual-report",
         EvidenceType.WEB_PAGE: "web-page",
         EvidenceType.CERTIFICATE: "certificate",
-        EvidenceType.OTHER: "other"
+        EvidenceType.OTHER: "other",
     }
 
     def archive(self) -> "HostingProviderSupportingDocument":
@@ -727,7 +751,7 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
             "url": self.link,
             "doc_type": doc_type,
             "title": self.title,
-            "valid_until": self.valid_to
+            "valid_until": self.valid_to,
         }
 
     def set_object_store_privacy(self):
@@ -741,11 +765,14 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
             key = self.attachment.name
             bucket = object_storage_bucket(settings.AWS_STORAGE_BUCKET_NAME)
             if self.public and not self.archived:
-
-                logger.debug(f"Setting attachment ACL of attachment '{key}' for supporting document {self.id} to 'public-read'")
+                logger.debug(
+                    f"Setting attachment ACL of attachment '{key}' for supporting document {self.id} to 'public-read'"
+                )
                 bucket.Object(key).Acl().put(ACL="public-read")
             else:
-                logger.debug(f"Setting attachment ACL of attachment '{key}' for supporting document {self.id} to 'private'")
+                logger.debug(
+                    f"Setting attachment ACL of attachment '{key}' for supporting document {self.id} to 'private'"
+                )
                 bucket.Object(key).Acl().put(ACL="private")
 
     def save(self, *args, **kwargs):
@@ -757,6 +784,7 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         # TODO ensure that we're not sending unneeded HTTP requests here, in the case where
         # the document privacy has not changed.
         self.set_object_store_privacy()
+
 
 class HostingCommunication(TimeStampedModel):
     template = models.CharField(max_length=128)
@@ -798,5 +826,3 @@ class HostingproviderStats(models.Model):
     class Meta:
         db_table = "hostingproviders_stats"
         # managed = False
-
-

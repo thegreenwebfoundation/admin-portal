@@ -16,11 +16,12 @@
 				Expand verification slugs to their full names using custom template tag
 			{% endcomment %}
 			<p class="m-0">{{ field.value|render_as_verification_bases|conditional_yesno:"Yes,No,-" }}</p>
-		{% elif field.label|lower == "which existing verified provider(s) do you rely on?" %}
+		{% elif field.name|lower == "linked_providers"%}
 			{% comment %}
 				Expand selected linked providers to their names
 				using custom template tag
 			{% endcomment %}
+			
 			<p class="m-0">{{ field.value|render_as_linked_providers|default:"None selected" }}</p>
 		{% elif field.label|lower == "country" %}
 			{% comment %}
@@ -35,6 +36,8 @@
 				<p class="m-0">{{ field.value }}</p>
 			{% endif %}
 		{% else %}
+		    <!--<h1>{{ field.label }}</h1>
+    		<h1>{{ field.name }}</h1>-->
 			<p class="m-0">{{ field.value|conditional_yesno:"Yes,No,-" }}</p>
 		{% endif %}
 	</div>
