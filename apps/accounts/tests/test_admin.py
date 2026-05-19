@@ -416,7 +416,6 @@ class TestHostingProviderAdmin:
                 str(sample_hoster_user.groups.first().id),
             )
 
-
     @pytest.mark.django_db
     def test_admin_change_page_shows_linked_providers_field(
         self, db, client, greenweb_staff_user, hosting_provider_with_sample_user
@@ -464,24 +463,38 @@ class TestHostingProviderAdmin:
 
         # Extract all hidden/management form fields from the HTML so inline formsets validate
         import re
+
         post_data = {}
-        for match in re.finditer(br'<input[^>]*name="([^"]+)"[^>]*value="([^"]*)"[^>]*>', resp.content):
-            name = match.group(1).decode('utf-8')
-            value = match.group(2).decode('utf-8')
+        # This regex matches HTML <input> tags that have both `name` and `value`
+        # attributes, capturing the values of those attributes.  It is used to
+        # pull CSRF tokens and Django formset management fields out of the
+        # rendered change page so they can be replayed in the subsequent POST.
+        for match in re.finditer(
+            rb'<input[^>]*name="([^"]*)"[^>]*value="([^"]*)"[^>]*>', resp.content
+        ):
+            name = match.group(1).decode("utf-8")
+            value = match.group(2).decode("utf-8")
             # Only include management form fields and non-button inputs
-            if 'TOTAL_FORMS' in name or 'INITIAL_FORMS' in name or 'MAX_NUM_FORMS' in name or 'csrfmiddlewaretoken' in name:
+            if (
+                "TOTAL_FORMS" in name
+                or "INITIAL_FORMS" in name
+                or "MAX_NUM_FORMS" in name
+                or "csrfmiddlewaretoken" in name
+            ):
                 post_data[name] = value
 
         # Add main form fields
-        post_data.update({
-            "name": hosting_provider_with_sample_user.name,
-            "website": hosting_provider_with_sample_user.website,
-            "description": hosting_provider_with_sample_user.description or "",
-            "country": str(hosting_provider_with_sample_user.country),
-            "model": hosting_provider_with_sample_user.model,
-            "linked_providers": [str(upstream.id)],
-            "_save": "Save",
-        })
+        post_data.update(
+            {
+                "name": hosting_provider_with_sample_user.name,
+                "website": hosting_provider_with_sample_user.website,
+                "description": hosting_provider_with_sample_user.description or "",
+                "country": str(hosting_provider_with_sample_user.country),
+                "model": hosting_provider_with_sample_user.model,
+                "linked_providers": [str(upstream.id)],
+                "_save": "Save",
+            }
+        )
 
         resp = client.post(admin_url, post_data, follow=True)
 
@@ -490,10 +503,12 @@ class TestHostingProviderAdmin:
             # form had errors, print them for debugging
             for key in list(resp.context.keys()):
                 obj = resp.context[key]
-                if hasattr(obj, 'errors'):
+                if hasattr(obj, "errors"):
                     print(f"{key} errors:", obj.errors)
 
-        assert len(resp.redirect_chain) == 1, f"Expected redirect after save, got no redirect. Status: {resp.status_code}"
+        assert len(resp.redirect_chain) == 1, (
+            f"Expected redirect after save, got no redirect. Status: {resp.status_code}"
+        )
         assert resp.redirect_chain[0][1] == 302
 
         hosting_provider_with_sample_user.refresh_from_db()
@@ -501,9 +516,7 @@ class TestHostingProviderAdmin:
         assert upstream in hosting_provider_with_sample_user.linked_providers.all()
 
     @pytest.mark.django_db
-    def test_admin_shows_linked_by_providers(
-        self, db, client, greenweb_staff_user
-    ):
+    def test_admin_shows_linked_by_providers(self, db, client, greenweb_staff_user):
         """
         Given an upstream provider that other providers rely on,
         when an admin views its change page,
@@ -534,7 +547,7 @@ class TestHostingProviderAdmin:
         resp = client.get(admin_url)
         assert resp.status_code == 200
         assert downstream.name in resp.rendered_content
-        assert "Providers that rely on this provider" in resp.rendered_content
+        assert "Upstream / downstream providers" in resp.rendered_content
         assert "downstream_providers" in resp.rendered_content
 
     @pytest.mark.django_db
@@ -568,7 +581,6 @@ class TestHostingProviderAdmin:
 
 
 class TestArchivingHostingProviderAdmin:
-
     @pytest.mark.parametrize(
         "archived",
         (

@@ -18,8 +18,11 @@
 {% endblock %} {% block extra_js %}
 
 <script>
-    // TODO: this is hardcoded to an value string that we might change, RESELLER_STRING
-    // we ought to have a constant in the databae we can rely on instead
+    {% comment %}
+    // RESELLER_STRING is the slug we use internally to identify this VerificationBasis
+    // option in the form wizard. To change the displayed text, update the name, not the slug.
+    {% endcomment %}
+
     const RESELLER_STRING =
         "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset";
     const isReseller = document.querySelector(

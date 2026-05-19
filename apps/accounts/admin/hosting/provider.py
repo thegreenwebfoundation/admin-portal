@@ -1,4 +1,5 @@
 import logging
+
 import django.forms as dj_forms
 import markdown
 from django import template as dj_template
@@ -44,6 +45,7 @@ from ..abstract import ObjectPermissionsAdminMixin
 
 logger = logging.getLogger(__name__)
 
+
 class HostingCertificateInline(admin.StackedInline):
     extra = 0
     model = HostingproviderCertificate
@@ -71,6 +73,7 @@ class ServiceAdmin(admin.ModelAdmin):
     class Meta:
         verbose_name = "Services Offered"
 
+
 @admin.register(VerificationBasis, site=greenweb_admin)
 class VerificationBasisAdmin(admin.ModelAdmin):
     model = VerificationBasis
@@ -86,10 +89,12 @@ class LabelAdmin(admin.ModelAdmin):
     class Meta:
         verbose_name = "Provider Label"
 
+
 @admin.register(SupportMessage, site=greenweb_admin)
 class SupportMessageAdmin(admin.ModelAdmin):
     # only staff should see this
     pass
+
 
 @admin.register(Hostingprovider, site=greenweb_admin)
 class HostingAdmin(
@@ -531,7 +536,6 @@ class HostingAdmin(
                         "city",
                         "services",
                         "verification_bases",
-                        "linked_providers",
                         "carbon_txt_motivations",
                         "created_by",
                     )
@@ -548,8 +552,13 @@ class HostingAdmin(
             {"fields": ("data_centers",)},
         )
         linked_by_fieldset = (
-            "Providers that rely on this provider",
-            {"fields": ("downstream_providers",)},
+            "Upstream / downstream providers",
+            {
+                "fields": (
+                    "linked_providers",
+                    "downstream_providers",
+                )
+            },
         )
         if obj is not None:
             fieldset.extend([users_fieldset, dc_fieldset, linked_by_fieldset])
@@ -602,7 +611,9 @@ class HostingAdmin(
         return "<br>".join([f"<a href={dc.admin_url}>{dc.name}</a>" for dc in dcs])
 
     @mark_safe
-    @admin.display(description="Providers that rely on this provider")
+    @admin.display(
+        description="Downstream providers",
+    )
     def downstream_providers(self, obj):
         """
         Returns markup for a list of providers that have linked to this provider
@@ -691,12 +702,8 @@ class HostingAdmin(
 
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
-    @admin.display(
-        description="Send email"
-    )
-    @admin.display(
-        description="Import IP Ranges from a CSV file"
-    )
+    @admin.display(description="Send email")
+    @admin.display(description="Import IP Ranges from a CSV file")
     @mark_safe
     def send_button(self, obj):
         url = reverse_admin_name(
@@ -707,10 +714,7 @@ class HostingAdmin(
         link = f'<a href="{url}" class="sendEmail">Send email</a>'
         return link
 
-
-    @admin.display(
-        description="Support Messages"
-    )
+    @admin.display(description="Support Messages")
     @mark_safe
     def preview_email_button(self, obj):
         url = reverse_admin_name(
@@ -720,7 +724,6 @@ class HostingAdmin(
         )
         link = f'<a href="{url}" class="sendEmail">Compose message</a>'
         return link
-
 
     @mark_safe
     def start_csv_import_button(self, obj):
@@ -736,15 +739,11 @@ class HostingAdmin(
         link = f'<a href="{url}" class="start_csv_import">Import IP Ranges from CSV</a>'
         return link
 
-
-    @admin.display(
-        description="website"
-    )
+    @admin.display(description="website")
     @mark_safe
     def html_website(self, obj):
         html = f'<a href="{obj.website}" target="_blank">{obj.website}</a>'
         return html
-
 
     @admin.display(
         description="Number of IP ranges",
@@ -753,25 +752,17 @@ class HostingAdmin(
     def ip_addresses(self, obj):
         return len(obj.greencheckip_set.all())
 
-
-    @admin.display(
-        description="country"
-    )
+    @admin.display(description="country")
     def country_str(self, obj):
         return obj.country.code
 
-
-    @admin.display(
-        description="Certificates"
-    )
+    @admin.display(description="Certificates")
     def certificates_amount(self, obj):
         return len(obj.hostingprovider_certificates.all())
 
     # certificates_amount.admin_order_field = "hostingprovider_certificates__count"
 
-    @admin.display(
-        description="Datacenters"
-    )
+    @admin.display(description="Datacenters")
     def datacenter_amount(self, obj):
         return len(obj.datacenter.all())
 
