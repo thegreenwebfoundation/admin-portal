@@ -9,12 +9,13 @@ class APIKeyManager(BaseAPIKeyManager):
     def get_usable_keys(self):
         return self.filter(
             models.Q(revoked=False),
-            models.Q(expiry_date__isnull=True) | models.Q(expiry_date__gt=timezone.now())
+            models.Q(expiry_date__isnull=True) | models.Q(expiry_date__gt=timezone.now()),
+            models.Q(user__api_access_banned=False)
         )
 
     def create_key_for_user(self, user, note="", expiry_date=None):
-        if self.get_usable_keys().filter(user=user).count() >= settings.MAX_API_KEYS_PER_USER:
-            raise ValueError(f"Only {settings.MAX_API_KEYS_PER_USER} active API keys allowed per account.")
+        if self.get_usable_keys().filter(user=user).count() >= user.api_key_limit:
+            raise ValueError(f"Only {user.api_key_limit} active API keys allowed for this account.")
 
         return self.create_key(user=user, note=note, expiry_date=expiry_date)
 
@@ -50,5 +51,9 @@ class APIKey(AbstractAPIKey):
         ]
 
     @property
+    def displayable_prefix(self):
+        return f"{settings.API_KEY_PREFIX}_{self.prefix}"
+
+    @property
     def name(self):
-        return f"{self.user.username}:{self.prefix}"
+        return f"{self.user.username}:{self.displayable_prefix}"

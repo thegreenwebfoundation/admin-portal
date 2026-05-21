@@ -1,12 +1,5 @@
 {% extends "base.html" %}
 {% load i18n static breakpoint %}
-{% block extrahead %}
-  <script src="{% static "accounts/js/provider_carbon_txt.js"  %}"></script>
-  <script src="{% static "accounts/js/copyable.js"  %}"></script>
-{% endblock %}
-{% block prenav %}
-{% include "provider_portal/carbon_txt/partials/beta_banner.html" %}
-{% endblock %}
 {% block content %}
 <div class="container mx-auto prose">
     {% block header_section %}
@@ -17,21 +10,17 @@
 
 
         <h1 class="text-center mb-1 mt-6 pt-3">
-            Fix displayed provider name
+          Sign up for API Access
         </h1>
 
-        <h6 class="text-center my-3">
-          Setup carbon.txt for provider: {{provider.name}}
-        </h6>
+        <div class="prose mx-auto mt-8">
+          <p>We offer access to Green Web Foundation services via our APIs to registered developers, but in order to better track usage of our data and services, we require you to register for an API key. This copy is a placeholder and will be updated later.  </p>
+        </div>
         </header>
     {% endblock %}
 
     <article>
       <div class="prose mx-auto mt-8">
-        {% block content_section %}
-
-        {% endblock %}
-
         {% if form %}
           <form method="post" class="form" action="">
             {% csrf_token %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load i18n static breakpoint %}
+{% block content %}
+<div class="container mx-auto prose">
+    {% block header_section %}
+      <header class="">
+        {% block back_link %}
+          <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt; Back to provider portal</a></p>
+        {% endblock back_link %}
+
+
+        <h1 class="text-center mb-1 mt-6 pt-3">
+          Your API Keys
+        </h1>
+
+        <div class="prose mx-auto mt-8">
+          <p>Green Web API keys allow you to access access to Green Web data and services programatically in your own scripts and products.<br /><br /> You can create a maximum of {{user.api_key_limit}} keys for this account.</p>
+        </div>
+        </header>
+    {% endblock %}
+
+    <article>
+      <div class="prose mx-auto mt-8">
+        {% if user.api_keys.get_usable_keys.all %}
+          <ul class="list-none p-0 mb-8">
+            {% for key in user.api_keys.get_usable_keys.all %}
+            <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 px-5 border-neutral border-t last-of-type:border-b">
+              <div class="columns-2  mt-0">
+                <div>
+                  <strong>Key:</strong>  <code class="font-normal">{{key.displayable_prefix}}...</code>
+                </div>
+                <div>
+                  <strong>Expiry date: </strong>{{key.expiry_date | date:"d F Y" | default:"Never" }}
+                </div>
+              </div>
+              <div class="columns-2 mt-1 mb-0">
+                <div>
+                  <a href="{% url 'revoke-api-key' key.prefix  %}">[revoke]</a>
+                </div>
+                <div>
+                  <strong>Note:</strong> {{key.note | default:"None"}}
+                </div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>You don't have any API keys yet.</p>
+        {% endif %}
+        {% if not request.user.has_api_access %}
+          <p><a class="btn mt-0 w-full" href="{% url 'api-access' %}">Sign up for API access</a></p>
+        {% elif request.user.can_create_api_key %}
+          <p><a class="btn mt-0 w-full" href="{% url 'create-api-key' %}">Create a new API key</a></p>
+        {% else %}
+        <p>You have reached the limit of {{user.api_key_limit}} keys for this account. To create more, you can revoke an existing key, or <a href="mailto:support@greenweb.org?subject=Request%20to%20raise%20API%20key%20limit%20for%20account%20{{user.username|urlencode}}">request that your limit be raised</a>.</p>
+
+        {% endif %}
+      </div>
+    </article>
+
+</div>
+{% endblock %}

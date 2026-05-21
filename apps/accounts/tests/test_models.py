@@ -655,9 +655,9 @@ class TestAPIKey:
         assert key in ac_models.APIKey.objects.get_usable_keys()
 
     @pytest.mark.django_db
-    def test_user_can_only_create_three_keys(self, user_factory):
+    def test_user_can_only_create_three_keys_by_default(self, user_factory):
         """
-        Users can create a maxmimum of three keys
+        Users can create a maxmimum of three keys by default
         """
         u = user_factory.create()
         for _i in range(settings.MAX_API_KEYS_PER_USER):
@@ -666,7 +666,18 @@ class TestAPIKey:
         with pytest.raises(ValueError):
             ac_models.APIKey.objects.create_key_for_user(u)
 
+    @pytest.mark.django_db
+    def test_user_key_limit_is_overridable(self, user_factory):
+        """
+        Admins can override the key limit per user
+        """
+        new_limit=5
+        u = user_factory.create(override_api_key_limit=new_limit)
+        for _i in range(new_limit):
+            ac_models.APIKey.objects.create_key_for_user(u)
 
+        with pytest.raises(ValueError):
+            ac_models.APIKey.objects.create_key_for_user(u)
 
     @pytest.mark.django_db
     def test_revoked_keys_dont_count_towards_user_limit(self, user_factory):

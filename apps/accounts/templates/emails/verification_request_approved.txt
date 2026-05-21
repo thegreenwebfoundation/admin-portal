@@ -5,12 +5,12 @@ Thank you for taking the time to update your listing in the Green Web Dataset.
 
 The updated information you provided has been reviewed and approved.
 
-If you need to update {{ provider.name }} again, you can do so by logging in to the Provider Portal.
+If you need to update {{ provider.name }} again, you can do so by logging in to the Green Web Portal.
 
 Thanks for your help in keeping the Green Web Dataset up to date!
 
 Best regards,
-Green Web Foundation 
+Green Web Foundation
 {% else %}
 Dear {{ org_name }},
 
@@ -33,7 +33,7 @@ In order to remain as an active verified green host in our dataset, you need to 
 Learn more about reverification in this FAQ: https://www.thegreenwebfoundation.org/support/what-is-reverification-for-hosting-providers/
 
 Useful links
-- Provider Portal: https://admin.thegreenwebfoundation.org/provider-portal/
+- Green Web Portal: https://admin.thegreenwebfoundation.org/provider-portal/
 - Hosting Directory: https://app.greenweb.org/directory/
 - Green Web Check: https://www.thegreenwebfoundation.org/green-web-check/
 - FAQs: https://www.thegreenwebfoundation.org/support/

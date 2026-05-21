@@ -15,7 +15,11 @@ from apps.accounts.views import (
     ProviderAutocompleteView,
     ProviderCarbonTxtView,
     ProviderCarbonTxtBuilderView,
+    APIKeyAccessView,
+    APIKeyCreateView,
     APIKeyIntrospectionView,
+    APIKeyListView,
+    APIKeyRevokeView,
 )
 
 urlpatterns = [
@@ -168,5 +172,25 @@ urlpatterns = [
         "internal/api/introspect_key",
         APIKeyIntrospectionView.as_view(),
         name="internal-introspect-api-key"
+    ),
+    path(
+        "api_keys/",
+        APIKeyListView.as_view(),
+        name="list-api-keys"
+    ),
+    path(
+        "api_access/",
+        APIKeyAccessView.as_view(),
+        name="api-access"
+    ),
+    path(
+        "api_keys/new/",
+        APIKeyCreateView.as_view(),
+        name="create-api-key"
+    ),
+    path(
+        "api_keys/<str:key_prefix>/revoke/",
+        APIKeyRevokeView.as_view(),
+        name="revoke-api-key"
     )
 ]

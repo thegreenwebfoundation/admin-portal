@@ -1,12 +1,5 @@
 {% extends "base.html" %}
 {% load i18n static breakpoint %}
-{% block extrahead %}
-  <script src="{% static "accounts/js/provider_carbon_txt.js"  %}"></script>
-  <script src="{% static "accounts/js/copyable.js"  %}"></script>
-{% endblock %}
-{% block prenav %}
-{% include "provider_portal/carbon_txt/partials/beta_banner.html" %}
-{% endblock %}
 {% block content %}
 <div class="container mx-auto prose">
     {% block header_section %}
@@ -17,21 +10,30 @@
 
 
         <h1 class="text-center mb-1 mt-6 pt-3">
-            Fix displayed provider name
+          Revoke API key
         </h1>
 
-        <h6 class="text-center my-3">
-          Setup carbon.txt for provider: {{provider.name}}
-        </h6>
+        <div class="prose mx-auto mt-8">
+          <p>Please confirm that you want to revoke this API key - once you've done so you will no longer be able to use it to access our services.</p>
+        </div>
         </header>
     {% endblock %}
 
     <article>
       <div class="prose mx-auto mt-8">
-        {% block content_section %}
-
-        {% endblock %}
-
+        <div class="bg-neutral-100 m-0 p-3 px-5 mb-5 border-neutral border-t border-b">
+          <div class="columns-2 mt-1">
+            <div>
+              <strong>Key:</strong>  <code class="font-normal">{{key.displayable_prefix}}...</code>
+            </div>
+            <div>
+              <strong>Expiry date: </strong>{{key.expiry_date | date:"d F Y" | default:"Never" }}
+            </div>
+          </div>
+          <div>
+              <strong>Note:</strong> {{key.note | default:"None"}}
+          </div>
+        </div>
         {% if form %}
           <form method="post" class="form" action="">
             {% csrf_token %}
@@ -52,7 +54,7 @@
             <button type="submit" class="btn w-full">
               <span class="text-xs">
                 {% block submit_button_text %}
-                Save and continue
+                Revoke
                 {% endblock submit_button_text %}
               </span>
             </button>
