@@ -37,7 +37,6 @@ from apps.greencheck.api import image_views
 from apps.greencheck.api import views as api_views
 from apps.accounts.views import LabelAutocompleteView
 from apps.accounts import urls as accounts_urls
-from rest_framework.authtoken import views
 
 from apps.greencheck import urls as greencheck_urls, directory_urls
 from apps.theme.views import style_guide
@@ -126,7 +125,6 @@ urlpatterns += [
         image_views.legacy_greencheck_image,
         name="greencheck-image-legacy",
     ),
-    path("api-token-auth/", views.obtain_auth_token, name="api-obtain-token"),
     path(
         "api-docs/",
         TGWFSwaggerView.with_ui("swagger", cache_timeout=0),

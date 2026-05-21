@@ -102,7 +102,6 @@ INSTALLED_APPS = [
     "django_mysql",
     "django_registration",
     "rest_framework",
-    "rest_framework.authtoken",
     "rest_framework_api_key",
     "drf_yasg",
     "corsheaders",
