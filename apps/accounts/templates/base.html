@@ -72,7 +72,7 @@
                                 <span>Hello {{ request.user.username }}</span>
                                 <span role="img" aria-label="waving hand" class="pr-3">👋</span>
                                 {% flag "api_keys" %}
-                                  {% if user.has_api_access %}
+                                  {% if not user.api_access_banned %}
                                     <a href="{% url 'provider_portal_home' %}" class="no-underline hover:underline pr-3" >Provider listings</a>
                                     <a href="{% url 'list-api-keys' %}" class="no-underline hover:underline pr-3">API keys</a>
                                   {% endif %}
