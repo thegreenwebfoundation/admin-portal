@@ -200,6 +200,31 @@ class GreenWebAdmin(AdminSite):
             },
         )
 
+        api_key = next(
+                (model for model in accounts_app["models"] if model["object_name"] == "APIKey"),
+                None
+        )
+        api_key_privilege_level = next(
+                (model for model in accounts_app["models"] if model["object_name"] == "APIKeyPrivilegeLevel"),
+                None
+        )
+
+        api_key_models = []
+
+        if api_key:
+            accounts_app["models"].remove(api_key)
+            api_key_models.append(api_key)
+
+        if api_key_privilege_level:
+            accounts_app["models"].remove(api_key_privilege_level)
+            api_key_models.append(api_key_privilege_level)
+
+        app_list.insert(2, {
+            "name": "API keys",
+            "app_label": "apikeys",
+            "models": api_key_models
+        })
+
         app_list += [
             {
                 "name": "Try out greencheck",

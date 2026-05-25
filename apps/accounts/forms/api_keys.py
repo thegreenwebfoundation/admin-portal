@@ -6,7 +6,7 @@ from ..models import APIKey
 class APIAccessForm(forms.Form):
     api_access_motivation = forms.CharField(
         widget=forms.Textarea(), required=True,
-        label="Why do you need an API key?",
+        label="What is your intended use case?",
         help_text="It's very useful to us to understand how and why people are using our data and services. Please tell us a little about how you plan to use our APIs."
     )
 

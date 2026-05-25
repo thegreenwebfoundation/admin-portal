@@ -29,6 +29,12 @@ class APIKeyManager(BaseAPIKeyManager):
         return super().get_from_key(key)
 
 
+class APIKeyPrivilegeLevel(models.Model):
+    name = models.CharField(max_length=255, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+
 class APIKey(AbstractAPIKey):
 
     name = None # Overrides the field set in the superclass.
@@ -40,6 +46,12 @@ class APIKey(AbstractAPIKey):
     )
     note = models.CharField(max_length=255, blank=True)
     objects = APIKeyManager()
+
+    privilege_level = models.ForeignKey(
+        APIKeyPrivilegeLevel,
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
 
     class Meta(AbstractAPIKey.Meta):
         verbose_name = "API Key"

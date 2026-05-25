@@ -30,6 +30,7 @@ class APIKeyIntrospectionView(APIView):
                 "username": key.user.username,
                 "expiry_date": key.expiry_date,
                 "prefix": key.prefix,
+                "privilege_level": key.privilege_level.name if key.privilege_level else None
             })
         except APIKey.DoesNotExist:
             return Response({"active": False})
