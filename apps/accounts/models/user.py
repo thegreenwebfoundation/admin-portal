@@ -1,5 +1,5 @@
 import datetime
-
+from django.conf import settings
 from django.contrib.auth.models import (
     AbstractBaseUser,
     UserManager,
@@ -57,6 +57,11 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
         ),
     )
     date_joined = models.DateTimeField("date joined", default=datetime.datetime.now)
+
+    api_access_motivation = models.TextField(null=True, blank=True)
+    api_access_banned = models.BooleanField(null=False, blank=False, default=False)
+    override_api_key_limit = models.IntegerField(null=True, blank=True)
+
     EMAIL_FIELD = "email"
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]
@@ -143,6 +148,18 @@ class User(AbstractBaseUser, PermissionsMixin, GuardianUserMixin):
             with_superuser=False,
             use_groups=False,
         )
+
+    @property
+    def has_api_access(self):
+        return self.api_access_motivation is not None and not self.api_access_banned
+
+    @property
+    def api_key_limit(self):
+        return self.override_api_key_limit or settings.MAX_API_KEYS_PER_USER
+
+    @property
+    def can_create_api_key(self):
+        return self.has_api_access and len(self.api_keys.get_usable_keys()) < self.api_key_limit
 
     def get_absolute_url(self):
         return reverse("user_edit", args=[str(self.id)])

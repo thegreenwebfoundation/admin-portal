@@ -1,4 +1,4 @@
-{% load static tailwind_tags %}
+{% load static tailwind_tags waffle_tags %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -63,18 +63,24 @@
                             </div>
 
                             <div class="subbrand border-l text-medium ml-8 pl-8 h-12 flex items-center">
-                                <p class="font-bold">Provider<br/>Portal</p>
+                                <p class="font-bold">Green Web<br/>Portal</p>
                             </div>
                         </div>
 
                         <div class="w-full sm:w-auto mt-4 sm:mt-0 pb-4 sm:pb-0 sm:pl-10 text-right">
                             {% if request.user.is_authenticated %}
                                 <span>Hello {{ request.user.username }}</span>
-                                <span role="img" aria-label="waving hand">👋</span>
+                                <span role="img" aria-label="waving hand" class="pr-3">👋</span>
+                                {% flag "api_keys" %}
+                                  {% if not user.api_access_banned %}
+                                    <a href="{% url 'provider_portal_home' %}" class="no-underline hover:underline pr-3" >Provider listings</a>
+                                    <a href="{% url 'list-api-keys' %}" class="no-underline hover:underline pr-3">API keys</a>
+                                  {% endif %}
+                                {% endflag %}
                                 <form class="inline" method="POST" action="{% url 'logout' %}">
                                 {% csrf_token %}
-                                <span class="pl-3">
-                                    <button> Log out</button>
+                                <span>
+                                    <button class="hover:underline"> Log out</button>
                                 </span>
                                 </form>
                             {% else %}

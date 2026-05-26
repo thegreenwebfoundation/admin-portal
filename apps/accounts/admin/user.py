@@ -107,12 +107,20 @@ class CustomUserAdmin(UserAdmin):
         contact_deets = ("Personal info", {"fields": ("email",)})
 
         # what we show for internal staff
-        staff_fieldsets = (
-            "User status and group membership",
-            {
-                "fields": ("is_active", "groups"),
-            },
-        )
+        staff_fieldsets = [
+            (
+                "API Access",
+                {
+                    "fields": ("api_access_motivation", "api_access_banned", "override_api_key_limit"),
+                },
+            ),
+            (
+                "User status and group membership",
+                {
+                    "fields": ("is_active", "groups"),
+                },
+            )
+        ]
 
         # our usual set of forms to show for users
         default_fieldset = [top_row, contact_deets]
@@ -126,13 +134,13 @@ class CustomUserAdmin(UserAdmin):
 
         # serve the extra staff fieldsets for creating users
         if request.user.is_admin:
-            return (*default_fieldset, staff_fieldsets)
+            return (*default_fieldset, *staff_fieldsets)
 
         # allow an override for super users
         if request.user.is_superuser:
             return (
                 *default_fieldset,
-                staff_fieldsets,
+                *staff_fieldsets,
                 (
                     "User status and group membership",
                     {

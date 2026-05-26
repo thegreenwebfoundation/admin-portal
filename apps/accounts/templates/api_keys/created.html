@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n static breakpoint %}
+{% block extrahead %}
+  <script src="{% static "accounts/js/copyable.js"  %}"></script>
+{% endblock %}
+{% block content %}
+<div class="container mx-auto prose">
+    {% block header_section %}
+      <header class="">
+        {% block back_link %}
+          <p class="mb-6 text-sm text-green"><a href="{% url 'list-api-keys' %}" class="text-neutral-500">&lt; Back to API keys home</a></p>
+        {% endblock back_link %}
+
+
+        <h1 class="text-center mb-1 mt-6 pt-3">
+          API key created
+        </h1>
+
+        <div class="prose mx-auto mt-8">
+          <p>Here are your new API key details - <strong>please copy and securely store your API token before continuing</strong>, once you leave this page you won't be shown it again.</p>
+        </div>
+        </header>
+    {% endblock %}
+
+    <article>
+      <div class="prose mx-auto mt-8">
+
+        <div class="bg-neutral-100 m-0 mb-8 p-3 px-5 border-neutral border-t border-b">
+          <div>
+            <strong>Token:</strong>
+            <span class="copyable">
+              <span class="content">{{token}}</span>
+              <a class="copy no-underline" href="#">📋</a>
+            </span>
+          </div>
+          <div class="columns-2 mt-1">
+            <div>
+              <strong>Expiry date: </strong>{{key.expiry_date | date:"d F Y" | default:"Never" }}
+            </div>
+            <div>
+                <strong>Note:</strong> {{key.note | default:"None"}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p><a class="btn mt-0 w-full" href="{% url 'list-api-keys' %}">I have copied and saved my key</a></p>
+    </article>
+
+</div>
+{% endblock %}

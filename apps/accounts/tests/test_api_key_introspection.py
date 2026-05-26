@@ -164,3 +164,32 @@ def test_request_for_revoked_api_key_with_correct_shared_secret(client, mocker):
     assert "expiry_date" not in body
     assert "prefix" not in body
 
+@pytest.mark.django_db
+def test_request_for_active_api_key_with_correct_shared_secret_for_banned_juser(client, mocker):
+    """
+    Attempting to introspect an active key for a banned user while
+    providing a correct shared secret gives an inactive response
+    """
+
+    # GIVEN I provide a correct shared secret and an active API key for a banned user.
+    mock_settings = mocker.patch("apps.accounts.permissions.settings")
+    mock_settings.GWF_SHARED_SECRET = "abc123"
+    user = gc_factories.UserFactory.create()
+    (_key, token) = APIKey.objects.create_key_for_user(user)
+    user.api_access_banned = True
+    user.save()
+    body = { "token": token }
+    headers = { "X-GWF-Shared-Secret": mock_settings.GWF_SHARED_SECRET }
+
+    # WHEN I make a request to the introspection endpoint
+    response = client.post(reverse("internal-introspect-api-key"), body, headers=headers)
+
+    # THEN I receive an "inactive" response
+    assert response.status_code == 200
+    body = response.json()
+    assert not body["active"]
+    assert "user_id" not in body
+    assert "username" not in body
+    assert "expiry_date" not in body
+    assert "prefix" not in body
+
