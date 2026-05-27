@@ -74,8 +74,8 @@ jobs:
               assoc="${{ github.event.pull_request.author_association }}"
               # the triggering ref is the ref of the pull request head
               echo "ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
-              if [[ "$assoc" == "COLLABORATOR" || "$assoc" == "OWNER" ]]; then
-                # PRs from collaborators and owners run the tests directly
+              if [[ "$assoc" == "COLLABORATOR" || "$assoc" == "OWNER" || "$assoc" == "MEMBER" ]]; then
+                # PRs from collaborators, members and owners run the tests directly
                 echo "is-collaborator=true" >> $GITHUB_OUTPUT
               else
                 #  PRs from other users wait for approval before running
