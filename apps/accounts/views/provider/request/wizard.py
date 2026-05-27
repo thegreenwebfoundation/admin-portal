@@ -1,19 +1,19 @@
-from enum import Enum
 import logging
+from enum import Enum
 
-from django.core.files.storage import DefaultStorage
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.admin.models import ADDITION, LogEntry
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
-from django.http import HttpRequest, Http404, HttpResponseRedirect
+from django.core.files.storage import DefaultStorage
+from django.http import Http404, HttpRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-
 from formtools.wizard.views import SessionWizardView
+from waffle import flag_is_active
 
 from ....forms import (
     BasisForVerificationForm,
@@ -25,7 +25,6 @@ from ....forms import (
     PreviewForm,
     ServicesForm,
 )
-
 from ....models import (
     Hostingprovider,
     HostingproviderCertificate,
@@ -33,16 +32,15 @@ from ....models import (
     ProviderRequestASN,
     ProviderRequestEvidence,
     ProviderRequestIPRange,
+    ProviderRequestLocation,
     ProviderRequestStatus,
 )
-
 from ....permissions import manage_provider
-
 from ....tasks import process_newsletter_registration
-
 from ....utils import send_email
 
 logger = logging.getLogger(__name__)
+
 
 class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
     """
@@ -244,7 +242,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
 
         # process BASIS_FOR_VERIFICATION form: assign verification bases and linked providers to ProviderRequest
         verification_bases_form = form_dict[steps.BASIS_FOR_VERIFICATION.value]
-        verification_bases_slugs = verification_bases_form.cleaned_data["verification_bases"]
+        verification_bases_slugs = verification_bases_form.cleaned_data[
+            "verification_bases"
+        ]
         pr.set_verification_bases_from_slugs(verification_bases_slugs)
 
         linked_providers = verification_bases_form.cleaned_data.get("linked_providers")
@@ -367,15 +367,23 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
     def get_form_kwargs(self, step=None):
         """
         Workaround for injecting "instance" argument to MultiModelForm
-        when the form is used for editing existing request
+        when the form is used for editing existing request.
+        Also passes feature-flag state to the basis-for-verification form.
         """
+        kwargs = {}
         affected_steps = [
             self.Steps.LOCATIONS.value,
             self.Steps.NETWORK_FOOTPRINT.value,
         ]
         if self.kwargs.get("request_id") and step in affected_steps:
-            return {"instance": self.get_form_instance(step)}
-        return {}
+            kwargs["instance"] = self.get_form_instance(step)
+
+        if step == self.Steps.BASIS_FOR_VERIFICATION.value:
+            kwargs["enable_linked_providers"] = flag_is_active(
+                self.request, "linked_providers"
+            )
+
+        return kwargs
 
     def get_form_initial(self, step):
         """
@@ -387,14 +395,15 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         initial = super().get_form_initial(step)
 
         if step == self.Steps.BASIS_FOR_VERIFICATION.value:
-            location_step_data = self.storage.get_step_data(self.Steps.LOCATIONS.value)
-            if location_step_data:
-                # location step uses a MultiModelForm with a formset keyed "locations".
-                # First location country field is named like: locations__1-0-country
-                for key, value in location_step_data.items():
-                    if "-country" in key and "__prefix__" not in key:
-                        initial["country"] = str(value)
-                        break
+            if flag_is_active(self.request, "linked_providers"):
+                location_step_data = self.storage.get_step_data(self.Steps.LOCATIONS.value)
+                if location_step_data:
+                    # location step uses a MultiModelForm with a formset keyed "locations".
+                    # First location country field is named like: locations__1-0-country
+                    for key, value in location_step_data.items():
+                        if "-country" in key and "__prefix__" not in key:
+                            initial["country"] = str(value)
+                            break
 
         return initial
 
@@ -455,7 +464,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         location_qs = (
             pr_instance.providerrequestlocation_set.all()
             if pr_instance.providerrequestlocation_set.exists()
-            else ProviderRequestASN.objects.none()
+            else ProviderRequestLocation.objects.none()
         )
         evidence_qs = (
             pr_instance.providerrequestevidence_set.all()
@@ -555,11 +564,15 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             network_dict = {
                 "ips": [
                     {"start": range.ip_start, "end": range.ip_end}
-                    for range in hosting_provider.greencheckip_set.filter(active=True).all()
+                    for range in hosting_provider.greencheckip_set.filter(
+                        active=True
+                    ).all()
                 ],
                 "asns": [
                     {"asn": item.asn}
-                    for item in hosting_provider.greencheckasn_set.filter(active=True).all()
+                    for item in hosting_provider.greencheckasn_set.filter(
+                        active=True
+                    ).all()
                 ],
             }
             if hp_provider_request:
@@ -585,7 +598,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "services": [s for s in hp_instance.services.slugs()]
             },
             cls.Steps.BASIS_FOR_VERIFICATION.value: {
-                "verification_bases": [b for b in hp_instance.verification_bases.slugs()],
+                "verification_bases": [
+                    b for b in hp_instance.verification_bases.slugs()
+                ],
                 "linked_providers": [p.id for p in hp_instance.linked_providers.all()],
                 "country": str(hp_instance.country),
             },

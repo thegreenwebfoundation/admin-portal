@@ -1,4 +1,5 @@
 {% load static %}
+{% load waffle_tags %}
 
 {% regroup ordered_results by country.name as country_list %}
 
@@ -55,6 +56,19 @@
                             {% endfor %}
                         </ul>
                     {% endif %}
+
+                    {% flag "linked_providers" %}
+                    {% if obj.linked_providers.exists %}
+                        <div class="my-4">
+                            <p class="text-sm text-neutral-600 mb-1">Relies on:</p>
+                            <ul class="pl-0">
+                                {% for upstream in obj.linked_providers.all %}
+                                    <li class="service-label inline-block bg-neutral-200">{{ upstream.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    {% endflag %}
 
                     {% if obj.public_supporting_evidence %}
                         <details class="mb-4">
