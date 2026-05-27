@@ -187,15 +187,35 @@ class BasisForVerificationForm(forms.ModelForm):
         By default the initial value is passed as a queryset,
         but TaggableManager does not handle that well - we pass a list instead.
         """
+        enable_linked_providers = kwargs.pop("enable_linked_providers", False)
         super().__init__(*args, **kwargs)
         instance = kwargs.get("instance")
         if instance:
             self.initial["verification_bases"] = [
                 b for b in instance.verification_bases.slugs()
             ]
-            self.initial["linked_providers"] = [
-                p.id for p in instance.linked_providers.all()
-            ]
+            if "linked_providers" in self.fields:
+                self.initial["linked_providers"] = [
+                    p.id for p in instance.linked_providers.all()
+                ]
+        if not enable_linked_providers:
+            self.fields.pop("linked_providers", None)
+            self.fields.pop("country", None)
+
+    RESELLER_SLUG = (
+        "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+    )
+
+    def clean(self):
+        """
+        When the resell basis is *not* selected, discard any linked_providers
+        values so the hidden widget does not silently submit stale data.
+        """
+        cleaned_data = super().clean()
+        bases = cleaned_data.get("verification_bases") or []
+        if self.RESELLER_SLUG not in bases and "linked_providers" in cleaned_data:
+            cleaned_data["linked_providers"] = []
+        return cleaned_data
 
     class Meta:
         model = ProviderRequest

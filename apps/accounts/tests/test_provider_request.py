@@ -125,8 +125,16 @@ def wizard_form_verification_bases_with_linked_provider_data():
     for _ in range(5):
         VerificationBasisFactory.create()
 
+    # ensure the reseller basis exists and is included
+    reseller_slug = "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+    reseller_basis, _ = models.VerificationBasis.objects.get_or_create(
+        slug=reseller_slug,
+        defaults={"name": "We resell or actively use a provider that is already in the Green Web Dataset."},
+    )
+
     tags_choices = models.VerificationBasis.objects.all()
-    bases_sample = random.sample([tag.slug for tag in tags_choices], 3)
+    bases_sample = [tag.slug for tag in tags_choices[:2]]
+    bases_sample.append(reseller_basis.slug)
 
     upstream = models.Hostingprovider.objects.create(
         name="Upstream Green Provider",
@@ -2403,6 +2411,7 @@ def test_staff_review_is_logged(
     assert log_message.change_message == expected_status
 
 
+@override_flag("linked_providers", active=True)
 @pytest.mark.django_db
 def test_wizard_submission_with_linked_providers(
     user,
@@ -2480,6 +2489,7 @@ def test_wizard_submission_without_linked_providers(
     assert pr_from_db.linked_providers.count() == 0
 
 
+@override_flag("linked_providers", active=True)
 @pytest.mark.django_db
 def test_wizard_country_injected_into_basis_step(
     user,
@@ -2527,3 +2537,144 @@ def test_wizard_country_injected_into_basis_step(
     assert "country" in form.fields
     # the initial value should reflect the first location's country
     assert form.initial.get("country") == "NL"
+
+
+# ---------- linked_providers feature-flag tests ----------
+
+@pytest.mark.django_db
+def test_wizard_basis_step_hides_linked_providers_when_flag_is_off(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+):
+    """
+    Given: the linked_providers waffle flag is OFF
+    When: the basis-for-verification step is rendered
+    Then: the linked_providers field and disclosure are not present
+    """
+    client.force_login(user)
+
+    response = client.post(urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True)
+    assert response.status_code == 200
+
+    response = client.post(urls.reverse("provider_registration"), wizard_form_org_location_data, follow=True)
+    assert response.status_code == 200
+
+    response = client.post(urls.reverse("provider_registration"), wizard_form_services_data, follow=True)
+    assert response.status_code == 200
+
+    assert response.context_data["wizard"]["steps"].current == "3"
+    form = response.context_data["form"]
+    assert "linked_providers" not in form.fields
+    assert "country" not in form.fields
+    assert "Linked providers" not in response.content.decode()
+
+
+@override_flag("linked_providers", active=True)
+@pytest.mark.django_db
+def test_wizard_basis_step_shows_linked_providers_when_flag_is_on(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+):
+    """
+    Given: the linked_providers waffle flag is ON
+    When: the basis-for-verification step is rendered
+    Then: the linked_providers field and disclosure are present
+    """
+    client.force_login(user)
+
+    response = client.post(urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True)
+    assert response.status_code == 200
+
+    response = client.post(urls.reverse("provider_registration"), wizard_form_org_location_data, follow=True)
+    assert response.status_code == 200
+
+    response = client.post(urls.reverse("provider_registration"), wizard_form_services_data, follow=True)
+    assert response.status_code == 200
+
+    assert response.context_data["wizard"]["steps"].current == "3"
+    form = response.context_data["form"]
+    assert "linked_providers" in form.fields
+    assert "country" in form.fields
+    content = response.content.decode()
+    assert "Linked providers" in content
+    assert "toggleLinkedProvidersSection" in content
+
+
+@pytest.mark.django_db
+def test_request_detail_hides_linked_providers_when_flag_is_off(
+    user,
+    client,
+):
+    """
+    Given: a ProviderRequest has linked_providers but the flag is OFF
+    When: the detail page is viewed
+    Then: the Linked providers row is not visible
+    """
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Provider",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://example.com",
+    )
+    pr = models.ProviderRequest.objects.create(
+        name="Test Provider",
+        website="https://test.com",
+        description="Test",
+        created_by=user,
+        status="PENDING_REVIEW",
+        authorised_by_org=True,
+    )
+    pr.linked_providers.add(upstream)
+
+    client.force_login(user)
+    detail_url = urls.reverse("provider_request_detail", args=[pr.id])
+    response = client.get(detail_url)
+    assert response.status_code == 200
+    assert "Linked providers" not in response.content.decode()
+    # DB should still have the data
+    pr.refresh_from_db()
+    assert pr.linked_providers.count() == 1
+
+
+@override_flag("linked_providers", active=True)
+@pytest.mark.django_db
+def test_request_detail_shows_linked_providers_when_flag_is_on(
+    user,
+    client,
+):
+    """
+    Given: a ProviderRequest has linked_providers and the flag is ON
+    When: the detail page is viewed
+    Then: the Linked providers row is visible
+    """
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Provider",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://example.com",
+    )
+    pr = models.ProviderRequest.objects.create(
+        name="Test Provider",
+        website="https://test.com",
+        description="Test",
+        created_by=user,
+        status="PENDING_REVIEW",
+        authorised_by_org=True,
+    )
+    pr.linked_providers.add(upstream)
+
+    client.force_login(user)
+    detail_url = urls.reverse("provider_request_detail", args=[pr.id])
+    response = client.get(detail_url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Linked providers" in content
+    assert "Upstream Provider" in content
