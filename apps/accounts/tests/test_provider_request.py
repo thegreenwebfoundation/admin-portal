@@ -2603,7 +2603,9 @@ def test_wizard_basis_step_shows_linked_providers_when_flag_is_on(
     assert "country" in form.fields
     content = response.content.decode()
     assert "Linked providers" in content
-    assert "toggleLinkedProvidersSection" in content
+    # we check for evidence of the code that toggles visibility on linked providers selector
+    assert "toggleLinkedProvidersHelptext" in content
+
 
 
 @pytest.mark.django_db
