@@ -1,70 +1,61 @@
 {% extends "./base_form.html" %}
 {% load waffle_tags %}
-
 {% block header_section %}
-<section class="prose mt-10">
-    <h1 class="mb-0">Basis for verification</h1>
-
+    <section class="prose mt-10">
+        <h1 class="mb-0">Basis for verification</h1>
+    
+        {% flag "linked_providers" %}
+        <div class="alert__warning mt-6" id="linked-providers-disclosure">
+            <p class="font-bold">Linked providers</p>
+            <p>
+                If your organisation relies on one or more already verified green
+                providers, you can list them below. [TODO: INSERT GUIDANCE ABOUT
+                GREEN PROVIDER BEING VISIBLE].
+            </p>
+            <p class="mb-0">
+                This relationship may be publicly displayed and shared by the Green
+                Web Foundation through our online platforms and tools.
+            </p>
+        </div>
+        {% endflag %}
+    </section>
+{% endblock %} 
+{% block extra_js %} 
     {% flag "linked_providers" %}
-    <div class="alert__warning mt-6" id="linked-providers-disclosure">
-        <p class="font-bold">Linked providers</p>
-        <p>
-            If your organisation relies on one or more already verified green
-            providers, you can list them below. [TODO: INSERT GUIDANCE ABOUT
-            GREEN PROVIDER BEING VISIBLE].
-        </p>
-        <p class="mb-0">
-            This relationship may be publicly displayed and shared by the Green
-            Web Foundation through our online platforms and tools.
-        </p>
-    </div>
-    {% endflag %}
-</section>
-{% endblock %}
+    <script>
+        {% comment %}
+        // RESELLER_STRING is the slug we use internally to identify this VerificationBasis
+        // option in the form wizard. To change the displayed text, update the name, not the slug.
+        {% endcomment %}
+    
+        const RESELLER_STRING =
+            "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset";
+    
+        const isReseller = document.querySelector(`input[value="${RESELLER_STRING}"]`,);
+        const linkedProviderSelectionBox = document.querySelector(
+            "#id_3-linked_providers_helptext",
+        ).parentElement;
 
-{% block extra_js %}
-{% flag "linked_providers" %}
-<script>
-    {% comment %}
-    // RESELLER_STRING is the slug we use internally to identify this VerificationBasis
-    // option in the form wizard. To change the displayed text, update the name, not the slug.
-    {% endcomment %}
-
-    const RESELLER_STRING =
-        "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset";
-
-    function toggleLinkedProvidersSection() {
-        const isResellerCheckbox = document.querySelector(
-            `input[value="${RESELLER_STRING}"]`,
-        );
-        const linkedProvidersRow = document.querySelector(
-            "#id_3-linked_providers",
-        )?.closest("tr");
-        const disclosure = document.querySelector(
-            "#linked-providers-disclosure",
-        );
-
-        if (!isResellerCheckbox) return;
-
-        const show = isResellerCheckbox.checked;
-
-        if (linkedProvidersRow) {
-            linkedProvidersRow.style.display = show ? "" : "none";
+        
+        function toggleLinkedProvidersHelptext() {
+            if (isReseller.checked) {
+            // setting display to "" (i.e. block) makes our widget visible when checked
+            // otherwise the 'none' style set in the 'else' branch hides it
+                linkedProviderSelectionBox.style.display = "";
+            } else {
+                linkedProviderSelectionBox.style.display = "none";
+            }
         }
-        if (disclosure) {
-            disclosure.style.display = show ? "" : "none";
+    
+        toggleLinkedProvidersHelptext();
+    
+        addEventListener("DOMContentLoaded", () => {
+        if (isReseller) {
+            isReseller.addEventListener("change", () => {
+                toggleLinkedProvidersHelptext();
+            });
         }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        toggleLinkedProvidersSection();
-        const isResellerCheckbox = document.querySelector(
-            `input[value="${RESELLER_STRING}"]`,
-        );
-        if (isResellerCheckbox) {
-            isResellerCheckbox.addEventListener("change", toggleLinkedProvidersSection);
-        }
-    });
-</script>
-{% endflag %}
+        })
+    </script>
+    {% endflag %} 
 {% endblock %}
