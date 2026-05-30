@@ -35,10 +35,6 @@ class LinkedProviderAutocompleteView(autocomplete.Select2QuerySetView):
 
         qs = Hostingprovider.objects.filter(archived=False, is_listed=True)
 
-        country = self.forwarded.get("country", None)
-        if country:
-            qs = qs.filter(country=country)
-
         if self.q:
             qs = qs.filter(name__istartswith=self.q)
 

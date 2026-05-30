@@ -354,7 +354,12 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         # iterate over all forms without the last one (PREVIEW)
         for step, form in self.FORMS[:-1]:
             cleaned_data = self.get_cleaned_data_for_step(step)
-            preview_forms[step] = form(initial=cleaned_data)
+            kwargs = {}
+            if step == self.Steps.BASIS_FOR_VERIFICATION.value:
+                kwargs["enable_upstream_providers"] = flag_is_active(
+                    self.request, "upstream_providers"
+                )
+            preview_forms[step] = form(initial=cleaned_data, **kwargs)
         return preview_forms
 
     def get_context_data(self, form, **kwargs):
@@ -388,22 +393,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
     def get_form_initial(self, step):
         """
         Provide initial data for specific wizard steps.
-
-        Injects the selected country into the basis-for-verification step
-        so the upstream-provider autocomplete can filter by it.
         """
         initial = super().get_form_initial(step)
-
-        if step == self.Steps.BASIS_FOR_VERIFICATION.value:
-            if flag_is_active(self.request, "upstream_providers"):
-                location_step_data = self.storage.get_step_data(self.Steps.LOCATIONS.value)
-                if location_step_data:
-                    # location step uses a MultiModelForm with a formset keyed "locations".
-                    # First location country field is named like: locations__1-0-country
-                    for key, value in location_step_data.items():
-                        if "-country" in key and "__prefix__" not in key:
-                            initial["country"] = str(value)
-                            break
 
         return initial
 

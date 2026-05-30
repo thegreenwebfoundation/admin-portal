@@ -1,7 +1,6 @@
 from betterforms.multiform import MultiModelForm
 from convenient_formsets import ConvenientBaseModelFormSet
 from dal import autocomplete
-from dal import forward as dal_forward
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
@@ -171,14 +170,8 @@ class BasisForVerificationForm(forms.ModelForm):
         ),
         widget=autocomplete.ModelSelect2Multiple(
             url="linked-provider-autocomplete",
-            forward=(dal_forward.Field("country"),),
             attrs={"data-placeholder": "Search for a verified provider..."},
         ),
-    )
-
-    country = forms.CharField(
-        widget=forms.HiddenInput,
-        required=False,
     )
 
     def __init__(self, *args, **kwargs):
@@ -200,7 +193,6 @@ class BasisForVerificationForm(forms.ModelForm):
                 ]
         if not enable_upstream_providers:
             self.fields.pop("upstream_providers", None)
-            self.fields.pop("country", None)
 
     RESELLER_SLUG = (
         "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
@@ -219,7 +211,7 @@ class BasisForVerificationForm(forms.ModelForm):
 
     class Meta:
         model = ProviderRequest
-        fields = ["verification_bases", "upstream_providers", "country"]
+        fields = ["verification_bases", "upstream_providers"]
 
 
 class ConsentForm(forms.ModelForm):
