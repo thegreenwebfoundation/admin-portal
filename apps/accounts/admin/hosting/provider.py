@@ -159,7 +159,7 @@ class HostingAdmin(
     readonly_fields = [
         "authorised_users",
         "data_centers",
-        "downstream_providers",
+        "display_downstream_providers",
         "preview_email_button",
         "start_csv_import_button",
     ]
@@ -555,8 +555,8 @@ class HostingAdmin(
             "Upstream / downstream providers",
             {
                 "fields": (
-                    "linked_providers",
-                    "downstream_providers",
+                    "upstream_providers",
+                    "display_downstream_providers",
                 )
             },
         )
@@ -614,12 +614,12 @@ class HostingAdmin(
     @admin.display(
         description="Downstream providers",
     )
-    def downstream_providers(self, obj):
+    def display_downstream_providers(self, obj):
         """
         Returns markup for a list of providers that have linked to this provider
         as their upstream green provider.
         """
-        downstream = obj.linked_by_providers.all()
+        downstream = obj.downstream_providers.all()
         if not downstream:
             return "No other providers are listed as relying on this provider."
         return "<br>".join(

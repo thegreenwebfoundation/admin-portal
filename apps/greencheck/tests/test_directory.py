@@ -129,36 +129,36 @@ def test_fallback_when_no_filter_view_has_no_results(client, hosting_provider_fa
 
 
 @pytest.mark.django_db
-def test_directory_hides_linked_providers_when_flag_is_off(
+def test_directory_hides_upstream_providers_when_flag_is_off(
     client, hosting_provider_factory
 ):
     """
-    Check that upstream linked providers are hidden when the flag is off.
+    Check that upstream providers are hidden when the flag is off.
     """
     upstream = hosting_provider_factory.create(
         country="GB", is_listed=True, name="Upstream Green"
     )
     provider = hosting_provider_factory.create(country="DE", is_listed=True)
-    provider.linked_providers.add(upstream)
+    provider.upstream_providers.add(upstream)
 
     res = client.get(reverse("directory-index"))
     assert res.status_code == 200
     assert "Relies on:" not in res.content.decode()
 
 
-@override_flag("linked_providers", active=True)
+@override_flag("upstream_providers", active=True)
 @pytest.mark.django_db
-def test_directory_shows_linked_providers_when_flag_is_on(
+def test_directory_shows_upstream_providers_when_flag_is_on(
     client, hosting_provider_factory
 ):
     """
-    Check that upstream linked providers are shown when the flag is on.
+    Check that upstream providers are shown when the flag is on.
     """
     upstream = hosting_provider_factory.create(
         country="GB", is_listed=True, name="Upstream Green"
     )
     provider = hosting_provider_factory.create(country="DE", is_listed=True)
-    provider.linked_providers.add(upstream)
+    provider.upstream_providers.add(upstream)
 
     res = client.get(reverse("directory-index"))
     assert res.status_code == 200

@@ -16,13 +16,13 @@
 				Expand verification slugs to their full names using custom template tag
 			{% endcomment %}
 			<p class="m-0">{{ field.value|render_as_verification_bases|conditional_yesno:"Yes,No,-" }}</p>
-		{% elif field.name|lower == "linked_providers"%}
+		{% elif field.name|lower == "upstream_providers"%}
 			{% comment %}
-				Expand selected linked providers to their names
+				Expand selected upstream providers to their names
 				using custom template tag
 			{% endcomment %}
 			
-			<p class="m-0">{{ field.value|render_as_linked_providers|default:"None selected" }}</p>
+			<p class="m-0">{{ field.value|render_as_upstream_providers|default:"None selected" }}</p>
 		{% elif field.label|lower == "country" %}
 			{% comment %}
 				Expand country code to country name (e.g. "DE" -> "Germany")

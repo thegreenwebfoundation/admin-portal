@@ -247,9 +247,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         ]
         pr.set_verification_bases_from_slugs(verification_bases_slugs)
 
-        linked_providers = verification_bases_form.cleaned_data.get("linked_providers")
-        if linked_providers:
-            pr.linked_providers.set(linked_providers)
+        upstream_providers = verification_bases_form.cleaned_data.get("upstream_providers")
+        if upstream_providers:
+            pr.upstream_providers.set(upstream_providers)
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
@@ -379,8 +379,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             kwargs["instance"] = self.get_form_instance(step)
 
         if step == self.Steps.BASIS_FOR_VERIFICATION.value:
-            kwargs["enable_linked_providers"] = flag_is_active(
-                self.request, "linked_providers"
+            kwargs["enable_upstream_providers"] = flag_is_active(
+                self.request, "upstream_providers"
             )
 
         return kwargs
@@ -390,12 +390,12 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         Provide initial data for specific wizard steps.
 
         Injects the selected country into the basis-for-verification step
-        so the linked-provider autocomplete can filter by it.
+        so the upstream-provider autocomplete can filter by it.
         """
         initial = super().get_form_initial(step)
 
         if step == self.Steps.BASIS_FOR_VERIFICATION.value:
-            if flag_is_active(self.request, "linked_providers"):
+            if flag_is_active(self.request, "upstream_providers"):
                 location_step_data = self.storage.get_step_data(self.Steps.LOCATIONS.value)
                 if location_step_data:
                     # location step uses a MultiModelForm with a formset keyed "locations".
@@ -601,7 +601,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "verification_bases": [
                     b for b in hp_instance.verification_bases.slugs()
                 ],
-                "linked_providers": [p.id for p in hp_instance.linked_providers.all()],
+                "upstream_providers": [p.id for p in hp_instance.upstream_providers.all()],
                 "country": str(hp_instance.country),
             },
             cls.Steps.GREEN_EVIDENCE.value: [
