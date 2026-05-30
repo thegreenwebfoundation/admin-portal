@@ -319,7 +319,7 @@ STORAGES = {
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    "apps/theme/static",
+    ROOT("src/apps/theme/static"),
 ]
 
 
