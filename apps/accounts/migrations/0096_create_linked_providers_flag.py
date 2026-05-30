@@ -3,27 +3,27 @@
 from django.db import migrations
 
 
-def create_linked_providers_flag(apps, schema_editor):
-    """Create the linked_providers waffle flag, defaulting to off for everyone."""
+def create_upstream_providers_flag(apps, schema_editor):
+    """Create the upstream_providers waffle flag, defaulting to off for everyone."""
     Flag = apps.get_model("waffle", "Flag")
     Flag.objects.get_or_create(
-        name="linked_providers",
+        name="upstream_providers",
         defaults={
             "everyone": False,
             "superusers": False,
             "staff": False,
             "authenticated": False,
             "note": (
-                "Controls visibility of the linked providers feature in the wizard, "
+                "Controls visibility of the upstream providers feature in the wizard, "
                 "portal, and public directory."
             ),
         },
     )
 
 
-def remove_linked_providers_flag(apps, schema_editor):
+def remove_upstream_providers_flag(apps, schema_editor):
     Flag = apps.get_model("waffle", "Flag")
-    Flag.objects.filter(name="linked_providers").delete()
+    Flag.objects.filter(name="upstream_providers").delete()
 
 
 class Migration(migrations.Migration):
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(
-            create_linked_providers_flag,
-            reverse_code=remove_linked_providers_flag,
+            create_upstream_providers_flag,
+            reverse_code=remove_upstream_providers_flag,
         ),
     ]

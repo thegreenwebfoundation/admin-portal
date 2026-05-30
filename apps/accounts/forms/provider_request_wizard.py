@@ -160,7 +160,7 @@ class BasisForVerificationForm(forms.ModelForm):
         ),
     )
 
-    linked_providers = forms.ModelMultipleChoiceField(
+    upstream_providers = forms.ModelMultipleChoiceField(
         queryset=Hostingprovider.objects.filter(archived=False, is_listed=True),
         required=False,
         label="Which existing verified provider(s) do you rely on as the basis the claim for using green energy?",
@@ -183,23 +183,23 @@ class BasisForVerificationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """
-        Implement injecting initial values for bases_for_verification and linked_providers fields.
+        Implement injecting initial values for bases_for_verification and upstream_providers fields.
         By default the initial value is passed as a queryset,
         but TaggableManager does not handle that well - we pass a list instead.
         """
-        enable_linked_providers = kwargs.pop("enable_linked_providers", False)
+        enable_upstream_providers = kwargs.pop("enable_upstream_providers", False)
         super().__init__(*args, **kwargs)
         instance = kwargs.get("instance")
         if instance:
             self.initial["verification_bases"] = [
                 b for b in instance.verification_bases.slugs()
             ]
-            if "linked_providers" in self.fields:
-                self.initial["linked_providers"] = [
-                    p.id for p in instance.linked_providers.all()
+            if "upstream_providers" in self.fields:
+                self.initial["upstream_providers"] = [
+                    p.id for p in instance.upstream_providers.all()
                 ]
-        if not enable_linked_providers:
-            self.fields.pop("linked_providers", None)
+        if not enable_upstream_providers:
+            self.fields.pop("upstream_providers", None)
             self.fields.pop("country", None)
 
     RESELLER_SLUG = (
@@ -208,18 +208,18 @@ class BasisForVerificationForm(forms.ModelForm):
 
     def clean(self):
         """
-        When the resell basis is *not* selected, discard any linked_providers
+        When the resell basis is *not* selected, discard any upstream_providers
         values so the hidden widget does not silently submit stale data.
         """
         cleaned_data = super().clean()
         bases = cleaned_data.get("verification_bases") or []
-        if self.RESELLER_SLUG not in bases and "linked_providers" in cleaned_data:
-            cleaned_data["linked_providers"] = []
+        if self.RESELLER_SLUG not in bases and "upstream_providers" in cleaned_data:
+            cleaned_data["upstream_providers"] = []
         return cleaned_data
 
     class Meta:
         model = ProviderRequest
-        fields = ["verification_bases", "linked_providers", "country"]
+        fields = ["verification_bases", "upstream_providers", "country"]
 
 
 class ConsentForm(forms.ModelForm):

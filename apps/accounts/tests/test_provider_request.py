@@ -147,7 +147,7 @@ def wizard_form_verification_bases_with_linked_provider_data():
     return {
         "provider_request_wizard_view-current_step": "3",
         "3-verification_bases": bases_sample,
-        "3-linked_providers": [str(upstream.id)],
+        "3-upstream_providers": [str(upstream.id)],
         "3-country": "GB",
     }
 
@@ -642,7 +642,7 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
 
 
 @pytest.mark.django_db
-def test_approve_creates_hosting_provider_with_linked_providers():
+def test_approve_creates_hosting_provider_with_upstream_providers():
     # given: a provider request with linked providers is created
     upstream = models.Hostingprovider.objects.create(
         name="Upstream Green",
@@ -654,7 +654,7 @@ def test_approve_creates_hosting_provider_with_linked_providers():
     pr = ProviderRequestFactory.create(
         services=faker.words(nb=4), verification_bases=faker.words(nb=4)
     )
-    pr.linked_providers.set([upstream])
+    pr.upstream_providers.set([upstream])
     ProviderRequestLocationFactory.create(request=pr)
     ProviderRequestEvidenceFactory.create(request=pr)
 
@@ -663,12 +663,12 @@ def test_approve_creates_hosting_provider_with_linked_providers():
     hp = models.Hostingprovider.objects.get(id=result.id)
 
     # then: resulting Hostingprovider has the linked providers copied
-    assert hp.linked_providers.count() == 1
-    assert upstream in hp.linked_providers.all()
+    assert hp.upstream_providers.count() == 1
+    assert upstream in hp.upstream_providers.all()
 
 
 @pytest.mark.django_db
-def test_approve_updates_existing_provider_with_linked_providers(
+def test_approve_updates_existing_provider_with_upstream_providers(
     hosting_provider_with_sample_user,
 ):
     # given: an existing hosting provider and a new upstream provider
@@ -682,7 +682,7 @@ def test_approve_updates_existing_provider_with_linked_providers(
     pr = ProviderRequestFactory.create(
         services=faker.words(nb=4), provider=hosting_provider_with_sample_user
     )
-    pr.linked_providers.set([upstream])
+    pr.upstream_providers.set([upstream])
     ProviderRequestLocationFactory.create(request=pr)
     ProviderRequestEvidenceFactory.create(request=pr)
 
@@ -692,8 +692,8 @@ def test_approve_updates_existing_provider_with_linked_providers(
 
     # then: the existing provider is updated with the new linked providers
     assert hp.id == pr.provider.id
-    assert hp.linked_providers.count() == 1
-    assert upstream in hp.linked_providers.all()
+    assert hp.upstream_providers.count() == 1
+    assert upstream in hp.upstream_providers.all()
 
 
 @pytest.mark.django_db
@@ -2411,9 +2411,9 @@ def test_staff_review_is_logged(
     assert log_message.change_message == expected_status
 
 
-@override_flag("linked_providers", active=True)
+@override_flag("upstream_providers", active=True)
 @pytest.mark.django_db
-def test_wizard_submission_with_linked_providers(
+def test_wizard_submission_with_upstream_providers(
     user,
     client,
     wizard_form_org_details_data,
@@ -2447,12 +2447,12 @@ def test_wizard_submission_with_linked_providers(
     pr = response.context_data["providerrequest"]
     pr_from_db = models.ProviderRequest.objects.get(id=pr.id)
 
-    assert pr_from_db.linked_providers.count() == 1
-    assert pr_from_db.linked_providers.first().name == "Upstream Green Provider"
+    assert pr_from_db.upstream_providers.count() == 1
+    assert pr_from_db.upstream_providers.first().name == "Upstream Green Provider"
 
 
 @pytest.mark.django_db
-def test_wizard_submission_without_linked_providers(
+def test_wizard_submission_without_upstream_providers(
     user,
     client,
     wizard_form_org_details_data,
@@ -2486,10 +2486,10 @@ def test_wizard_submission_without_linked_providers(
     pr = response.context_data["providerrequest"]
     pr_from_db = models.ProviderRequest.objects.get(id=pr.id)
 
-    assert pr_from_db.linked_providers.count() == 0
+    assert pr_from_db.upstream_providers.count() == 0
 
 
-@override_flag("linked_providers", active=True)
+@override_flag("upstream_providers", active=True)
 @pytest.mark.django_db
 def test_wizard_country_injected_into_basis_step(
     user,
@@ -2539,10 +2539,10 @@ def test_wizard_country_injected_into_basis_step(
     assert form.initial.get("country") == "NL"
 
 
-# ---------- linked_providers feature-flag tests ----------
+# ---------- upstream_providers feature-flag tests ----------
 
 @pytest.mark.django_db
-def test_wizard_basis_step_hides_linked_providers_when_flag_is_off(
+def test_wizard_basis_step_hides_upstream_providers_when_flag_is_off(
     user,
     client,
     wizard_form_org_details_data,
@@ -2550,9 +2550,9 @@ def test_wizard_basis_step_hides_linked_providers_when_flag_is_off(
     wizard_form_services_data,
 ):
     """
-    Given: the linked_providers waffle flag is OFF
+    Given: the upstream_providers waffle flag is OFF
     When: the basis-for-verification step is rendered
-    Then: the linked_providers field and disclosure are not present
+    Then: the upstream_providers field and disclosure are not present
     """
     client.force_login(user)
 
@@ -2567,14 +2567,14 @@ def test_wizard_basis_step_hides_linked_providers_when_flag_is_off(
 
     assert response.context_data["wizard"]["steps"].current == "3"
     form = response.context_data["form"]
-    assert "linked_providers" not in form.fields
+    assert "upstream_providers" not in form.fields
     assert "country" not in form.fields
     assert "Linked providers" not in response.content.decode()
 
 
-@override_flag("linked_providers", active=True)
+@override_flag("upstream_providers", active=True)
 @pytest.mark.django_db
-def test_wizard_basis_step_shows_linked_providers_when_flag_is_on(
+def test_wizard_basis_step_shows_upstream_providers_when_flag_is_on(
     user,
     client,
     wizard_form_org_details_data,
@@ -2582,9 +2582,9 @@ def test_wizard_basis_step_shows_linked_providers_when_flag_is_on(
     wizard_form_services_data,
 ):
     """
-    Given: the linked_providers waffle flag is ON
+    Given: the upstream_providers waffle flag is ON
     When: the basis-for-verification step is rendered
-    Then: the linked_providers field and disclosure are present
+    Then: the upstream_providers field and disclosure are present
     """
     client.force_login(user)
 
@@ -2599,22 +2599,22 @@ def test_wizard_basis_step_shows_linked_providers_when_flag_is_on(
 
     assert response.context_data["wizard"]["steps"].current == "3"
     form = response.context_data["form"]
-    assert "linked_providers" in form.fields
+    assert "upstream_providers" in form.fields
     assert "country" in form.fields
     content = response.content.decode()
     assert "Linked providers" in content
-    # we check for evidence of the code that toggles visibility on linked providers selector
-    assert "toggleLinkedProvidersHelptext" in content
+    # we check for evidence of the code that toggles visibility on upstream providers selector
+    assert "toggleUpstreamProvidersSection" in content
 
 
 
 @pytest.mark.django_db
-def test_request_detail_hides_linked_providers_when_flag_is_off(
+def test_request_detail_hides_upstream_providers_when_flag_is_off(
     user,
     client,
 ):
     """
-    Given: a ProviderRequest has linked_providers but the flag is OFF
+    Given: a ProviderRequest has upstream_providers but the flag is OFF
     When: the detail page is viewed
     Then: the Linked providers row is not visible
     """
@@ -2633,7 +2633,7 @@ def test_request_detail_hides_linked_providers_when_flag_is_off(
         status="PENDING_REVIEW",
         authorised_by_org=True,
     )
-    pr.linked_providers.add(upstream)
+    pr.upstream_providers.add(upstream)
 
     client.force_login(user)
     detail_url = urls.reverse("provider_request_detail", args=[pr.id])
@@ -2642,17 +2642,17 @@ def test_request_detail_hides_linked_providers_when_flag_is_off(
     assert "Linked providers" not in response.content.decode()
     # DB should still have the data
     pr.refresh_from_db()
-    assert pr.linked_providers.count() == 1
+    assert pr.upstream_providers.count() == 1
 
 
-@override_flag("linked_providers", active=True)
+@override_flag("upstream_providers", active=True)
 @pytest.mark.django_db
-def test_request_detail_shows_linked_providers_when_flag_is_on(
+def test_request_detail_shows_upstream_providers_when_flag_is_on(
     user,
     client,
 ):
     """
-    Given: a ProviderRequest has linked_providers and the flag is ON
+    Given: a ProviderRequest has upstream_providers and the flag is ON
     When: the detail page is viewed
     Then: the Linked providers row is visible
     """
@@ -2671,7 +2671,7 @@ def test_request_detail_shows_linked_providers_when_flag_is_on(
         status="PENDING_REVIEW",
         authorised_by_org=True,
     )
-    pr.linked_providers.add(upstream)
+    pr.upstream_providers.add(upstream)
 
     client.force_login(user)
     detail_url = urls.reverse("provider_request_detail", args=[pr.id])

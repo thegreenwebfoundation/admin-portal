@@ -136,11 +136,11 @@ class ProviderRequest(TimeStampedModel):
     newsletter_opt_in = models.BooleanField(
         default=False, verbose_name="Newsletter signup"
     )
-    linked_providers = models.ManyToManyField(
+    upstream_providers = models.ManyToManyField(
         Hostingprovider,
         blank=True,
-        related_name="provider_requests_linked",
-        verbose_name="Upstream linked providers",
+        related_name="downstream_provider_requests",
+        verbose_name="Upstream providers",
         help_text="Active verified providers this request relies on for its green status.",
     )
     # if this field is set, approving a request will update the provider instead of creating a new one
@@ -300,7 +300,7 @@ class ProviderRequest(TimeStampedModel):
             hp.is_listed = True
 
         hp.verification_bases.set(self.verification_bases.all())
-        hp.linked_providers.set(self.linked_providers.all())
+        hp.upstream_providers.set(self.upstream_providers.all())
 
         hp.save()
 

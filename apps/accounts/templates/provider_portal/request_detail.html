@@ -99,12 +99,12 @@
               {% endfor %}
             </td>
           </tr>
-          {% flag "linked_providers" %}
+          {% flag "upstream_providers" %}
           <tr>
             <td>Linked providers</td>
             <td>
-              {% if object.linked_providers.exists %}
-                {% for provider in object.linked_providers.all %}
+              {% if object.upstream_providers.exists %}
+                {% for provider in object.upstream_providers.all %}
                   {{ provider.name }}<br>
                 {% endfor %}
               {% else %}

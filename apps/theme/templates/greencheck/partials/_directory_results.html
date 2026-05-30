@@ -57,12 +57,12 @@
                         </ul>
                     {% endif %}
 
-                    {% flag "linked_providers" %}
-                    {% if obj.linked_providers.exists %}
+                    {% flag "upstream_providers" %}
+                    {% if obj.upstream_providers.exists %}
                         <div class="my-4">
                             <p class="text-sm text-neutral-600 mb-1">Relies on:</p>
                             <ul class="pl-0">
-                                {% for upstream in obj.linked_providers.all %}
+                                {% for upstream in obj.upstream_providers.all %}
                                     <li class="service-label inline-block bg-neutral-200">{{ upstream.name }}</li>
                                 {% endfor %}
                             </ul>

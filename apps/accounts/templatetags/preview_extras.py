@@ -47,9 +47,9 @@ def render_as_verification_bases(value):
 
 
 @register.filter
-def render_as_linked_providers(value):
+def render_as_upstream_providers(value):
     """
-    Attempts to map linked provider IDs to provider names
+    Attempts to map upstream provider IDs to provider names
     based on a database query.
     """
     if not value:

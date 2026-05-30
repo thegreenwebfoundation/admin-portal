@@ -417,12 +417,12 @@ class TestHostingProviderAdmin:
             )
 
     @pytest.mark.django_db
-    def test_admin_change_page_shows_linked_providers_field(
+    def test_admin_change_page_shows_upstream_providers_field(
         self, db, client, greenweb_staff_user, hosting_provider_with_sample_user
     ):
         """
         Given an admin user, when they visit a hosting provider change page,
-        then the linked_providers field is visible in the form.
+        then the upstream_providers field is visible in the form.
         """
         client.force_login(greenweb_staff_user)
 
@@ -432,10 +432,10 @@ class TestHostingProviderAdmin:
         )
         resp = client.get(admin_url)
         assert resp.status_code == 200
-        assert "linked_providers" in resp.rendered_content
+        assert "upstream_providers" in resp.rendered_content
 
     @pytest.mark.django_db
-    def test_admin_can_set_linked_providers(
+    def test_admin_can_set_upstream_providers(
         self, db, client, greenweb_staff_user, hosting_provider_with_sample_user
     ):
         """
@@ -491,7 +491,7 @@ class TestHostingProviderAdmin:
                 "description": hosting_provider_with_sample_user.description or "",
                 "country": str(hosting_provider_with_sample_user.country),
                 "model": hosting_provider_with_sample_user.model,
-                "linked_providers": [str(upstream.id)],
+                "upstream_providers": [str(upstream.id)],
                 "_save": "Save",
             }
         )
@@ -512,15 +512,15 @@ class TestHostingProviderAdmin:
         assert resp.redirect_chain[0][1] == 302
 
         hosting_provider_with_sample_user.refresh_from_db()
-        assert hosting_provider_with_sample_user.linked_providers.count() == 1
-        assert upstream in hosting_provider_with_sample_user.linked_providers.all()
+        assert hosting_provider_with_sample_user.upstream_providers.count() == 1
+        assert upstream in hosting_provider_with_sample_user.upstream_providers.all()
 
     @pytest.mark.django_db
-    def test_admin_shows_linked_by_providers(self, db, client, greenweb_staff_user):
+    def test_admin_shows_downstream_providers(self, db, client, greenweb_staff_user):
         """
         Given an upstream provider that other providers rely on,
         when an admin views its change page,
-        then the linked_by_providers field lists the downstream providers.
+        then the downstream_providers field lists the downstream providers.
         """
         upstream = ac_models.Hostingprovider.objects.create(
             name="Upstream Green",
@@ -536,7 +536,7 @@ class TestHostingProviderAdmin:
             is_listed=True,
             website="https://downstream.example.com",
         )
-        downstream.linked_providers.add(upstream)
+        downstream.upstream_providers.add(upstream)
 
         client.force_login(greenweb_staff_user)
 
@@ -548,15 +548,15 @@ class TestHostingProviderAdmin:
         assert resp.status_code == 200
         assert downstream.name in resp.rendered_content
         assert "Upstream / downstream providers" in resp.rendered_content
-        assert "downstream_providers" in resp.rendered_content
+        assert "display_downstream_providers" in resp.rendered_content
 
     @pytest.mark.django_db
-    def test_provider_request_admin_shows_linked_providers(
+    def test_provider_request_admin_shows_upstream_providers(
         self, db, client, greenweb_staff_user
     ):
         """
         Given an admin user, when they view a provider request in admin,
-        then the linked_providers field is visible as a readonly field.
+        then the upstream_providers field is visible as a readonly field.
         """
         upstream = ac_models.Hostingprovider.objects.create(
             name="Upstream Green",
@@ -566,7 +566,7 @@ class TestHostingProviderAdmin:
             website="https://upstream.example.com",
         )
         pr = ProviderRequestFactory.create()
-        pr.linked_providers.set([upstream])
+        pr.upstream_providers.set([upstream])
 
         client.force_login(greenweb_staff_user)
 

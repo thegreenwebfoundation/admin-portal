@@ -32,7 +32,7 @@ class HostingAdminForm(forms.ModelForm):
         widgets = {
             "services": LabelWidget(model=Service),
             "verification_bases": LabelWidget(model=VerificationBasis),
-            "linked_providers": autocomplete.ModelSelect2Multiple(
+            "upstream_providers": autocomplete.ModelSelect2Multiple(
                 url="provider-autocomplete",
                 attrs={"data-placeholder": "Search for a provider..."},
             ),
