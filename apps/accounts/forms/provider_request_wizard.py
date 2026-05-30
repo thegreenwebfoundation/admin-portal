@@ -162,9 +162,9 @@ class BasisForVerificationForm(forms.ModelForm):
     upstream_providers = forms.ModelMultipleChoiceField(
         queryset=Hostingprovider.objects.filter(archived=False, is_listed=True),
         required=False,
-        label="Which existing verified provider(s) do you rely on as the basis the claim for using green energy?",
+        label="Which existing verified provider(s) do you rely on as the basis for the claim of using green energy?",
         help_text=mark_safe(
-            "[TODO: INSERT GUIDANCE ABOUT GREEN PROVIDER BEING VISIBLE] "
+            "If your supplier(s) are already verified with us, you can use their status to demonstrate your services are running on green energy. "
             "This relationship may be publicly displayed and shared by the Green Web Foundation "
             "through our online platforms and tools."
         ),
