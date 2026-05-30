@@ -13,6 +13,7 @@ from apps.greencheck.importers.importer_csv import CSVImporter
 def test_csv_path() -> str:
     csv_path = (
         pathlib.Path(settings.ROOT)
+        / "src"
         / "apps"
         / "greencheck"
         / "fixtures"
