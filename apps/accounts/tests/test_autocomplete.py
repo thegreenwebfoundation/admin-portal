@@ -54,25 +54,6 @@ class TestLinkedProviderAutocompleteView:
         results = response.json()["results"]
         assert all("Unlisted" not in r["text"] for r in results)
 
-    def test_results_filtered_by_country_when_forwarded(self, client, sample_hoster_user, hosting_provider_factory):
-        """Given a country is forwarded, only providers in that country are returned."""
-        uk_provider = hosting_provider_factory.create(
-            name="UK Provider", country="GB", archived=False, is_listed=True
-        )
-        us_provider = hosting_provider_factory.create(
-            name="US Provider", country="US", archived=False, is_listed=True
-        )
-
-        url = reverse("linked-provider-autocomplete")
-        client.force_login(sample_hoster_user)
-        response = client.get(url, {"forward": '{"country": "GB"}'})
-
-        assert response.status_code == 200
-        results = response.json()["results"]
-        texts = [r["text"] for r in results]
-        assert "UK Provider" in texts
-        assert "US Provider" not in texts
-
     def test_all_countries_returned_when_no_country_forwarded(self, client, sample_hoster_user, hosting_provider_factory):
         """Given no country is forwarded, providers from all countries are returned."""
         uk_provider = hosting_provider_factory.create(

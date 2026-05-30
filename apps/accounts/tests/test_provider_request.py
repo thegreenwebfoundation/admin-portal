@@ -148,7 +148,6 @@ def wizard_form_verification_bases_with_linked_provider_data():
         "provider_request_wizard_view-current_step": "3",
         "3-verification_bases": bases_sample,
         "3-upstream_providers": [str(upstream.id)],
-        "3-country": "GB",
     }
 
 @pytest.fixture()
@@ -2489,56 +2488,6 @@ def test_wizard_submission_without_upstream_providers(
     assert pr_from_db.upstream_providers.count() == 0
 
 
-@override_flag("upstream_providers", active=True)
-@pytest.mark.django_db
-def test_wizard_country_injected_into_basis_step(
-    user,
-    client,
-    wizard_form_org_details_data,
-    wizard_form_org_location_data,
-    wizard_form_services_data,
-    wizard_form_verification_bases_data,
-    wizard_form_evidence_data,
-    wizard_form_network_data,
-    wizard_form_consent,
-    wizard_form_preview,
-):
-    """
-    Given: a user proceeds through the wizard past the location step
-    When: the basis-for-verification step is rendered
-    Then: the hidden country field is populated from the first location
-    """
-    # set a known country in location data
-    location_data = {
-        **wizard_form_org_location_data,
-        "locations__1-0-country": "NL",
-        "locations__1-0-city": "Amsterdam",
-        "locations__1-1-country": "NL",
-        "locations__1-1-city": "Rotterdam",
-    }
-
-    client.force_login(user)
-
-    # step 0: org details
-    response = client.post(urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True)
-    assert response.status_code == 200
-
-    # step 1: locations
-    response = client.post(urls.reverse("provider_registration"), location_data, follow=True)
-    assert response.status_code == 200
-
-    # step 2: services
-    response = client.post(urls.reverse("provider_registration"), wizard_form_services_data, follow=True)
-    assert response.status_code == 200
-
-    # step 3: basis for verification — inspect the hidden country field
-    assert response.context_data["wizard"]["steps"].current == "3"
-    form = response.context_data["form"]
-    assert "country" in form.fields
-    # the initial value should reflect the first location's country
-    assert form.initial.get("country") == "NL"
-
-
 # ---------- upstream_providers feature-flag tests ----------
 
 @pytest.mark.django_db
@@ -2600,12 +2549,55 @@ def test_wizard_basis_step_shows_upstream_providers_when_flag_is_on(
     assert response.context_data["wizard"]["steps"].current == "3"
     form = response.context_data["form"]
     assert "upstream_providers" in form.fields
-    assert "country" in form.fields
     content = response.content.decode()
     assert "Linked providers" in content
     # we check for evidence of the code that toggles visibility on upstream providers selector
     assert "toggleUpstreamProvidersSection" in content
 
+
+@override_flag("upstream_providers", active=True)
+@pytest.mark.django_db
+def test_wizard_preview_shows_upstream_providers(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_verification_bases_with_linked_provider_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+):
+    """
+    Given: a user selects upstream providers during the wizard
+    When: the preview step is rendered
+    Then: the upstream provider names are visible on the preview page
+    """
+    client.force_login(user)
+
+    form_data = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        wizard_form_verification_bases_with_linked_provider_data,
+        wizard_form_evidence_data,
+        wizard_form_network_data,
+        wizard_form_consent,
+    ]
+
+    response = None
+    for data in form_data:
+        response = client.post(urls.reverse("provider_registration"), data, follow=True)
+        assert response.status_code == 200
+
+    # then: PREVIEW step is rendered
+    preview_forms = response.context_data["preview_forms"]
+    basis_form = preview_forms["3"]
+    assert "upstream_providers" in basis_form.fields
+
+    # the upstream provider name should appear in the rendered content
+    content = response.content.decode()
+    assert "Upstream Green Provider" in content
 
 
 @pytest.mark.django_db
