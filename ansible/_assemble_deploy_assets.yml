@@ -18,7 +18,7 @@
     eval "`fnm env`"
     npx rollup --config
   args:
-    chdir: "{{ project_root }}/current/apps/theme/static_src"
+    chdir: "{{ project_root }}/current/src/apps/theme/static_src"
     executable: "/usr/bin/bash"
   changed_when: false
 

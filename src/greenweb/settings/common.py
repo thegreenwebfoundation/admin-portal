@@ -17,7 +17,9 @@ import structlog
 from dramatiq import middleware as dramatiq_middleware
 
 # Environ
-ROOT = environ.Path(__file__) - 3
+# ROOT is the project root (where manage.py lives)
+# __file__ is at src/greenweb/settings/common.py, so we go up 4 levels to reach repo root
+ROOT = environ.Path(__file__) - 4
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, os.getenv("SECRET_KEY")),

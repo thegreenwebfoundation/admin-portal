@@ -27,7 +27,7 @@ WORKDIR /app
 # run `source /app/.venv/bin/activate`, and adding python path
 # makes it easier to run manage.py commands
 ENV PATH=$VIRTUAL_ENV/bin:$PATH \
-    PYTHONPATH=/app
+    PYTHONPATH=/app/src
 
 # Default port exposed by this container
 EXPOSE 9000
@@ -40,7 +40,7 @@ USER deploy
 RUN python -m venv $VIRTUAL_ENV
 
 # Add our python libraries for managing dependencies
-uv 0.1.43 is triggering bad certificate errors, so we pin to 0.1.39
+# uv 0.1.43 is triggering bad certificate errors, so we pin to 0.1.39
 RUN python -m pip install uv==0.1.39 wheel --upgrade
 
 # Copy application code, with dockerignore filtering out the stuff we don't want
@@ -59,7 +59,7 @@ RUN python ./manage.py tailwind build
 # the static files in the build step. Investigate if this results 
 # in meaningful savings on the final image size
 WORKDIR /app
-RUN cd ./apps/theme/static_src/ && \
+RUN cd ./src/apps/theme/static_src/ && \
     npx rollup --config
 
 # Collect static files

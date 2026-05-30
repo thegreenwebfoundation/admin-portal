@@ -2,6 +2,10 @@
 import os
 import sys
 
+# Add src/ to path so imports work when running from repo root
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
+
 
 def main():
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "greenweb.settings.development")

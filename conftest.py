@@ -1,4 +1,9 @@
 import pathlib
+import sys
+
+# Ensure src/ is on path for pytest discovery
+SRC_DIR = pathlib.Path(__file__).parent / "src"
+sys.path.insert(0, str(SRC_DIR))
 
 import dramatiq
 import factory
@@ -184,7 +189,7 @@ def green_asn(hosting_provider):
 def csv_file():
     this_file = pathlib.Path(__file__)
     return this_file.parent.joinpath(
-        "apps", "greencheck", "fixtures", "test_dataset_conftest.csv"
+        "src", "apps", "greencheck", "fixtures", "test_dataset_conftest.csv"
     )
 
 
