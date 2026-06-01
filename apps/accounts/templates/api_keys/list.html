@@ -14,9 +14,17 @@
         </h1>
 
         <div class="prose mx-auto mt-8">
-          <p>Green Web API keys allow you to access access to Green Web data and services programatically in your own scripts and products.<br /><br /> You can create a maximum of {{user.api_key_limit}} keys for this account.</p>
+          <p>API keys allow you to access the Green Web Foundation’s data and services programatically in your own scripts and products.</p>
+
+          <p>Green Web Foundation APIs that currently require an API key for access are:</p>
+          <ul>
+            <li>
+            The <a href="https://carbon-txt-api.greenweb.org/api/docs" target="_blank">carbon.txt validator</a> API (<a href="https://developers.thegreenwebfoundation.org/api/carbon-txt/overview/" target="_blank">read docs</a>)
+            </li>
+          </ul>
+          <p>You can create a maximum of {{user.api_key_limit}} keys for this account.</p>
         </div>
-        </header>
+      </header>
     {% endblock %}
 
     <article>
