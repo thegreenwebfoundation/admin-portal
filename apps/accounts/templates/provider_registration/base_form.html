@@ -15,9 +15,6 @@
 {% block header_section %}
 {% endblock %}
 
-{% block footer_section %}
-{% endblock %}
-
 {% if form.is_multipart %}
     <form enctype="multipart/form-data" method="post" action="" class="gwf-form">
 {% else %}
@@ -35,6 +32,9 @@
     {{ wizard.form }}
 {% endif %}
 </table>
+
+{% block footer_section %}
+{% endblock %}
 
 <input class="btn" type="submit" value="{% trans "next" %}"/>
 
