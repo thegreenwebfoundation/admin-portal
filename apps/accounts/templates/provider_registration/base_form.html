@@ -33,6 +33,10 @@
 {% endif %}
 </table>
 
+<!-- child templates can override this to inject custom HTML content -->
+{% block footer_section %}
+{% endblock %}
+
 <input class="btn" type="submit" value="{% trans "next" %}"/>
 
 {% if wizard.steps.prev %}

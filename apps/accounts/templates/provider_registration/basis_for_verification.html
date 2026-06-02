@@ -4,21 +4,18 @@
 {% block header_section %}
 <section class="prose mt-10">
     <h1 class="mb-0">Basis for verification</h1>
+</section>
+{% endblock %}
 
+{% block footer_section %}
     {% flag "upstream_providers" %}
-    <div class="alert__warning mt-6" id="upstream-providers-disclosure">
-        <p class="font-bold">Linked providers</p>
-        <p>
-            If your supplier(s) are already verified with us, you can use their verified status to support a claim that your services
-            are run on green energy.
-        </p>
+    <div class="alert__warning mt-0" id="upstream-providers-disclosure">
         <p class="mb-0">
             This relationship may be publicly displayed and shared by the Green
-            Web Foundation through our online platforms and tools.
+            Web Foundation through our online platforms and tools. If you do not wish for these relationships to be disclosed, please select a different basis for verification.
         </p>
     </div>
     {% endflag %}
-</section>
 {% endblock %}
 
 {% block extra_js %}
