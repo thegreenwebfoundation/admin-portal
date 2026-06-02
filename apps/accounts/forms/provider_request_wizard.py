@@ -164,9 +164,8 @@ class BasisForVerificationForm(forms.ModelForm):
         required=False,
         label="Which existing verified provider(s) do you rely on as the basis for the claim of using green energy?",
         help_text=mark_safe(
-            "If your supplier(s) are already verified with us, you can use their status to demonstrate your services are running on green energy. "
-            "This relationship may be publicly displayed and shared by the Green Web Foundation "
-            "through our online platforms and tools."
+            "If your supplier(s) are already verified with us, you can use their status to demonstrate your services are running on green energy. To do so, select the supplier(s) you use in the input box below.<br/><br/>"
+            "On the next page, you should also share some evidence showing you have an active business relationship with the supplier(s) you have selected. This can be in the form of a recent invoice, contract, or similar documents. Documents can be shared privately, with sensitive information blacked out."
         ),
         widget=autocomplete.ModelSelect2Multiple(
             url="linked-provider-autocomplete",
