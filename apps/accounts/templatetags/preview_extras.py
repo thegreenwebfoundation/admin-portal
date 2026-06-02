@@ -59,7 +59,7 @@ def render_as_upstream_providers(value):
         # make sure name is safely included in the HTML
         list_items = format_html(
             "<ul>{}</ul>",
-            format_html_join(",", "<li>{}</li>", ((prov.name,) for prov in providers)),
+            format_html_join("", "<li>{}</li>", ((prov.name,) for prov in providers)),
         )
         return list_items
     return None
