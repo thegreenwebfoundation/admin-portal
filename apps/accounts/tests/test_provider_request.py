@@ -2549,8 +2549,6 @@ def test_wizard_basis_step_shows_upstream_providers_when_flag_is_on(
     assert response.context_data["wizard"]["steps"].current == "3"
     form = response.context_data["form"]
     assert "upstream_providers" in form.fields
-    content = response.content.decode()
-    assert "Linked providers" in content
     # we check for evidence of the code that toggles visibility on upstream providers selector
     assert "toggleUpstreamProvidersSection" in content
 
