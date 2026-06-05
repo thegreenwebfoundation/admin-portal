@@ -31,3 +31,19 @@ def test_explorer_staff_user_can_access(greenweb_staff_user, client):
     assert response.status_code == 200
     # we can't just rely on having a 200, as described before
     assert "not authorized to access this page" not in response.content.decode("utf8")
+
+
+@pytest.mark.django_db
+def test_explorer_anonymous_user_does_not_500(client):
+    """
+    Given an anonymous user, when they access the explorer index,
+    then they are presented with the admin login page and no 500 error is raised.
+    The EXPLORER_PERMISSION_VIEW lambda calls request.user.is_admin, which
+    would previously raise AttributeError on AnonymousUser.
+    """
+    explorer_url = urls.reverse("explorer_index")
+    response = client.get(explorer_url)
+
+    content = response.content.decode("utf8")
+    assert response.status_code == 200
+    assert "Log in | Django site admin" in content

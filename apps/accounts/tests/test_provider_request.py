@@ -2673,3 +2673,19 @@ def test_request_detail_shows_upstream_providers_when_flag_is_on(
     content = response.content.decode()
     assert "Linked providers" in content
     assert "Upstream Provider" in content
+
+
+@pytest.mark.django_db
+def test_provider_edit_anonymous_user_does_not_500(client, hosting_provider_factory):
+    """
+    Given an anonymous user and an existing hosting provider,
+    when they access the provider edit URL,
+    then they are redirected to the login page and no 500 error is raised.
+    The dispatch method accesses request.user.is_admin,
+    which would previously raise AttributeError on AnonymousUser.
+    """
+    provider = hosting_provider_factory.create()
+    edit_url = urls.reverse("provider_edit", args=[provider.id])
+    response = client.get(edit_url)
+
+    assert response.status_code == 302

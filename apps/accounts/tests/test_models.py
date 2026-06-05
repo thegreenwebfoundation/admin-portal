@@ -17,6 +17,7 @@ from storages.backends.s3 import S3Storage
 #  or form level.
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 
 User = get_user_model()
 
@@ -435,6 +436,17 @@ class TestHostingProviderEvidence:
         object_storage_bucket_mock.assert_called_with(bucket_name)
         bucket.Object.assert_called_with(evidence.attachment.name)
         bucket.Object.return_value.Acl.return_value.put.assert_called_with(ACL="private")
+
+
+class TestAnonymousUser:
+    def test_anonymous_user_is_admin_returns_false(self):
+        """
+        Given an AnonymousUser instance,
+        when accessing the is_admin property,
+        then it returns False without raising an AttributeError.
+        """
+        anon = AnonymousUser()
+        assert anon.is_admin is False
 
 
 class TestUser:

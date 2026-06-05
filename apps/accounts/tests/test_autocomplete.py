@@ -101,3 +101,33 @@ class TestLinkedProviderAutocompleteView:
         texts = [r["text"] for r in results]
         assert "Green Web" in texts
         assert "Grey Web" not in texts
+
+
+@pytest.mark.django_db
+class TestProviderAutocompleteView:
+    def test_unauthenticated_user_gets_empty_results(self, client):
+        """
+        Given an unauthenticated user,
+        when they hit the provider autocomplete endpoint,
+        then they get an empty result set and no 500 error is raised.
+        """
+        url = reverse("provider-autocomplete")
+        response = client.get(url)
+
+        assert response.status_code == 200
+        assert response.json()["results"] == []
+
+
+@pytest.mark.django_db
+class TestLabelAutocompleteView:
+    def test_unauthenticated_user_gets_empty_results(self, client):
+        """
+        Given an unauthenticated user,
+        when they hit the label autocomplete endpoint,
+        then they get an empty result set and no 500 error is raised.
+        """
+        url = reverse("label-autocomplete")
+        response = client.get(url)
+
+        assert response.status_code == 200
+        assert response.json()["results"] == []
