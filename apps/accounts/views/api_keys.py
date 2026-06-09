@@ -8,7 +8,7 @@ from django.views.generic import FormView, TemplateView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..forms import APIAccessForm, APIKeyForm, APIRevokeForm
+from ..forms import APIKeyForm, APIRevokeForm
 from ..models import APIKey
 from ..permissions import HasGWFSharedSecret
 
@@ -30,6 +30,7 @@ class APIKeyIntrospectionView(APIView):
                 "username": key.user.username,
                 "expiry_date": key.expiry_date,
                 "prefix": key.prefix,
+                "service": key.service.key,
                 "privilege_level": key.privilege_level.name if key.privilege_level else None
             })
         except APIKey.DoesNotExist:
@@ -37,21 +38,6 @@ class APIKeyIntrospectionView(APIView):
 
 class APIKeyListView(LoginRequiredMixin, TemplateView):
     template_name = "api_keys/list.html"
-
-class APIKeyAccessView(LoginRequiredMixin, FormView):
-    """
-    Displays the interstitial form to apply for API access.
-    This is displayed once per user, before creating an API key.
-    """
-    template_name = "api_keys/api_access.html"
-    form_class = APIAccessForm
-
-    def get_success_url(self):
-       return reverse("create-api-key")
-
-    def form_valid(self, form):
-        form.update_user(self.request.user)
-        return super().form_valid(form)
 
 
 class APIKeyCreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):

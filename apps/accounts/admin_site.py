@@ -208,6 +208,10 @@ class GreenWebAdmin(AdminSite):
                 (model for model in accounts_app["models"] if model["object_name"] == "APIKeyPrivilegeLevel"),
                 None
         )
+        api_service = next(
+                (model for model in accounts_app["models"] if model["object_name"] == "APIService"),
+                None
+        )
 
         api_key_models = []
 
@@ -218,6 +222,10 @@ class GreenWebAdmin(AdminSite):
         if api_key_privilege_level:
             accounts_app["models"].remove(api_key_privilege_level)
             api_key_models.append(api_key_privilege_level)
+
+        if api_service:
+            accounts_app["models"].remove(api_service)
+            api_key_models.append(api_service)
 
         app_list.insert(2, {
             "name": "API keys",

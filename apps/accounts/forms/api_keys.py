@@ -1,15 +1,22 @@
 from django import forms
 from django.utils.safestring import mark_safe
 
-from ..models import APIKey
+from ..models import APIKey, APIService
 
 class FieldsetRadioSelect(forms.RadioSelect):
     def render(self, name, value, attrs=None, renderer=None):
         html = super().render(name, value, attrs, renderer)
         return mark_safe(f'<fieldset class="mt-2">{html}</fieldset>')
 
-class APIAccessForm(forms.Form):
-    api_access_motivation = forms.CharField(
+class APIKeyForm(forms.Form):
+
+    service = forms.ModelChoiceField(
+        queryset=APIService.objects.all(),
+        required=True,
+        label="Service",
+    )
+
+    motivation = forms.CharField(
         widget=forms.Textarea(), required=True,
         label="What is your intended use case?",
         help_text="It's very useful to us to understand how and why people are using our data and services. Please tell us a little about how you plan to use our APIs."
@@ -23,18 +30,6 @@ class APIAccessForm(forms.Form):
         help_text="We log user activity with authenticated APIs, to better understand how our service is used, and to monitor usage levels - we need your explicit informed consent for this."
     )
 
-    def clean_privacy_policy_acceptance(self):
-        acceptance = self.cleaned_data.get("privacy_policy_acceptance")
-        if acceptance != "Yes":
-            raise forms.ValidationError("You must agree to the privacy policy in order to use the API.")
-        return acceptance
-
-    def update_user(self, user):
-        user.api_access_motivation = self.cleaned_data["api_access_motivation"]
-        user.save()
-
-
-class APIKeyForm(forms.Form):
     expiry_date = forms.DateField(
         widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         required=False,
@@ -47,8 +42,26 @@ class APIKeyForm(forms.Form):
         help_text="An optional note to help you remember who this API key is used by, and what for."
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        services = APIService.objects.all()
+        if services.count() < 2:
+            self.fields['service'].widget = forms.HiddenInput()
+            self.fields['service'].initial = services.first()
+
+
+    def clean_privacy_policy_acceptance(self):
+        acceptance = self.cleaned_data.get("privacy_policy_acceptance")
+        if acceptance != "Yes":
+            raise forms.ValidationError("You must agree to the privacy policy in order to use the API.")
+        return acceptance
+
+
+
     def create_key(self, user):
         return APIKey.objects.create_key_for_user(user,
+            service = self.cleaned_data["service"],
+            motivation = self.cleaned_data["motivation"],
             note = self.cleaned_data["note"],
             expiry_date = self.cleaned_data["expiry_date"],
         )

@@ -1,8 +1,7 @@
 from datetime import timedelta
 from django.urls import reverse
 from django.utils import timezone
-from apps.accounts.models import APIKey
-from apps.accounts import urls
+from apps.accounts.models import APIKey, APIService
 from apps.greencheck import factories as gc_factories
 
 import pytest
@@ -19,7 +18,8 @@ def test_request_without_shared_secret(client, mocker):
     mock_settings = mocker.patch("apps.accounts.permissions.settings")
     mock_settings.GWF_SHARED_SECRET = "abc123"
     user = gc_factories.UserFactory.create()
-    (_key, token) = APIKey.objects.create_key_for_user(user)
+    service = APIService.objects.create(name="Test service", key="test_service")
+    (_key, token) = APIKey.objects.create_key_for_user(user, service, "motivation statement")
     body = { "token": token }
     headers = { }
 
@@ -40,7 +40,8 @@ def test_request_with_incorrect_shared_secret(client, mocker):
     mock_settings = mocker.patch("apps.accounts.permissions.settings")
     mock_settings.GWF_SHARED_SECRET = "abc123"
     user = gc_factories.UserFactory.create()
-    (_key, token) = APIKey.objects.create_key_for_user(user)
+    service = APIService.objects.create(name="Test service", key="test_service")
+    (_key, token) = APIKey.objects.create_key_for_user(user, service, "motivation statement")
     body = { "token": token }
     headers = { "X-GWF-Shared-Secret": "def456" }
 
@@ -64,7 +65,8 @@ def test_request_for_valid_api_key_with_correct_shared_secret(client, mocker):
     mock_settings = mocker.patch("apps.accounts.permissions.settings")
     mock_settings.GWF_SHARED_SECRET = "abc123"
     user = gc_factories.UserFactory.create()
-    (key, token) = APIKey.objects.create_key_for_user(user)
+    service = APIService.objects.create(name="Test service", key="test_service")
+    (key, token) = APIKey.objects.create_key_for_user(user, service, "motivation statement")
     body = { "token": token }
     headers = { "X-GWF-Shared-Secret": mock_settings.GWF_SHARED_SECRET }
 
@@ -79,6 +81,7 @@ def test_request_for_valid_api_key_with_correct_shared_secret(client, mocker):
     assert body["username"] == user.username
     assert body["expiry_date"] == key.expiry_date
     assert body["prefix"] == key.prefix
+    assert body["service"] == service.key
 
 @pytest.mark.django_db
 def test_request_for_wrong_api_key_with_correct_shared_secret(client, mocker):
@@ -91,7 +94,8 @@ def test_request_for_wrong_api_key_with_correct_shared_secret(client, mocker):
     mock_settings = mocker.patch("apps.accounts.permissions.settings")
     mock_settings.GWF_SHARED_SECRET = "abc123"
     user = gc_factories.UserFactory.create()
-    (_key, _token) = APIKey.objects.create_key_for_user(user)
+    service = APIService.objects.create(name="Test service", key="test_service")
+    (_key, token) = APIKey.objects.create_key_for_user(user, service, "motivation statement")
     body = { "token": "cde3456" }
     headers = { "X-GWF-Shared-Secret": mock_settings.GWF_SHARED_SECRET }
 
@@ -118,7 +122,11 @@ def test_request_for_expired_api_key_with_correct_shared_secret(client, mocker):
     mock_settings = mocker.patch("apps.accounts.permissions.settings")
     mock_settings.GWF_SHARED_SECRET = "abc123"
     user = gc_factories.UserFactory.create()
-    (_key, token) = APIKey.objects.create_key_for_user(user, expiry_date = timezone.now() - timedelta(days=1))
+    service = APIService.objects.create(name="Test service", key="test_service")
+    (_key, token) = APIKey.objects.create_key_for_user(
+            user, service, "motivation statement",
+            expiry_date = timezone.now() - timedelta(days=1)
+    )
     body = { "token": token }
     headers = { "X-GWF-Shared-Secret": mock_settings.GWF_SHARED_SECRET }
 
@@ -146,7 +154,8 @@ def test_request_for_revoked_api_key_with_correct_shared_secret(client, mocker):
     mock_settings = mocker.patch("apps.accounts.permissions.settings")
     mock_settings.GWF_SHARED_SECRET = "abc123"
     user = gc_factories.UserFactory.create()
-    (key, token) = APIKey.objects.create_key_for_user(user)
+    service = APIService.objects.create(name="Test service", key="test_service")
+    (key, token) = APIKey.objects.create_key_for_user(user, service, "motivation statement")
     key.revoked = True
     key.save()
     body = { "token": token }
@@ -175,7 +184,8 @@ def test_request_for_active_api_key_with_correct_shared_secret_for_banned_juser(
     mock_settings = mocker.patch("apps.accounts.permissions.settings")
     mock_settings.GWF_SHARED_SECRET = "abc123"
     user = gc_factories.UserFactory.create()
-    (_key, token) = APIKey.objects.create_key_for_user(user)
+    service = APIService.objects.create(name="Test service", key="test_service")
+    (_key, token) = APIKey.objects.create_key_for_user(user, service, "motivation statement")
     user.api_access_banned = True
     user.save()
     body = { "token": token }

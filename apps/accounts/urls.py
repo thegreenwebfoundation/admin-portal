@@ -16,7 +16,6 @@ from apps.accounts.views import (
     LinkedProviderAutocompleteView,
     ProviderCarbonTxtView,
     ProviderCarbonTxtBuilderView,
-    APIKeyAccessView,
     APIKeyCreateView,
     APIKeyIntrospectionView,
     APIKeyListView,
@@ -183,11 +182,6 @@ urlpatterns = [
         "api_keys/",
         APIKeyListView.as_view(),
         name="list-api-keys"
-    ),
-    path(
-        "api_access/",
-        APIKeyAccessView.as_view(),
-        name="api-access"
     ),
     path(
         "api_keys/new/",

@@ -2,7 +2,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic.base import TemplateView
 
-from .api_keys import APIKeyAccessView, APIKeyCreateView, APIKeyIntrospectionView, APIKeyListView, APIKeyRevokeView
+from .api_keys import APIKeyCreateView, APIKeyIntrospectionView, APIKeyListView, APIKeyRevokeView
 from .user import UserRegistrationView
 from .user import UserActivationView
 from .provider.autocomplete import (
