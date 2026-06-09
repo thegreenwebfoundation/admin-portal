@@ -32,22 +32,25 @@
         {% if user.api_keys.get_usable_keys.all %}
           <ul class="list-none p-0 mb-8">
             {% for key in user.api_keys.get_usable_keys.all %}
-            <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 px-5 border-neutral border-t last-of-type:border-b">
-              <div class="columns-2  mt-0">
+            <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 border-green border-t-2 last-of-type:border-b-2">
+              <div class="columns-2  mt-0 mb-2">
                 <div>
                   <strong>Key:</strong>  <code class="font-normal">{{key.displayable_prefix}}...</code>
                 </div>
                 <div>
-                  <strong>Expiry date: </strong>{{key.expiry_date | date:"d F Y" | default:"Never" }}
+                  <strong>Service:</strong>  {{key.service.name}}
                 </div>
               </div>
-              <div class="columns-2 mt-1 mb-0">
+              <div class="columns-2 mt-1 mb-2">
+                <div>
+                  <strong>Expiry date: </strong>{{key.expiry_date | date:"d F Y" | default:"Never" }}
+                </div>
                 <div>
                   <a href="{% url 'revoke-api-key' key.prefix  %}">[revoke]</a>
                 </div>
-                <div>
-                  <strong>Note:</strong> {{key.note | default:"None"}}
-                </div>
+              </div>
+              <div class="mb-0">
+                <strong>Note:</strong> {{key.note | default:"None"}}
               </div>
             </li>
             {% endfor %}
