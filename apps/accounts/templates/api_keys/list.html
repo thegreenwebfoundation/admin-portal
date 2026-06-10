@@ -5,7 +5,7 @@
     {% block header_section %}
       <header class="">
         {% block back_link %}
-          <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt; Back to provider portal</a></p>
+          <p class="mb-6 text-sm text-green"><a href="{% url 'dashboard' %}" class="text-neutral-500">&lt; Back to the Green Web portal</a></p>
         {% endblock back_link %}
 
 
@@ -35,10 +35,10 @@
             <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 border-green border-t-2 last-of-type:border-b-2">
               <div class="columns-2  mt-0 mb-2">
                 <div>
-                  <strong>Key:</strong>  <code class="font-normal">{{key.displayable_prefix}}...</code>
+                  <strong>Key:  </strong>  <code class="font-normal">{{key.displayable_prefix}}...</code>
                 </div>
                 <div>
-                  <strong>Service:</strong>  {{key.service.name}}
+                  <strong>Service: </strong>  {{key.service.name}}
                 </div>
               </div>
               <div class="columns-2 mt-1 mb-2">
@@ -50,7 +50,7 @@
                 </div>
               </div>
               <div class="mb-0">
-                <strong>Note:</strong> {{key.note | default:"None"}}
+                <strong>Note: </strong> {{key.note | default:"None"}}
               </div>
             </li>
             {% endfor %}
@@ -66,6 +66,5 @@
         {% endif %}
       </div>
     </article>
-
 </div>
 {% endblock %}
