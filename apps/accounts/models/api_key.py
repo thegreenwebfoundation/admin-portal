@@ -40,6 +40,8 @@ class APIKeyPrivilegeLevel(models.Model):
 class APIService(models.Model):
     name = models.CharField(max_length=255, null=False, blank=False)
     key = models.CharField(max_length=255, null=False, blank=False)
+    documentation_url = models.URLField(null=False, blank=False)
+    api_url = models.URLField(null=False, blank=False)
 
     def __str__(self):
         return f"{self.name} ({self.key})"

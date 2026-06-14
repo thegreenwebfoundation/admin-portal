@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..forms import APIKeyForm, APIRevokeForm
-from ..models import APIKey
+from ..models import APIKey, APIService
 from ..permissions import HasGWFSharedSecret
 
 class APIKeyIntrospectionView(APIView):
@@ -39,6 +39,11 @@ class APIKeyIntrospectionView(APIView):
 class APIKeyListView(LoginRequiredMixin, TemplateView):
     template_name = "api_keys/list.html"
 
+    def get_context_data(self, *args, **kwargs):
+        return {
+            **super().get_context_data(*args, **kwargs),
+            **{"services": APIService.objects.all() }
+        }
 
 class APIKeyCreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
     """

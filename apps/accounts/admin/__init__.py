@@ -28,7 +28,7 @@ class APIKeyPrivilegeLevelAdmin(admin.ModelAdmin):
 
 class APIServiceAdmin(admin.ModelAdmin):
     model=APIService
-    list_display=["name", "key"]
+    list_display=["name", "key", "api_url", "documentation_url"]
 
 class APIKeyModelAdmin(BaseAPIKeyModelAdmin):
     list_display = ["user"] + [f for f in BaseAPIKeyModelAdmin.list_display if f != "name"]

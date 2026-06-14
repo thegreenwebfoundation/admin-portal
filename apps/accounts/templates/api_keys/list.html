@@ -18,9 +18,11 @@
 
           <p>Green Web Foundation APIs that currently require an API key for access are:</p>
           <ul>
-            <li>
-            The <a href="https://carbon-txt-api.greenweb.org/api/docs" target="_blank">carbon.txt validator</a> API (<a href="https://developers.thegreenwebfoundation.org/api/carbon-txt/overview/" target="_blank">read docs</a>)
-            </li>
+            {% for service in services %}
+              <li>
+                <a href="{{service.api_url}}" target="_blank">{{service.name}}</a> (<a href="{{service.documentation_url}}" target="_blank">read documentation</a>)
+              </li>
+            {% endfor %}
           </ul>
 
         {% if user.api_access_banned %}
@@ -44,7 +46,7 @@
                   <strong>Key:  </strong>  <code class="font-normal">{{key.displayable_prefix}}...</code>
                 </div>
                 <div>
-                  <strong>Service: </strong>  {{key.service.name}}
+                  <strong>Service: </strong> {{key.service.name}}
                 </div>
               </div>
               <div class="columns-2 mt-1 mb-2">
@@ -52,7 +54,9 @@
                   <strong>Expiry date: </strong>{{key.expiry_date | date:"d F Y" | default:"Never" }}
                 </div>
                 <div>
-                  <a href="{% url 'revoke-api-key' key.prefix  %}">[revoke]</a>
+                    [<a href="{{key.service.api_url}}" target="_blank">endpoint</a>]
+                    [<a href="{{key.service.documentation_url}}" target="_blank">docs</a>]
+                    [<a href="{% url 'revoke-api-key' key.prefix  %}">revoke</a>]
                 </div>
               </div>
               <div class="mb-0">
