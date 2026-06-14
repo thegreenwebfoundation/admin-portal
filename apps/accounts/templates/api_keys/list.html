@@ -22,11 +22,17 @@
             The <a href="https://carbon-txt-api.greenweb.org/api/docs" target="_blank">carbon.txt validator</a> API (<a href="https://developers.thegreenwebfoundation.org/api/carbon-txt/overview/" target="_blank">read docs</a>)
             </li>
           </ul>
+
+        {% if user.api_access_banned %}
+          <p>You do not have access to the Green Web API. If you think this is a mistake, please <a href="mailto:support@greenweb.org?subject=Request%20to%20raise%20API%20access%20query%20for%20account%20{{user.username|urlencode}}">get in touch with our support team</a>!</p>
+        {% else %}
           <p>You can create a maximum of {{user.api_key_limit}} keys for this account.</p>
+        {% endif %}
         </div>
       </header>
     {% endblock %}
 
+{% if not user.api_access_banned %}
     <article>
       <div class="prose mx-auto mt-8">
         {% if user.api_keys.get_usable_keys.all %}
@@ -66,5 +72,6 @@
         {% endif %}
       </div>
     </article>
+  {% endif %}
 </div>
 {% endblock %}
