@@ -2,21 +2,28 @@
 
 {% load i18n static humanize widget_tweaks tailwind_filters waffle_tags %}
 {% block content %}
+<div class="contaner mx-auto prose">
+    {% block header_section %}
+      <header class="">
+        {% block back_link %}
+          <p class="mb-6 text-sm text-green"><a href="{% url 'dashboard' %}" class="text-neutral-500">&lt; Back to the Green Web portal</a></p>
+        {% endblock back_link %}
 
+
+        <h1 class="text-center mb-1 mt-6 pt-3">
+          Your provider listings
+        </h1>
+
+      </header>
+    {% endblock %}
 <article>
     <div class="prose mx-auto mt-8">
-      	<h1 class="text-center leading-10">
-			<span class="text-xl">Welcome to the</span><br>
-			Green Web portal</h1>
-
 			<div class="alert__warning mt-3 mb-3" id="upstream-providers-disclosure">
         <p>
             Our criteria for verifying hosting providers will be updated on <strong>October 1, 2026</strong>. The updated criteria will apply to all new verification and reverification requests after that date.
 			</p>
 <p class="mb-0">Learn more <a href="https://www.thegreenwebfoundation.org/news/request-for-comment-updates-to-our-verification-criteria-for-data-centers-and-hosting-providers/">about the updates</a> in our blog post. View the <a href="https://www.thegreenwebfoundation.org/tools/green-web-dataset/get-verified/disclosures/">updated criteria in full</a> on our website.</p>
     </div>
-
-		<h2 class="border-0 my-3 pb-0">Providers overview</h2>
 
     {% if object_list.requests %}
 		  <h3 class="text-xl pt-8" id="pending">Pending verification</h3>
@@ -83,44 +90,35 @@
 
 		{% endif %}
 
-		{% flag "hide_old_admin" %}
-		<h3 class="text-xl pt-10">Other actions</h3>
+  {% flag "api_keys" %}
+      <div class="mt-16">
+        {% include "provider_portal/partials/how_do_i_get_verified_block.html" %}
+      </div>
+  {% else %}
+    {% flag "hide_old_admin" %}
+      <h3 class="text-xl pt-10">Other actions</h3>
 
-		<p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:password_change' %}" class="text-neutral-500">Update your password</a></p>
+      <p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:password_change' %}" class="text-neutral-500">Update your password</a></p>
 
-		<p class="text-neutral-500 mt-8"><a href="{% url 'green_urls_redirect' %}" class="text-neutral-500">See our list of downloadable green domain dataset snapshots</a></p>
+      <p class="text-neutral-500 mt-8"><a href="{% url 'green_urls_redirect' %}" class="text-neutral-500">See our list of downloadable green domain dataset snapshots</a></p>
 
-		<p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:check_url' %}" class="text-neutral-500">Try an extended green check for troubleshooting with support staff</a></p>
+      <p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:check_url' %}" class="text-neutral-500">Try an extended green check for troubleshooting with support staff</a></p>
 
-		{% else %}
+      {% else %}
 
-		<p class="text-neutral-500 mt-8">Looking for the <a href="{% url 'greenweb_admin:index' %}" class="text-neutral-500">old style admin screens</a>?</p>
+      <p class="text-neutral-500 mt-8">Looking for the <a href="{% url 'greenweb_admin:index' %}" class="text-neutral-500">old style admin screens</a>?</p>
 
-		{% endflag %}
+      {% endflag %}
+      </div>
+      </div>
+	    <div class="lg:grid grid-cols-2 gap-16 mt-16 lg:my-16 items-stretch">
+        {% include "provider_portal/partials/how_do_i_get_verified_block.html" %}
+        {% include "provider_portal/partials/donate_block.html" %}
+    {% endflag %}
 
-	</div>
 
-	<div class="lg:grid grid-cols-2 gap-16 mt-10 lg:my-10">
-		<section class="prose bg-white border-2 rounded-xl mb-6 lg:mb-0 p-6">
-            <h3 class="text-2xl border-b-2 mt-2 pb-3">How can I get verified? </h3>
-            <p>To become verified, you need to submit a verification request that provides proof that you use green energy for your services. You can prove this if you are avoiding, reducing, or offsetting emissions.</p>
-			<p>Submitting the request will approximately take you 15 minutes and is free of charge.</p>
-			<p>Once submitted, we will review your request and get in touch if further evidence is needed. As we are a non-profit organisation the verification process is independent.</p>
-			<p><a href="https://www.thegreenwebfoundation.org/what-you-need-to-get-verified/" target="_blank" rel="noreferrer noopener">More information on how to get verified</a>.</p>
-		</section>
 
-		<section class="prose border-2 rounded-xl p-6 bg-black text-white">
-            <div class="border-b-2 border-white pb-3 flex items-center">
-				<img class="inline border-r-2 border-green my-0 pr-4" width="60px" height="60px" src="{% static 'img/GWF-icon-sunburst--green.svg' %}" alt="Green Web Foundation logo"/>
-           	 	<h3 class="text-2xl inline text-white my-0 ml-4 p-0">Support the mission</h3>
-			</div>
-            <p>Green Web Foundation is on a mission to accelerate the transition to a fossil-free internet by 2030.</p>
-			<p>We maintain the world's largest open dataset of websites running on green energy, the <i>Green Web Dataset</i>.
-				Every day, across the globe, more than seven million checks against this dataset are made.</p>
-			<p>Donations help keep this work freely available and state-of-the-art.</p>
-			<p><a class="btn mt-0 font-bold" href="https://www.thegreenwebfoundation.org/donate/" target="_blank" rel="noopener noreferrer">Donate</a></p>
-		</section>
 	</div>
 </article>
-
+</div>
 {% endblock %}

@@ -21,7 +21,7 @@ Any Green Web Checks for sites hosted on the IP ranges/AS numbers you provided w
 Updating your listing
 Our platform is self-service meaning that you can update your listing yourself. To update your listing:
 
-1. Go to https://admin.thegreenwebfoundation.org/provider-portal/ and login.
+1. Go to https://admin.thegreenwebfoundation.org and login.
 2. You will be shown your verified providers. Find the one you want to change, and click the “Edit” link.
 3. Complete the form, making any changes you need.
 4. Once you are done, submit the updates.
@@ -33,7 +33,7 @@ In order to remain as an active verified green host in our dataset, you need to 
 Learn more about reverification in this FAQ: https://www.thegreenwebfoundation.org/support/what-is-reverification-for-hosting-providers/
 
 Useful links
-- Green Web Portal: https://admin.thegreenwebfoundation.org/provider-portal/
+- Green Web Portal: https://admin.thegreenwebfoundation.org/
 - Hosting Directory: https://app.greenweb.org/directory/
 - Green Web Check: https://www.thegreenwebfoundation.org/green-web-check/
 - FAQs: https://www.thegreenwebfoundation.org/support/

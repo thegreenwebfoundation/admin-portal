@@ -148,14 +148,14 @@ class GreenWebAdmin(AdminSite):
             return app_list
 
         verification_request_item = {
-            "name": "New provider portal",
+            "name": "New Green Web portal",
             "app_label": "greencheck",
-            "app_url": reverse("provider_portal_home"),
+            "app_url": reverse("dashboard"),
             "models": [
                 {
-                    "name": "Move to a new version of provider portal",
+                    "name": "Move to a new version of the Green Web portal",
                     "object_name": "greencheck_url",
-                    "admin_url": reverse("provider_portal_home"),
+                    "admin_url": reverse("dashboard"),
                     "view_only": True,
                 }
             ],
@@ -208,6 +208,10 @@ class GreenWebAdmin(AdminSite):
                 (model for model in accounts_app["models"] if model["object_name"] == "APIKeyPrivilegeLevel"),
                 None
         )
+        api_service = next(
+                (model for model in accounts_app["models"] if model["object_name"] == "APIService"),
+                None
+        )
 
         api_key_models = []
 
@@ -218,6 +222,10 @@ class GreenWebAdmin(AdminSite):
         if api_key_privilege_level:
             accounts_app["models"].remove(api_key_privilege_level)
             api_key_models.append(api_key_privilege_level)
+
+        if api_service:
+            accounts_app["models"].remove(api_service)
+            api_key_models.append(api_service)
 
         app_list.insert(2, {
             "name": "API keys",

@@ -1,33 +1,51 @@
 {% extends "base.html" %}
 
-{% load widget_tweaks %}
+{% load widget_tweaks waffle_tags %}
 
 {% block content %}
 
+    <div class="contianer mx-auto prose">
 
-<div class="container mx-auto">
-  <section class="mx-auto max-w-lg bg-white border-2 border-dark-gray rounded-md  h-100-l mt-8 p-8">
+    {% block header_section %}
+      <header class="">
+      	<h1 class="mt-8 text-center leading-10">
+			<span class="text-xl">Welcome to the</span><br>
+			Green Web portal</h1>
 
-  <h2 class="text-xl">What do you want to do today?</h2>
+      </header>
+    {% endblock %}
+<article>
+  <h3 class="mb-8 mt-16 border-none pb-0">What are you here to do?</h3>
+		<section class="prose bg-white border-2 rounded-xl mb-16 p-6 mt-0">
+            <h3 class="text-2xl border-b-2 mt-2 pb-3">Request verification for a hosting provider</h3>
+            <p>If you're a hosting provider, and you're looking to set up, verify or manage your listing in the directory and your green web check results, you can find all you need in the <a href="{% url 'provider_portal_home' %}">provider listings section</a>.</p>
+            <p><a class="btn btn-white mt-0 font-bold" href="{% url 'provider_portal_home' %}" >Go to provider listings</a></p>
+		</section>
 
-  <ul class="mt-4">
-
-    <li>
-    {# if the user has a hosting provider #}
-      <a class="text-green-800" href="/" >
-        Register a digital service provider for the directory.
-      </a>
-    </li>
-
-  {# if user can create new hosting providers #}
-    <a class="text-green-800" href="" >
-        Visit stats
-      </a>
-  </ul>
-
+		<section class="prose bg-white border-2 rounded-xl mb-16 p-6">
+            <h3 class="text-2xl border-b-2 mt-2 pb-3">Set up and manage API keys</h3>
+            <p>If you're looking for access to Green Web APIs and data services, and want to create or manage your API keys, please see the  <a href="{% url 'list-api-keys' %}">API keys section</a>.</p>
+            <p><a class="btn btn-white mt-0 font-bold" href="{% url 'list-api-keys' %}" >Go to API keys</a></p>
+		</section>
 
 
-  </section>
+    {% include "provider_portal/partials/donate_block.html" %}
+    {% flag "hide_old_admin" %}
+		<h3 class="text-xl pt-0 mt-16">Other actions</h3>
+
+		<p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:password_change' %}" class="text-neutral-500">Update your password</a></p>
+
+		<p class="text-neutral-500 mt-8"><a href="{% url 'green_urls_redirect' %}" class="text-neutral-500">See our list of downloadable green domain dataset snapshots</a></p>
+
+		<p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:check_url' %}" class="text-neutral-500">Try an extended green check for troubleshooting with support staff</a></p>
+
+		{% else %}
+
+		<p class="text-neutral-500 mt-8">Looking for the <a href="{% url 'greenweb_admin:index' %}" class="text-neutral-500">old style admin screens</a>?</p>
+
+		{% endflag %}
+
+</article>
+
 </div>
-
-{% endblock %}
+{% endblock content %}

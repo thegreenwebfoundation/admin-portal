@@ -5,7 +5,7 @@
     {% block header_section %}
       <header class="">
         {% block back_link %}
-          <p class="mb-6 text-sm text-green"><a href="{% url 'provider_portal_home' %}" class="text-neutral-500">&lt; Back to provider portal</a></p>
+          <p class="mb-6 text-sm text-green"><a href="{% url 'dashboard' %}" class="text-neutral-500">&lt; Back to the Green Web portal</a></p>
         {% endblock back_link %}
 
 
@@ -18,36 +18,49 @@
 
           <p>Green Web Foundation APIs that currently require an API key for access are:</p>
           <ul>
-            <li>
-            The <a href="https://carbon-txt-api.greenweb.org/api/docs" target="_blank">carbon.txt validator</a> API (<a href="https://developers.thegreenwebfoundation.org/api/carbon-txt/overview/" target="_blank">read docs</a>)
-            </li>
+            {% for service in services %}
+              <li>
+                <a href="{{service.api_url}}" target="_blank">{{service.name}}</a> (<a href="{{service.documentation_url}}" target="_blank">read documentation</a>)
+              </li>
+            {% endfor %}
           </ul>
+
+        {% if user.api_access_banned %}
+          <p>You do not have access to the Green Web API. If you think this is a mistake, please <a href="mailto:support@greenweb.org?subject=Request%20to%20raise%20API%20access%20query%20for%20account%20{{user.username|urlencode}}">get in touch with our support team</a>!</p>
+        {% else %}
           <p>You can create a maximum of {{user.api_key_limit}} keys for this account.</p>
+        {% endif %}
         </div>
       </header>
     {% endblock %}
 
+{% if not user.api_access_banned %}
     <article>
       <div class="prose mx-auto mt-8">
         {% if user.api_keys.get_usable_keys.all %}
           <ul class="list-none p-0 mb-8">
             {% for key in user.api_keys.get_usable_keys.all %}
-            <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 px-5 border-neutral border-t last-of-type:border-b">
-              <div class="columns-2  mt-0">
+            <li class="odd:bg-neutral-100 even:bg-neutral-200 m-0 p-3 border-green border-t-2 last-of-type:border-b-2">
+              <div class="columns-2  mt-0 mb-2">
                 <div>
-                  <strong>Key:</strong>  <code class="font-normal">{{key.displayable_prefix}}...</code>
+                  <strong>Key:  </strong>  <code class="font-normal">{{key.displayable_prefix}}...</code>
                 </div>
+                <div>
+                  <strong>Service: </strong> {{key.service.name}}
+                </div>
+              </div>
+              <div class="columns-2 mt-1 mb-2">
                 <div>
                   <strong>Expiry date: </strong>{{key.expiry_date | date:"d F Y" | default:"Never" }}
                 </div>
+                <div>
+                    [<a href="{{key.service.api_url}}" target="_blank">endpoint</a>]
+                    [<a href="{{key.service.documentation_url}}" target="_blank">docs</a>]
+                    [<a href="{% url 'revoke-api-key' key.prefix  %}">revoke</a>]
+                </div>
               </div>
-              <div class="columns-2 mt-1 mb-0">
-                <div>
-                  <a href="{% url 'revoke-api-key' key.prefix  %}">[revoke]</a>
-                </div>
-                <div>
-                  <strong>Note:</strong> {{key.note | default:"None"}}
-                </div>
+              <div class="mb-0">
+                <strong>Note: </strong> {{key.note | default:"None"}}
               </div>
             </li>
             {% endfor %}
@@ -55,9 +68,7 @@
         {% else %}
           <p>You don't have any API keys yet.</p>
         {% endif %}
-        {% if not request.user.has_api_access %}
-          <p><a class="btn mt-0 w-full" href="{% url 'api-access' %}">Sign up for API access</a></p>
-        {% elif request.user.can_create_api_key %}
+        {% if request.user.can_create_api_key %}
           <p><a class="btn mt-0 w-full" href="{% url 'create-api-key' %}">Create a new API key</a></p>
         {% else %}
         <p>You have reached the limit of {{user.api_key_limit}} keys for this account. To create more, you can revoke an existing key, or <a href="mailto:support@greenweb.org?subject=Request%20to%20raise%20API%20key%20limit%20for%20account%20{{user.username|urlencode}}">request that your limit be raised</a>.</p>
@@ -65,6 +76,6 @@
         {% endif %}
       </div>
     </article>
-
+  {% endif %}
 </div>
 {% endblock %}

@@ -111,7 +111,7 @@ class CustomUserAdmin(UserAdmin):
             (
                 "API Access",
                 {
-                    "fields": ("api_access_motivation", "api_access_banned", "override_api_key_limit"),
+                    "fields": ("api_access_banned", "override_api_key_limit"),
                 },
             ),
             (

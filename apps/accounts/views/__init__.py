@@ -1,8 +1,11 @@
+import waffle
+
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic.base import TemplateView
 
-from .api_keys import APIKeyAccessView, APIKeyCreateView, APIKeyIntrospectionView, APIKeyListView, APIKeyRevokeView
+from .api_keys import APIKeyCreateView, APIKeyIntrospectionView, APIKeyListView, APIKeyRevokeView
 from .user import UserRegistrationView
 from .user import UserActivationView
 from .provider.autocomplete import (
@@ -16,7 +19,7 @@ from .provider.request.wizard import ProviderRequestWizardView
 from .provider.carbon_txt import ProviderCarbonTxtView, ProviderCarbonTxtBuilderView
 
 
-class DashboardView(TemplateView):
+class DashboardView(LoginRequiredMixin, TemplateView):
     """
     This dashboard view was what people would see when signing into the admin.
     We currently redirect to the provider portal home page as at present,we
@@ -26,5 +29,8 @@ class DashboardView(TemplateView):
     template_name = "dashboard.html"
 
     def get(self, request, *args, **kwargs):
-        return HttpResponseRedirect(reverse("provider_portal_home"))
+        if waffle.flag_is_active(request, "api_keys"):
+            return super().get(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect(reverse("provider_portal_home"))
 

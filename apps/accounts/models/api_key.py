@@ -4,6 +4,8 @@ from django.db import models
 from django.utils import timezone
 from rest_framework_api_key.models import AbstractAPIKey, BaseAPIKeyManager
 
+
+
 class APIKeyManager(BaseAPIKeyManager):
 
     def get_usable_keys(self):
@@ -13,11 +15,11 @@ class APIKeyManager(BaseAPIKeyManager):
             models.Q(user__api_access_banned=False)
         )
 
-    def create_key_for_user(self, user, note="", expiry_date=None):
+    def create_key_for_user(self, user, service, motivation, note="", expiry_date=None):
         if self.get_usable_keys().filter(user=user).count() >= user.api_key_limit:
             raise ValueError(f"Only {user.api_key_limit} active API keys allowed for this account.")
 
-        return self.create_key(user=user, note=note, expiry_date=expiry_date)
+        return self.create_key(user=user, motivation=motivation, service=service, note=note, expiry_date=expiry_date)
 
     def create_key(self, **kwargs):
         instance, key = super().create_key(**kwargs)
@@ -35,6 +37,16 @@ class APIKeyPrivilegeLevel(models.Model):
     def __str__(self):
         return self.name
 
+class APIService(models.Model):
+    name = models.CharField(max_length=255, null=False, blank=False)
+    key = models.CharField(max_length=255, null=False, blank=False)
+    documentation_url = models.URLField(null=False, blank=False)
+    api_url = models.URLField(null=False, blank=False)
+
+    def __str__(self):
+        return f"{self.name} ({self.key})"
+
+
 class APIKey(AbstractAPIKey):
 
     name = None # Overrides the field set in the superclass.
@@ -45,13 +57,21 @@ class APIKey(AbstractAPIKey):
         related_name="api_keys",
     )
     note = models.CharField(max_length=255, blank=True)
-    objects = APIKeyManager()
+    motivation = models.TextField(null=False, blank=False)
+
+    service = models.ForeignKey(
+       APIService,
+       on_delete=models.CASCADE,
+       null=False, blank=False
+    )
 
     privilege_level = models.ForeignKey(
         APIKeyPrivilegeLevel,
         on_delete=models.SET_NULL,
         null=True, blank=True
     )
+
+    objects = APIKeyManager()
 
     class Meta(AbstractAPIKey.Meta):
         verbose_name = "API Key"

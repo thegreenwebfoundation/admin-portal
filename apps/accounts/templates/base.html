@@ -57,7 +57,7 @@
                         <div class="w-full sm:w-auto sm:flex-grow flex flex-row">
 
                             <div class="logo">
-                                <a href="{% url 'provider_portal_home' %}">
+                                <a href="{% url 'dashboard' %}">
                                     <img width="200px" height="48px" src="{% static 'img/TGWF-logo.svg' %}" alt="Green Web Foundation logo"/>
                                 </a>
                             </div>
@@ -70,12 +70,11 @@
                         <div class="w-full sm:w-auto mt-4 sm:mt-0 pb-4 sm:pb-0 sm:pl-10 text-right">
                             {% if request.user.is_authenticated %}
                                 <span>Hello {{ request.user.username }}</span>
-                                <span role="img" aria-label="waving hand" class="pr-3">👋</span>
+                                <span role="img" aria-label="waving hand" class="lg:pr-3">👋</span>
+                                <br class="lg:hidden" />
                                 {% flag "api_keys" %}
-                                  {% if not user.api_access_banned %}
                                     <a href="{% url 'provider_portal_home' %}" class="no-underline hover:underline pr-3" >Provider listings</a>
                                     <a href="{% url 'list-api-keys' %}" class="no-underline hover:underline pr-3">API keys</a>
-                                  {% endif %}
                                 {% endflag %}
                                 <form class="inline" method="POST" action="{% url 'logout' %}">
                                 {% csrf_token %}

@@ -674,7 +674,8 @@ class TestAPIKey:
         Revoked API Keys are not usable for authentication
         """
         u = user_factory.create()
-        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u)
+        s = ac_models.APIService.objects.create(key="test_service", name="Test service")
+        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
         key.revoked = True
         key.save()
 
@@ -686,7 +687,8 @@ class TestAPIKey:
         Expired API Keys are not usable for authentication
         """
         u = user_factory.create()
-        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u,
+        s = ac_models.APIService.objects.create(key="test_service", name="Test service")
+        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text",
             expiry_date=timezone.now() - timedelta(days=1)
         )
 
@@ -698,7 +700,8 @@ class TestAPIKey:
         Keys with a future expiry date are usable for authentication
         """
         u = user_factory.create()
-        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u,
+        s = ac_models.APIService.objects.create(key="test_service", name="Test service")
+        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text",
             expiry_date=timezone.now() + timedelta(days=1)
         )
 
@@ -710,7 +713,8 @@ class TestAPIKey:
         Keys without an expiry date are usable for authentication
         """
         u = user_factory.create()
-        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u)
+        s = ac_models.APIService.objects.create(key="test_service", name="Test service")
+        (key, _token) = ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
 
         assert key in ac_models.APIKey.objects.get_usable_keys()
 
@@ -720,11 +724,12 @@ class TestAPIKey:
         Users can create a maxmimum of three keys by default
         """
         u = user_factory.create()
+        s = ac_models.APIService.objects.create(key="test_service", name="Test service")
         for _i in range(settings.MAX_API_KEYS_PER_USER):
-            ac_models.APIKey.objects.create_key_for_user(u)
+            ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
 
         with pytest.raises(ValueError):
-            ac_models.APIKey.objects.create_key_for_user(u)
+            ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
 
     @pytest.mark.django_db
     def test_user_key_limit_is_overridable(self, user_factory):
@@ -733,11 +738,12 @@ class TestAPIKey:
         """
         new_limit=5
         u = user_factory.create(override_api_key_limit=new_limit)
+        s = ac_models.APIService.objects.create(key="test_service", name="Test service")
         for _i in range(new_limit):
-            ac_models.APIKey.objects.create_key_for_user(u)
+            ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
 
         with pytest.raises(ValueError):
-            ac_models.APIKey.objects.create_key_for_user(u)
+            ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
 
     @pytest.mark.django_db
     def test_revoked_keys_dont_count_towards_user_limit(self, user_factory):
@@ -745,15 +751,16 @@ class TestAPIKey:
         Revoked keys do not count towards the three key limit
         """
         u = user_factory.create()
+        s = ac_models.APIService.objects.create(key="test_service", name="Test service")
         for _i in range(settings.MAX_API_KEYS_PER_USER - 1):
-            ac_models.APIKey.objects.create_key_for_user(u)
+            ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
 
-        (revoked_key, _token) = ac_models.APIKey.objects.create_key_for_user(u)
+        (revoked_key, _token) = ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
         revoked_key.revoked = True
         revoked_key.save()
 
         try:
-            ac_models.APIKey.objects.create_key_for_user(u)
+            ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
         except ValueError:
             pytest.fail("Unexpected ValueError")
 
@@ -763,14 +770,15 @@ class TestAPIKey:
         Expired keys do not count towards the three key limit
         """
         u = user_factory.create()
+        s = ac_models.APIService.objects.create(key="test_service", name="Test service")
         for _i in range(settings.MAX_API_KEYS_PER_USER - 1):
-            ac_models.APIKey.objects.create_key_for_user(u)
+            ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
 
-        ac_models.APIKey.objects.create_key_for_user(u,
+        ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text",
             expiry_date=timezone.now() - timedelta(days=1)
         )
 
         try:
-            ac_models.APIKey.objects.create_key_for_user(u)
+            ac_models.APIKey.objects.create_key_for_user(u, s, "motivation text")
         except ValueError:
             pytest.fail("Unexpected ValueError")
