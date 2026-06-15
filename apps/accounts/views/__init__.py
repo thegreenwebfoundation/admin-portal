@@ -1,3 +1,5 @@
+import waffle
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -25,4 +27,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     """
 
     template_name = "dashboard.html"
+
+    def get(self, request, *args, **kwargs):
+        if waffle.flag_is_active(request, "api_keys"):
+            return super().get(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect(reverse("provider_portal_home"))
 

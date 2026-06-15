@@ -90,16 +90,35 @@
 
 		{% endif %}
 
-		<section class="prose bg-white border-2 rounded-xl mb-6 mt-16 lg:mb-0 p-6">
-            <h3 class="text-2xl border-b-2 mt-2 pb-3">How can I get verified? </h3>
-            <p>To become verified, you need to submit a verification request that provides proof that you use green energy for your services. You can prove this if you are avoiding, reducing, or offsetting emissions.</p>
-			<p>Submitting the request will approximately take you 15 minutes and is free of charge.</p>
-			<p>Once submitted, we will review your request and get in touch if further evidence is needed. As we are a non-profit organisation the verification process is independent.</p>
-			<p><a href="https://www.thegreenwebfoundation.org/what-you-need-to-get-verified/" target="_blank" rel="noreferrer noopener">More information on how to get verified</a>.</p>
-		</section>
+  {% flag "api_keys" %}
+      <div class="mt-16">
+        {% include "provider_portal/partials/how_do_i_get_verified_block.html" %}
+      </div>
+  {% else %}
+    {% flag "hide_old_admin" %}
+      <h3 class="text-xl pt-10">Other actions</h3>
+
+      <p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:password_change' %}" class="text-neutral-500">Update your password</a></p>
+
+      <p class="text-neutral-500 mt-8"><a href="{% url 'green_urls_redirect' %}" class="text-neutral-500">See our list of downloadable green domain dataset snapshots</a></p>
+
+      <p class="text-neutral-500 mt-8"><a href="{% url 'greenweb_admin:check_url' %}" class="text-neutral-500">Try an extended green check for troubleshooting with support staff</a></p>
+
+      {% else %}
+
+      <p class="text-neutral-500 mt-8">Looking for the <a href="{% url 'greenweb_admin:index' %}" class="text-neutral-500">old style admin screens</a>?</p>
+
+      {% endflag %}
+      </div>
+      </div>
+	    <div class="lg:grid grid-cols-2 gap-16 mt-16 lg:my-16 items-stretch">
+        {% include "provider_portal/partials/how_do_i_get_verified_block.html" %}
+        {% include "provider_portal/partials/donate_block.html" %}
+    {% endflag %}
+
+
 
 	</div>
-
 </article>
 </div>
 {% endblock %}
