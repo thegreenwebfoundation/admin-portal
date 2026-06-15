@@ -185,6 +185,10 @@ ADMIN_PERMS= [
     "change_apikey",
     "delete_apikey",
     "view_apikey",
+    "add_apiservice",
+    "change_apiservice",
+    "delete_apiservce",
+    "view_apiservice",
 ]
 
 PERMS = {
