@@ -1,6 +1,6 @@
 from django import forms
 from django.utils.safestring import mark_safe
-
+from datetime import date
 from ..models import APIKey, APIService
 
 class FieldsetRadioSelect(forms.RadioSelect):
@@ -58,10 +58,13 @@ class APIKeyForm(forms.Form):
     def clean_privacy_policy_acceptance(self):
         acceptance = self.cleaned_data.get("privacy_policy_acceptance")
         if acceptance != "Yes":
-            raise forms.ValidationError("You must agree to the privacy policy in order to use the API.")
+            self.add_error("privacy_policy_acceptance", "You must agree to the privacy policy in order to use the API.")
         return acceptance
 
-
+    def clean_expiry_date(self):
+        expiry_date = self.cleaned_data.get("expiry_date")
+        if expiry_date and expiry_date <= date.today():
+            self.add_error("expiry_date", "If the expiry date is set, it must be in the future!")
 
     def create_key(self, user):
         return APIKey.objects.create_key_for_user(user,
