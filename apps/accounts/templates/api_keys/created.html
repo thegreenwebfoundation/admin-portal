@@ -33,7 +33,7 @@
               <a class="copy no-underline" href="#">📋</a>
             </span>
           </div>
-          <div class="columns-2 mt-1">
+          <div class="columns-2 mt-10">
             <div>
               <strong>Expiry date: </strong>{{key.expiry_date | date:"d F Y" | default:"Never" }}
             </div>
@@ -44,7 +44,7 @@
         </div>
       </div>
 
-      <p><a class="btn mt-0 w-full" href="{% url 'list-api-keys' %}">I have copied and saved my key</a></p>
+      <p class="mt-12"><a class="btn w-full" href="{% url 'list-api-keys' %}">I have copied and saved my key</a></p>
     </article>
 
 </div>
