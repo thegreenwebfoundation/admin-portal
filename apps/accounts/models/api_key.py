@@ -33,6 +33,7 @@ class APIKeyManager(BaseAPIKeyManager):
 
 class APIKeyPrivilegeLevel(models.Model):
     name = models.CharField(max_length=255, null=False, blank=False)
+    note = models.CharField(max_length=512, blank=True)
 
     def __str__(self):
         return self.name

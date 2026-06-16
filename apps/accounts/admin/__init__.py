@@ -24,7 +24,7 @@ from .log_entry import GWLogEntryAdmin
 
 class APIKeyPrivilegeLevelAdmin(admin.ModelAdmin):
     model=APIKeyPrivilegeLevel
-    list_display=["name"]
+    list_display=["name", "note"]
 
 class APIServiceAdmin(admin.ModelAdmin):
     model=APIService
