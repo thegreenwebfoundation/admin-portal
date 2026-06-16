@@ -26,7 +26,7 @@
           </ul>
 
         {% if user.api_access_banned %}
-          <p>You do not have access to the Green Web API. If you think this is a mistake, please <a href="mailto:support@greenweb.org?subject=Request%20to%20raise%20API%20access%20query%20for%20account%20{{user.username|urlencode}}">get in touch with our support team</a>!</p>
+          <p>You do not have access to the Green Web API. If you think this is a mistake, please <a href="https://www.thegreenwebfoundation.org/support-form/" target="_blank">get in touch with our support team</a>!</p>
         {% else %}
           <p>You can create a maximum of {{user.api_key_limit}} keys for this account.</p>
         {% endif %}
@@ -71,7 +71,7 @@
         {% if request.user.can_create_api_key %}
           <p class="mt-12"><a class="btn mt-0 w-full" href="{% url 'create-api-key' %}">Create a new API key</a></p>
         {% else %}
-        <p>You have reached the limit of {{user.api_key_limit}} keys for this account. To create more, you can revoke an existing key, or <a href="mailto:support@greenweb.org?subject=Request%20to%20raise%20API%20key%20limit%20for%20account%20{{user.username|urlencode}}">request that your limit be raised</a>.</p>
+        <p>You have reached the limit of {{user.api_key_limit}} keys for this account. To create more, you can revoke an existing key, or <a href="https://www.thegreenwebfoundation.org/support-form/" target="_blank">request that your limit be raised</a>.</p>
 
         {% endif %}
       </div>
