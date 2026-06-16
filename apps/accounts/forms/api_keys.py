@@ -28,8 +28,9 @@ class APIKeyForm(forms.Form):
         widget=FieldsetRadioSelect(),
         label=mark_safe("Do you accept our <a href='https://www.thegreenwebfoundation.org/privacy-statement/' target='_blank'>privacy statement</a>?"),
         help_text=mark_safe((
-            "We log user activity with authenticated APIs, to better understand how our service is used, and to monitor usage levels"                       " - we need your explicit informed consent for this.<br />Please make sure you've read, and understood our "
-            "<a href='https://www.thegreenwebfoundation.org/privacy-statement/' target='_blank'>privacy statement</a>,"
+            "We log user activity with authenticated APIs, to better understand how our service is used, and to monitor usage levels"
+            " - we need your explicit informed consent for this.<br />Please make sure you've read, and understood our "
+            "<a href='https://www.thegreenwebfoundation.org/privacy-statement/' target='_blank'>privacy statement</a>, "
             "and in particular <a href='https://www.thegreenwebfoundation.org/privacy-statement/#apis-and-data-services' target='_blank'>"
             "the section on APIs and data services</a> before agreeing."
         ))
