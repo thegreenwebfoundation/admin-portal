@@ -20,7 +20,7 @@
           <ul>
             {% for service in services %}
               <li>
-                <a href="{{service.api_url}}" target="_blank">{{service.name}}</a> (<a href="{{service.documentation_url}}" target="_blank">read documentation</a>)
+                {{service.name}} [<a href="{{service.api_url}}" target="_blank">endpoint</a>] [<a href="{{service.documentation_url}}" target="_blank">docs</a>]
               </li>
             {% endfor %}
           </ul>
