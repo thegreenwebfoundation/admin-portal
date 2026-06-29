@@ -534,6 +534,7 @@ class HostingAdmin(
                         "name",
                         "website",
                         "description",
+                        "public_2030_target_url",
                         "country",
                         "city",
                         "services",
