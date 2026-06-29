@@ -8,7 +8,6 @@ import pytest
 from django import urls
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
-from django.test import RequestFactory
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -16,6 +15,7 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
+from django.test import RequestFactory
 from django.urls import reverse
 from faker import Faker
 from freezegun import freeze_time
@@ -129,10 +129,14 @@ def wizard_form_verification_bases_with_linked_provider_data():
         VerificationBasisFactory.create()
 
     # ensure the reseller basis exists and is included
-    reseller_slug = "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+    reseller_slug = (
+        "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+    )
     reseller_basis, _ = models.VerificationBasis.objects.get_or_create(
         slug=reseller_slug,
-        defaults={"name": "We resell or actively use a provider that is already in the Green Web Dataset."},
+        defaults={
+            "name": "We resell or actively use a provider that is already in the Green Web Dataset."
+        },
     )
 
     # draw from the active version's choices (June 2026 when the v2 flag is off)
@@ -154,6 +158,7 @@ def wizard_form_verification_bases_with_linked_provider_data():
         "3-verification_bases": bases_sample,
         "3-upstream_providers": [str(upstream.id)],
     }
+
 
 @pytest.fixture()
 def wizard_form_evidence_data(fake_evidence):
@@ -263,7 +268,9 @@ def fake_evidence():
         {
             "title": "this one has both: link and a file",
             "link": "www.example.com",
-            "file": File(file=io.BytesIO(faker.text().encode()), name=faker.file_name()),
+            "file": File(
+                file=io.BytesIO(faker.text().encode()), name=faker.file_name()
+            ),
             "type": models.EvidenceType.CERTIFICATE,
         },
         {
@@ -579,7 +586,9 @@ def test_approve_changes_status_to_approved():
 @pytest.mark.django_db
 def test_approve_creates_hosting_provider():
     # given: a provider request with services is created
-    pr = ProviderRequestFactory.create(services=faker.words(nb=4), verification_bases=faker.words(nb=4))
+    pr = ProviderRequestFactory.create(
+        services=faker.words(nb=4), verification_bases=faker.words(nb=4)
+    )
     ProviderRequestLocationFactory.create(request=pr)
     ProviderRequestEvidenceFactory.create(request=pr)
 
@@ -2004,7 +2013,7 @@ def test_saving_changes_to_hp_with_new_verification_request(
         "4-0-file": "",
         "4-0-type": ev1.type,
         "4-0-public": ev1.public,
-        #4then a new piece of evidence
+        # 4then a new piece of evidence
         "4-1-title": " ".join(faker.words(3)),
         "4-1-link": "",
         "4-1-file": fake_evidence,
@@ -2495,6 +2504,7 @@ def test_wizard_submission_without_upstream_providers(
 
 # ---------- upstream_providers feature-flag tests ----------
 
+
 @pytest.mark.django_db
 def test_wizard_basis_step_hides_upstream_providers_when_flag_is_off(
     user,
@@ -2510,13 +2520,21 @@ def test_wizard_basis_step_hides_upstream_providers_when_flag_is_off(
     """
     client.force_login(user)
 
-    response = client.post(urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True)
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True
+    )
     assert response.status_code == 200
 
-    response = client.post(urls.reverse("provider_registration"), wizard_form_org_location_data, follow=True)
+    response = client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_org_location_data,
+        follow=True,
+    )
     assert response.status_code == 200
 
-    response = client.post(urls.reverse("provider_registration"), wizard_form_services_data, follow=True)
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_services_data, follow=True
+    )
     assert response.status_code == 200
 
     assert response.context_data["wizard"]["steps"].current == "3"
@@ -2542,13 +2560,21 @@ def test_wizard_basis_step_shows_upstream_providers_when_flag_is_on(
     """
     client.force_login(user)
 
-    response = client.post(urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True)
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True
+    )
     assert response.status_code == 200
 
-    response = client.post(urls.reverse("provider_registration"), wizard_form_org_location_data, follow=True)
+    response = client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_org_location_data,
+        follow=True,
+    )
     assert response.status_code == 200
 
-    response = client.post(urls.reverse("provider_registration"), wizard_form_services_data, follow=True)
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_services_data, follow=True
+    )
     assert response.status_code == 200
 
     assert response.context_data["wizard"]["steps"].current == "3"
@@ -2708,7 +2734,7 @@ def test_get_active_version_defaults_to_june_when_no_request():
     get_active_version falls back to the June 2026 version
     rather than risk evaluating the waffle flag against a None request.
     """
-    from apps.accounts.models import get_active_version, VerificationBasisVersion
+    from apps.accounts.models import VerificationBasisVersion, get_active_version
 
     assert get_active_version(None) == VerificationBasisVersion.JUNE_2026
 
@@ -2783,8 +2809,9 @@ def test_verification_bases_choices_per_user_rollout_via_m2m(user):
     (via the waffle admin UI), as opposed to ``@override_flag`` which
     bypasses the M2M by setting ``everyone`` directly.
     """
-    from apps.accounts.models import VerificationBasisVersion
     from waffle.models import Flag
+
+    from apps.accounts.models import VerificationBasisVersion
 
     june_base = VerificationBasisFactory.create(
         name="June passive procurement m2m test",
@@ -2912,8 +2939,14 @@ def test_wizard_basis_step_shows_documentation_links_for_october_bases(
     """
     client.force_login(user)
 
-    client.post(urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True)
-    client.post(urls.reverse("provider_registration"), wizard_form_org_location_data, follow=True)
+    client.post(
+        urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True
+    )
+    client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_org_location_data,
+        follow=True,
+    )
     response = client.post(
         urls.reverse("provider_registration"), wizard_form_services_data, follow=True
     )
@@ -3067,7 +3100,10 @@ def test_evidence_round_trips_matching_and_coverage_on_request():
         claim_coverage_percentage=42,
     )
     evidence.refresh_from_db()
-    assert evidence.fossil_free_energy_matching == models.FossilFreeEnergyMatching.HOURLY.value
+    assert (
+        evidence.fossil_free_energy_matching
+        == models.FossilFreeEnergyMatching.HOURLY.value
+    )
     assert evidence.claim_coverage_percentage == 42
 
 
@@ -3086,7 +3122,9 @@ def test_supporting_document_round_trips_matching_and_coverage():
         claim_coverage_percentage=100,
     )
     doc.refresh_from_db()
-    assert doc.fossil_free_energy_matching == models.FossilFreeEnergyMatching.ANNUAL.value
+    assert (
+        doc.fossil_free_energy_matching == models.FossilFreeEnergyMatching.ANNUAL.value
+    )
     assert doc.claim_coverage_percentage == 100
 
 
@@ -3164,8 +3202,14 @@ def test_credential_form_shows_matching_fields_when_flag_on(user):
     assert form.fields["claim_coverage_percentage"].required is False
 
     field_keys = list(form.fields.keys())
-    assert field_keys.index("fossil_free_energy_matching") == field_keys.index("description") - 2
-    assert field_keys.index("claim_coverage_percentage") == field_keys.index("description") - 1
+    assert (
+        field_keys.index("fossil_free_energy_matching")
+        == field_keys.index("description") - 2
+    )
+    assert (
+        field_keys.index("claim_coverage_percentage")
+        == field_keys.index("description") - 1
+    )
 
 
 @pytest.mark.django_db
@@ -3280,9 +3324,7 @@ def test_credential_form_coverage_percentage_bounds(user, value, should_be_valid
 # --- Wizard evidence step ---
 
 
-def _walk_to_evidence_step(
-    client, user, org_details, org_location, services
-):
+def _walk_to_evidence_step(client, user, org_details, org_location, services):
     """Walk through the wizard up to (and including) the services step."""
     client.force_login(user)
     client.post(urls.reverse("provider_registration"), org_details, follow=True)
@@ -3338,13 +3380,10 @@ def test_wizard_evidence_step_renders_new_fields_when_flag_on(
 
     content = response.content.decode()
     assert (
-        "Does this disclosure support a claim of using annually, or hourly matched fossil-free energy?"
+        "Does this disclosure support a claim of using annual, or hourly matched fossil-free energy?"
         in content
     )
-    assert (
-        "What percentage of your claims are met by this disclosure?"
-        in content
-    )
+    assert "What percentage of your claims are met by this disclosure?" in content
     # the legacy intro sentence is gated off when the flag is ON
     assert "avoid, reduce, or offset" not in content
 
@@ -3382,13 +3421,10 @@ def test_wizard_evidence_step_hides_new_fields_when_flag_off(
 
     content = response.content.decode()
     assert (
-        "Does this disclosure support a claim of using annually, or hourly matched fossil-free energy?"
+        "Does this disclosure support a claim of using annual, or hourly matched fossil-free energy?"
         not in content
     )
-    assert (
-        "What percentage of your claims are met by this disclosure?"
-        not in content
-    )
+    assert "What percentage of your claims are met by this disclosure?" not in content
     # the legacy intro sentence is shown when the flag is OFF
     assert "avoid, reduce, or offset" in content
 
@@ -3443,7 +3479,10 @@ def test_wizard_preview_renders_new_fields_when_flag_on(
 
     content = response.content.decode()
     # the selected matching value is echoed back as an option on the preview form
-    assert models.FossilFreeEnergyMatching.ANNUAL.label in content or "Annually matched" in content
+    assert (
+        models.FossilFreeEnergyMatching.ANNUAL.label in content
+        or "Annually matched" in content
+    )
     assert "75" in content
 
 
@@ -3498,7 +3537,10 @@ def test_approve_copies_matching_and_coverage_to_supporting_document():
     hp = models.Hostingprovider.objects.get(id=result.id)
 
     persisted = hp.supporting_documents.filter(title=ev.title).get()
-    assert persisted.fossil_free_energy_matching == models.FossilFreeEnergyMatching.HOURLY.value
+    assert (
+        persisted.fossil_free_energy_matching
+        == models.FossilFreeEnergyMatching.HOURLY.value
+    )
     assert persisted.claim_coverage_percentage == 63
 
 
@@ -3537,6 +3579,8 @@ def test_provider_request_evidence_inline_includes_new_fields():
     """
     from apps.accounts.admin.provider_request import ProviderRequestEvidenceInline
 
-    inline_field_names = {f.name for f in ProviderRequestEvidenceInline.model._meta.fields}
+    inline_field_names = {
+        f.name for f in ProviderRequestEvidenceInline.model._meta.fields
+    }
     assert "fossil_free_energy_matching" in inline_field_names
     assert "claim_coverage_percentage" in inline_field_names
