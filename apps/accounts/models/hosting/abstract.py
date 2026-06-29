@@ -2,9 +2,11 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from taggit import models as tag_models
 from model_utils.models import TimeStampedModel
+from taggit import models as tag_models
+
 from ..choices import EnergyType
+
 
 class Label(tag_models.TagBase):
     """
@@ -35,6 +37,7 @@ class AbstractNote(TimeStampedModel):
 
     class Meta:
         abstract = True
+
 
 class EvidenceType(models.TextChoices):
     """
@@ -113,7 +116,7 @@ class AbstractSupportingDocument(models.Model):
         null=True,
         blank=True,
         help_text=(
-            "Does this evidence support a claim of using annually matched "
+            "Does this evidence support a claim of using annual matched "
             "or hourly matched fossil-free energy?"
         ),
     )
@@ -122,8 +125,7 @@ class AbstractSupportingDocument(models.Model):
         blank=True,
         validators=[MaxValueValidator(100)],
         help_text=(
-            "What percentage of your claims are met by this disclosure? "
-            "Optional."
+            "What percentage of your claims are met by this disclosure? Optional."
         ),
     )
 
@@ -133,6 +135,7 @@ class AbstractSupportingDocument(models.Model):
     class Meta:
         abstract = True
         verbose_name = "Supporting Document"
+
 
 class Certificate(models.Model):
     energyprovider = models.CharField(max_length=255)
@@ -145,5 +148,3 @@ class Certificate(models.Model):
 
     class Meta:
         abstract = True
-
-

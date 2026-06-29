@@ -296,7 +296,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
         choices=FossilFreeEnergyMatching.choices,
         required=False,  # set to True in __init__ when the flag is on
         widget=forms.Select,
-        # label="Does this disclosure support a claim of using annual, or hourly matched fossil-free energy?",
+        label="Does this disclosure support a claim of using annual, or hourly matched fossil-free energy?",
         help_text=(
             "Does this disclosure support a claim of using annual, or hourly matched fossil-free energy? "
         ),
@@ -305,7 +305,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
         required=False,
         min_value=0,
         max_value=100,
-        # label="What percentage of your claims are met by this disclosure?",
+        label="What percentage of your claims are met by this disclosure?",
         help_text=(
             "What percentage of your claims are met by this disclosure? "
             "Enter a whole number between 0 and 100. Optional. "
