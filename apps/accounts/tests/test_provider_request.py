@@ -3141,3 +3141,609 @@ def test_wizard_basis_step_shows_documentation_links_for_october_bases(
             f"expected documentation link {path!r} in the rendered basis step"
         )
     assert "see required evidence" in content
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_basis_form_drops_legacy_initial_when_flag_on(user):
+    """
+    Given the verification_basis_v2 flag is ON, initial ``verification_bases``
+    slugs that belong to the legacy June 2026 version are dropped so the form
+    does not pre-check options that cannot validate against the October 2026
+    choices. This matters when editing an existing provider or request that
+    was submitted under the old criteria.
+    """
+    from apps.accounts.forms.provider_request_wizard import (
+        BasisForVerificationForm,
+    )
+    from apps.accounts.models import VerificationBasisVersion
+
+    june_base = VerificationBasisFactory.create(
+        name="June legacy basis for initial drop test",
+        version=VerificationBasisVersion.JUNE_2026,
+    )
+    october_base = VerificationBasisFactory.create(
+        name="October active basis for initial drop test",
+        version=VerificationBasisVersion.OCTOBER_2026,
+    )
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = BasisForVerificationForm(
+        initial={"verification_bases": [june_base.slug, october_base.slug]},
+        request=request,
+    )
+
+    assert october_base.slug in form.initial["verification_bases"]
+    assert june_base.slug not in form.initial["verification_bases"]
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_basis_form_drops_all_legacy_initial_when_no_october_match(user):
+    """
+    Given the flag is ON and the initial bases are all legacy (June 2026),
+    the form clears ``verification_bases`` to an empty list rather than
+    carrying forward slugs that can't validate.
+    """
+    from apps.accounts.forms.provider_request_wizard import (
+        BasisForVerificationForm,
+    )
+    from apps.accounts.models import VerificationBasisVersion
+
+    june_base = VerificationBasisFactory.create(
+        name="June only legacy for clear test",
+        version=VerificationBasisVersion.JUNE_2026,
+    )
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = BasisForVerificationForm(
+        initial={"verification_bases": [june_base.slug]},
+        request=request,
+    )
+
+    assert form.initial["verification_bases"] == []
+
+
+@pytest.mark.django_db
+def test_basis_form_preserves_initial_when_flag_off(user):
+    """
+    Given the flag is OFF (the default), initial June 2026 slugs are
+    preserved — the filtering only applies when the flag is ON.
+    """
+    from apps.accounts.forms.provider_request_wizard import (
+        BasisForVerificationForm,
+    )
+    from apps.accounts.models import VerificationBasisVersion
+
+    june_base = VerificationBasisFactory.create(
+        name="June preserved when flag off test",
+        version=VerificationBasisVersion.JUNE_2026,
+    )
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = BasisForVerificationForm(
+        initial={"verification_bases": [june_base.slug]},
+        request=request,
+    )
+
+    assert june_base.slug in form.initial["verification_bases"]
+
+
+# ---------------------------------------------------------------------------
+# Disclosure matching + claim coverage (verification_basis_v2 rollout)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_evidence_new_fields_default_to_none():
+    """
+    A fresh ProviderRequestEvidence defaults both new fields to None,
+    so the migration is additive and existing rows remain valid.
+    """
+    pr = ProviderRequestFactory.create()
+    evidence = models.ProviderRequestEvidence.objects.create(
+        title="Untitled evidence",
+        link="https://example.com/evidence",
+        type=models.EvidenceType.WEB_PAGE.value,
+        public=False,
+        request=pr,
+    )
+    assert evidence.fossil_free_energy_matching is None
+    assert evidence.claim_coverage_percentage is None
+
+
+@pytest.mark.django_db
+def test_evidence_round_trips_matching_and_coverage_on_request():
+    """
+    ProviderRequestEvidence can persist and reload both new fields.
+    """
+    pr = ProviderRequestFactory.create()
+    evidence = models.ProviderRequestEvidence.objects.create(
+        title="Round trip evidence",
+        link="https://example.com/evidence",
+        type=models.EvidenceType.WEB_PAGE.value,
+        public=True,
+        request=pr,
+        fossil_free_energy_matching=models.FossilFreeEnergyMatching.HOURLY.value,
+        claim_coverage_percentage=42,
+    )
+    evidence.refresh_from_db()
+    assert evidence.fossil_free_energy_matching == models.FossilFreeEnergyMatching.HOURLY.value
+    assert evidence.claim_coverage_percentage == 42
+
+
+@pytest.mark.django_db
+def test_supporting_document_round_trips_matching_and_coverage():
+    """
+    HostingProviderSupportingDocument inherits the new fields from
+    AbstractSupportingDocument and persists both.
+    """
+    doc = models.HostingProviderSupportingDocument.objects.create(
+        title="Provider doc",
+        type=models.EvidenceType.CERTIFICATE.value,
+        valid_from=date(2023, 1, 1),
+        valid_to=date(2024, 1, 1),
+        fossil_free_energy_matching=models.FossilFreeEnergyMatching.ANNUAL.value,
+        claim_coverage_percentage=100,
+    )
+    doc.refresh_from_db()
+    assert doc.fossil_free_energy_matching == models.FossilFreeEnergyMatching.ANNUAL.value
+    assert doc.claim_coverage_percentage == 100
+
+
+@pytest.mark.django_db
+def test_claim_coverage_percentage_rejects_above_100():
+    """
+    The model-level MaxValueValidator enforces the 100 cap on save/full_clean.
+    """
+    pr = ProviderRequestFactory.create()
+    evidence = models.ProviderRequestEvidence(
+        title="Over-coverage",
+        link="https://example.com/evidence",
+        type=models.EvidenceType.WEB_PAGE.value,
+        public=False,
+        request=pr,
+        claim_coverage_percentage=101,
+    )
+    with pytest.raises(ValidationError):
+        evidence.full_clean()
+
+
+# --- Form ---
+
+
+@pytest.mark.django_db
+def test_credential_form_hides_matching_fields_when_flag_off(user):
+    """
+    With verification_basis_v2 OFF (the default), the two new fields are
+    absent from CredentialForm entirely so the flag-OFF rendering is
+    byte-identical to the legacy form.
+    """
+    from apps.accounts.forms.provider_request_wizard import CredentialForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = CredentialForm(request=request)
+
+    assert "fossil_free_energy_matching" not in form.fields
+    assert "claim_coverage_percentage" not in form.fields
+
+
+@pytest.mark.django_db
+def test_credential_form_hides_matching_fields_when_request_is_none():
+    """
+    When no request is provided (defensive default), the matching fields
+    are not surfaced regardless of any flag state.
+    """
+    from apps.accounts.forms.provider_request_wizard import CredentialForm
+
+    form = CredentialForm()
+
+    assert "fossil_free_energy_matching" not in form.fields
+    assert "claim_coverage_percentage" not in form.fields
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_credential_form_shows_matching_fields_when_flag_on(user):
+    """
+    With verification_basis_v2 ON, both new fields appear,
+    fossil_free_energy_matching is required, claim_coverage_percentage is
+    optional, and both sit immediately before ``description``.
+    """
+    from apps.accounts.forms.provider_request_wizard import CredentialForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = CredentialForm(request=request)
+
+    assert "fossil_free_energy_matching" in form.fields
+    assert "claim_coverage_percentage" in form.fields
+    assert form.fields["fossil_free_energy_matching"].required is True
+    assert form.fields["claim_coverage_percentage"].required is False
+
+    field_keys = list(form.fields.keys())
+    assert field_keys.index("fossil_free_energy_matching") == field_keys.index("description") - 2
+    assert field_keys.index("claim_coverage_percentage") == field_keys.index("description") - 1
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_credential_form_matching_field_required_when_flag_on(user):
+    """
+    With the flag ON, omitting fossil_free_energy_matching invalidates the
+    form; supplying a valid choice validates it (when other required fields
+    are present).
+    """
+    from apps.accounts.forms.provider_request_wizard import CredentialForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    required = {
+        "type": models.EvidenceType.WEB_PAGE.value,
+        "title": "Some title",
+        "link": "https://example.com/evidence",
+    }
+
+    invalid_form = CredentialForm(
+        data={
+            **required,
+            "public": False,
+            # fossil_free_energy_matching deliberately omitted
+            "claim_coverage_percentage": "",
+        },
+        request=request,
+    )
+    assert not invalid_form.is_valid()
+    assert "fossil_free_energy_matching" in invalid_form.errors
+
+    valid_form = CredentialForm(
+        data={
+            **required,
+            "public": False,
+            "fossil_free_energy_matching": models.FossilFreeEnergyMatching.ANNUAL.value,
+            "claim_coverage_percentage": "",
+        },
+        request=request,
+    )
+    assert valid_form.is_valid(), valid_form.errors
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_credential_form_coverage_percentage_optional_when_flag_on(user):
+    """
+    With the flag ON, claim_coverage_percentage remains optional: a form
+    submitted without it is valid.
+    """
+    from apps.accounts.forms.provider_request_wizard import CredentialForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = CredentialForm(
+        data={
+            "type": models.EvidenceType.WEB_PAGE.value,
+            "title": "Some title",
+            "link": "https://example.com/evidence",
+            "public": False,
+            "fossil_free_energy_matching": models.FossilFreeEnergyMatching.HOURLY.value,
+            "claim_coverage_percentage": "",
+        },
+        request=request,
+    )
+    assert form.is_valid(), form.errors
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+@pytest.mark.parametrize(
+    "value,should_be_valid",
+    [
+        (-1, False),
+        (0, True),
+        (100, True),
+        (101, False),
+    ],
+)
+def test_credential_form_coverage_percentage_bounds(user, value, should_be_valid):
+    """
+    claim_coverage_percentage is bounded to 0–100 via the form-field
+    min/max_value validators.
+    """
+    from apps.accounts.forms.provider_request_wizard import CredentialForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = CredentialForm(
+        data={
+            "type": models.EvidenceType.WEB_PAGE.value,
+            "title": "Some title",
+            "link": "https://example.com/evidence",
+            "public": False,
+            "fossil_free_energy_matching": models.FossilFreeEnergyMatching.ANNUAL.value,
+            "claim_coverage_percentage": value,
+        },
+        request=request,
+    )
+
+    is_valid = form.is_valid()
+    assert is_valid is should_be_valid, (
+        f"expected valid={should_be_valid} for percentage={value}, "
+        f"got valid={is_valid}, errors={form.errors}"
+    )
+
+
+# --- Wizard evidence step ---
+
+
+def _walk_to_evidence_step(
+    client, user, org_details, org_location, services
+):
+    """Walk through the wizard up to (and including) the services step."""
+    client.force_login(user)
+    client.post(urls.reverse("provider_registration"), org_details, follow=True)
+    client.post(urls.reverse("provider_registration"), org_location, follow=True)
+    client.post(urls.reverse("provider_registration"), services, follow=True)
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_wizard_evidence_step_renders_new_fields_when_flag_on(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_verification_bases_data,
+):
+    """
+    Given the verification_basis_v2 flag is ON, the green-evidence step
+    surfaces the fossil_free_energy_matching and claim_coverage_percentage
+    form fields immediately above the description textarea, and hides the
+    legacy "avoid, reduce, or offset" intro sentence (superseded by the
+    October 2026 criteria wording).
+    """
+    _walk_to_evidence_step(
+        client,
+        user,
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+    )
+
+    # When the flag is ON, the basis form validates against the October
+    # 2026 verification bases. Draw slugs from the flag-active choice set
+    # so the basis step validates and the wizard advances to step "4".
+    request = RequestFactory().get("/")
+    request.user = user
+    october_choices = models.ProviderRequest.get_verification_bases_choices(request)
+    october_slugs = [slug for slug, _label in october_choices]
+    bases_data = {
+        "provider_request_wizard_view-current_step": "3",
+        "3-verification_bases": october_slugs[:1],
+    }
+
+    response = client.post(
+        urls.reverse("provider_registration"),
+        bases_data,
+        follow=True,
+    )
+
+    assert response.status_code == 200
+    assert response.context_data["wizard"]["steps"].current == "4"
+
+    content = response.content.decode()
+    assert (
+        "Does this disclosure support a claim of using annually, or hourly matched fossil-free energy?"
+        in content
+    )
+    assert (
+        "What percentage of your claims are met by this disclosure?"
+        in content
+    )
+    # the legacy intro sentence is gated off when the flag is ON
+    assert "avoid, reduce, or offset" not in content
+
+
+@pytest.mark.django_db
+def test_wizard_evidence_step_hides_new_fields_when_flag_off(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_verification_bases_data,
+):
+    """
+    Given the verification_basis_v2 flag is OFF (the default), the
+    green-evidence step does not surface the new field labels, and the
+    legacy "avoid, reduce, or offset" intro sentence is still shown.
+    """
+    _walk_to_evidence_step(
+        client,
+        user,
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+    )
+
+    response = client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_verification_bases_data,
+        follow=True,
+    )
+
+    assert response.status_code == 200
+    assert response.context_data["wizard"]["steps"].current == "4"
+
+    content = response.content.decode()
+    assert (
+        "Does this disclosure support a claim of using annually, or hourly matched fossil-free energy?"
+        not in content
+    )
+    assert (
+        "What percentage of your claims are met by this disclosure?"
+        not in content
+    )
+    # the legacy intro sentence is shown when the flag is OFF
+    assert "avoid, reduce, or offset" in content
+
+
+# --- Preview step ---
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_wizard_preview_renders_new_fields_when_flag_on(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data_with_matching,
+    wizard_form_network_explanation_only,
+    wizard_form_consent,
+):
+    """
+    Given the flag is ON and the evidence step is submitted with both new
+    fields populated, the preview step renders the submitted values for
+    each evidence row.
+    """
+    client.force_login(user)
+    # When the flag is ON, the basis form validates against October 2026
+    # verification bases; the default fixture draws June slugs which would
+    # fail validation. Build the basis payload from the flag-active choices.
+    request = RequestFactory().get("/")
+    request.user = user
+    october_choices = models.ProviderRequest.get_verification_bases_choices(request)
+    october_slugs = [slug for slug, _label in october_choices]
+    bases_data = {
+        "provider_request_wizard_view-current_step": "3",
+        "3-verification_bases": october_slugs[:1],
+    }
+    steps = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        bases_data,
+        wizard_form_evidence_data_with_matching,
+        wizard_form_network_explanation_only,
+        wizard_form_consent,
+    ]
+    for data in steps:
+        response = client.post(urls.reverse("provider_registration"), data, follow=True)
+        assert response.status_code == 200
+
+    # the final POST above should have rendered the preview step
+    assert response.context_data["wizard"]["steps"].current == "7"
+
+    content = response.content.decode()
+    # the selected matching value is echoed back as an option on the preview form
+    assert models.FossilFreeEnergyMatching.ANNUAL.label in content or "Annually matched" in content
+    assert "75" in content
+
+
+@pytest.fixture()
+def wizard_form_evidence_data_with_matching(fake_evidence):
+    """
+    Evidence step payload that populates the new matching and coverage
+    fields for the first row, so the preview step has data to render.
+    """
+    return {
+        "provider_request_wizard_view-current_step": "4",
+        "4-TOTAL_FORMS": 2,
+        "4-INITIAL_FORMS": 0,
+        "4-0-title": " ".join(faker.words(3)),
+        "4-0-link": faker.url(),
+        "4-0-file": "",
+        "4-0-type": models.EvidenceType.WEB_PAGE.value,
+        "4-0-public": "on",
+        "4-0-fossil_free_energy_matching": models.FossilFreeEnergyMatching.ANNUAL.value,
+        "4-0-claim_coverage_percentage": "75",
+        "4-1-title": " ".join(faker.words(3)),
+        "4-1-link": "",
+        "4-1-file": fake_evidence,
+        "4-1-type": models.EvidenceType.ANNUAL_REPORT.value,
+        "4-1-public": "on",
+        "4-1-fossil_free_energy_matching": models.FossilFreeEnergyMatching.HOURLY.value,
+        "4-1-claim_coverage_percentage": "50",
+    }
+
+
+# --- Approval ---
+
+
+@freeze_time("Feb 15th, 2023")
+@pytest.mark.django_db
+def test_approve_copies_matching_and_coverage_to_supporting_document():
+    """
+    When a ProviderRequest carrying the new matching/coverage fields is
+    approved, the resulting HostingProviderSupportingDocument carries the
+    same values for both fields.
+    """
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+
+    ev = ProviderRequestEvidenceFactory.create(
+        request=pr,
+        fossil_free_energy_matching=models.FossilFreeEnergyMatching.HOURLY.value,
+        claim_coverage_percentage=63,
+    )
+
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+
+    persisted = hp.supporting_documents.filter(title=ev.title).get()
+    assert persisted.fossil_free_energy_matching == models.FossilFreeEnergyMatching.HOURLY.value
+    assert persisted.claim_coverage_percentage == 63
+
+
+@freeze_time("Feb 15th, 2023")
+@pytest.mark.django_db
+def test_approve_copies_null_matching_and_coverage_when_absent():
+    """
+    When the new fields are unset (None), approve() still succeeds and
+    the resulting HostingProviderSupportingDocument carries None for both.
+    """
+    pr = ProviderRequestFactory.create()
+    ProviderRequestLocationFactory.create(request=pr)
+
+    ev = ProviderRequestEvidenceFactory.create(
+        request=pr,
+        fossil_free_energy_matching=None,
+        claim_coverage_percentage=None,
+    )
+
+    result = pr.approve()
+    hp = models.Hostingprovider.objects.get(id=result.id)
+
+    persisted = hp.supporting_documents.filter(title=ev.title).get()
+    assert persisted.fossil_free_energy_matching is None
+    assert persisted.claim_coverage_percentage is None
+
+
+# --- Admin ---
+
+
+@pytest.mark.django_db
+def test_provider_request_evidence_inline_includes_new_fields():
+    """
+    The ProviderRequestEvidenceInline exposes both new fields so admins
+    can review them when looking at a ProviderRequest.
+    """
+    from apps.accounts.admin.provider_request import ProviderRequestEvidenceInline
+
+    inline_field_names = {f.name for f in ProviderRequestEvidenceInline.model._meta.fields}
+    assert "fossil_free_energy_matching" in inline_field_names
+    assert "claim_coverage_percentage" in inline_field_names

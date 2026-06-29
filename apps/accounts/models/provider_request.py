@@ -4,6 +4,7 @@ from typing import Iterable, List, Tuple, Union
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator
 from django.db import IntegrityError, models, transaction
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -19,6 +20,7 @@ from apps.greencheck.validators import validate_ip_range
 
 from .hosting import (
     EvidenceType,
+    FossilFreeEnergyMatching,
     Hostingprovider,
     HostingProviderSupportingDocument,
     Service,
@@ -404,6 +406,12 @@ class ProviderRequest(TimeStampedModel):
                 valid_to=date.today() + timedelta(days=365),
                 type=evidence.type,
                 public=evidence.public,
+                # Carry across the new matching/coverage fields so they survive
+                # approval and are reviewable on the provider itself. These are
+                # intentionally excluded from ``has_content_match`` above so the
+                # archival re-upload equivalence check is unchanged.
+                fossil_free_energy_matching=evidence.fossil_free_energy_matching,
+                claim_coverage_percentage=evidence.claim_coverage_percentage,
             )
             logger.debug(
                 f"Created supporting doc: {supporting_doc} for evidence: {evidence}"
@@ -517,6 +525,25 @@ class ProviderRequestEvidence(models.Model):
     type = models.CharField(choices=EvidenceType.choices, max_length=255)
     public = models.BooleanField(default=False)
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
+    fossil_free_energy_matching = models.CharField(
+        choices=FossilFreeEnergyMatching.choices,
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text=(
+            "Does this evidence support a claim of using annually matched "
+            "or hourly matched fossil-free energy?"
+        ),
+    )
+    claim_coverage_percentage = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(100)],
+        help_text=(
+            "What percentage of your claims are met by this disclosure? "
+            "Optional."
+        ),
+    )
 
     def __str__(self) -> str:
         name = self.link or self.file.name

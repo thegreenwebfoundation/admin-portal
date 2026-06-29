@@ -36,6 +36,10 @@ class SupportingEvidenceFactory(dj_factory.DjangoModelFactory):
     hostingprovider = factory.SubFactory(gc_factories.HostingProviderFactory)
     valid_from = timezone.now()
     valid_to = timezone.now() + relativedelta(years=1)
+    fossil_free_energy_matching = factory.Faker(
+        "random_element", elements=ac_models.FossilFreeEnergyMatching.values
+    )
+    claim_coverage_percentage = factory.Faker("random_int", min=0, max=100)
 
     class Meta:
         model = ac_models.HostingProviderSupportingDocument
@@ -109,6 +113,10 @@ class ProviderRequestEvidenceFactory(factory.django.DjangoModelFactory):
     type = factory.Faker("random_element", elements=ac_models.EvidenceType.values)
     public = factory.Faker("random_element", elements=[True, False])
     request = factory.SubFactory(ProviderRequestFactory)
+    fossil_free_energy_matching = factory.Faker(
+        "random_element", elements=ac_models.FossilFreeEnergyMatching.values
+    )
+    claim_coverage_percentage = factory.Faker("random_int", min=0, max=100)
 
     class Meta:
         model = ac_models.ProviderRequestEvidence
