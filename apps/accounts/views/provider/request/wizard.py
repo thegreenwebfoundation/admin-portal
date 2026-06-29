@@ -359,6 +359,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 kwargs["enable_upstream_providers"] = flag_is_active(
                     self.request, "upstream_providers"
                 )
+                kwargs["request"] = self.request
             preview_forms[step] = form(initial=cleaned_data, **kwargs)
         return preview_forms
 
@@ -387,6 +388,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             kwargs["enable_upstream_providers"] = flag_is_active(
                 self.request, "upstream_providers"
             )
+            kwargs["request"] = self.request
 
         return kwargs
 

@@ -178,9 +178,17 @@ class BasisForVerificationForm(forms.ModelForm):
         Implement injecting initial values for bases_for_verification and upstream_providers fields.
         By default the initial value is passed as a queryset,
         but TaggableManager does not handle that well - we pass a list instead.
+
+        Accepts an optional ``request`` kwarg so the verification bases choices
+        can be scoped to the active version (see ``get_active_version``).
         """
         enable_upstream_providers = kwargs.pop("enable_upstream_providers", False)
+        request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
+        # scope the available choices to the active version for this request
+        self.fields["verification_bases"].choices = (
+            ProviderRequest.get_verification_bases_choices(request)
+        )
         instance = kwargs.get("instance")
         if instance:
             self.initial["verification_bases"] = [
