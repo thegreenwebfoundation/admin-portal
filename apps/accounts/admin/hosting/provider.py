@@ -77,6 +77,8 @@ class ServiceAdmin(admin.ModelAdmin):
 @admin.register(VerificationBasis, site=greenweb_admin)
 class VerificationBasisAdmin(admin.ModelAdmin):
     model = VerificationBasis
+    list_display = ("name", "description", "version")
+    list_filter = ("version",)
 
     class Meta:
         verbose_name = "Bases for Verification"
