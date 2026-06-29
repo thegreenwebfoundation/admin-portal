@@ -771,6 +771,17 @@ class OrgDetailsForm(forms.ModelForm):
         widget=forms.widgets.Textarea,
         max_length=1000,
     )
+    public_2030_target_url = forms.URLField(
+        required=False,
+        label="Public 2030 target for running on fossil-free power",
+        help_text=(
+            "If your organisation has publicly committed to running on 100% "
+            "fossil-free power on an hourly basis by 2030, link to your public "
+            "statement. Optional."
+        ),
+        widget=forms.URLInput(attrs={"placeholder": "https://"}),
+        max_length=500,
+    )
     authorised_by_org = forms.TypedChoiceField(
         label="Do you work for the organisation seeking verification?",
         help_text=(
@@ -798,7 +809,25 @@ class OrgDetailsForm(forms.ModelForm):
 
     class Meta:
         model = ProviderRequest
-        fields = ["name", "website", "description", "authorised_by_org"]
+        fields = ["name", "website", "description", "public_2030_target_url", "authorised_by_org"]
+
+    def __init__(self, *args, **kwargs):
+        """
+        Accepts an optional ``request`` kwarg so the ``verification_basis_v2``
+        waffle flag can be consulted to decide whether to show the
+        ``public_2030_target_url`` field. When the flag is off, the field is
+        popped so flag-OFF rendering stays byte-identical to the legacy form.
+        """
+        from waffle import flag_is_active
+
+        request = kwargs.pop("request", None)
+        super().__init__(*args, **kwargs)
+
+        show_field = request is not None and flag_is_active(
+            request, "verification_basis_v2"
+        )
+        if not show_field:
+            self.fields.pop("public_2030_target_url", None)
 
 
 class ServicesForm(forms.ModelForm):

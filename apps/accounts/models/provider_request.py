@@ -100,6 +100,17 @@ class ProviderRequest(TimeStampedModel):
     name = models.CharField(max_length=255)
     website = models.CharField(max_length=255)
     description = models.TextField()
+    public_2030_target_url = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name="Public 2030 target for running on fossil-free power",
+        help_text=(
+            "If your organisation has publicly committed to running on 100% "
+            "fossil-free power on an hourly basis by 2030, link to your public "
+            "statement. Optional."
+        ),
+    )
     status = models.CharField(
         choices=ProviderRequestStatus.choices,
         max_length=255,
@@ -287,6 +298,7 @@ class ProviderRequest(TimeStampedModel):
         hp.country = first_location.country
         hp.city = first_location.city
         hp.website = self.website
+        hp.public_2030_target_url = self.public_2030_target_url
         hp.request = self
         hp.created_by = self.created_by
 
