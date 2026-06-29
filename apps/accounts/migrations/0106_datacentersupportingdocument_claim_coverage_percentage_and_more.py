@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0105_seed_october_2026_verification_bases"),
     ]
@@ -30,7 +29,7 @@ class Migration(migrations.Migration):
                     ("Annually matched", "Annually matched fossil-free energy"),
                     ("Hourly matched", "Hourly matched fossil-free energy"),
                 ],
-                help_text="Does this evidence support a claim of using annually matched or hourly matched fossil-free energy?",
+                help_text="Does this evidence support a claim of using annual matched or hourly matched fossil-free energy?",
                 max_length=64,
                 null=True,
             ),
@@ -54,7 +53,7 @@ class Migration(migrations.Migration):
                     ("Annually matched", "Annually matched fossil-free energy"),
                     ("Hourly matched", "Hourly matched fossil-free energy"),
                 ],
-                help_text="Does this evidence support a claim of using annually matched or hourly matched fossil-free energy?",
+                help_text="Does this evidence support a claim of using annual matched or hourly matched fossil-free energy?",
                 max_length=64,
                 null=True,
             ),
@@ -78,7 +77,7 @@ class Migration(migrations.Migration):
                     ("Annually matched", "Annually matched fossil-free energy"),
                     ("Hourly matched", "Hourly matched fossil-free energy"),
                 ],
-                help_text="Does this evidence support a claim of using annually matched or hourly matched fossil-free energy?",
+                help_text="Does this evidence support a claim of using annual matched or hourly matched fossil-free energy?",
                 max_length=64,
                 null=True,
             ),

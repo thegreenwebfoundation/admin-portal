@@ -3316,7 +3316,10 @@ def test_evidence_round_trips_matching_and_coverage_on_request():
         claim_coverage_percentage=42,
     )
     evidence.refresh_from_db()
-    assert evidence.fossil_free_energy_matching == models.FossilFreeEnergyMatching.HOURLY.value
+    assert (
+        evidence.fossil_free_energy_matching
+        == models.FossilFreeEnergyMatching.HOURLY.value
+    )
     assert evidence.claim_coverage_percentage == 42
 
 
@@ -3335,7 +3338,9 @@ def test_supporting_document_round_trips_matching_and_coverage():
         claim_coverage_percentage=100,
     )
     doc.refresh_from_db()
-    assert doc.fossil_free_energy_matching == models.FossilFreeEnergyMatching.ANNUAL.value
+    assert (
+        doc.fossil_free_energy_matching == models.FossilFreeEnergyMatching.ANNUAL.value
+    )
     assert doc.claim_coverage_percentage == 100
 
 
@@ -3413,8 +3418,14 @@ def test_credential_form_shows_matching_fields_when_flag_on(user):
     assert form.fields["claim_coverage_percentage"].required is False
 
     field_keys = list(form.fields.keys())
-    assert field_keys.index("fossil_free_energy_matching") == field_keys.index("description") - 2
-    assert field_keys.index("claim_coverage_percentage") == field_keys.index("description") - 1
+    assert (
+        field_keys.index("fossil_free_energy_matching")
+        == field_keys.index("description") - 2
+    )
+    assert (
+        field_keys.index("claim_coverage_percentage")
+        == field_keys.index("description") - 1
+    )
 
 
 @pytest.mark.django_db
@@ -3529,9 +3540,7 @@ def test_credential_form_coverage_percentage_bounds(user, value, should_be_valid
 # --- Wizard evidence step ---
 
 
-def _walk_to_evidence_step(
-    client, user, org_details, org_location, services
-):
+def _walk_to_evidence_step(client, user, org_details, org_location, services):
     """Walk through the wizard up to (and including) the services step."""
     client.force_login(user)
     client.post(urls.reverse("provider_registration"), org_details, follow=True)
@@ -3587,13 +3596,10 @@ def test_wizard_evidence_step_renders_new_fields_when_flag_on(
 
     content = response.content.decode()
     assert (
-        "Does this disclosure support a claim of using annually, or hourly matched fossil-free energy?"
+        "Does this disclosure support a claim of using annual, or hourly matched fossil-free energy?"
         in content
     )
-    assert (
-        "What percentage of your claims are met by this disclosure?"
-        in content
-    )
+    assert "What percentage of your claims are met by this disclosure?" in content
     # the legacy intro sentence is gated off when the flag is ON
     assert "avoid, reduce, or offset" not in content
 
@@ -3631,13 +3637,10 @@ def test_wizard_evidence_step_hides_new_fields_when_flag_off(
 
     content = response.content.decode()
     assert (
-        "Does this disclosure support a claim of using annually, or hourly matched fossil-free energy?"
+        "Does this disclosure support a claim of using annual, or hourly matched fossil-free energy?"
         not in content
     )
-    assert (
-        "What percentage of your claims are met by this disclosure?"
-        not in content
-    )
+    assert "What percentage of your claims are met by this disclosure?" not in content
     # the legacy intro sentence is shown when the flag is OFF
     assert "avoid, reduce, or offset" in content
 
@@ -3692,7 +3695,10 @@ def test_wizard_preview_renders_new_fields_when_flag_on(
 
     content = response.content.decode()
     # the selected matching value is echoed back as an option on the preview form
-    assert models.FossilFreeEnergyMatching.ANNUAL.label in content or "Annually matched" in content
+    assert (
+        models.FossilFreeEnergyMatching.ANNUAL.label in content
+        or "Annually matched" in content
+    )
     assert "75" in content
 
 
@@ -3747,7 +3753,10 @@ def test_approve_copies_matching_and_coverage_to_supporting_document():
     hp = models.Hostingprovider.objects.get(id=result.id)
 
     persisted = hp.supporting_documents.filter(title=ev.title).get()
-    assert persisted.fossil_free_energy_matching == models.FossilFreeEnergyMatching.HOURLY.value
+    assert (
+        persisted.fossil_free_energy_matching
+        == models.FossilFreeEnergyMatching.HOURLY.value
+    )
     assert persisted.claim_coverage_percentage == 63
 
 
@@ -3786,6 +3795,8 @@ def test_provider_request_evidence_inline_includes_new_fields():
     """
     from apps.accounts.admin.provider_request import ProviderRequestEvidenceInline
 
-    inline_field_names = {f.name for f in ProviderRequestEvidenceInline.model._meta.fields}
+    inline_field_names = {
+        f.name for f in ProviderRequestEvidenceInline.model._meta.fields
+    }
     assert "fossil_free_energy_matching" in inline_field_names
     assert "claim_coverage_percentage" in inline_field_names

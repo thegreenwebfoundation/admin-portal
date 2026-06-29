@@ -116,7 +116,7 @@ class AbstractSupportingDocument(models.Model):
         null=True,
         blank=True,
         help_text=(
-            "Does this evidence support a claim of using annually matched "
+            "Does this evidence support a claim of using annual matched "
             "or hourly matched fossil-free energy?"
         ),
     )
@@ -125,8 +125,7 @@ class AbstractSupportingDocument(models.Model):
         blank=True,
         validators=[MaxValueValidator(100)],
         help_text=(
-            "What percentage of your claims are met by this disclosure? "
-            "Optional."
+            "What percentage of your claims are met by this disclosure? Optional."
         ),
     )
 
