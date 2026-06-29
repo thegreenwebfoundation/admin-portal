@@ -47,6 +47,41 @@ AWAITING_REVIEW_STRING = "Awaiting Review"
 AWAITING_REVIEW_SLUG = "awaiting-review"
 
 
+class VerificationBasisVersion(models.TextChoices):
+    """
+    The version of the verification basis criteria a record belongs to.
+
+    New admin-created records target the latest regime (``OCTOBER_2026``),
+    while pre-existing records are backfilled to ``JUNE_2026``. Which
+    version is surfaced to end users is controlled by the
+    ``verification_basis_v2`` waffle flag via :func:`get_active_version`.
+    """
+
+    JUNE_2026 = "2026-06", "Current (June 2026)"
+    OCTOBER_2026 = "2026-10", "Upcoming (October 2026)"
+
+
+def get_active_version(request=None) -> str:
+    """
+    Return the active verification basis version for a given request.
+
+    Uses waffle's ``verification_basis_v2`` flag to decide between the
+    June 2026 and October 2026 criteria sets. When no request is available
+    (e.g. class-level form field defaults, management commands) the flag
+    cannot be safely evaluated, so the June 2026 version is returned as a
+    conservative fallback. This avoids hitting ``request.GET`` /
+    ``request.user`` on a ``None`` request inside waffle.
+    """
+    if request is None:
+        return VerificationBasisVersion.JUNE_2026
+    # imported lazily to avoid coupling model loading to the waffle app
+    from waffle import flag_is_active
+
+    if flag_is_active(request, "verification_basis_v2"):
+        return VerificationBasisVersion.OCTOBER_2026
+    return VerificationBasisVersion.JUNE_2026
+
+
 # this allows us to identify:
 # 1. the issuer of the hash (i.e. Green Web Foundation)
 # 2. the version of the algorithm used to create the hash
@@ -118,6 +153,23 @@ class VerificationBasis(tag_models.TagBase):
 
     required_evidence_link = models.URLField(
         max_length=255, null=True, blank=True, verbose_name="Required evidence link"
+    )
+
+    version = models.CharField(
+        max_length=128,
+        choices=VerificationBasisVersion.choices,
+        default=VerificationBasisVersion.OCTOBER_2026,
+        help_text=(
+            "Which version of the verification criteria this basis belongs to. "
+            "New admin-created records target the October 2026 regime by default."
+        ),
+    )
+    description = models.TextField(
+        blank=True,
+        help_text=(
+            "Supporting description for given basis for verification. "
+            "Used in end-user facing UI to help explain what a given basis means"
+        ),
     )
 
     class Meta:

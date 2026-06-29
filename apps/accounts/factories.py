@@ -14,6 +14,8 @@ factory.random.reseed_random("venture not into the land of flaky tests")
 
 class VerificationBasisFactory(dj_factory.DjangoModelFactory):
     name = factory.Faker("word")
+    # Match the backfill so existing tests stay stable on the June 2026 regime
+    version = ac_models.VerificationBasisVersion.JUNE_2026
 
     class Meta:
         model = ac_models.VerificationBasis
