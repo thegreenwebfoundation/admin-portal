@@ -531,7 +531,7 @@ class ProviderRequestEvidence(models.Model):
         null=True,
         blank=True,
         help_text=(
-            "Does this evidence support a claim of using annual matched "
+            "Does this evidence support a claim of using annually matched "
             "or hourly matched fossil-free energy?"
         ),
     )
@@ -540,7 +540,8 @@ class ProviderRequestEvidence(models.Model):
         blank=True,
         validators=[MaxValueValidator(100)],
         help_text=(
-            "What percentage of your claims are met by this disclosure? Optional."
+            "What percentage of your claims are met by this disclosure? "
+            "Optional."
         ),
     )
 
