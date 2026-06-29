@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n static %}
+{% load i18n static waffle_tags %}
 {% block head %}
 
 {% endblock %}
@@ -36,7 +36,10 @@
 
 	<section class="my-8">
 		<h1>Submit your evidence</h1>
+		{% flag 'verification_basis_v2' %}
+		{% else %}
 		<p>Show us the steps you are taking to <span class="italic">avoid, reduce, or offset</span> your emissions. Upload as many supporting documents as needed.
+		{% endflag %}
 		<p><a href="https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of evidence we request</a>.</p>
 		<p class="uppercase font-bold">For each item, add a link <span class="uppercase">or</span> upload a file.</p>
 	</section>
@@ -132,7 +135,7 @@
 		<p class="mb-12"><sup>**</sup>NB It is <strong>not</strong> mandatory to place evidence in the public domain to become verified as a green hosting provider. However, we encourage you to do so wherever possible to increase your transparency and accountability.</p>
 
 		<div class="mb-8">
-			<input type="button" id="add-form-button" value="Add another evidence" class="btn btn-white">
+			<input type="button" id="add-form-button" value="Add another disclosure" class="btn btn-white">
 		</div>
 
 		<div>

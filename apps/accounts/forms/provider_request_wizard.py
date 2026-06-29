@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from betterforms.multiform import MultiModelForm
 from convenient_formsets import ConvenientBaseModelFormSet
 from dal import autocomplete
@@ -11,6 +13,7 @@ from django_countries.fields import CountryField
 from file_resubmit.widgets import ResubmitFileWidget
 
 from ..models import (
+    FossilFreeEnergyMatching,
     Hostingprovider,
     ProviderRequest,
     ProviderRequestASN,
@@ -186,9 +189,9 @@ class BasisForVerificationForm(forms.ModelForm):
         request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
         # scope the available choices to the active version for this request
-        self.fields["verification_bases"].choices = (
-            ProviderRequest.get_verification_bases_choices(request)
-        )
+        self.fields[
+            "verification_bases"
+        ].choices = ProviderRequest.get_verification_bases_choices(request)
         instance = kwargs.get("instance")
         if instance:
             self.initial["verification_bases"] = [
@@ -198,6 +201,19 @@ class BasisForVerificationForm(forms.ModelForm):
                 self.initial["upstream_providers"] = [
                     p.id for p in instance.upstream_providers.all()
                 ]
+        # When the flag is ON, the choices are scoped to the October 2026
+        # version. Drop any initial slugs that belong to a legacy (June 2026)
+        # version so the form does not pre-check options that cannot validate,
+        # and so the user is not presented with stale criteria that no longer
+        # apply when carrying forward an existing request or provider.
+        active_slugs = {
+            slug for slug, _label in self.fields["verification_bases"].choices
+        }
+        self.initial["verification_bases"] = [
+            slug
+            for slug in self.initial.get("verification_bases", [])
+            if slug in active_slugs
+        ]
         if not enable_upstream_providers:
             self.fields.pop("upstream_providers", None)
 
@@ -258,28 +274,99 @@ class ConsentForm(forms.ModelForm):
 
 
 class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
+    """
+    Per-row form used inside the green evidence formset.
+
+    Accepts an optional ``request`` kwarg so the ``verification_basis_v2``
+    waffle flag can be consulted to decide whether to show the
+    ``fossil_free_energy_matching`` and ``claim_coverage_percentage``
+    fields. When the flag is off, both fields are popped so the flag-OFF
+    rendering is byte-identical to the legacy form.
+    """
+
+    fossil_free_energy_matching = forms.ChoiceField(
+        choices=FossilFreeEnergyMatching.choices,
+        required=False,  # set to True in __init__ when the flag is on
+        widget=forms.Select,
+        # label="Does this disclosure support a claim of using annual, or hourly matched fossil-free energy?",
+        help_text=(
+            "Does this disclosure support a claim of using annual, or hourly matched fossil-free energy? "
+        ),
+    )
+    claim_coverage_percentage = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=100,
+        # label="What percentage of your claims are met by this disclosure?",
+        help_text=(
+            "What percentage of your claims are met by this disclosure? "
+            "Enter a whole number between 0 and 100. Optional. ")
+        ,
+    )
+
     class Meta:
         model = ProviderRequestEvidence
         exclude = ["request"]
         labels = {"file": "File upload"}
         # define the ordering of the fields
-        fields = ["type", "title", "link", "file", "description", "public"]
+        fields = [
+            "type",
+            "title",
+            "link",
+            "file",
+            "fossil_free_energy_matching",
+            "claim_coverage_percentage",
+            "description",
+            "public",
+        ]
         help_texts = {
             "type": (
-                "What kind of evidence are you adding? Choose from the dropdown list."
+                "What kind of disclosure are you adding? Choose from the dropdown list."
             ),
-            "title": "Give this piece of evidence a title.",
-            "description": "What else should we know about this evidence? If it does not clearly name your organisation, please add a sentence outlining why.",  # noqa
+            "title": "Give this disclosure a title.",
+            "description": (
+                "What else should we know about this disclosure? If it does not clearly name your "
+                ", please add a sentence outlining why.",  # noqa
+            ),
             "link": "Provide a link to a supporting document. Include the https:// part.",  # noqa
             "file": "OR upload a supporting document in PDF or image format.",
             "public": (
-                "By checking this box you agree to place this evidence in the public domain, and it being cited publicly"  # noqa
+                "By checking this box you agree to place this disclosure in the public domain, and it being cited publicly"  # noqa
                 " to support your organisation's sustainability claims<sup>**</sup>."
             ),
         }
         # we're using this widget to retain the files submitted in the form
         # in case of ValidationError being raised
         widgets = {"file": ResubmitFileWidget}
+
+    def __init__(self, *args, **kwargs):
+        from waffle import flag_is_active
+
+        request = kwargs.pop("request", None)
+        super().__init__(*args, **kwargs)
+
+        show_matching_fields = request is not None and flag_is_active(
+            request, "verification_basis_v2"
+        )
+        if not show_matching_fields:
+            self.fields.pop("fossil_free_energy_matching", None)
+            self.fields.pop("claim_coverage_percentage", None)
+        else:
+            self.fields["fossil_free_energy_matching"].required = True
+            # enforce ordering so both fields sit immediately before ``description``
+            desired_order = [
+                "type",
+                "title",
+                "link",
+                "file",
+                "fossil_free_energy_matching",
+                "claim_coverage_percentage",
+                "description",
+                "public",
+            ]
+            self.fields = OrderedDict(
+                (k, self.fields[k]) for k in desired_order if k in self.fields
+            )
 
 
 # Part of multi-step registration form (screen 3).
