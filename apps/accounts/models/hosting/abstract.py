@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from taggit import models as tag_models
@@ -44,6 +45,17 @@ class EvidenceType(models.TextChoices):
     WEB_PAGE = "Web page"
     CERTIFICATE = "Certificate"
     OTHER = "Other"
+
+
+class FossilFreeEnergyMatching(models.TextChoices):
+    """
+    Whether a piece of supporting evidence supports a claim of using
+    annually matched or hourly matched fossil-free energy.
+    """
+
+    ANNUAL = "Annually matched", "Annually matched fossil-free energy"
+    HOURLY = "Hourly matched", "Hourly matched fossil-free energy"
+
 
 class AbstractSupportingDocument(models.Model):
     """
@@ -93,6 +105,25 @@ class AbstractSupportingDocument(models.Model):
         help_text=(
             "If this is checked, this document will not show up in any queries. "
             "Should not be editable via the admin interface by non-staff users."
+        ),
+    )
+    fossil_free_energy_matching = models.CharField(
+        choices=FossilFreeEnergyMatching.choices,
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text=(
+            "Does this evidence support a claim of using annually matched "
+            "or hourly matched fossil-free energy?"
+        ),
+    )
+    claim_coverage_percentage = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(100)],
+        help_text=(
+            "What percentage of your claims are met by this disclosure? "
+            "Optional."
         ),
     )
 

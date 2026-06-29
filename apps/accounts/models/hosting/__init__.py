@@ -1,7 +1,7 @@
 from django.db import models
 from model_utils.models import TimeStampedModel
 
-from .abstract import EvidenceType, Label
+from .abstract import EvidenceType, FossilFreeEnergyMatching, Label
 from .datacenter import (
     Datacenter,
     DatacenterCertificate,

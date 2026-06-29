@@ -360,6 +360,11 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                     self.request, "upstream_providers"
                 )
                 kwargs["request"] = self.request
+            # The green evidence formset rebuilds with ``form_kwargs`` so
+            # each child ``CredentialForm`` knows whether to render the matching
+            # and coverage fields in the preview.
+            if step == self.Steps.GREEN_EVIDENCE.value:
+                kwargs["form_kwargs"] = {"request": self.request}
             preview_forms[step] = form(initial=cleaned_data, **kwargs)
         return preview_forms
 
@@ -389,6 +394,13 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 self.request, "upstream_providers"
             )
             kwargs["request"] = self.request
+
+        # The green evidence step is a formset; ``form_kwargs`` is threaded
+        # to each child ``CredentialForm.__init__`` so it can consult the
+        # ``verification_basis_v2`` waffle flag to show/hide the matching
+        # and coverage fields.
+        if step == self.Steps.GREEN_EVIDENCE.value:
+            kwargs["form_kwargs"] = {"request": self.request}
 
         return kwargs
 
