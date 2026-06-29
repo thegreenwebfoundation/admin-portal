@@ -8,6 +8,7 @@ import pytest
 from django import urls
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
+from django.test import RequestFactory
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -108,8 +109,10 @@ def wizard_form_verification_bases_data():
     for _ in range(5):
         VerificationBasisFactory.create()
 
-    tags_choices = models.VerificationBasis.objects.all()
-    bases_sample = random.sample([tag.slug for tag in tags_choices], 3)
+    # draw from the active version's choices (June 2026 when the v2 flag is off)
+    # so the submitted slugs are always valid for the rendered form
+    choices = models.ProviderRequest.get_verification_bases_choices()
+    bases_sample = random.sample([slug for slug, _label in choices], 3)
 
     return {
         "provider_request_wizard_view-current_step": "3",
@@ -132,8 +135,10 @@ def wizard_form_verification_bases_with_linked_provider_data():
         defaults={"name": "We resell or actively use a provider that is already in the Green Web Dataset."},
     )
 
-    tags_choices = models.VerificationBasis.objects.all()
-    bases_sample = [tag.slug for tag in tags_choices[:2]]
+    # draw from the active version's choices (June 2026 when the v2 flag is off)
+    choices = models.ProviderRequest.get_verification_bases_choices()
+    choice_slugs = [slug for slug, _label in choices]
+    bases_sample = random.sample(choice_slugs, min(2, len(choice_slugs)))
     bases_sample.append(reseller_basis.slug)
 
     upstream = models.Hostingprovider.objects.create(
@@ -2689,3 +2694,158 @@ def test_provider_edit_anonymous_user_does_not_500(client, hosting_provider_fact
     response = client.get(edit_url)
 
     assert response.status_code == 302
+
+
+# ---------------------------------------------------------------------------
+# Verification basis versioning (October 2026 rollout)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_get_active_version_defaults_to_june_when_no_request():
+    """
+    Given no request is available,
+    get_active_version falls back to the June 2026 version
+    rather than risk evaluating the waffle flag against a None request.
+    """
+    from apps.accounts.models import get_active_version, VerificationBasisVersion
+
+    assert get_active_version(None) == VerificationBasisVersion.JUNE_2026
+
+
+@pytest.mark.django_db
+def test_verification_bases_choices_returns_2026_06_when_flag_off(user):
+    """
+    Given the verification_basis_v2 flag is OFF (the default),
+    get_verification_bases_choices returns only June 2026 bases,
+    even when October 2026 bases exist in the database.
+    """
+    from apps.accounts.models import VerificationBasisVersion
+
+    june_base = VerificationBasisFactory.create(
+        name="June self generation test",
+        version=VerificationBasisVersion.JUNE_2026,
+    )
+    october_base = VerificationBasisFactory.create(
+        name="October self generation test",
+        version=VerificationBasisVersion.OCTOBER_2026,
+    )
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    choices = models.ProviderRequest.get_verification_bases_choices(request)
+    choice_slugs = {slug for slug, _label in choices}
+
+    assert june_base.slug in choice_slugs
+    assert october_base.slug not in choice_slugs
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_verification_bases_choices_returns_2026_10_when_flag_on(user):
+    """
+    Given the verification_basis_v2 flag is ON,
+    get_verification_bases_choices returns only October 2026 bases,
+    even when June 2026 bases exist in the database.
+    """
+    from apps.accounts.models import VerificationBasisVersion
+
+    june_base = VerificationBasisFactory.create(
+        name="June direct procurement test",
+        version=VerificationBasisVersion.JUNE_2026,
+    )
+    october_base = VerificationBasisFactory.create(
+        name="October direct procurement test",
+        version=VerificationBasisVersion.OCTOBER_2026,
+    )
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    choices = models.ProviderRequest.get_verification_bases_choices(request)
+    choice_slugs = {slug for slug, _label in choices}
+
+    assert october_base.slug in choice_slugs
+    assert june_base.slug not in choice_slugs
+
+
+@pytest.mark.django_db
+def test_verification_bases_choices_with_request_none_returns_june():
+    """
+    Given no request is passed (e.g. class-level callable invocation),
+    get_verification_bases_choices returns only June 2026 bases.
+    """
+    from apps.accounts.models import VerificationBasisVersion
+
+    VerificationBasisFactory.create(
+        name="June green tariff test",
+        version=VerificationBasisVersion.JUNE_2026,
+    )
+    october_base = VerificationBasisFactory.create(
+        name="October green tariff test",
+        version=VerificationBasisVersion.OCTOBER_2026,
+    )
+
+    choices = models.ProviderRequest.get_verification_bases_choices()
+    choice_slugs = {slug for slug, _label in choices}
+
+    assert october_base.slug not in choice_slugs
+
+
+@pytest.mark.django_db
+def test_october_2026_bases_carry_documentation_links():
+    """
+    The October 2026 verification bases seeded by migration 0105 each carry a
+    ``required_evidence_link`` pointing at the public documentation page for
+    that criterion, mirroring how the June 2026 bases expose evidence
+    guidance. The ``label`` property appends this as a
+    "see required evidence" hyperlink so end users can reach the docs from
+    the form.
+    """
+    from apps.accounts.models import VerificationBasisVersion
+
+    expected = {
+        "Self generation": (
+            "https://www.thegreenwebfoundation.org/verification/disclosures/"
+            "self-generation"
+        ),
+        "Direct procurement": (
+            "https://www.thegreenwebfoundation.org/verification/disclosures/"
+            "direct-procurement"
+        ),
+        "Green tariffs": (
+            "https://www.thegreenwebfoundation.org/verification/disclosures/"
+            "green-tariff"
+        ),
+        "Unbundled certificates": (
+            "https://www.thegreenwebfoundation.org/verification/disclosures/"
+            "unbundled-certificates"
+        ),
+        "Passive procurement": (
+            "https://www.thegreenwebfoundation.org/verification/disclosures/"
+            "passive-procurement"
+        ),
+    }
+
+    october_bases = models.VerificationBasis.objects.filter(
+        version=VerificationBasisVersion.OCTOBER_2026
+    )
+    # sanity: we seeded exactly the five expected bases
+    assert october_bases.count() == len(expected)
+
+    for base in october_bases:
+        assert base.name in expected, f"unexpected October base: {base.name!r}"
+        link = base.required_evidence_link
+        assert link == expected[base.name], (
+            f"{base.name}: required_evidence_link={link!r}, "
+            f"expected {expected[base.name]!r}"
+        )
+
+        # the label property should surface the link as a "see required evidence"
+        # hyperlink so users can reach the docs from the wizard form
+        rendered = str(base.label)
+        assert link in rendered
+        assert "see required evidence" in rendered.lower()
+
+

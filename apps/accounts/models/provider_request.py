@@ -23,6 +23,7 @@ from .hosting import (
     HostingProviderSupportingDocument,
     Service,
     VerificationBasis,
+    get_active_version,
 )
 
 import ipaddress
@@ -201,12 +202,15 @@ class ProviderRequest(TimeStampedModel):
         return [(tag.slug, tag.name) for tag in Service.objects.all()]
 
     @classmethod
-    def get_verification_bases_choices(cls) -> List[Tuple[int, str]]:
+    def get_verification_bases_choices(cls, request=None) -> List[Tuple[int, str]]:
         """
         Returns a list of available verification bases (implemented in the Tag model)
-        in a format expected by ChoiceField
+        in a format expected by ChoiceField, scoped to the active version for the
+        given request. When no request is supplied, the June 2026 version is used.
         """
-        return [(tag.slug, tag.label) for tag in VerificationBasis.objects.all()]
+        version = get_active_version(request)
+        bases = VerificationBasis.objects.filter(version=version)
+        return [(tag.slug, tag.label) for tag in bases]
 
     @transaction.atomic
     def approve(self) -> Hostingprovider:
