@@ -2771,6 +2771,52 @@ def test_verification_bases_choices_returns_2026_10_when_flag_on(user):
 
 
 @pytest.mark.django_db
+def test_verification_bases_choices_per_user_rollout_via_m2m(user):
+    """
+    Regression test: per-user rollout via the waffle flag's ``users`` M2M
+    must actually take effect. ``everyone`` must be ``None`` (the migration
+    default), not ``False`` — waffle's ``Flag.is_active`` short-circuits at
+    ``everyone is False`` and never consults the ``users`` / ``groups``
+    relations, which would silently break the documented rollout strategy.
+
+    This test mirrors how an admin rolls the flag out to a specific user
+    (via the waffle admin UI), as opposed to ``@override_flag`` which
+    bypasses the M2M by setting ``everyone`` directly.
+    """
+    from apps.accounts.models import VerificationBasisVersion
+    from waffle.models import Flag
+
+    june_base = VerificationBasisFactory.create(
+        name="June passive procurement m2m test",
+        version=VerificationBasisVersion.JUNE_2026,
+    )
+    october_base = VerificationBasisFactory.create(
+        name="October passive procurement m2m test",
+        version=VerificationBasisVersion.OCTOBER_2026,
+    )
+
+    flag = Flag.objects.get(name="verification_basis_v2")
+    # invariant upheld by migration 0104: everyone must be None for per-user
+    # rollout to work. Assert here so a future migration edit can't silently
+    # break rollout without a test failure.
+    assert flag.everyone is None, (
+        "verification_basis_v2 flag.everyone must be None (not False) for "
+        "per-user rollout via the users M2M to take effect. See migration 0104."
+    )
+    flag.users.add(user)
+    flag.save()
+    # clear any cached flag state on the request object
+    request = RequestFactory().get("/")
+    request.user = user
+
+    choices = models.ProviderRequest.get_verification_bases_choices(request)
+    choice_slugs = {slug for slug, _label in choices}
+
+    assert october_base.slug in choice_slugs
+    assert june_base.slug not in choice_slugs
+
+
+@pytest.mark.django_db
 def test_verification_bases_choices_with_request_none_returns_june():
     """
     Given no request is passed (e.g. class-level callable invocation),
@@ -2849,3 +2895,42 @@ def test_october_2026_bases_carry_documentation_links():
         assert "see required evidence" in rendered.lower()
 
 
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_wizard_basis_step_shows_documentation_links_for_october_bases(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+):
+    """
+    Given the verification_basis_v2 flag is ON,
+    when the basis-for-verification step is rendered,
+    then each October 2026 checkbox label includes a hyperlink to that
+    criterion's documentation page.
+    """
+    client.force_login(user)
+
+    client.post(urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True)
+    client.post(urls.reverse("provider_registration"), wizard_form_org_location_data, follow=True)
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_services_data, follow=True
+    )
+
+    assert response.status_code == 200
+    assert response.context_data["wizard"]["steps"].current == "3"
+
+    content = response.content.decode()
+    # every October basis should surface a "see required evidence" link in the form
+    for path in (
+        "/verification/disclosures/self-generation",
+        "/verification/disclosures/direct-procurement",
+        "/verification/disclosures/green-tariff",
+        "/verification/disclosures/unbundled-certificates",
+        "/verification/disclosures/passive-procurement",
+    ):
+        assert path in content, (
+            f"expected documentation link {path!r} in the rendered basis step"
+        )
+    assert "see required evidence" in content
