@@ -73,6 +73,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "data_processing_opt_in",
         "provider",
         "upstream_providers",
+        "public_2030_target_url",
     )
     actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"

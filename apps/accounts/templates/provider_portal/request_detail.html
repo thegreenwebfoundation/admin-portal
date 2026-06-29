@@ -75,6 +75,18 @@
             <td>Description</td>
             <td>{{ object.description }}</td>
           </tr>
+          {% flag "verification_basis_v2" %}
+          <tr>
+            <td>Public 2030 target</td>
+            <td>
+              {% if object.public_2030_target_url %}
+                <a href="{{ object.public_2030_target_url }}" target="_blank" rel="noopener noreferrer">{{ object.public_2030_target_url }}</a>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+          {% endflag %}
           <tr>
             <td>Locations</td>
             <td>

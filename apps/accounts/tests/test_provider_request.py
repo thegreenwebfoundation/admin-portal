@@ -1273,6 +1273,7 @@ def test_edit_view_displays_form_with_prepopulated_data(client):
         "website": pr.website,
         "description": pr.description,
         "authorised_by_org": pr.authorised_by_org,
+        "public_2030_target_url": pr.public_2030_target_url,
     }
     assert form.initial == expected_initial
 
@@ -1328,6 +1329,7 @@ def test_editing_pr_updates_original_submission(
         "website": pr.website,
         "description": pr.description,
         "authorised_by_org": pr.authorised_by_org,
+        "public_2030_target_url": pr.public_2030_target_url,
     }
     # when: submitting ORG_DETAILS form with overridden data
     response = client.post(edit_url, wizard_form_org_details_data, follow=True)
@@ -1571,6 +1573,7 @@ def test_editing_hp_creates_new_verification_request(
         "name": hp.name,
         "website": hp.website,
         "description": hp.description,
+        "public_2030_target_url": hp.public_2030_target_url,
     }
     # when: submitting ORG_DETAILS form with overridden data
     response = client.post(edit_url, wizard_form_org_details_data, follow=True)

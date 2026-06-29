@@ -355,6 +355,8 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         for step, form in self.FORMS[:-1]:
             cleaned_data = self.get_cleaned_data_for_step(step)
             kwargs = {}
+            if step == self.Steps.ORG_DETAILS.value:
+                kwargs["request"] = self.request
             if step == self.Steps.BASIS_FOR_VERIFICATION.value:
                 kwargs["enable_upstream_providers"] = flag_is_active(
                     self.request, "upstream_providers"
@@ -388,6 +390,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         ]
         if self.kwargs.get("request_id") and step in affected_steps:
             kwargs["instance"] = self.get_form_instance(step)
+
+        if step == self.Steps.ORG_DETAILS.value:
+            kwargs["request"] = self.request
 
         if step == self.Steps.BASIS_FOR_VERIFICATION.value:
             kwargs["enable_upstream_providers"] = flag_is_active(
@@ -561,6 +566,16 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             if hp_provider_request:
                 initial_org_dict["authorised_by_org"] = (
                     hp_provider_request.authorised_by_org
+                )
+                initial_org_dict["public_2030_target_url"] = (
+                    hp_provider_request.public_2030_target_url
+                )
+            # fall back to the provider's own value when carrying a request
+            # forward, so the field is populated for providers approved before
+            # this field existed on ProviderRequest.
+            if not initial_org_dict.get("public_2030_target_url"):
+                initial_org_dict["public_2030_target_url"] = (
+                    hosting_provider.public_2030_target_url
                 )
             return initial_org_dict
 
