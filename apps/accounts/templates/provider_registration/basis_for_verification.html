@@ -1,5 +1,5 @@
 {% extends "./base_form.html" %}
-{% load waffle_tags %}
+{% load verification_flags waffle_tags %}
 
 {% block header_section %}
 <section class="prose mt-10">
@@ -8,19 +8,21 @@
 {% endblock %}
 
 {% block footer_section %}
-{% flag "upstream_providers" %}
-    <div class="alert__warning mt-0 mb-0" id="upstream-providers-disclosure">
+{% upstream_section_enabled as show_upstream %}
+{% if show_upstream %}
+    <div class="alert__warning mt-0 mb-0" id="upstream-providers-disclosure" style="display: none">
         <p class="mb-0">
             This relationship may be publicly displayed and shared by the Green
             Web Foundation through our online platforms and tools. If you do not wish for
             this relationship to be public, then please select another basis for verification.
         </p>
     </div>
-    {% endflag %}
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
-{% flag "upstream_providers" %}
+{% upstream_section_enabled as show_upstream %}
+{% if show_upstream %}
 <script>
     {% comment %}
     // RESELLER_STRING is the slug we use internally to identify this VerificationBasis
@@ -41,6 +43,14 @@
     ).parentElement;
 
     function toggleUpstreamProvidersSection() {
+
+      if (!isReseller) {
+        // No resell checkbox in this regime – there is no selected basis to
+        // justify showing the upstream provider picker, so hide it.
+        linkedProviderSelectionBox.style.display = "none";
+        disclosureWarning.style.display = "none";
+        return;
+      }
 
       if (isReseller.checked) {
         // setting display to "" (i.e. block) makes our widget visible when checked
@@ -75,5 +85,5 @@
   overflow: auto !important;
 }
 </style>
-{% endflag %}
+{% endif %}
 {% endblock %}

@@ -36,6 +36,7 @@ from apps.accounts.factories import (
 from apps.greencheck.factories import (
     GreenASNFactory,
     GreenIpFactory,
+    HostingProviderFactory,
     ServiceFactory,
     UserFactory,
 )
@@ -124,26 +125,25 @@ def wizard_form_verification_bases_data():
 def wizard_form_verification_bases_with_linked_provider_data():
     """
     Returns valid data for step BASIS FOR VERIFICATION including a linked provider.
+    Uses the October 2026 resell basis, so it must be used with the
+    ``verification_basis_v2`` flag enabled.
     """
-    for _ in range(5):
-        VerificationBasisFactory.create()
+    regular_basis = VerificationBasisFactory.create(
+        name="V2 regular basis for linked provider test",
+        version=models.VerificationBasisVersion.OCTOBER_2026,
+    )
 
-    # ensure the reseller basis exists and is included
+    # ensure the resell basis exists under its October 2026 slug/name
     reseller_slug = (
         "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
     )
-    reseller_basis, _ = models.VerificationBasis.objects.get_or_create(
+    models.VerificationBasis.objects.get_or_create(
         slug=reseller_slug,
         defaults={
-            "name": "We resell or actively use a provider that is already in the Green Web Dataset."
+            "name": "We resell/use an existing verified green provider",
+            "version": models.VerificationBasisVersion.OCTOBER_2026,
         },
     )
-
-    # draw from the active version's choices (June 2026 when the v2 flag is off)
-    choices = models.ProviderRequest.get_verification_bases_choices()
-    choice_slugs = [slug for slug, _label in choices]
-    bases_sample = random.sample(choice_slugs, min(2, len(choice_slugs)))
-    bases_sample.append(reseller_basis.slug)
 
     upstream = models.Hostingprovider.objects.create(
         name="Upstream Green Provider",
@@ -155,7 +155,7 @@ def wizard_form_verification_bases_with_linked_provider_data():
 
     return {
         "provider_request_wizard_view-current_step": "3",
-        "3-verification_bases": bases_sample,
+        "3-verification_bases": [regular_basis.slug, reseller_slug],
         "3-upstream_providers": [str(upstream.id)],
     }
 
@@ -2424,7 +2424,7 @@ def test_staff_review_is_logged(
     assert log_message.change_message == expected_status
 
 
-@override_flag("upstream_providers", active=True)
+@override_flag("verification_basis_v2", active=True)
 @pytest.mark.django_db
 def test_wizard_submission_with_upstream_providers(
     user,
@@ -2439,7 +2439,8 @@ def test_wizard_submission_with_upstream_providers(
     wizard_form_preview,
 ):
     """
-    Given: a user submits a provider request selecting linked upstream providers
+    Given: a user submits a provider request under verification_basis_v2,
+    selecting the resell basis and linked upstream providers.
     When: the wizard completes successfully
     Then: the ProviderRequest is created with the linked providers persisted
     """
@@ -2587,7 +2588,61 @@ def test_wizard_basis_step_shows_upstream_providers_when_flag_is_on(
     assert "toggleUpstreamProvidersSection" in content
 
 
+@override_flag("verification_basis_v2", active=True)
+@pytest.mark.django_db
+def test_wizard_basis_step_hides_upstream_section_initially_under_v2(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+):
+    """
+    Given: the verification_basis_v2 waffle flag is ON
+    When: the basis-for-verification step is rendered with no resell basis selected
+    Then: the upstream provider selection box is hidden by the on-load JS toggle
+    """
+    client.force_login(user)
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_org_location_data,
+        follow=True,
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_services_data, follow=True
+    )
+    assert response.status_code == 200
+
+    assert response.context_data["wizard"]["steps"].current == "3"
+
+    content = response.content.decode()
+
+    # The upstream picker is part of the form in this regime.
+    assert (
+        'id="id_3-upstream_providers"' in content
+        or 'id="id_upstream_providers"' in content
+    )
+
+    # The public relationship warning starts hidden, until the resell basis is
+    # selected. This is confirmed from the server-rendered HTML, independent
+    # of browser JS execution.
+    assert 'id="upstream-providers-disclosure" style="display: none"' in content
+
+    # Regression guard: the inline toggle checks for the absence of the resell
+    # checkbox so we do not error when that basis is not offered to a user.
+    assert "if (!isReseller)" in content
+
+
 @override_flag("upstream_providers", active=True)
+@override_flag("verification_basis_v2", active=True)
 @pytest.mark.django_db
 def test_wizard_preview_shows_upstream_providers(
     user,
@@ -2601,7 +2656,7 @@ def test_wizard_preview_shows_upstream_providers(
     wizard_form_consent,
 ):
     """
-    Given: a user selects upstream providers during the wizard
+    Given: a user selects the resell basis and upstream providers during the v2 wizard
     When: the preview step is rendered
     Then: the upstream provider names are visible on the preview page
     """
@@ -2866,6 +2921,158 @@ def test_verification_bases_choices_with_request_none_returns_june():
     assert october_base.slug not in choice_slugs
 
 
+# ---------------------------------------------------------------------------
+# Upstream providers under verification_basis_v2
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_basis_form_preserves_initial_when_flag_off(user):
+    """
+    Given the verification_basis_v2 flag is OFF, if a ProviderRequest already
+    has June 2026 bases, those slugs are preserved as initial values and stale
+    October-only slugs are filtered out.
+    """
+    from apps.accounts.forms.provider_request_wizard import BasisForVerificationForm
+    from apps.accounts.models import VerificationBasisVersion
+
+    june_base = VerificationBasisFactory.create(
+        name="June basis initial test",
+        version=VerificationBasisVersion.JUNE_2026,
+    )
+    october_base = VerificationBasisFactory.create(
+        name="October basis initial test",
+        version=VerificationBasisVersion.OCTOBER_2026,
+    )
+
+    pr = models.ProviderRequest.objects.create(
+        name="Test",
+        website="https://example.com",
+        description="Test",
+        status=models.ProviderRequestStatus.OPEN,
+        authorised_by_org=True,
+        created_by=user,
+    )
+    pr.verification_bases.add(june_base, october_base)
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = BasisForVerificationForm(request=request, instance=pr)
+
+    assert june_base.slug in form.initial["verification_bases"]
+    assert october_base.slug not in form.initial["verification_bases"]
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_basis_form_keeps_upstream_providers_field_when_flag_on(user):
+    """
+    Given the verification_basis_v2 flag is ON, the upstream_providers field
+    is kept in the form even when the standalone ``upstream_providers`` waffle
+    flag is OFF, so the template can toggle it based on the resell basis
+    selection.
+    """
+    from apps.accounts.forms.provider_request_wizard import BasisForVerificationForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = BasisForVerificationForm(
+        request=request,
+        enable_upstream_providers=False,
+    )
+
+    assert "upstream_providers" in form.fields
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_basis_form_clears_upstream_providers_when_resell_not_selected(user):
+    """
+    Given the flag is ON, if the user submits upstream providers without
+    selecting the resell basis, the clean step discards the upstream values.
+    """
+    from apps.accounts.forms.provider_request_wizard import BasisForVerificationForm
+    from apps.greencheck.factories import HostingProviderFactory
+
+    request = RequestFactory().get("/")
+    request.user = user
+    provider = HostingProviderFactory.create(archived=False, is_listed=True)
+
+    form = BasisForVerificationForm(
+        data={
+            "verification_bases": ["self-generation"],
+            "upstream_providers": [str(provider.id)],
+        },
+        request=request,
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["upstream_providers"] == []
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_provider_edit_initial_carries_new_upstream_bases(user):
+    """
+    Given a provider already has the new upstream-related verification bases,
+    when starting the provider-edit wizard under verification_basis_v2,
+    those bases are pre-checked in the basis step.
+    """
+    hp = models.Hostingprovider.objects.create(
+        name="Provider with upstream bases",
+        country="GB",
+        website="https://example.com",
+    )
+
+    non_verified_slug = "we-use-a-non-verified-provider"
+    resell_slug = (
+        "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+    )
+
+    hp.verification_bases.add(
+        models.VerificationBasis.objects.get(slug=non_verified_slug)
+    )
+    hp.verification_bases.add(models.VerificationBasis.objects.get(slug=resell_slug))
+
+    initial = views.ProviderRequestWizardView.get_initial_dict(hp.id)
+    basis_initial = initial[
+        views.ProviderRequestWizardView.Steps.BASIS_FOR_VERIFICATION.value
+    ]
+
+    assert non_verified_slug in basis_initial["verification_bases"]
+    assert resell_slug in basis_initial["verification_bases"]
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_basis_form_keeps_upstream_providers_when_resell_selected(user):
+    """
+    Given the flag is ON, if the user selects the resell basis and also
+    chooses upstream providers, the upstream values are preserved.
+    """
+    from apps.accounts.forms.provider_request_wizard import BasisForVerificationForm
+    from apps.greencheck.factories import HostingProviderFactory
+
+    request = RequestFactory().get("/")
+    request.user = user
+    provider = HostingProviderFactory.create(archived=False, is_listed=True)
+
+    form = BasisForVerificationForm(
+        data={
+            "verification_bases": [
+                "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+            ],
+            "upstream_providers": [str(provider.id)],
+        },
+        request=request,
+    )
+
+    assert form.is_valid(), form.errors
+    assert list(form.cleaned_data["upstream_providers"]) == [provider]
+
+
 @pytest.mark.django_db
 def test_october_2026_bases_carry_documentation_links():
     """
@@ -2899,12 +3106,20 @@ def test_october_2026_bases_carry_documentation_links():
             "https://www.thegreenwebfoundation.org/verification/disclosures/"
             "passive-procurement"
         ),
+        "We use a provider that is not verified": (
+            "https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-"
+            "of-green-power/#reselling"
+        ),
+        "We resell/use an existing verified green provider": (
+            "https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-"
+            "of-green-power/#reselling"
+        ),
     }
 
     october_bases = models.VerificationBasis.objects.filter(
         version=VerificationBasisVersion.OCTOBER_2026
     )
-    # sanity: we seeded exactly the five expected bases
+    # sanity: we seeded exactly the seven expected bases
     assert october_bases.count() == len(expected)
 
     for base in october_bases:
@@ -2962,6 +3177,7 @@ def test_wizard_basis_step_shows_documentation_links_for_october_bases(
         "/verification/disclosures/green-tariff",
         "/verification/disclosures/unbundled-certificates",
         "/verification/disclosures/passive-procurement",
+        "/what-we-accept-as-evidence-of-green-power/#reselling",
     ):
         assert path in content, (
             f"expected documentation link {path!r} in the rendered basis step"
