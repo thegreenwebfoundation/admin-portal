@@ -3,9 +3,17 @@
 from django.db import migrations
 from django.utils.text import slugify
 
+RESELLER_SLUG = (
+    "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+)
+RESELLING_EVIDENCE_LINK = (
+    "https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-"
+    "of-green-power/#reselling"
+)
 
 OCTOBER_2026_BASES = [
     {
+        "slug": "self-generation",
         "name": "Self generation",
         "description": "You generate your own fossil-free energy.",
         "required_evidence_link": (
@@ -14,6 +22,7 @@ OCTOBER_2026_BASES = [
         ),
     },
     {
+        "slug": "direct-procurement",
         "name": "Direct procurement",
         "description": (
             "You buy directly from a fossil-free energy project via a dedicated "
@@ -25,6 +34,7 @@ OCTOBER_2026_BASES = [
         ),
     },
     {
+        "slug": "green-tariffs",
         "name": "Green tariffs",
         "description": (
             "You actively procure a fossil-free energy tariff via electricity "
@@ -36,6 +46,7 @@ OCTOBER_2026_BASES = [
         ),
     },
     {
+        "slug": "unbundled-certificates",
         "name": "Unbundled certificates",
         "description": (
             "You buy certificates of fossil-free generation separate from the "
@@ -48,6 +59,7 @@ OCTOBER_2026_BASES = [
         ),
     },
     {
+        "slug": "passive-procurement",
         "name": "Passive procurement",
         "description": (
             "You operate in a place where certificates for fossil-free "
@@ -58,6 +70,24 @@ OCTOBER_2026_BASES = [
             "https://www.thegreenwebfoundation.org/verification/disclosures/"
             "passive-procurement"
         ),
+    },
+    {
+        "slug": "we-use-a-non-verified-provider",
+        "name": "We use a provider that is not verified",
+        "description": (
+            "You rely on an upstream provider for green services, but that "
+            "provider is not verified in the Green Web Dataset."
+        ),
+        "required_evidence_link": RESELLING_EVIDENCE_LINK,
+    },
+    {
+        "slug": RESELLER_SLUG,
+        "name": "We resell/use an existing verified green provider",
+        "description": (
+            "You rely on an upstream provider that is already verified in the "
+            "Green Web Dataset."
+        ),
+        "required_evidence_link": RESELLING_EVIDENCE_LINK,
     },
 ]
 
@@ -73,11 +103,15 @@ def seed_october_2026_bases(apps, schema_editor):
     "see required evidence" hyperlink appended to the label). Seeded with
     ``version='2026-10'``; visibility is gated by the
     ``verification_basis_v2`` waffle flag.
+
+    The resell basis was originally created by migration 0067 as a June 2026
+    criterion; here we promote it to the October 2026 set and update its name
+    and evidence link to match the new upstream-provider split.
     """
     VerificationBasis = apps.get_model("accounts", "VerificationBasis")
     for base in OCTOBER_2026_BASES:
-        VerificationBasis.objects.get_or_create(
-            slug=slugify(base["name"]),
+        VerificationBasis.objects.update_or_create(
+            slug=base["slug"],
             defaults={
                 "name": base["name"],
                 "description": base["description"],
@@ -88,13 +122,30 @@ def seed_october_2026_bases(apps, schema_editor):
 
 
 def remove_october_2026_bases(apps, schema_editor):
+    """
+    Reverse: delete bases introduced by this migration and revert the resell
+    basis to its June 2026 name/link so it remains a valid legacy criterion.
+    """
     VerificationBasis = apps.get_model("accounts", "VerificationBasis")
-    slugs = [slugify(b["name"]) for b in OCTOBER_2026_BASES]
-    VerificationBasis.objects.filter(slug__in=slugs).delete()
+
+    # Revert the resell basis (existed before this migration).
+    VerificationBasis.objects.filter(slug=RESELLER_SLUG).update(
+        version="2026-06",
+        name="We resell or actively use a provider that is already in the Green Web Dataset",
+        required_evidence_link=None,
+    )
+
+    # The remaining five bases were introduced by this migration; remove them.
+    remaining_slugs = [
+        base["slug"]
+        for base in OCTOBER_2026_BASES
+        if base["slug"] != RESELLER_SLUG
+        and base["slug"] != "we-use-a-non-verified-provider"
+    ]
+    VerificationBasis.objects.filter(slug__in=remaining_slugs).delete()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0104_create_verification_basis_v2_flag"),
     ]
