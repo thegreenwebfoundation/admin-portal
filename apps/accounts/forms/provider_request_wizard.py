@@ -182,6 +182,8 @@ class BasisForVerificationForm(forms.ModelForm):
         Accepts an optional ``request`` kwarg so the verification bases choices
         can be scoped to the active version (see ``get_active_version``).
         """
+        from waffle import flag_is_active
+
         enable_upstream_providers = kwargs.pop("enable_upstream_providers", False)
         request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
@@ -198,7 +200,28 @@ class BasisForVerificationForm(forms.ModelForm):
                 self.initial["upstream_providers"] = [
                     p.id for p in instance.upstream_providers.all()
                 ]
-        if not enable_upstream_providers:
+        # Drop any initial slugs that are not in the active version's choices
+        # (e.g. a provider/request that had a legacy June 2026 basis opened
+        # under the October 2026 regime). This prevents stale checkboxes and
+        # avoids validation errors for slugs no longer offered.
+        active_slugs = {
+            slug for slug, _label in self.fields["verification_bases"].choices
+        }
+        self.initial["verification_bases"] = [
+            slug
+            for slug in self.initial.get("verification_bases", [])
+            if slug in active_slugs
+        ]
+        # Under the verification_basis_v2 regime the upstream-provider basis
+        # is split into two October 2026 options, one of which requires the
+        # user to pick linked providers. Keep the field in the form so the
+        # template can show/hide it based on the selected basis. Outside v2,
+        # retain the legacy behaviour of gating the field on the standalone
+        # ``upstream_providers`` waffle flag.
+        is_v2 = (
+            request is not None and flag_is_active(request, "verification_basis_v2")
+        )
+        if not is_v2 and not enable_upstream_providers:
             self.fields.pop("upstream_providers", None)
 
     RESELLER_SLUG = (
