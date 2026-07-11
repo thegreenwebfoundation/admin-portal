@@ -21,7 +21,7 @@ It is possible to connect a local development instance, or a hosted one on gitpo
 
 Use `dotenv`, passing in the path to the correct `dotenv` file, like `.env.prod` or `.env.staging` to run a command with different environment variables set - like connecting to a specific database, use a special DJANGO_SETTINGS config file, and so on.
 
-For example, if you are running a local dev environment, and you have a `.env` file called .`env.staging.local`, running the code below would run the basic django command, connected to the servers outlined in .`env.staging.local`. This would use whatever django settings file is specified in that file, i.e. a file at `greenweb/settings/staging.py`.
+For example, if you are running a local dev environment, and you have a `.env` file called .`env.staging.local`, running the code below would run the basic django command, connected to the servers outlined in .`env.staging.local`. This would use whatever django settings file is specified in that file, i.e. a file at `src/greenweb/settings/staging.py`.
 
 ```
 dotenv -f .env.prod.local run -- ./manage.py
