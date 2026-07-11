@@ -64,25 +64,6 @@ dev_setup_codespaces: migrate _dev_setup_frontend _dev_tailwind_install _dev_set
     echo "all set up. run 'just dev_runserver' to start a server, and in another terminal "
 
 
-# TODO: these should be removed once we have confirmed the data-analysis repo works when importing this 'gwp' project as a library
-# # Set up the github repo for data analysis against the Green Web Platform database. Will not work inside a Github Codespace
-_data_analysis_repo:
-    #!/usr/bin/env bash
-    if test -d data-analysis; then
-        echo "data-analysis repo already checked out"
-    else
-        git clone https://github.com/thegreenwebfoundation/data-analysis.git
-    fi
-
-# Start a Marimo notebook session from a starter notebook. This will not work inside a Github Codespace
-data_marimo_starter *options: _data_analysis_repo
-	# set up our start notebook with django initialised ready for queries
-	uv run marimo edit data-analysis/starter-notebook.py {{ options }}
-
-# Run Marimo notebook session. This will not work inside a Github Codespace
-data_marimo *options: _data_analysis_repo
-    uv run marimo {{ options }}
-
 # Run the django tests (with pytest), creating a test database using the `testing` settings.
 test *options:
     uv run pytest -s --create-db --ds=greenweb.settings.testing {{ options }}
