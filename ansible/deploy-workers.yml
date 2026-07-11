@@ -34,7 +34,11 @@
 
     # flag for deciding to compile assets or not
     # this is the slowest deploy step
-    compile_assets: false
+    # NOTE: this is set to true as a workaround — both deploy.yml and
+    # deploy-workers.yml run the f500.project_deploy role, which creates
+    # separate timestamped releases. If compile_assets is false here, the
+    # worker release (which becomes `current`) has no staticfiles directory.
+    compile_assets: true
 
 
   pre_tasks:
