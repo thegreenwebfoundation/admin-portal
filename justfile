@@ -60,9 +60,8 @@ dev_test_only *options:
     uv run pytest -s --create-db --looponfail -m only -v --ds=greenweb.settings.testing {{ options }}
 
 # Set up a development environment inside Github Codespaces
-dev_setup_codespaces: migrate _dev_setup_frontend _dev_tailwind_install _dev_setup_local_users
+dev_setup_codespaces: _dev_tailwind_install _dev_setup_frontend _dev_setup_local_users migrate
     echo "all set up. run 'just dev_runserver' to start a server, and in another terminal "
-
 
 # Run the django tests (with pytest), creating a test database using the `testing` settings.
 test *options:
