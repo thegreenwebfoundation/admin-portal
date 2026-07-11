@@ -378,7 +378,7 @@ Run the code below from the project root, to run gunicorn:
 gunicorn greenweb.wsgi --bind 0.0.0.0:8000 -c gunicorn.conf.py
 ```
 
-See `gunicorn.conf.py` in the code base for further informatinon about the workers in use, and `greenweb/wsgi.py` to see which django config file is used to define how the django application behaves.
+See `gunicorn.conf.py` in the code base for further informatinon about the workers in use, and `src/greenweb/wsgi.py` to see which django config file is used to define how the django application behaves.
 
 **Further reading**
 
