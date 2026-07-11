@@ -421,7 +421,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             "title": "Give this disclosure a title.",
             "description": (
                 "What else should we know about this disclosure? If it does not clearly name your "
-                ", please add a sentence outlining why.",  # noqa
+                ", please add a sentence outlining why."  # noqa
             ),
             "link": "Provide a link to a supporting document. Include the https:// part.",  # noqa
             "file": "OR upload a supporting document in PDF or image format.",
