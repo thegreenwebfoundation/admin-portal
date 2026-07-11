@@ -3547,6 +3547,7 @@ def _walk_to_evidence_step(client, user, org_details, org_location, services):
 
 @pytest.mark.django_db
 @override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_claimed_percentage", active=True)
 def test_wizard_evidence_step_renders_new_fields_when_flag_on(
     user,
     client,
@@ -3556,10 +3557,10 @@ def test_wizard_evidence_step_renders_new_fields_when_flag_on(
     wizard_form_verification_bases_data,
 ):
     """
-    Given the verification_basis_v2 flag is ON, the green-evidence step
-    surfaces the fossil_free_energy_matching and claim_coverage_percentage
-    form fields immediately above the description textarea, and hides the
-    legacy "avoid, reduce, or offset" intro sentence (superseded by the
+    Given the verification_basis_v2 and verification_basis_v2_claimed_percentage flags
+    are ON, the green-evidence step surfaces the fossil_free_energy_matching and
+    claim_coverage_percentage form fields immediately above the description textarea,
+    and hides the legacy "avoid, reduce, or offset" intro sentence (superseded by the
     October 2026 criteria wording).
     """
     _walk_to_evidence_step(
