@@ -15,6 +15,7 @@ faker = Faker()
 def importer_form_csv_file() -> File:
     csv_path = (
         pathlib.Path(settings.ROOT)
+        / "src"
         / "apps"
         / "greencheck"
         / "fixtures"

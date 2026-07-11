@@ -55,7 +55,7 @@ dev_test_only *options:
 # Set up a development environment inside Github Codespaces
 dev_setup_codespaces: migrate _dev_tailwind_install _dev_setup_local_users
     uv run python manage.py tailwind build
-    cd ./apps/theme/static_src/ && npx rollup --config
+    cd ./src/apps/theme/static_src/ && npx rollup --config
     uv run python manage.py collectstatic --no-input
     echo "all set up. run 'just dev_runserver' to start a server, and in another terminal "
 
