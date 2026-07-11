@@ -105,7 +105,7 @@
 
 
     # Note: when changing the schedule here, be sure to update the sentry configuration
-    # in apps/greencheck/management/commands/clear_expired_greendomains.py to match,
+    # in src/apps/greencheck/management/commands/clear_expired_greendomains.py to match,
     # otherwise we risk getting spurious error alerts.
     - name: Ensure job to clear expired domains is present
       ansible.builtin.cron:
@@ -122,7 +122,7 @@
       tags: [crontab]
 
     # Note: when changing the schedule here, be sure to update the sentry configuration
-    # in apps/greencheck/management/commands/dump_green_domains.py to match,
+    # in src/apps/greencheck/management/commands/dump_green_domains.py to match,
     # otherwise we risk getting spurious error alerts.
     - name: Ensure job to export green domains is present
       ansible.builtin.cron:
@@ -139,7 +139,7 @@
       tags: [crontab]
 
       # Note: when changing the schedule here, be sure to update the sentry configuration
-    # in apps/accounts/management/commands/sweep_carbon_txt_domain_cache.py to match,
+    # in src/apps/accounts/management/commands/sweep_carbon_txt_domain_cache.py to match,
     # otherwise we risk getting spurious error alerts.
     - name: Ensure job to sweep carbon.txt domain cache
       ansible.builtin.cron:

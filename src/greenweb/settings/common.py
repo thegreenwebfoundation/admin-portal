@@ -17,7 +17,7 @@ import structlog
 from dramatiq import middleware as dramatiq_middleware
 
 # Environ
-ROOT = environ.Path(__file__) - 3
+ROOT = environ.Path(__file__) - 4
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, os.getenv("SECRET_KEY")),
@@ -212,7 +212,7 @@ ROOT_URLCONF = "greenweb.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates"],
+        "DIRS": [str(pathlib.Path(ROOT) / "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -317,7 +317,7 @@ STORAGES = {
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    "apps/theme/static",
+    ROOT("src/apps/theme/static"),
 ]
 
 
