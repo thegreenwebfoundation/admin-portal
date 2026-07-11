@@ -30,8 +30,7 @@ services:
     ports:
       - 9000:9000
     volumes:
-      - ./apps:/app/apps
-      - ./greenweb:/app/greenweb
+      - ./src:/app/src
     restart: always
     depends_on:
       - db

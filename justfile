@@ -36,6 +36,13 @@ dev_runserver:
 _dev_tailwind_install:
     uv run python manage.py tailwind install
 
+# setup and build local assets
+_dev_setup_frontend:
+    uv run python manage.py tailwind build
+    cd ./src/apps/theme/static_src/ && npx rollup --config
+    uv run python manage.py collectstatic --no-input
+
+
 # Run a django management command in the development environment.
 dev_manage *options:
     uv run python manage.py {{ options }}
@@ -53,12 +60,11 @@ dev_test_only *options:
     uv run pytest -s --create-db --looponfail -m only -v --ds=greenweb.settings.testing {{ options }}
 
 # Set up a development environment inside Github Codespaces
-dev_setup_codespaces: migrate _dev_tailwind_install _dev_setup_local_users
-    uv run python manage.py tailwind build
-    cd ./src/apps/theme/static_src/ && npx rollup --config
-    uv run python manage.py collectstatic --no-input
+dev_setup_codespaces: migrate _dev_setup_frontend _dev_tailwind_install _dev_setup_local_users
     echo "all set up. run 'just dev_runserver' to start a server, and in another terminal "
 
+
+# TODO: these should be removed once we have confirmed the data-analysis repo works when importing this 'gwp' project as a library
 # # Set up the github repo for data analysis against the Green Web Platform database. Will not work inside a Github Codespace
 _data_analysis_repo:
     #!/usr/bin/env bash

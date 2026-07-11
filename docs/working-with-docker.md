@@ -41,7 +41,7 @@ docker compose build
 docker compose up
 ```
 
-This will download the various images needed, then start them as separate docker containers. By default the contents of the project `./apps` contianing most of the django code, and `./greenweb` directory are mounted into the running django container, allowing you to make changes. 
+This will download the various images needed, then start them as separate docker containers. By default the contents of the project `./src/apps` contianing most of the django code, and `./src/greenweb` directory are mounted into the running django container, allowing you to make changes. 
 
 Similarly, an `.env.docker` file is used to provide the environment variables file that would be present in production, or in other development environments. See `.env.docker.sample` for an annotated list of the expected environment variables.
 
@@ -60,8 +60,7 @@ django:
     ports:
       - 9000:9000
     volumes:
-      - ./apps:/app/apps
-      - ./greenweb:/app/greenweb
+      - ./src:/app/src
     restart: always
     depends_on:
       - db
