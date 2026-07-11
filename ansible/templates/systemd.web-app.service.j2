@@ -12,6 +12,7 @@ ExecStart={{ project_root}}/current/run_gunicorn.sh
 ExecReload=/bin/kill -s HUP $MAINPID
 WorkingDirectory={{ project_root}}/current/
 EnvironmentFile={{ project_root}}/current/.env
+Environment="PYTHONPATH={{ project_root}}/current/src"
 User={{ service_user }}
 Group={{ service_user }}
 KillMode=process

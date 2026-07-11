@@ -8,7 +8,7 @@
   tasks:
     - name: run management task to create domains snapshot
       shell: |
-        source .venv/bin/acticate
+        source .venv/bin/activate
         dotenv run -- ./manage.py dump_green_domains --upload
       args:
         chdir: "{{ project_root }}/current"
