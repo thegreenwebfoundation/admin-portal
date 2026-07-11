@@ -115,6 +115,7 @@ class AbstractSupportingDocument(models.Model):
         max_length=64,
         null=True,
         blank=True,
+        default=FossilFreeEnergyMatching.ANNUAL.value,
         help_text=(
             "Does this evidence support a claim of using annual matched "
             "or hourly matched fossil-free energy?"

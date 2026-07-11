@@ -176,6 +176,20 @@ class BasisForVerificationForm(forms.ModelForm):
         ),
     )
 
+    # the new slug we use for new 2026-10 criteria
+    RESELLER_SLUG = (
+        "we-resell-use-an-existing-verified-green-provider-v2"
+    )
+
+    # the previous slug we had
+    LEGACY_RESELLER_SLUG = (
+        "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+    )
+
+    UPSTREAM_BASIS_SLUGS = [RESELLER_SLUG, LEGACY_RESELLER_SLUG]
+
+
+
     def __init__(self, *args, **kwargs):
         """
         Implement injecting initial values for bases_for_verification and upstream_providers fields.
@@ -189,11 +203,17 @@ class BasisForVerificationForm(forms.ModelForm):
 
         enable_upstream_providers = kwargs.pop("enable_upstream_providers", False)
         request = kwargs.pop("request", None)
+        # store request so we can refer to it later in form life cycle validation
+        self.request = request
         super().__init__(*args, **kwargs)
+
+
         # scope the available choices to the active version for this request
         self.fields[
             "verification_bases"
         ].choices = ProviderRequest.get_verification_bases_choices(request)
+
+
         instance = kwargs.get("instance")
         if instance:
             self.initial["verification_bases"] = [
@@ -215,6 +235,7 @@ class BasisForVerificationForm(forms.ModelForm):
             for slug in self.initial.get("verification_bases", [])
             if slug in active_slugs
         ]
+
         # Under the verification_basis_v2 regime the upstream-provider basis
         # is split into two October 2026 options, one of which requires the
         # user to pick linked providers. Keep the field in the form so the
@@ -225,9 +246,71 @@ class BasisForVerificationForm(forms.ModelForm):
         if not is_v2 and not enable_upstream_providers:
             self.fields.pop("upstream_providers", None)
 
-    RESELLER_SLUG = (
-        "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
-    )
+    def _convert_legacy_reseller_slug(self):
+        """
+        Under verification_basis_v2, rewrite in-flight wizard submissions that
+        still use the legacy reseller slug so they validate against the
+        v2 choices.
+
+        We do this because providers may have checked 'we use upstream providers' before
+        the switch over to new criteria, and want to smoothly convert them to use the
+        correct reseller slug, as they go through the wizard
+        """
+        if not self.is_bound or not self.request:
+            return
+
+        from waffle import flag_is_active
+        if not flag_is_active(self.request, "verification_basis_v2"):
+            return
+
+        field_name = self.add_prefix("verification_bases")
+
+        # QueryDict / MultiValueDict use getlist; plain dict does not.
+        if hasattr(self.data, "getlist"):
+            values = self.data.getlist(field_name)
+        else:
+            values = self.data.get(field_name, [])
+            if not isinstance(values, list):
+                values = [values] if values else []
+
+
+        if self.LEGACY_RESELLER_SLUG not in values:
+            return
+
+        # if we have the old legacy slug, replace it with the new on as they go through
+        # the wizard
+        new_values = [
+            self.RESELLER_SLUG if value == self.LEGACY_RESELLER_SLUG else value
+            for value in values
+        ]
+
+
+        new_data = self.data.copy()
+        if hasattr(self.data, "getlist"):
+            # becauwe we're not working with a dict, we need to setlist(), otherwise
+            # we end up adding a list INSIDE list, rather than setting the value
+            # to be the list
+            values = self.data.getlist(field_name)
+            new_data.setlist(field_name, new_values)
+        else:
+            new_data[field_name] = new_values
+
+        self.data = new_data
+
+
+    def full_clean(self):
+        """
+        Validate the form, but convert a legacy value first before validation.
+        This implicitly calls clean() on our form.
+
+        We override the entry point here rather than ``clean()`` because
+        ``clean()`` only sees values that already passed per-field validation.
+        The legacy resell slug may not be a valid choice in the October 2026
+        regime, so we rewrite ``self.data`` before validation runs.
+        """
+        self._convert_legacy_reseller_slug()
+        super().full_clean()
+
 
     def clean(self):
         """
@@ -235,8 +318,11 @@ class BasisForVerificationForm(forms.ModelForm):
         values so the hidden widget does not silently submit stale data.
         """
         cleaned_data = super().clean()
-        bases = cleaned_data.get("verification_bases") or []
-        if self.RESELLER_SLUG not in bases and "upstream_providers" in cleaned_data:
+        bases = set(cleaned_data.get("verification_bases") or [])
+
+        # does the form contain any basis for collecting upstream providers?
+        # if not, clear out the 'upstream_providers' from the cleaned data
+        if not bases.intersection(self.UPSTREAM_BASIS_SLUGS) and "upstream_providers" in cleaned_data:
             cleaned_data["upstream_providers"] = []
         return cleaned_data
 
@@ -294,6 +380,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
 
     fossil_free_energy_matching = forms.ChoiceField(
         choices=FossilFreeEnergyMatching.choices,
+        initial=FossilFreeEnergyMatching.ANNUAL,
         required=False,  # set to True in __init__ when the flag is on
         widget=forms.Select,
         label="Does this disclosure support a claim of using annual, or hourly matched fossil-free energy?",
@@ -360,7 +447,6 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             self.fields.pop("fossil_free_energy_matching", None)
             self.fields.pop("claim_coverage_percentage", None)
         else:
-            self.fields["fossil_free_energy_matching"].required = True
             # enforce ordering so both fields sit immediately before ``description``
             desired_order = [
                 "type",
@@ -376,6 +462,18 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
                 (k, self.fields[k]) for k in desired_order if k in self.fields
             )
 
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # If the v2 matching fields are shown, default fossil_free_energy_matching
+        # to Annual when the user didn't explicitly choose a value.
+        if (
+            "fossil_free_energy_matching" in self.fields
+            and not cleaned_data.get("fossil_free_energy_matching")
+        ):
+            cleaned_data["fossil_free_energy_matching"] = FossilFreeEnergyMatching.ANNUAL
+
+        return cleaned_data
 
 # Part of multi-step registration form (screen 3).
 # Uses ConvenientBaseFormSet to display add/delete buttons

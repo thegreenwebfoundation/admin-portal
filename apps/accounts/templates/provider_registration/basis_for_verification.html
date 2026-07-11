@@ -29,14 +29,19 @@
     // option in the form wizard. To change the displayed text, update the name, not the slug.
     {% endcomment %}
 
-    const RESELLER_STRING =
-      "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset";
+
+    const RESELLER_SLUG ="we-resell-use-an-existing-verified-green-provider-v2"
+    const LEGACY_RESELLER_SLUG = "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
+    const RESELLER_STRINGS = [RESELLER_SLUG, LEGACY_RESELLER_SLUG]
+
 
     const disclosureWarning = document.querySelector(
       "#upstream-providers-disclosure"
     );
 
-    const isReseller = document.querySelector(`input[value="${RESELLER_STRING}"]`);
+    const isReseller = document.querySelector(
+      `input[value="${RESELLER_SLUG}"], input[value="${LEGACY_RESELLER_SLUG}"]`
+    );
 
     const linkedProviderSelectionBox = document.querySelector(
       "#id_3-upstream_providers_helptext",

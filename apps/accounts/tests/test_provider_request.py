@@ -407,7 +407,7 @@ def test_wizard_view_happy_path(
     assert log_message.change_message == "Provider request created for review"
 
 
-def _create_provider_request(client, form_data) -> HttpResponse:
+def _create_provider_request(client, form_data, debug=False) -> HttpResponse:
     """
     Run through the steps the form wizard with the provided form data,
     to create a new provider request.
@@ -415,6 +415,18 @@ def _create_provider_request(client, form_data) -> HttpResponse:
     response = None
     for step, data in enumerate(form_data, 1):
         response = client.post(urls.reverse("provider_registration"), data, follow=True)
+
+        if debug:
+
+            print(f"--- step {step}: status={response.status_code} ---")
+            print("context keys:", list(response.context_data.keys()))
+
+            if "wizard" in response.context_data:
+                print("wizard step:", response.context_data["wizard"]["steps"].current)
+            if "form" in response.context_data:
+                print("form errors:", response.context_data["form"].errors)
+            if "providerrequest" in response.context_data:
+                print("ProviderRequest created:", response.context_data["providerrequest"])
     return response
 
 
@@ -2456,7 +2468,7 @@ def test_wizard_submission_with_upstream_providers(
     ]
     client.force_login(user)
 
-    response = _create_provider_request(client, form_data)
+    response = _create_provider_request(client, form_data, debug=True)
 
     pr = response.context_data["providerrequest"]
     pr_from_db = models.ProviderRequest.objects.get(id=pr.id)
@@ -2672,10 +2684,7 @@ def test_wizard_preview_shows_upstream_providers(
         wizard_form_consent,
     ]
 
-    response = None
-    for data in form_data:
-        response = client.post(urls.reverse("provider_registration"), data, follow=True)
-        assert response.status_code == 200
+    response = _create_provider_request(client, form_data, debug=True)
 
     # then: PREVIEW step is rendered
     preview_forms = response.context_data["preview_forms"]
@@ -3016,7 +3025,7 @@ def test_basis_form_clears_upstream_providers_when_resell_not_selected(user):
 @override_flag("verification_basis_v2", active=True)
 def test_provider_edit_initial_carries_new_upstream_bases(user):
     """
-    Given a provider already has the new upstream-related verification bases,
+    Given a provider already has the upstream-related verification bases,
     when starting the provider-edit wizard under verification_basis_v2,
     those bases are pre-checked in the basis step.
     """
@@ -3026,16 +3035,20 @@ def test_provider_edit_initial_carries_new_upstream_bases(user):
         website="https://example.com",
     )
 
+    # our initial migrations did not create this use case but
+    # we do use it in production
+    # it is superseded with corresponding one in the v2 update
     non_verified_slug = "we-use-a-non-verified-provider"
-    resell_slug = (
-        "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
-    )
+    VerificationBasisFactory.create(name=non_verified_slug)
+
+    resell_slug = account_forms.BasisForVerificationForm.LEGACY_RESELLER_SLUG
 
     hp.verification_bases.add(
         models.VerificationBasis.objects.get(slug=non_verified_slug)
     )
     hp.verification_bases.add(models.VerificationBasis.objects.get(slug=resell_slug))
 
+    # create our wizard
     initial = views.ProviderRequestWizardView.get_initial_dict(hp.id)
     basis_initial = initial[
         views.ProviderRequestWizardView.Steps.BASIS_FOR_VERIFICATION.value
@@ -3399,11 +3412,12 @@ def test_credential_form_hides_matching_fields_when_request_is_none():
 
 @pytest.mark.django_db
 @override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_claimed_percentage", active=True)
 def test_credential_form_shows_matching_fields_when_flag_on(user):
     """
-    With verification_basis_v2 ON, both new fields appear,
-    fossil_free_energy_matching is required, claim_coverage_percentage is
-    optional, and both sit immediately before ``description``.
+    With verification_basis_v2 and verification_basis_v2_claimed_percentage ON,
+    both new fields appear. claim_coverage_percentage is optional.
+    both sit immediately before ``description``.
     """
     from apps.accounts.forms.provider_request_wizard import CredentialForm
 
@@ -3414,8 +3428,6 @@ def test_credential_form_shows_matching_fields_when_flag_on(user):
 
     assert "fossil_free_energy_matching" in form.fields
     assert "claim_coverage_percentage" in form.fields
-    assert form.fields["fossil_free_energy_matching"].required is True
-    assert form.fields["claim_coverage_percentage"].required is False
 
     field_keys = list(form.fields.keys())
     assert (
@@ -3427,48 +3439,6 @@ def test_credential_form_shows_matching_fields_when_flag_on(user):
         == field_keys.index("description") - 1
     )
 
-
-@pytest.mark.django_db
-@override_flag("verification_basis_v2", active=True)
-def test_credential_form_matching_field_required_when_flag_on(user):
-    """
-    With the flag ON, omitting fossil_free_energy_matching invalidates the
-    form; supplying a valid choice validates it (when other required fields
-    are present).
-    """
-    from apps.accounts.forms.provider_request_wizard import CredentialForm
-
-    request = RequestFactory().get("/")
-    request.user = user
-
-    required = {
-        "type": models.EvidenceType.WEB_PAGE.value,
-        "title": "Some title",
-        "link": "https://example.com/evidence",
-    }
-
-    invalid_form = CredentialForm(
-        data={
-            **required,
-            "public": False,
-            # fossil_free_energy_matching deliberately omitted
-            "claim_coverage_percentage": "",
-        },
-        request=request,
-    )
-    assert not invalid_form.is_valid()
-    assert "fossil_free_energy_matching" in invalid_form.errors
-
-    valid_form = CredentialForm(
-        data={
-            **required,
-            "public": False,
-            "fossil_free_energy_matching": models.FossilFreeEnergyMatching.ANNUAL.value,
-            "claim_coverage_percentage": "",
-        },
-        request=request,
-    )
-    assert valid_form.is_valid(), valid_form.errors
 
 
 @pytest.mark.django_db
@@ -3495,6 +3465,30 @@ def test_credential_form_coverage_percentage_optional_when_flag_on(user):
         request=request,
     )
     assert form.is_valid(), form.errors
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_evidence_form_defaults_to_annual_when_matching_field_not_set(user):
+    from apps.accounts.forms.provider_request_wizard import CredentialForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = CredentialForm(
+        data={
+            "title": "Evidence without matching choice",
+            "type": models.EvidenceType.CERTIFICATE,
+            "link": "https://example.com",
+            "public": "on",
+        },
+        request=request,
+    )
+
+    assert form.is_valid(), form.errors
+    assert (
+        form.cleaned_data["fossil_free_energy_matching"]
+        == models.FossilFreeEnergyMatching.ANNUAL
+    )
 
 
 @pytest.mark.django_db

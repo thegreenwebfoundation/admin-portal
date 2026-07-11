@@ -4,8 +4,14 @@ from django.db import migrations
 from django.utils.text import slugify
 
 RESELLER_SLUG = (
+    "we-resell-use-an-existing-verified-green-provider-v2"
+)
+
+LEGACY_RESELLER_SLUG = (
     "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
 )
+
+
 RESELLING_EVIDENCE_LINK = (
     "https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-"
     "of-green-power/#reselling"
@@ -72,7 +78,7 @@ OCTOBER_2026_BASES = [
         ),
     },
     {
-        "slug": "we-use-a-non-verified-provider",
+        "slug": "we-use-a-non-verified-provider-v2",
         "name": "We use a provider that is not verified",
         "description": (
             "You rely on an upstream provider for green services, but that "
@@ -90,6 +96,9 @@ OCTOBER_2026_BASES = [
         "required_evidence_link": RESELLING_EVIDENCE_LINK,
     },
 ]
+
+INTRODUCED_SLUGS = [base["slug"] for base in OCTOBER_2026_BASES]
+
 
 
 def seed_october_2026_bases(apps, schema_editor):
@@ -127,22 +136,7 @@ def remove_october_2026_bases(apps, schema_editor):
     basis to its June 2026 name/link so it remains a valid legacy criterion.
     """
     VerificationBasis = apps.get_model("accounts", "VerificationBasis")
-
-    # Revert the resell basis (existed before this migration).
-    VerificationBasis.objects.filter(slug=RESELLER_SLUG).update(
-        version="2026-06",
-        name="We resell or actively use a provider that is already in the Green Web Dataset",
-        required_evidence_link=None,
-    )
-
-    # The remaining five bases were introduced by this migration; remove them.
-    remaining_slugs = [
-        base["slug"]
-        for base in OCTOBER_2026_BASES
-        if base["slug"] != RESELLER_SLUG
-        and base["slug"] != "we-use-a-non-verified-provider"
-    ]
-    VerificationBasis.objects.filter(slug__in=remaining_slugs).delete()
+    VerificationBasis.objects.filter(slug__in=INTRODUCED_SLUGS).delete()
 
 
 class Migration(migrations.Migration):
