@@ -35,12 +35,12 @@
 	<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
 
 	<section class="my-8">
-		<h1>Submit your evidence</h1>
+		<h1>Submit your disclosures</h1>
 		{% flag 'verification_basis_v2' %}
 		{% else %}
 		<p>Show us the steps you are taking to <span class="italic">avoid, reduce, or offset</span> your emissions. Upload as many supporting documents as needed.
 		{% endflag %}
-		<p><a href="https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of evidence we request</a>.</p>
+		<p><a href="https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/" target="_blank" rel="noopener noreferrer">Detailed information about the kind of disclosures we request</a>.</p>
 		<p class="uppercase font-bold">For each item, add a link <span class="uppercase">or</span> upload a file.</p>
 	</section>
 </div>
@@ -91,20 +91,23 @@
 			{% endcomment %}
 
 			{% for field in form %}
-				<div class="form__evidence--field mb-4 form__evidence--field-{{ field.name }}">
-					{{ field.label_tag }}
 
-					{% if field.help_text %}
-						<p class="helptext">{{ field.help_text | safe }}</p>
-					{% endif %}
+			    {% comment %}
+				We do not want to show the claim_coverage_percentage unless the flag
+				'verification_basis_v2_claimed_percentage' is active
+				{% endcomment %}
 
-					{{ field }}
+                {% if field.name == "claim_coverage_percentage" %}
+                    {% flag "verification_basis_v2_claimed_percentage" %}
+                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                    {% endflag %}
+                {% else %}
+                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                {% endif %}
 
-					{{ field.errors }}
-				</div>
 			{% endfor %}
 
-			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
+			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this disclosure">
 
 		</div>
 		{% endfor %}
@@ -115,17 +118,15 @@
 
 			{{ wizard.form.empty_form.non_field_errors }}
 			{% for field in wizard.form.empty_form %}
-				<div class="form__evidence--field mb-4 form__evidence--field-{{ field.name }}">
-					{{ field.label_tag }}
 
-					{% if field.help_text %}
-						<p class="helptext">{{ field.help_text | safe }}</p>
-					{% endif %}
+    			{% if field.name == "claim_coverage_percentage" %}
+                    {% flag "verification_basis_v2_claimed_percentage" %}
+                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                    {% endflag %}
+                {% else %}
+                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                {% endif %}
 
-					{{ field }}
-
-					{{ field.errors }}
-				</div>
 			{% endfor %}
 			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
 		</div>

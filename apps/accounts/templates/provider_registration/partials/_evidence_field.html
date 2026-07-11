@@ -1,0 +1,16 @@
+{% comment %}
+This is an field partial designed to be included on a conditional basis
+when we use flags to decide whether to expose form elements in our form wizard
+{% endcomment %}
+
+<div class="form__evidence--field mb-4 form__evidence--field-{{ field.name }}">
+    {{ field.label_tag }}
+
+    {% if field.help_text %}
+        <p class="helptext">{{ field.help_text | safe }}</p>
+    {% endif %}
+
+    {{ field }}
+
+    {{ field.errors }}
+</div>
