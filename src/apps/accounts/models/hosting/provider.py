@@ -55,6 +55,13 @@ class VerificationBasisVersion(models.TextChoices):
     while pre-existing records are backfilled to ``JUNE_2026``. Which
     version is surfaced to end users is controlled by the
     ``verification_basis_v2`` waffle flag via :func:`get_active_version`.
+
+    Note: the ``verification_basis_v2`` flag now controls only October 2026
+    verification bases / upstream providers / intro text. The fossil-free 2030
+    target URL and the hourly/annual disclosure fields have been split out
+    into their own flags (``verification_basis_v2_fossil_free_2030`` and
+    ``verification_basis_v2_hourly_annual`` respectively) and are no longer
+    tied to this flag.
     """
 
     JUNE_2026 = "2026-06", "Current (June 2026)"
@@ -71,6 +78,10 @@ def get_active_version(request=None) -> str:
     cannot be safely evaluated, so the June 2026 version is returned as a
     conservative fallback. This avoids hitting ``request.GET`` /
     ``request.user`` on a ``None`` request inside waffle.
+
+    Note: this flag controls only the October 2026 verification bases. The
+    fossil-free 2030 target URL and the hourly/annual disclosure fields have
+    their own flags and are consulted independently in their respective forms.
     """
     if request is None:
         return VerificationBasisVersion.JUNE_2026

@@ -401,9 +401,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             kwargs["request"] = self.request
 
         # The green evidence step is a formset; ``form_kwargs`` is threaded
-        # to each child ``CredentialForm.__init__`` so it can consult the
-        # ``verification_basis_v2`` waffle flag to show/hide the matching
-        # and coverage fields.
+        # to each child ``CredentialForm.__init__``. This allows them to
+        # consult `verification_basis_v2` waffle flags and decide to
+        # show/hide the annual / hourly matching, or fossil free coverage fields.
         if step == self.Steps.GREEN_EVIDENCE.value:
             kwargs["form_kwargs"] = {"request": self.request}
 

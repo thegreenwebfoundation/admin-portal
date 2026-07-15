@@ -24,8 +24,14 @@ def create_verification_basis_v2_flag(apps, schema_editor):
             "authenticated": False,
             "note": (
                 "Controls visibility of October 2026 verification basis criteria "
-                "in request forms. Set everyone=None (default) for per-user/per-group "
-                "rollout; flip everyone=True for the global October 2026 switchover."
+                "in request forms (get_active_version, upstream_providers field, "
+                "legacy slug conversion, upstream_section_enabled template tag, "
+                "and the evidence intro text swap). Note: the fossil-free 2030 "
+                "target URL and the hourly/annual disclosure fields now have "
+                "their own flags (verification_basis_v2_fossil_free_2030 and "
+                "verification_basis_v2_hourly_annual respectively). Set "
+                "everyone=None (default) for per-user/per-group rollout; flip "
+                "everyone=True for the global October 2026 switchover."
             ),
         },
     )
