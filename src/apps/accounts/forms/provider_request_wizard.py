@@ -371,11 +371,11 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
     """
     Per-row form used inside the green evidence formset.
 
-    Accepts an optional ``request`` kwarg so the ``verification_basis_v2``
-    waffle flag can be consulted to decide whether to show the
-    ``fossil_free_energy_matching`` and ``claim_coverage_percentage``
-    fields. When the flag is off, both fields are popped so the flag-OFF
-    rendering is byte-identical to the legacy form.
+    Accepts an optional ``request`` kwarg so the
+    ``verification_basis_v2_hourly_annual`` waffle flag can be consulted to
+    decide whether to show the ``fossil_free_energy_matching`` and
+    ``claim_coverage_percentage`` fields. When the flag is off, both fields
+    are popped so the flag-OFF rendering is byte-identical to the legacy form.
     """
 
     fossil_free_energy_matching = forms.ChoiceField(
@@ -441,7 +441,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         show_matching_fields = request is not None and flag_is_active(
-            request, "verification_basis_v2"
+            request, "verification_basis_v2_hourly_annual"
         )
         if not show_matching_fields:
             self.fields.pop("fossil_free_energy_matching", None)
@@ -813,10 +813,11 @@ class OrgDetailsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """
-        Accepts an optional ``request`` kwarg so the ``verification_basis_v2``
-        waffle flag can be consulted to decide whether to show the
-        ``public_2030_target_url`` field. When the flag is off, the field is
-        popped so flag-OFF rendering stays byte-identical to the legacy form.
+        Accepts an optional ``request`` kwarg so the
+        ``verification_basis_v2_fossil_free_2030`` waffle flag can be
+        consulted to decide whether to show the ``public_2030_target_url``
+        field. When the flag is off, the field is popped so flag-OFF rendering
+        stays byte-identical to the legacy form.
         """
         from waffle import flag_is_active
 
@@ -824,7 +825,7 @@ class OrgDetailsForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         show_field = request is not None and flag_is_active(
-            request, "verification_basis_v2"
+            request, "verification_basis_v2_fossil_free_2030"
         )
         if not show_field:
             self.fields.pop("public_2030_target_url", None)

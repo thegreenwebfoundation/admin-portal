@@ -3414,11 +3414,11 @@ def test_credential_form_hides_matching_fields_when_request_is_none():
 
 
 @pytest.mark.django_db
-@override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_hourly_annual", active=True)
 @override_flag("verification_basis_v2_claimed_percentage", active=True)
 def test_credential_form_shows_matching_fields_when_flag_on(user):
     """
-    With verification_basis_v2 and verification_basis_v2_claimed_percentage ON,
+    With verification_basis_v2_hourly_annual and verification_basis_v2_claimed_percentage ON,
     both new fields appear. claim_coverage_percentage is optional.
     both sit immediately before ``description``.
     """
@@ -3445,7 +3445,7 @@ def test_credential_form_shows_matching_fields_when_flag_on(user):
 
 
 @pytest.mark.django_db
-@override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_hourly_annual", active=True)
 def test_credential_form_coverage_percentage_optional_when_flag_on(user):
     """
     With the flag ON, claim_coverage_percentage remains optional: a form
@@ -3470,7 +3470,7 @@ def test_credential_form_coverage_percentage_optional_when_flag_on(user):
     assert form.is_valid(), form.errors
 
 @pytest.mark.django_db
-@override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_hourly_annual", active=True)
 def test_evidence_form_defaults_to_annual_when_matching_field_not_set(user):
     from apps.accounts.forms.provider_request_wizard import CredentialForm
 
@@ -3495,7 +3495,7 @@ def test_evidence_form_defaults_to_annual_when_matching_field_not_set(user):
 
 
 @pytest.mark.django_db
-@override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_hourly_annual", active=True)
 @pytest.mark.parametrize(
     "value,should_be_valid",
     [
@@ -3547,6 +3547,7 @@ def _walk_to_evidence_step(client, user, org_details, org_location, services):
 
 @pytest.mark.django_db
 @override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_hourly_annual", active=True)
 @override_flag("verification_basis_v2_claimed_percentage", active=True)
 def test_wizard_evidence_step_renders_new_fields_when_flag_on(
     user,
@@ -3557,10 +3558,11 @@ def test_wizard_evidence_step_renders_new_fields_when_flag_on(
     wizard_form_verification_bases_data,
 ):
     """
-    Given the verification_basis_v2 and verification_basis_v2_claimed_percentage flags
-    are ON, the green-evidence step surfaces the fossil_free_energy_matching and
-    claim_coverage_percentage form fields immediately above the description textarea,
-    and hides the legacy "avoid, reduce, or offset" intro sentence (superseded by the
+    Given the verification_basis_v2, verification_basis_v2_hourly_annual and
+    verification_basis_v2_claimed_percentage flags are ON, the green-evidence
+    step surfaces the fossil_free_energy_matching and claim_coverage_percentage
+    form fields immediately above the description textarea, and hides the
+    legacy "avoid, reduce, or offset" intro sentence (superseded by the
     October 2026 criteria wording).
     """
     _walk_to_evidence_step(
@@ -3648,6 +3650,7 @@ def test_wizard_evidence_step_hides_new_fields_when_flag_off(
 
 @pytest.mark.django_db
 @override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_hourly_annual", active=True)
 def test_wizard_preview_renders_new_fields_when_flag_on(
     user,
     client,
@@ -3798,3 +3801,70 @@ def test_provider_request_evidence_inline_includes_new_fields():
     }
     assert "fossil_free_energy_matching" in inline_field_names
     assert "claim_coverage_percentage" in inline_field_names
+
+
+# --- Flag independence tests ---
+#
+# These guard against future regressions where someone re-couples the three
+# features (fossil-free 2030 link, hourly/annual disclosures, October 2026
+# verification bases) to a single flag. Each test enables exactly ONE of the
+# three flags and asserts only its own feature surfaces.
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2_hourly_annual", active=True)
+def test_credential_form_shows_matching_fields_with_only_hourly_annual_flag(user):
+    """
+    With ONLY ``verification_basis_v2_hourly_annual`` ON (and
+    ``verification_basis_v2`` OFF), the matching and coverage fields appear
+    on ``CredentialForm``. This proves the hourly/annual feature is decoupled
+    from the October 2026 verification bases flag.
+    """
+    from apps.accounts.forms.provider_request_wizard import CredentialForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = CredentialForm(request=request)
+
+    assert "fossil_free_energy_matching" in form.fields
+    assert "claim_coverage_percentage" in form.fields
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2_fossil_free_2030", active=True)
+def test_org_details_form_shows_2030_field_with_only_fossil_free_flag(user):
+    """
+    With ONLY ``verification_basis_v2_fossil_free_2030`` ON (and
+    ``verification_basis_v2`` OFF), the ``public_2030_target_url`` field
+    appears on ``OrgDetailsForm``. This proves the fossil-free 2030 feature
+    is decoupled from the October 2026 verification bases flag.
+    """
+    from apps.accounts.forms.provider_request_wizard import OrgDetailsForm
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    form = OrgDetailsForm(request=request)
+
+    assert "public_2030_target_url" in form.fields
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_verification_bases_return_october_with_only_v2_flag(user):
+    """
+    With ONLY ``verification_basis_v2`` ON (and the other two flags OFF),
+    ``get_active_version`` returns the October 2026 version. This proves the
+    October 2026 verification bases feature is decoupled from the fossil-free
+    2030 and hourly/annual flags.
+    """
+    from apps.accounts.models.hosting.provider import (
+        VerificationBasisVersion,
+        get_active_version,
+    )
+
+    request = RequestFactory().get("/")
+    request.user = user
+
+    assert get_active_version(request) == VerificationBasisVersion.OCTOBER_2026
