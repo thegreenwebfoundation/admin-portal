@@ -5,7 +5,7 @@ description = "Green Web Foundation Portal"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "awscli>=1.35.20",
+    "awscli>=1.44.78",
     "awscli-plugin-endpoint>=0.4",
     "boto3>=1.35.54",
     "db-to-sqlite>=1.5",
