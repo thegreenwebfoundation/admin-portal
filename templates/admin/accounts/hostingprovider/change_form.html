@@ -1,19 +1,19 @@
 {% extends "admin/change_form.html" %}
 {% block field_sets %}
     {% for fieldset in adminform %}
-        {% if fieldset.name == "Hostingprovider info" %}
-            {% include "admin/accounts/hostingprovider/hosting_provider_fieldset.html" %}
-        {% elif fieldset.name == "Datacenter info" %}
-            {% include "admin/accounts/hostingprovider/data_center_fieldset.html" %}
-        {% else %}
+        {% if fieldset.name == "Upstream providers" %}
             {% include "admin/includes/fieldset.html" %}
-        {% endif %}
-        {% if fieldset.name == "Upstream / downstream providers" %}
             {% for inline_admin_formset in inline_admin_formsets %}
                 {% if inline_admin_formset.opts.verbose_name_plural == "Upstream providers" %}
                     {% include inline_admin_formset.opts.template %}
                 {% endif %}
             {% endfor %}
+        {% elif fieldset.name == "Hostingprovider info" %}
+            {% include "admin/accounts/hostingprovider/hosting_provider_fieldset.html" %}
+        {% elif fieldset.name == "Datacenter info" %}
+            {% include "admin/accounts/hostingprovider/data_center_fieldset.html" %}
+        {% else %}
+            {% include "admin/includes/fieldset.html" %}
         {% endif %}
     {% endfor %}
 {% endblock %}
