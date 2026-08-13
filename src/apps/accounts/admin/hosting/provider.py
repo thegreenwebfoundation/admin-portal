@@ -38,6 +38,7 @@ from ...models import (
     Label,
     Service,
     SupportMessage,
+    UpstreamProvider,
     VerificationBasis,
 )
 from ...utils import get_admin_name, reverse_admin_name
@@ -56,6 +57,33 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
     extra = 0
     model = HostingProviderSupportingDocument
     form = forms.InlineSupportingDocumentForm
+
+
+class UpstreamProviderInline(admin.TabularInline):
+    """Inline for managing upstream provider connections with visibility."""
+
+    model = UpstreamProvider
+    fk_name = "parent"
+    extra = 1
+    autocomplete_fields = ["upstream"]
+    fields = ("upstream", "is_public")
+
+    def get_formset(self, request, obj=None, **kwargs):
+        """
+        Default new admin-created connections to is_public=False
+        (per requirement). Existing connections keep their saved value.
+        """
+        formset = super().get_formset(request, obj=None, **kwargs)
+        original_init = formset.form.__init__
+
+        def new_init(self, *args, **kwargs):
+            super(formset.form, self).__init__(*args, **kwargs)
+            # Only set default for unbound extra forms (new rows)
+            if not self.is_bound and not self.initial:
+                self.initial["is_public"] = False
+
+        formset.form.__init__ = new_init
+        return formset
 
 
 class HostingProviderNoteInline(admin.StackedInline):
@@ -122,6 +150,7 @@ class HostingAdmin(
         GreencheckAsnInline,
         GreencheckAsnApproveInline,
         HostingProviderNoteInline,
+        UpstreamProviderInline,
     ]
     search_fields = ("name",)
 
@@ -558,7 +587,6 @@ class HostingAdmin(
             "Upstream / downstream providers",
             {
                 "fields": (
-                    "upstream_providers",
                     "display_downstream_providers",
                 )
             },
@@ -620,13 +648,18 @@ class HostingAdmin(
     def display_downstream_providers(self, obj):
         """
         Returns markup for a list of providers that have linked to this provider
-        as their upstream green provider.
+        as their upstream green provider, including the visibility state of each
+        connection.
         """
-        downstream = obj.downstream_providers.all()
+        downstream = obj.downstream_connections.select_related("parent").all()
         if not downstream:
             return "No other providers are listed as relying on this provider."
         return "<br>".join(
-            [f"<a href={hp.admin_url}>{hp.name}</a>" for hp in downstream]
+            [
+                f'<a href={conn.parent.admin_url}>{conn.parent.name}</a> '
+                f"({'public' if conn.is_public else 'hidden'})"
+                for conn in downstream
+            ]
         )
 
     def services(self, obj):

@@ -10,11 +10,13 @@
 {% block footer_section %}
 {% upstream_section_enabled as show_upstream %}
 {% if show_upstream %}
-    <div class="alert__warning mt-0 mb-0" id="upstream-providers-disclosure" style="display: none">
+    <div class="alert__warning mt-0 mb-0" id="upstream-providers-disclosure" hidden>
         <p class="mb-0">
-            This relationship may be publicly displayed and shared by the Green
-            Web Foundation through our online platforms and tools. If you do not wish for
-            this relationship to be public, then please select another basis for verification.
+            Upstream provider relationships may be publicly displayed and shared
+            by the Green Web Foundation through our online platforms and tools.
+            You can choose to hide individual upstream providers from the public
+            directory by unchecking the "show in public directory" option next to
+            each selected provider.
         </p>
     </div>
 {% endif %}
@@ -52,19 +54,18 @@
       if (!isReseller) {
         // No resell checkbox in this regime – there is no selected basis to
         // justify showing the upstream provider picker, so hide it.
-        linkedProviderSelectionBox.style.display = "none";
-        disclosureWarning.style.display = "none";
+        linkedProviderSelectionBox.setAttribute("hidden", "");
+        disclosureWarning.setAttribute("hidden", "");
         return;
       }
 
       if (isReseller.checked) {
-        // setting display to "" (i.e. block) makes our widget visible when checked
-        // otherwise the 'none' style set in the 'else' branch hides it
-        linkedProviderSelectionBox.style.display = "";
-        disclosureWarning.style.display = "";
+        // Remove the hidden attribute to make the widget visible
+        linkedProviderSelectionBox.removeAttribute("hidden");
+        disclosureWarning.removeAttribute("hidden");
       } else {
-        linkedProviderSelectionBox.style.display = "none";
-        disclosureWarning.style.display = "none";
+        linkedProviderSelectionBox.setAttribute("hidden", "");
+        disclosureWarning.setAttribute("hidden", "");
       }
     }
 
@@ -88,6 +89,13 @@
   display: flex !important;
   align-items: center !important;
   overflow: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .upstream-visibility-row {
+        animation: none !important;
+        transition: none !important;
+    }
 }
 </style>
 {% endif %}

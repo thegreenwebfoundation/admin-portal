@@ -34,6 +34,7 @@ from ....models import (
     ProviderRequestIPRange,
     ProviderRequestLocation,
     ProviderRequestStatus,
+    ProviderRequestUpstreamProvider,
 )
 from ....permissions import manage_provider
 from ....tasks import process_newsletter_registration
@@ -249,7 +250,14 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
 
         upstream_providers = verification_bases_form.cleaned_data.get("upstream_providers")
         if upstream_providers:
-            pr.upstream_providers.set(upstream_providers)
+            for item in upstream_providers:
+                provider = item["provider"]
+                is_public = item.get("is_public", True)
+                ProviderRequestUpstreamProvider.objects.update_or_create(
+                    request=pr,
+                    upstream=provider,
+                    defaults={"is_public": is_public},
+                )
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
@@ -621,7 +629,16 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "verification_bases": [
                     b for b in hp_instance.verification_bases.slugs()
                 ],
-                "upstream_providers": [p.id for p in hp_instance.upstream_providers.all()],
+                "upstream_providers": [
+                    {
+                        "provider": c.upstream_id,
+                        "is_public": c.is_public,
+                        "provider_name": c.upstream.name,
+                    }
+                    for c in hp_instance.upstream_connections.select_related(
+                        "upstream"
+                    )
+                ],
                 "country": str(hp_instance.country),
             },
             cls.Steps.GREEN_EVIDENCE.value: [

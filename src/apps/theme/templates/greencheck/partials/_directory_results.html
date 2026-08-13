@@ -62,7 +62,7 @@
                         <div class="my-4">
                             <p class="text-sm text-neutral-600 mb-1">Relies on:</p>
                             <ul class="pl-0">
-                                {% for upstream in obj.upstream_providers.all %}
+                                {% for upstream in obj.public_upstream_providers.all %}
                                     <li class="service-label inline-block bg-neutral-200">{{ upstream.name }}</li>
                                 {% endfor %}
                             </ul>

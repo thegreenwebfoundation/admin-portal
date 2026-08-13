@@ -72,7 +72,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "newsletter_opt_in",
         "data_processing_opt_in",
         "provider",
-        "upstream_providers",
+        "display_upstream_providers",
         "public_2030_target_url",
     )
     actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
@@ -84,6 +84,21 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         elif db_field.name == "verification_bases":
             kwargs['widget'] = LabelWidget(model=VerificationBasis)
         return super(ProviderRequest, self).formfield_for_dbfield(db_field,**kwargs)
+
+    @mark_safe
+    @admin.display(description="Upstream providers")
+    def display_upstream_providers(self, obj):
+        """
+        Read-only display of upstream providers selected in this request,
+        showing the visibility state of each connection.
+        """
+        connections = obj.upstream_connections.select_related("upstream").all()
+        if not connections:
+            return "None"
+        return "<br>".join(
+            f"{conn.upstream.name} ({'public' if conn.is_public else 'hidden'})"
+            for conn in connections
+        )
 
     def send_approval_email(
         self,
