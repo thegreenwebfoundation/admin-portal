@@ -63,7 +63,12 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
                     pid = str(pid.pk)
                 else:
                     pid = str(pid)
-                result.append({"provider": pid, "is_public": item.get("is_public", True), "provider_name": item.get("provider_name")})
+                entry = {"provider": pid, "is_public": item.get("is_public", True)}
+                # Only carry forward provider_name if truthy
+                pname = item.get("provider_name")
+                if pname:
+                    entry["provider_name"] = pname
+                result.append(entry)
             elif hasattr(item, "pk"):
                 result.append({"provider": str(item.pk), "is_public": True})
             elif item:
@@ -90,6 +95,26 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
 
     def _render_visibility_list(self, name, field_id, items):
         """Render the fieldset of per-provider visibility checkboxes."""
+        # Look up provider names for any items missing one
+        missing_pks = [
+            int(item["provider"])
+            for item in items
+            if not item.get("provider_name")
+        ]
+        name_map = {}
+        if missing_pks:
+            from apps.accounts.models import Hostingprovider
+            name_map = {
+                str(p.pk): p.name
+                for p in Hostingprovider.objects.filter(pk__in=missing_pks)
+            }
+
+        for item in items:
+            if not item.get("provider_name"):
+                item["provider_name"] = name_map.get(
+                    item["provider"], f"Provider #{item['provider']}"
+                )
+
         if not items:
             return format_html(
                 '<fieldset class="upstream-visibility-list mt-3" '
