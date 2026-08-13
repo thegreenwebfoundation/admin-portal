@@ -132,7 +132,8 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
 
         rows_html = format_html_join(
             "",
-            '<div class="upstream-visibility-row flex items-center gap-2 mb-1">'
+            '<div class="upstream-visibility-row flex items-center gap-2 mb-1" '
+            'data-provider-id="{}">'
             '<input type="checkbox" name="{}_visibility_{}" id="{}_visibility_{}" '
             'class="form-checkbox" {} /> '
             '<label for="{}_visibility_{}" class="text-sm">'
@@ -142,6 +143,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
                 "</div>",
             (
                 (
+                    item["provider"],
                     name,
                     item["provider"],
                     field_id,
