@@ -250,6 +250,8 @@ class UpstreamProvider(TimeStampedModel):
 
     class Meta:
         unique_together = ("parent", "upstream")
+        verbose_name = "upstream provider"
+        verbose_name_plural = "upstream providers"
 
     def __str__(self):
         return f"{self.parent} → {self.upstream} ({'public' if self.is_public else 'hidden'})"

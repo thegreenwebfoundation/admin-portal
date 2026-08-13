@@ -67,6 +67,7 @@ class UpstreamProviderInline(admin.TabularInline):
     extra = 1
     autocomplete_fields = ["upstream"]
     fields = ("upstream", "is_public")
+    verbose_name_plural = "Upstream providers"
 
     def get_formset(self, request, obj=None, **kwargs):
         """
