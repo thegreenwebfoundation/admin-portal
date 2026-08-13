@@ -88,6 +88,38 @@ class ProviderRequestVerificationBasis(tag_models.TaggedItemBase):
     )
 
 
+class ProviderRequestUpstreamProvider(TimeStampedModel):
+    """
+    Through model for the upstream_providers M2M on ProviderRequest.
+    Carries an ``is_public`` flag so a submitter can choose to hide an
+    upstream connection from the public directory.
+    """
+
+    request = models.ForeignKey(
+        "ProviderRequest",
+        on_delete=models.CASCADE,
+        related_name="upstream_connections",
+    )
+    upstream = models.ForeignKey(
+        Hostingprovider,
+        on_delete=models.CASCADE,
+    )
+    is_public = models.BooleanField(
+        default=True,
+        verbose_name="Visible publicly",
+        help_text=(
+            "If unchecked, this upstream connection will not be shown in "
+            "the public directory."
+        ),
+    )
+
+    class Meta:
+        unique_together = ("request", "upstream")
+
+    def __str__(self):
+        return f"{self.request} → {self.upstream} ({'public' if self.is_public else 'hidden'})"
+
+
 class ProviderRequest(TimeStampedModel):
     """
     Model representing the input data
@@ -153,6 +185,7 @@ class ProviderRequest(TimeStampedModel):
     upstream_providers = models.ManyToManyField(
         Hostingprovider,
         blank=True,
+        through="ProviderRequestUpstreamProvider",
         related_name="downstream_provider_requests",
         verbose_name="Upstream providers",
         help_text="Active verified providers this request relies on for its green status.",
@@ -318,7 +351,18 @@ class ProviderRequest(TimeStampedModel):
             hp.is_listed = True
 
         hp.verification_bases.set(self.verification_bases.all())
-        hp.upstream_providers.set(self.upstream_providers.all())
+
+        # Preserve visibility choices from the request into the live provider.
+        # We use the through model directly because ``.set() on an M2M with
+        # a custom through model does not carry per-connection metadata.
+        from .hosting import UpstreamProvider
+
+        for conn in self.upstream_connections.all():
+            UpstreamProvider.objects.update_or_create(
+                parent=hp,
+                upstream=conn.upstream,
+                defaults={"is_public": conn.is_public},
+            )
 
         hp.save()
 
