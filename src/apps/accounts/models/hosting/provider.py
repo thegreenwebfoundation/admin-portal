@@ -221,6 +221,40 @@ class ProviderVerificationBasis(tag_models.TaggedItemBase):
     )
 
 
+class UpstreamProvider(TimeStampedModel):
+    """
+    Through model for the self-referential upstream_providers M2M on
+    Hostingprovider. Carries an ``is_public`` flag so that an upstream
+    connection can be hidden from the public directory while still
+    recorded internally.
+    """
+
+    parent = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+        related_name="upstream_connections",
+    )
+    upstream = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+        related_name="downstream_connections",
+    )
+    is_public = models.BooleanField(
+        default=True,
+        verbose_name="Visible publicly",
+        help_text=(
+            "If unchecked, this upstream connection will not be shown in "
+            "the public directory."
+        ),
+    )
+
+    class Meta:
+        unique_together = ("parent", "upstream")
+
+    def __str__(self):
+        return f"{self.parent} → {self.upstream} ({'public' if self.is_public else 'hidden'})"
+
+
 class Hostingprovider(models.Model, DirtyFieldsMixin):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
@@ -301,6 +335,7 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         "self",
         symmetrical=False,
         blank=True,
+        through="UpstreamProvider",
         related_name="downstream_providers",
         verbose_name="Upstream providers",
         help_text="Other active verified providers this provider relies on for its green status.",
@@ -434,6 +469,16 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
             return self.website
         else:
             return f"https://{self.website}"
+
+    @property
+    def public_upstream_providers(self):
+        """
+        Return only upstream providers whose connection is marked as public.
+        Used by the public directory to exclude hidden connections.
+        """
+        return self.upstream_providers.filter(
+            upstreamprovider__is_public=True
+        )
 
     # Mutators
     def refresh_shared_secret(self) -> str:

@@ -20,6 +20,7 @@ from .provider import (
     Service,
     PartnerChoice,
     ProviderSharedSecret,
+    UpstreamProvider,
     VerificationBasis,
     VerificationBasisVersion,
     get_active_version,
