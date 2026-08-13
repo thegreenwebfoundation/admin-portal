@@ -167,19 +167,21 @@
         }
 
         // --- Select2 event integration ---
+        //
+        // Select2 fires `select2:select` / `select2:unselect` as jQuery
+        // events, so we listen via jQuery. The selected/unselected item's ID
+        // is in `e.params.data.id`.
 
-        // select2:select — a provider was chosen
-        selectElement.addEventListener("select2:select", function (e) {
-            var id = e.detail && e.detail.id;
-            if (id !== undefined && id !== null) {
+        var $select = (window.jQuery || window.jq)(selectElement);
+        $select.on("select2:select", function (e) {
+            var id = (e.params && e.params.data && e.params.data.id) || null;
+            if (id !== null) {
                 addRow(id);
             }
         });
-
-        // select2:unselect — a provider was removed
-        selectElement.addEventListener("select2:unselect", function (e) {
-            var id = e.detail && e.detail.id;
-            if (id !== undefined && id !== null) {
+        $select.on("select2:unselect", function (e) {
+            var id = (e.params && e.params.data && e.params.data.id) || null;
+            if (id !== null) {
                 removeRow(id);
             }
         });
