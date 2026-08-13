@@ -584,8 +584,14 @@ class HostingAdmin(
             "Associated datacenters",
             {"fields": ("data_centers",)},
         )
-        linked_by_fieldset = (
-            "Upstream / downstream providers",
+        upstream_fieldset = (
+            "Upstream providers",
+            {
+                "fields": (),
+            },
+        )
+        downstream_fieldset = (
+            "Downstream providers",
             {
                 "fields": (
                     "display_downstream_providers",
@@ -593,7 +599,7 @@ class HostingAdmin(
             },
         )
         if obj is not None:
-            fieldset.extend([users_fieldset, dc_fieldset, linked_by_fieldset])
+            fieldset.extend([users_fieldset, dc_fieldset, upstream_fieldset, downstream_fieldset])
 
         admin_editable = (
             "Admin only",
