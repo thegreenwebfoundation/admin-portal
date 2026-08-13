@@ -58,18 +58,37 @@ def render_as_upstream_providers(value):
 
     # Handle both new format (list of dicts) and legacy format (list of IDs)
     if isinstance(value, list) and value and isinstance(value[0], dict):
-        provider_ids = [item["provider"] for item in value]
+        # Normalize provider to PK — may be a Hostingprovider instance or an ID
+        def _get_pk(p):
+            return p.pk if hasattr(p, "pk") else int(p)
+
+        # If provider is already a model instance, use it directly
+        if all(hasattr(item.get("provider"), "name") for item in value):
+            list_items = format_html_join(
+                "",
+                "<li>{} ({})</li>",
+                (
+                    (
+                        item["provider"].name,
+                        "public" if item.get("is_public", True) else "hidden",
+                    )
+                    for item in value
+                ),
+            )
+            return format_html("<ul>{}</ul>", list_items)
+
+        provider_ids = [_get_pk(item["provider"]) for item in value]
         providers = {p.id: p for p in Hostingprovider.objects.filter(id__in=provider_ids)}
         list_items = format_html_join(
             "",
             "<li>{} ({})</li>",
             (
                 (
-                    providers[item["provider"]].name,
+                    providers[_get_pk(item["provider"])].name,
                     "public" if item.get("is_public", True) else "hidden",
                 )
                 for item in value
-                if item["provider"] in providers
+                if _get_pk(item["provider"]) in providers
             ),
         )
         return format_html("<ul>{}</ul>", list_items)

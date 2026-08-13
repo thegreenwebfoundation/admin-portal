@@ -45,6 +45,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         - list of IDs (legacy format, defaults is_public=True)
         - a single dict
         - a single ID
+        - model instances
         """
         if value is None:
             return []
@@ -56,7 +57,15 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         result = []
         for item in value:
             if isinstance(item, dict):
-                result.append(item)
+                # Normalize provider to a string ID
+                pid = item.get("provider")
+                if hasattr(pid, "pk"):
+                    pid = str(pid.pk)
+                else:
+                    pid = str(pid)
+                result.append({"provider": pid, "is_public": item.get("is_public", True), "provider_name": item.get("provider_name")})
+            elif hasattr(item, "pk"):
+                result.append({"provider": str(item.pk), "is_public": True})
             elif item:
                 result.append({"provider": str(item), "is_public": True})
         return result
@@ -66,9 +75,13 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         Render the Select2 multi-select, then append the visibility
         checkbox fieldset below it.
         """
-        select_html = super().render(name, value, attrs, renderer, **kwargs)
-
+        # Normalize the value to a format the underlying SelectMultiple
+        # understands (list of PK strings) before passing to super().
         items = self._normalize_initial(value)
+        pk_values = [item["provider"] for item in items]
+
+        select_html = super().render(name, pk_values, attrs, renderer, **kwargs)
+
         field_id = attrs.get("id", name) if attrs else name
 
         visibility_html = self._render_visibility_list(name, field_id, items)
@@ -159,37 +172,38 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         underlying SelectMultiple expects (a list of PKs as strings).
         """
         items = self._normalize_initial(value)
-        return [str(item["provider"]) for item in items]
+        result = []
+        for item in items:
+            pid = item["provider"]
+            if hasattr(pid, "pk"):
+                pid = pid.pk
+            result.append(str(pid))
+        return result
 
 
-class UpstreamProviderChoiceField(forms.Field):
+class UpstreamProviderChoiceField(forms.ModelMultipleChoiceField):
     """
     Custom form field for selecting upstream providers with per-item
     visibility. Pairs with :class:`UpstreamProviderSelectWidget`.
 
-    Unlike ``ModelMultipleChoiceField``, this field's ``clean()`` returns
-    a list of dicts::
+    Extends ``ModelMultipleChoiceField`` so that the DAL widget's
+    ``QuerySetSelectMixin`` can access ``self.choices.queryset`` for
+    rendering selected options.
+
+    Unlike the parent, this field's ``clean()`` returns a list of dicts::
 
         [{"provider": <Hostingprovider instance>, "is_public": True}, ...]
-
-    The queryset restricts which providers are valid choices.
     """
-
-    def __init__(self, queryset, *args, **kwargs):
-        self.queryset = queryset
-        super().__init__(*args, **kwargs)
-
-    def to_python(self, value):
-        return value
 
     def clean(self, value):
         """
-        Validate that all provider IDs in the value correspond to valid
-        providers in the queryset. Return a list of dicts with the
-        provider PK as a string and the is_public flag.
+        Override clean to prevent the parent from converting the widget's
+        list-of-dicts into a queryset. We validate the provider IDs against
+        the queryset ourselves.
         """
-        value = super().clean(value)
-        if not value:
+        # value is the output of the widget's value_from_datadict:
+        # a list of {"provider": str_id, "is_public": bool} dicts
+        if value in self.empty_values or not value:
             return []
 
         if not isinstance(value, list):

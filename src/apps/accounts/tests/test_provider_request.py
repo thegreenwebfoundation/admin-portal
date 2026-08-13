@@ -157,6 +157,7 @@ def wizard_form_verification_bases_with_linked_provider_data():
         "provider_request_wizard_view-current_step": "3",
         "3-verification_bases": [regular_basis.slug, reseller_slug],
         "3-upstream_providers": [str(upstream.id)],
+        f"3-upstream_providers_visibility_{upstream.id}": "on",
     }
 
 
@@ -669,6 +670,8 @@ def test_approve_updates_existing_provider(hosting_provider_with_sample_user):
 @pytest.mark.django_db
 def test_approve_creates_hosting_provider_with_upstream_providers():
     # given: a provider request with linked providers is created
+    from apps.accounts.models import ProviderRequestUpstreamProvider
+
     upstream = models.Hostingprovider.objects.create(
         name="Upstream Green",
         country="GB",
@@ -679,7 +682,9 @@ def test_approve_creates_hosting_provider_with_upstream_providers():
     pr = ProviderRequestFactory.create(
         services=faker.words(nb=4), verification_bases=faker.words(nb=4)
     )
-    pr.upstream_providers.set([upstream])
+    ProviderRequestUpstreamProvider.objects.create(
+        request=pr, upstream=upstream, is_public=True
+    )
     ProviderRequestLocationFactory.create(request=pr)
     ProviderRequestEvidenceFactory.create(request=pr)
 
@@ -697,6 +702,8 @@ def test_approve_updates_existing_provider_with_upstream_providers(
     hosting_provider_with_sample_user,
 ):
     # given: an existing hosting provider and a new upstream provider
+    from apps.accounts.models import ProviderRequestUpstreamProvider
+
     upstream = models.Hostingprovider.objects.create(
         name="Upstream Green",
         country="GB",
@@ -707,7 +714,9 @@ def test_approve_updates_existing_provider_with_upstream_providers(
     pr = ProviderRequestFactory.create(
         services=faker.words(nb=4), provider=hosting_provider_with_sample_user
     )
-    pr.upstream_providers.set([upstream])
+    ProviderRequestUpstreamProvider.objects.create(
+        request=pr, upstream=upstream, is_public=True
+    )
     ProviderRequestLocationFactory.create(request=pr)
     ProviderRequestEvidenceFactory.create(request=pr)
 
@@ -2649,7 +2658,7 @@ def test_wizard_basis_step_hides_upstream_section_initially_under_v2(
     # The public relationship warning starts hidden, until the resell basis is
     # selected. This is confirmed from the server-rendered HTML, independent
     # of browser JS execution.
-    assert 'id="upstream-providers-disclosure" style="display: none"' in content
+    assert 'id="upstream-providers-disclosure" hidden' in content
 
     # Regression guard: the inline toggle checks for the absence of the resell
     # checkbox so we do not error when that basis is not offered to a user.
@@ -2724,7 +2733,10 @@ def test_request_detail_hides_upstream_providers_when_flag_is_off(
         status="PENDING_REVIEW",
         authorised_by_org=True,
     )
-    pr.upstream_providers.add(upstream)
+    from apps.accounts.models import ProviderRequestUpstreamProvider
+    ProviderRequestUpstreamProvider.objects.create(
+        request=pr, upstream=upstream, is_public=True
+    )
 
     client.force_login(user)
     detail_url = urls.reverse("provider_request_detail", args=[pr.id])
@@ -2762,7 +2774,10 @@ def test_request_detail_shows_upstream_providers_when_flag_is_on(
         status="PENDING_REVIEW",
         authorised_by_org=True,
     )
-    pr.upstream_providers.add(upstream)
+    from apps.accounts.models import ProviderRequestUpstreamProvider
+    ProviderRequestUpstreamProvider.objects.create(
+        request=pr, upstream=upstream, is_public=True
+    )
 
     client.force_login(user)
     detail_url = urls.reverse("provider_request_detail", args=[pr.id])
@@ -3081,12 +3096,16 @@ def test_basis_form_keeps_upstream_providers_when_resell_selected(user):
                 "we-resell-or-actively-use-a-provider-that-is-already-in-the-green-web-dataset"
             ],
             "upstream_providers": [str(provider.id)],
+            f"upstream_providers_visibility_{provider.id}": "on",
         },
         request=request,
     )
 
     assert form.is_valid(), form.errors
-    assert list(form.cleaned_data["upstream_providers"]) == [provider]
+    cleaned = form.cleaned_data["upstream_providers"]
+    assert len(cleaned) == 1
+    assert cleaned[0]["provider"] == provider
+    assert cleaned[0]["is_public"] is True
 
 
 @pytest.mark.django_db

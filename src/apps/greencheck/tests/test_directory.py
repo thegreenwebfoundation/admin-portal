@@ -135,11 +135,15 @@ def test_directory_hides_upstream_providers_when_flag_is_off(
     """
     Check that upstream providers are hidden when the flag is off.
     """
+    from apps.accounts.models import UpstreamProvider
+
     upstream = hosting_provider_factory.create(
         country="GB", is_listed=True, name="Upstream Green"
     )
     provider = hosting_provider_factory.create(country="DE", is_listed=True)
-    provider.upstream_providers.add(upstream)
+    UpstreamProvider.objects.create(
+        parent=provider, upstream=upstream, is_public=True
+    )
 
     res = client.get(reverse("directory-index"))
     assert res.status_code == 200
@@ -154,14 +158,44 @@ def test_directory_shows_upstream_providers_when_flag_is_on(
     """
     Check that upstream providers are shown when the flag is on.
     """
+    from apps.accounts.models import UpstreamProvider
+
     upstream = hosting_provider_factory.create(
         country="GB", is_listed=True, name="Upstream Green"
     )
     provider = hosting_provider_factory.create(country="DE", is_listed=True)
-    provider.upstream_providers.add(upstream)
+    UpstreamProvider.objects.create(
+        parent=provider, upstream=upstream, is_public=True
+    )
 
     res = client.get(reverse("directory-index"))
     assert res.status_code == 200
     content = res.content.decode()
     assert "Relies on:" in content
     assert "Upstream Green" in content
+
+
+@override_flag("upstream_providers", active=True)
+@pytest.mark.django_db
+def test_directory_hides_hidden_upstream_providers(
+    client, hosting_provider_factory
+):
+    """
+    Check that upstream providers marked as hidden (is_public=False) are not
+    shown in the public directory.
+    """
+    from apps.accounts.models import UpstreamProvider
+
+    upstream = hosting_provider_factory.create(
+        country="GB", is_listed=False, name="Hidden Upstream Co"
+    )
+    provider = hosting_provider_factory.create(country="DE", is_listed=True, name="Reseller Co")
+    UpstreamProvider.objects.create(
+        parent=provider, upstream=upstream, is_public=False
+    )
+
+    res = client.get(reverse("directory-index"))
+    assert res.status_code == 200
+    content = res.content.decode()
+    # The hidden upstream should not appear in the "Relies on" section
+    assert "Relies on:" not in content
