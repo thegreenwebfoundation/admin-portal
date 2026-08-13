@@ -42,7 +42,6 @@
         skip it here to avoid rendering it twice.
         {% endcomment %}
         {% if inline_admin_formset.opts.verbose_name_plural == "Upstream providers" %}
-            {% continue %}
         {% elif inline_admin_formset.opts.verbose_name_plural == "IP approvals" %}
             {% if ip_range_count > 500 %}
                 <fieldset class="module">
