@@ -193,6 +193,16 @@ ADMIN_PERMS= [
     "change_apikeyprivilegelevel",
     "delete_apikeyprivilegelevel",
     "view_apikeyprivilegelevel",
+    # need to be able to manage upstream provider connections
+    "add_upstreamprovider",
+    "change_upstreamprovider",
+    "delete_upstreamprovider",
+    "view_upstreamprovider",
+    # need to be able to manage provider request upstream connections
+    "add_providerrequestupstreamprovider",
+    "change_providerrequestupstreamprovider",
+    "delete_providerrequestupstreamprovider",
+    "view_providerrequestupstreamprovider",
 ]
 
 PERMS = {

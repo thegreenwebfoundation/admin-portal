@@ -217,11 +217,14 @@ class TestLinkedProviders:
     @pytest.mark.django_db
     def test_hostingprovider_can_have_upstream_providers(self, db, hosting_provider_factory):
         """Given a provider, when linked providers are added, then they are accessible."""
+        from apps.accounts.models import UpstreamProvider
+
         provider = hosting_provider_factory.create(country="GB", is_listed=True)
         upstream1 = hosting_provider_factory.create(country="GB", is_listed=True)
         upstream2 = hosting_provider_factory.create(country="GB", is_listed=True)
 
-        provider.upstream_providers.set([upstream1, upstream2])
+        UpstreamProvider.objects.create(parent=provider, upstream=upstream1, is_public=True)
+        UpstreamProvider.objects.create(parent=provider, upstream=upstream2, is_public=False)
 
         assert provider.upstream_providers.count() == 2
         assert upstream1 in provider.upstream_providers.all()
@@ -230,10 +233,12 @@ class TestLinkedProviders:
     @pytest.mark.django_db
     def test_hostingprovider_downstream_providers_reverse(self, db, hosting_provider_factory):
         """Given upstream providers, when linked, downstream providers are visible via reverse relation."""
+        from apps.accounts.models import UpstreamProvider
+
         downstream = hosting_provider_factory.create(country="GB", is_listed=True)
         upstream = hosting_provider_factory.create(country="GB", is_listed=True)
 
-        downstream.upstream_providers.add(upstream)
+        UpstreamProvider.objects.create(parent=downstream, upstream=upstream, is_public=True)
 
         assert downstream in upstream.downstream_providers.all()
         assert upstream.downstream_providers.count() == 1
@@ -241,10 +246,12 @@ class TestLinkedProviders:
     @pytest.mark.django_db
     def test_upstream_providers_self_referential_not_symmetrical(self, db, hosting_provider_factory):
         """The self-referential M2M should not be symmetrical."""
+        from apps.accounts.models import UpstreamProvider
+
         a = hosting_provider_factory.create(country="GB", is_listed=True)
         b = hosting_provider_factory.create(country="GB", is_listed=True)
 
-        a.upstream_providers.add(b)
+        UpstreamProvider.objects.create(parent=a, upstream=b, is_public=True)
 
         assert b in a.upstream_providers.all()
         assert a not in b.upstream_providers.all()
@@ -252,10 +259,14 @@ class TestLinkedProviders:
     @pytest.mark.django_db
     def test_provider_request_can_have_upstream_providers(self, db, hosting_provider_factory, provider_request_factory):
         """Given a provider request, when linked providers are added, then they are accessible."""
+        from apps.accounts.models import ProviderRequestUpstreamProvider
+
         upstream = hosting_provider_factory.create(country="GB", is_listed=True)
         request = provider_request_factory.create()
 
-        request.upstream_providers.set([upstream])
+        ProviderRequestUpstreamProvider.objects.create(
+            request=request, upstream=upstream, is_public=True
+        )
 
         assert request.upstream_providers.count() == 1
         assert upstream in request.upstream_providers.all()

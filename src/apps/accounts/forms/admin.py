@@ -32,10 +32,6 @@ class HostingAdminForm(forms.ModelForm):
         widgets = {
             "services": LabelWidget(model=Service),
             "verification_bases": LabelWidget(model=VerificationBasis),
-            "upstream_providers": autocomplete.ModelSelect2Multiple(
-                url="provider-autocomplete",
-                attrs={"data-placeholder": "Search for a provider..."},
-            ),
             "staff_labels": dal_widgets.TaggitSelect2("label-autocomplete"),
             "carbon_txt_motivations": LabelWidget(model=CarbonTxtMotivation)
         }

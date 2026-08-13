@@ -422,7 +422,7 @@ class TestHostingProviderAdmin:
     ):
         """
         Given an admin user, when they visit a hosting provider change page,
-        then the upstream_providers field is visible in the form.
+        then the upstream providers inline is visible.
         """
         client.force_login(greenweb_staff_user)
 
@@ -432,15 +432,15 @@ class TestHostingProviderAdmin:
         )
         resp = client.get(admin_url)
         assert resp.status_code == 200
-        assert "upstream_providers" in resp.rendered_content
+        assert "Upstream / downstream providers" in resp.rendered_content
 
     @pytest.mark.django_db
     def test_admin_can_set_upstream_providers(
         self, db, client, greenweb_staff_user, hosting_provider_with_sample_user
     ):
         """
-        Given an admin user, when they set linked providers on a hosting provider,
-        then the changes are persisted.
+        Given an admin user, when they set linked providers on a hosting provider
+        via the inline, then the changes are persisted.
         """
         upstream = ac_models.Hostingprovider.objects.create(
             name="Upstream Green",
@@ -465,16 +465,11 @@ class TestHostingProviderAdmin:
         import re
 
         post_data = {}
-        # This regex matches HTML <input> tags that have both `name` and `value`
-        # attributes, capturing the values of those attributes.  It is used to
-        # pull CSRF tokens and Django formset management fields out of the
-        # rendered change page so they can be replayed in the subsequent POST.
         for match in re.finditer(
             rb'<input[^>]*name="([^"]*)"[^>]*value="([^"]*)"[^>]*>', resp.content
         ):
             name = match.group(1).decode("utf-8")
             value = match.group(2).decode("utf-8")
-            # Only include management form fields and non-button inputs
             if (
                 "TOTAL_FORMS" in name
                 or "INITIAL_FORMS" in name
@@ -482,6 +477,12 @@ class TestHostingProviderAdmin:
                 or "csrfmiddlewaretoken" in name
             ):
                 post_data[name] = value
+
+        prefix = "upstream_connections"
+
+        # Find TOTAL_FORMS for the upstream inline
+        total_forms_key = f"{prefix}-TOTAL_FORMS"
+        total_forms = int(post_data.get(total_forms_key, "0"))
 
         # Add main form fields
         post_data.update(
@@ -491,20 +492,30 @@ class TestHostingProviderAdmin:
                 "description": hosting_provider_with_sample_user.description or "",
                 "country": str(hosting_provider_with_sample_user.country),
                 "model": hosting_provider_with_sample_user.model,
-                "upstream_providers": [str(upstream.id)],
                 "_save": "Save",
             }
         )
+
+        # Add an upstream provider via the inline formset.
+        # total_forms is the current count (includes extra empty forms).
+        # We add our data at the first empty form (index 0 for new objects).
+        idx = 0
+        post_data[f"{prefix}-{idx}-upstream"] = str(upstream.id)
+        post_data[f"{prefix}-{idx}-is_public"] = "on"
 
         resp = client.post(admin_url, post_data, follow=True)
 
         # Django admin redirects to changelist on successful save.
         if not resp.redirect_chain:
-            # form had errors, print them for debugging
             for key in list(resp.context.keys()):
                 obj = resp.context[key]
-                if hasattr(obj, "errors"):
+                if hasattr(obj, "errors") and obj.errors:
                     print(f"{key} errors:", obj.errors)
+            if "adminform" in resp.context:
+                print("adminform errors:", resp.context["adminform"].form.errors)
+            for inline_admin_formset in resp.context.get("inline_admin_formsets", []):
+                if inline_admin_formset.formset.errors:
+                    print(f"Inline errors:", inline_admin_formset.formset.errors)
 
         assert len(resp.redirect_chain) == 1, (
             f"Expected redirect after save, got no redirect. Status: {resp.status_code}"
@@ -520,8 +531,11 @@ class TestHostingProviderAdmin:
         """
         Given an upstream provider that other providers rely on,
         when an admin views its change page,
-        then the downstream_providers field lists the downstream providers.
+        then the downstream_providers field lists the downstream providers
+        with their visibility state.
         """
+        from apps.accounts.models import UpstreamProvider
+
         upstream = ac_models.Hostingprovider.objects.create(
             name="Upstream Green",
             country="GB",
@@ -536,7 +550,9 @@ class TestHostingProviderAdmin:
             is_listed=True,
             website="https://downstream.example.com",
         )
-        downstream.upstream_providers.add(upstream)
+        UpstreamProvider.objects.create(
+            parent=downstream, upstream=upstream, is_public=True
+        )
 
         client.force_login(greenweb_staff_user)
 
@@ -556,8 +572,11 @@ class TestHostingProviderAdmin:
     ):
         """
         Given an admin user, when they view a provider request in admin,
-        then the upstream_providers field is visible as a readonly field.
+        then the upstream providers are visible as a readonly display
+        showing the visibility state.
         """
+        from apps.accounts.models import ProviderRequestUpstreamProvider
+
         upstream = ac_models.Hostingprovider.objects.create(
             name="Upstream Green",
             country="GB",
@@ -566,7 +585,9 @@ class TestHostingProviderAdmin:
             website="https://upstream.example.com",
         )
         pr = ProviderRequestFactory.create()
-        pr.upstream_providers.set([upstream])
+        ProviderRequestUpstreamProvider.objects.create(
+            request=pr, upstream=upstream, is_public=True
+        )
 
         client.force_login(greenweb_staff_user)
 
@@ -578,6 +599,7 @@ class TestHostingProviderAdmin:
         assert resp.status_code == 200
         # The linked provider name should appear in the readonly display
         assert upstream.name in resp.rendered_content
+        assert "public" in resp.rendered_content
 
 
 class TestArchivingHostingProviderAdmin:

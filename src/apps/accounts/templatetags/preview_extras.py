@@ -49,14 +49,34 @@ def render_as_verification_bases(value):
 @register.filter
 def render_as_upstream_providers(value):
     """
-    Attempts to map upstream provider IDs to provider names
-    based on a database query.
+    Renders a list of upstream provider selections (list of dicts with
+    ``provider`` and ``is_public`` keys) as an HTML list, showing the
+    provider name and visibility state.
     """
     if not value:
         return None
+
+    # Handle both new format (list of dicts) and legacy format (list of IDs)
+    if isinstance(value, list) and value and isinstance(value[0], dict):
+        provider_ids = [item["provider"] for item in value]
+        providers = {p.id: p for p in Hostingprovider.objects.filter(id__in=provider_ids)}
+        list_items = format_html_join(
+            "",
+            "<li>{} ({})</li>",
+            (
+                (
+                    providers[item["provider"]].name,
+                    "public" if item.get("is_public", True) else "hidden",
+                )
+                for item in value
+                if item["provider"] in providers
+            ),
+        )
+        return format_html("<ul>{}</ul>", list_items)
+
+    # Legacy: list of provider IDs
     providers = Hostingprovider.objects.filter(id__in=value)
     if providers:
-        # make sure name is safely included in the HTML
         list_items = format_html(
             "<ul>{}</ul>",
             format_html_join("", "<li>{}</li>", ((prov.name,) for prov in providers)),

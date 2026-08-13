@@ -21,6 +21,7 @@ from ..models import (
     ProviderRequestIPRange,
     ProviderRequestLocation,
 )
+from .widgets import UpstreamProviderChoiceField, UpstreamProviderSelectWidget
 
 
 class AlwaysChangedModelFormMixin:
@@ -162,7 +163,7 @@ class BasisForVerificationForm(forms.ModelForm):
         ),
     )
 
-    upstream_providers = forms.ModelMultipleChoiceField(
+    upstream_providers = UpstreamProviderChoiceField(
         queryset=Hostingprovider.objects.filter(archived=False, is_listed=True),
         required=False,
         label="Which existing verified provider(s) do you rely on as the basis for the claim of using green energy?",
@@ -170,7 +171,7 @@ class BasisForVerificationForm(forms.ModelForm):
             "If your supplier(s) are already verified with us, you can use their status to demonstrate your services are running on green energy. To do so, select the supplier(s) you use in the input box below.<br/><br/>"
             "On the next page, you should also share some evidence showing you have an active business relationship with the supplier(s) you have selected. This can be in the form of a recent invoice, contract, or similar documents. Documents can be shared privately, with sensitive information blacked out."
         ),
-        widget=autocomplete.ModelSelect2Multiple(
+        widget=UpstreamProviderSelectWidget(
             url="linked-provider-autocomplete",
             attrs={"data-placeholder": "Search for a verified provider..."},
         ),
@@ -221,7 +222,12 @@ class BasisForVerificationForm(forms.ModelForm):
             ]
             if "upstream_providers" in self.fields:
                 self.initial["upstream_providers"] = [
-                    p.id for p in instance.upstream_providers.all()
+                    {
+                        "provider": c.upstream_id,
+                        "is_public": c.is_public,
+                        "provider_name": c.upstream.name,
+                    }
+                    for c in instance.upstream_connections.select_related("upstream")
                 ]
         # Drop any initial slugs that are not in the active version's choices
         # (e.g. a provider/request that had a legacy June 2026 basis opened

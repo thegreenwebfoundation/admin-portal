@@ -115,9 +115,9 @@
           <tr>
             <td>Linked providers</td>
             <td>
-              {% if object.upstream_providers.exists %}
-                {% for provider in object.upstream_providers.all %}
-                  {{ provider.name }}<br>
+              {% if object.upstream_connections.exists %}
+                {% for conn in object.upstream_connections.select_related("upstream").all %}
+                  {{ conn.upstream.name }} ({{ conn.is_public|yesno:"public,hidden" }})<br>
                 {% endfor %}
               {% else %}
                 -
