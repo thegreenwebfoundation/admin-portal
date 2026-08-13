@@ -1,13 +1,14 @@
 {% extends "admin/change_form.html" %}
 {% block field_sets %}
     {% for fieldset in adminform %}
-        {% if fieldset.name == "Upstream providers" %}
-            {% include "admin/includes/fieldset.html" %}
+        {% if fieldset.name == "Downstream providers" %}
+            {% comment %}Render the upstream inline first, then the downstream fieldset{% endcomment %}
             {% for inline_admin_formset in inline_admin_formsets %}
                 {% if inline_admin_formset.opts.verbose_name_plural == "Upstream providers" %}
                     {% include inline_admin_formset.opts.template %}
                 {% endif %}
             {% endfor %}
+            {% include "admin/includes/fieldset.html" %}
         {% elif fieldset.name == "Hostingprovider info" %}
             {% include "admin/accounts/hostingprovider/hosting_provider_fieldset.html" %}
         {% elif fieldset.name == "Datacenter info" %}
