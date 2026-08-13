@@ -185,6 +185,19 @@
                 removeRow(id);
             }
         });
+        // Handle "clear all" — Select2 fires select2:clear which also
+        // fires select2:unselect per item, but in some versions only
+        // select2:clear is fired. Handle both to be safe.
+        $select.on("select2:clear", function () {
+            var rows = rowsContainer.querySelectorAll(
+                ".upstream-visibility-row"
+            );
+            for (var i = 0; i < rows.length; i++) {
+                rows[i].remove();
+            }
+            hideFieldset();
+            announce("All providers removed.");
+        });
 
         // Show/hide based on initial state
         if (rowsContainer.children.length > 0) {
