@@ -3,6 +3,8 @@ import django.utils.timezone
 import model_utils.fields
 from django.db import migrations, models
 
+from ..group_permissions import populate_group_permissions
+
 
 def copy_existing_upstream_connections(apps, schema_editor):
     """
@@ -245,5 +247,9 @@ class Migration(migrations.Migration):
                 ),
             ],
             database_operations=[],
+        ),
+        migrations.RunPython(
+            populate_group_permissions,
+            reverse_code=migrations.RunPython.noop,
         ),
     ]
