@@ -8,6 +8,13 @@
         {% else %}
             {% include "admin/includes/fieldset.html" %}
         {% endif %}
+        {% if fieldset.name == "Upstream / downstream providers" %}
+            {% for inline_admin_formset in inline_admin_formsets %}
+                {% if inline_admin_formset.opts.verbose_name_plural == "Upstream providers" %}
+                    {% include inline_admin_formset.opts.template %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     {% endfor %}
 {% endblock %}
 {% block inline_field_sets %}
@@ -29,8 +36,14 @@
         as some providers have massive numbers that stop the page loading
         properly.
         The rest we want to serve as using their default inlines.
+
+        The upstream providers inline is rendered in the field_sets block
+        right after the "Upstream / downstream providers" fieldset, so we
+        skip it here to avoid rendering it twice.
         {% endcomment %}
-        {% if inline_admin_formset.opts.verbose_name_plural == "IP approvals" %}
+        {% if inline_admin_formset.opts.verbose_name_plural == "Upstream providers" %}
+            {% continue %}
+        {% elif inline_admin_formset.opts.verbose_name_plural == "IP approvals" %}
             {% if ip_range_count > 500 %}
                 <fieldset class="module">
                     <h2>IP Ranges</h2>
