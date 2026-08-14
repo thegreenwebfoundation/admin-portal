@@ -125,3 +125,51 @@ def exclude_preview_fields(form):
     On preview, exclude fields "id" and "delete" from forms
     """
     return [field for field in form if field.label.lower() not in ["id", "delete"]]
+
+
+@register.filter
+def render_as_regions(value, location_choices=None):
+    """
+    Render location index values as 'City, Country' strings.
+    The value is a list of index strings (e.g. ["0", "2"]).
+    location_choices is a list of (index, label) tuples.
+    """
+    if not value:
+        return None
+    if location_choices:
+        choice_map = dict(location_choices)
+        labels = [choice_map.get(str(v), str(v)) for v in value]
+    else:
+        labels = [str(v) for v in value]
+    return mark_safe(", ".join(labels))
+
+
+@register.filter
+def render_region_scope(form, location_choices=None):
+    """
+    Render the region scope for a CredentialForm in the preview.
+    If region_scope == 'all', show 'All regions'.
+    If region_scope == 'specific', show the selected region labels.
+    """
+    region_scope = None
+    locations = []
+
+    # The form may be unbound (preview); read from initial/value
+    if hasattr(form, "cleaned_data"):
+        region_scope = form.cleaned_data.get("region_scope")
+        locations = form.cleaned_data.get("locations", [])
+    else:
+        scope_field = form.fields.get("region_scope") if hasattr(form, "fields") else None
+        if scope_field:
+            region_scope = form.initial.get("region_scope", scope_field.initial)
+        loc_field = form.fields.get("locations") if hasattr(form, "fields") else None
+        if loc_field:
+            locations = form.initial.get("locations", [])
+
+    if region_scope == "all":
+        return mark_safe("All regions")
+    elif region_scope == "specific" and locations:
+        return render_as_regions(locations, location_choices)
+    elif region_scope == "specific":
+        return mark_safe("Specific regions (none selected)")
+    return None

@@ -68,7 +68,7 @@
 
           {% for evidence_form in preview_forms.4.forms %}
             {% if not evidence_form.DELETE.value %}
-              {% include "provider_registration/partials/_preview.html" with form=evidence_form %}
+              {% include "provider_registration/partials/_preview.html" with form=evidence_form location_choices=location_choices %}
             {% endif %}
           {% endfor %}
         </section>

@@ -21,8 +21,18 @@
 				Expand selected upstream providers to their names
 				using custom template tag
 			{% endcomment %}
-			
+		
 			<p class="m-0">{{ field.value|render_as_upstream_providers|default:"None selected" }}</p>
+		{% elif field.name|lower == "region_scope" %}
+			{# Skip — rendered as part of the 'locations' field below #}
+		{% elif field.name|lower == "locations" %}
+			{% with scope=form.initial.region_scope %}
+				{% if scope == "all" or not scope %}
+					<p class="m-0">All regions</p>
+				{% else %}
+					<p class="m-0">{{ field.value|render_as_regions:location_choices|default:"None selected" }}</p>
+				{% endif %}
+			{% endwith %}
 		{% elif field.label|lower == "country" %}
 			{% comment %}
 				Expand country code to country name (e.g. "DE" -> "Germany")
