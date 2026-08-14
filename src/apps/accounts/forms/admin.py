@@ -11,6 +11,7 @@ from ..models import (
     Datacenter,
     DatacenterNote,
     Hostingprovider,
+    HostingProviderLocation,
     HostingProviderNote,
     HostingProviderSupportingDocument,
     Service,
@@ -106,7 +107,30 @@ class PreviewEmailForm(forms.Form):
     # check that we have an email before trying to forwarding to an email service
 
 
-class InlineSupportingDocumentForm(forms.ModelForm):
+class HostingProviderSupportingDocumentInlineForm(forms.ModelForm):
+    """
+    Form for editing supporting documents in the hosting provider admin.
+    Limits the ``locations`` queryset to the provider's live
+    ``HostingProviderLocation`` rows.
+    """
+
+    class Meta:
+        model = HostingProviderSupportingDocument
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Limit locations to the provider's live locations
+        if self.instance and self.instance.hostingprovider_id:
+            hp = self.instance.hostingprovider
+            self.fields["locations"].queryset = HostingProviderLocation.objects.filter(
+                hostingprovider=hp
+            )
+        else:
+            self.fields["locations"].queryset = HostingProviderLocation.objects.none()
+
+
+class InlineSupportingDocumentForm(HostingProviderSupportingDocumentInlineForm):
     """
     A custom form for listing and uploading supporting documents
     in the Hostingprovider admin.
@@ -126,9 +150,5 @@ class InlineSupportingDocumentForm(forms.ModelForm):
             self.initial["valid_to"] = datetime.date.today() + datetime.timedelta(
                 days=365
             )
-
-    class Meta:
-        model = HostingProviderSupportingDocument
-        fields = "__all__"
 
 
