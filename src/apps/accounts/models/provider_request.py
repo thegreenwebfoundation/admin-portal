@@ -357,6 +357,14 @@ class ProviderRequest(TimeStampedModel):
         # a custom through model does not carry per-connection metadata.
         from .hosting import UpstreamProvider
 
+        # Remove upstream connections that are no longer in the request.
+        request_upstream_ids = set(
+            self.upstream_connections.values_list("upstream_id", flat=True)
+        )
+        UpstreamProvider.objects.filter(parent=hp).exclude(
+            upstream_id__in=request_upstream_ids
+        ).delete()
+
         for conn in self.upstream_connections.all():
             UpstreamProvider.objects.update_or_create(
                 parent=hp,

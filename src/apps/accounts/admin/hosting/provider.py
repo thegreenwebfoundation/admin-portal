@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.db import models
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 
 from apps.greencheck.admin import (
@@ -59,32 +60,29 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
     form = forms.InlineSupportingDocumentForm
 
 
+class UpstreamProviderInlineForm(dj_forms.ModelForm):
+    """Form for UpstreamProvider inline — defaults new rows to is_public=False."""
+
+    class Meta:
+        model = UpstreamProvider
+        fields = ("upstream", "is_public")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound and not self.initial:
+            self.initial["is_public"] = False
+
+
 class UpstreamProviderInline(admin.TabularInline):
     """Inline for managing upstream provider connections with visibility."""
 
     model = UpstreamProvider
     fk_name = "parent"
     extra = 1
+    form = UpstreamProviderInlineForm
     autocomplete_fields = ["upstream"]
     fields = ("upstream", "is_public")
     verbose_name_plural = "Upstream providers"
-
-    def get_formset(self, request, obj=None, **kwargs):
-        """
-        Default new admin-created connections to is_public=False
-        (per requirement). Existing connections keep their saved value.
-        """
-        formset = super().get_formset(request, obj=None, **kwargs)
-        original_init = formset.form.__init__
-
-        def new_init(self, *args, **kwargs):
-            super(formset.form, self).__init__(*args, **kwargs)
-            # Only set default for unbound extra forms (new rows)
-            if not self.is_bound and not self.initial:
-                self.initial["is_public"] = False
-
-        formset.form.__init__ = new_init
-        return formset
 
 
 class HostingProviderNoteInline(admin.StackedInline):
@@ -584,6 +582,11 @@ class HostingAdmin(
             "Associated datacenters",
             {"fields": ("data_centers",)},
         )
+        # NOTE: The "Downstream providers" fieldset name and the
+        # "Upstream providers" inline verbose_name_plural are string-matched
+        # in the admin change_form template
+        # (templates/admin/accounts/hostingprovider/change_form.html)
+        # to reorder inlines. Renaming either will require updating the template.
         downstream_fieldset = (
             "Downstream providers",
             {
@@ -646,7 +649,7 @@ class HostingAdmin(
     @admin.display(
         description="Downstream providers",
     )
-    def display_downstream_providers(self, obj):
+    def display_downstream_providers(self, obj) -> str:
         """
         Returns markup for a list of providers that have linked to this provider
         as their upstream green provider, including the visibility state of each
@@ -655,12 +658,14 @@ class HostingAdmin(
         downstream = obj.downstream_connections.select_related("parent").all()
         if not downstream:
             return "No other providers are listed as relying on this provider."
-        return "<br>".join(
-            [
-                f'<a href={conn.parent.admin_url}>{conn.parent.name}</a> '
-                f"({'public' if conn.is_public else 'hidden'})"
+        return format_html_join(
+            "",
+            '<a href="{}">{}</a> ({})<br>',
+            (
+                (conn.parent.admin_url, conn.parent.name,
+                 "public" if conn.is_public else "hidden")
                 for conn in downstream
-            ]
+            ),
         )
 
     def services(self, obj):

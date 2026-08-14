@@ -432,7 +432,7 @@ class TestHostingProviderAdmin:
         )
         resp = client.get(admin_url)
         assert resp.status_code == 200
-        assert "Upstream / downstream providers" in resp.rendered_content
+        assert "Downstream providers" in resp.rendered_content
 
     @pytest.mark.django_db
     def test_admin_can_set_upstream_providers(
@@ -563,7 +563,7 @@ class TestHostingProviderAdmin:
         resp = client.get(admin_url)
         assert resp.status_code == 200
         assert downstream.name in resp.rendered_content
-        assert "Upstream / downstream providers" in resp.rendered_content
+        assert "Downstream providers" in resp.rendered_content
         assert "display_downstream_providers" in resp.rendered_content
 
     @pytest.mark.django_db

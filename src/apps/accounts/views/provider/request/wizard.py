@@ -250,14 +250,25 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
 
         upstream_providers = verification_bases_form.cleaned_data.get("upstream_providers")
         if upstream_providers:
-            for item in upstream_providers:
-                provider = item["provider"]
-                is_public = item.get("is_public", True)
-                ProviderRequestUpstreamProvider.objects.update_or_create(
-                    request=pr,
-                    upstream=provider,
-                    defaults={"is_public": is_public},
-                )
+            # When the private_upstream_linking flag is on, cleaned_data is a
+            # list of {"provider": <Hostingprovider>, "is_public": bool} dicts.
+            # When the flag is off, it's a QuerySet of Hostingprovider instances.
+            if isinstance(upstream_providers, list) and upstream_providers and isinstance(upstream_providers[0], dict):
+                for item in upstream_providers:
+                    provider = item["provider"]
+                    is_public = item.get("is_public", True)
+                    ProviderRequestUpstreamProvider.objects.update_or_create(
+                        request=pr,
+                        upstream=provider,
+                        defaults={"is_public": is_public},
+                    )
+            else:
+                for provider in upstream_providers:
+                    ProviderRequestUpstreamProvider.objects.update_or_create(
+                        request=pr,
+                        upstream=provider,
+                        defaults={"is_public": True},
+                    )
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
@@ -369,6 +380,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 kwargs["enable_upstream_providers"] = flag_is_active(
                     self.request, "upstream_providers"
                 )
+                kwargs["enable_private_upstream_linking"] = flag_is_active(
+                    self.request, "private_upstream_linking"
+                )
                 kwargs["request"] = self.request
             # The green evidence formset rebuilds with ``form_kwargs`` so
             # each child ``CredentialForm`` knows whether to render the matching
@@ -405,6 +419,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         if step == self.Steps.BASIS_FOR_VERIFICATION.value:
             kwargs["enable_upstream_providers"] = flag_is_active(
                 self.request, "upstream_providers"
+            )
+            kwargs["enable_private_upstream_linking"] = flag_is_active(
+                self.request, "private_upstream_linking"
             )
             kwargs["request"] = self.request
 

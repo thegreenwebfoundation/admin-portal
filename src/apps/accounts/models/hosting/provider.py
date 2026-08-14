@@ -478,12 +478,10 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         Return only upstream providers whose connection is marked as public.
         Used by the public directory to exclude hidden connections.
         """
-        from .provider import UpstreamProvider as _UpstreamProvider
-
-        upstream_ids = _UpstreamProvider.objects.filter(
-            parent=self, is_public=True
-        ).values_list("upstream_id", flat=True)
-        return self.upstream_providers.filter(id__in=upstream_ids)
+        return self.upstream_providers.filter(
+            downstream_connections__is_public=True,
+            downstream_connections__parent=self,
+        )
 
     # Mutators
     def refresh_shared_secret(self) -> str:

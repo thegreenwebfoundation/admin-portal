@@ -1,7 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Prefetch
 from django.views.generic import DetailView
 
-from ....models import ProviderRequest
+from ....models import ProviderRequest, ProviderRequestUpstreamProvider
 
 class ProviderRequestDetailView(LoginRequiredMixin, DetailView):
     """
@@ -19,8 +20,16 @@ class ProviderRequestDetailView(LoginRequiredMixin, DetailView):
         Admins can retrieve any ProviderRequest object,
         regular users can only retrieve objects that they created.
         """
+        qs = ProviderRequest.objects.all().prefetch_related(
+            Prefetch(
+                "upstream_connections",
+                queryset=ProviderRequestUpstreamProvider.objects.select_related(
+                    "upstream"
+                ),
+            ),
+        )
         if self.request.user.is_admin:
-            return ProviderRequest.objects.all()
-        return ProviderRequest.objects.filter(created_by=self.request.user)
+            return qs
+        return qs.filter(created_by=self.request.user)
 
 

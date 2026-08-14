@@ -182,12 +182,13 @@ def test_directory_hides_hidden_upstream_providers(
 ):
     """
     Check that upstream providers marked as hidden (is_public=False) are not
-    shown in the public directory.
+    shown in the public directory, even when the upstream itself is a listed
+    provider that would otherwise appear in the directory.
     """
     from apps.accounts.models import UpstreamProvider
 
     upstream = hosting_provider_factory.create(
-        country="GB", is_listed=False, name="Hidden Upstream Co"
+        country="GB", is_listed=True, name="Hidden Upstream Co"
     )
     provider = hosting_provider_factory.create(country="DE", is_listed=True, name="Reseller Co")
     UpstreamProvider.objects.create(
@@ -199,3 +200,7 @@ def test_directory_hides_hidden_upstream_providers(
     content = res.content.decode()
     # The hidden upstream should not appear in the "Relies on" section
     assert "Relies on:" not in content
+    # The upstream provider's name should not appear in the reseller's
+    # upstream section (it may still appear elsewhere in the directory
+    # as its own listing, so we check the "Relies on" context).
+    assert "Hidden Upstream Co</li>" not in content

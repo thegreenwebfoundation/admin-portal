@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n static %}
 {% load preview_extras %}
-{% load waffle_tags %}
+{% load verification_flags waffle_tags %}
 
 {% block content %}
 
@@ -112,12 +112,13 @@
             </td>
           </tr>
           {% flag "upstream_providers" %}
+          {% private_upstream_linking_enabled as show_visibility %}
           <tr>
             <td>Linked providers</td>
             <td>
               {% if object.upstream_connections.exists %}
                 {% for conn in object.upstream_connections.all %}
-                  {{ conn.upstream.name }} ({{ conn.is_public|yesno:"public,hidden" }})<br>
+                  {{ conn.upstream.name }}{% if show_visibility %} ({{ conn.is_public|yesno:"public,hidden" }}){% endif %}<br>
                 {% endfor %}
               {% else %}
                 -
