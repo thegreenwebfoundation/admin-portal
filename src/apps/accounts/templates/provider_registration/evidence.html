@@ -30,22 +30,59 @@
 	[hidden] {
 		display: none !important;
 	}
-	/* Make region scope radio buttons visible and recognisable.
-	   Tailwind's forms plugin sets appearance:none which renders them
-	   as tiny black squares. Restore a visible border and proper sizing. */
+	/* Make region scope radio buttons and labels visible.
+	   Tailwind's forms plugin renders radios as tiny black squares, and
+	   .form__evidence--field hides labels with screen-reader-only styling.
+	   Override both for the region scope radio group so it displays
+	   as a normal labelled choice. */
+	.disclosure-region-scope-field {
+		margin-bottom: 1rem;
+	}
+	.disclosure-region-scope-field .form__evidence--field,
+	.disclosure-region-scope-field .form__evidence--field-region_scope {
+		margin-bottom: 0;
+	}
+	.disclosure-region-scope-field .form__evidence--field > label,
+	.disclosure-region-scope-field .form__evidence--field-region_scope > label {
+		position: static;
+		width: auto;
+		height: auto;
+		overflow: visible;
+		clip: auto;
+		margin: 0 0 0.5rem 0;
+		font-size: 1rem;
+		font-weight: 600;
+		display: block;
+	}
+	.disclosure-region-scope-field label[for*="region_scope"] {
+		position: static;
+		width: auto;
+		height: auto;
+		overflow: visible;
+		clip: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-right: 1.5rem;
+		font-weight: normal;
+	}
 	.disclosure-region-scope-field input[type="radio"] {
-		width: 1.25rem;
-		height: 1.25rem;
+		width: 1.5rem;
+		height: 1.5rem;
 		border: 2px solid #6b7280;
 		background-color: #fff;
+		border-radius: 50%;
+		appearance: none;
+		-webkit-appearance: none;
+		flex-shrink: 0;
 	}
 	.disclosure-region-scope-field input[type="radio"]:checked {
 		border-color: #166534;
 		background-color: #166534;
 	}
-	.disclosure-region-scope-field label {
-		font-size: 1rem;
-		font-weight: normal;
+	.disclosure-region-scope-field input[type="radio"]:focus {
+		outline: 2px solid #166534;
+		outline-offset: 2px;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.ts-dropdown {
@@ -195,7 +232,6 @@
                 </div>
             {% elif field.name == "region_scope" %}
                 <fieldset class="disclosure-region-scope-field">
-                    <legend class="block text-sm font-medium mb-1">{{ field.label }}</legend>
                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
                 </fieldset>
             {% else %}
