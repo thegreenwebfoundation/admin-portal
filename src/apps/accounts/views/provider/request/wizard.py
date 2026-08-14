@@ -249,26 +249,35 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         pr.set_verification_bases_from_slugs(verification_bases_slugs)
 
         upstream_providers = verification_bases_form.cleaned_data.get("upstream_providers")
-        if upstream_providers:
-            # When the private_upstream_linking flag is on, cleaned_data is a
-            # list of {"provider": <Hostingprovider>, "is_public": bool} dicts.
-            # When the flag is off, it's a QuerySet of Hostingprovider instances.
-            if isinstance(upstream_providers, list) and upstream_providers and isinstance(upstream_providers[0], dict):
-                for item in upstream_providers:
-                    provider = item["provider"]
-                    is_public = item.get("is_public", True)
-                    ProviderRequestUpstreamProvider.objects.update_or_create(
-                        request=pr,
-                        upstream=provider,
-                        defaults={"is_public": is_public},
-                    )
-            else:
-                for provider in upstream_providers:
-                    ProviderRequestUpstreamProvider.objects.update_or_create(
-                        request=pr,
-                        upstream=provider,
-                        defaults={"is_public": True},
-                    )
+
+        # Clean up stale upstream connections that are no longer in the
+        # submission, then create/update the ones that remain.
+        if isinstance(upstream_providers, list) and upstream_providers and isinstance(upstream_providers[0], dict):
+            new_upstream_ids = {item["provider"].pk for item in upstream_providers}
+            ProviderRequestUpstreamProvider.objects.filter(
+                request=pr
+            ).exclude(upstream_id__in=new_upstream_ids).delete()
+            for item in upstream_providers:
+                provider = item["provider"]
+                is_public = item.get("is_public", True)
+                ProviderRequestUpstreamProvider.objects.update_or_create(
+                    request=pr,
+                    upstream=provider,
+                    defaults={"is_public": is_public},
+                )
+        elif upstream_providers:
+            new_upstream_ids = {p.pk for p in upstream_providers}
+            ProviderRequestUpstreamProvider.objects.filter(
+                request=pr
+            ).exclude(upstream_id__in=new_upstream_ids).delete()
+            for provider in upstream_providers:
+                ProviderRequestUpstreamProvider.objects.update_or_create(
+                    request=pr,
+                    upstream=provider,
+                    defaults={"is_public": True},
+                )
+        else:
+            ProviderRequestUpstreamProvider.objects.filter(request=pr).delete()
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
