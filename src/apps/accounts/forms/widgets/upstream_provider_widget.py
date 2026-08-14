@@ -140,7 +140,8 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
             'class="form-checkbox" {} /> '
             '<label for="{}_visibility_{}" class="text-sm">'
                 '<span class="upstream-provider-name">{}</span> '
-                "— show in public directory"
+                '<span class="visibility-label visibility-public" {}>— show in public directory</span> '
+                '<span class="visibility-label visibility-hidden" {}>— will not be shown in public directory</span> '
                 "</label>"
                 "</div>",
             (
@@ -154,6 +155,8 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
                     field_id,
                     item["provider"],
                     item.get("provider_name", f"Provider #{item['provider']}"),
+                    "" if item.get("is_public", True) else "hidden",
+                    "hidden" if item.get("is_public", True) else "",
                 )
                 for item in items
             ),
@@ -167,7 +170,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         return format_html(
             '<fieldset class="upstream-visibility-list mt-3" id="{}">'
             '<legend class="text-sm font-medium mb-1">'
-            "Selected providers — show in public directory?"
+            "The following providers will be shown publicly as 'upstream' suppliers in your supply chain:"
             "</legend>"
             '<div class="upstream-visibility-rows">{}</div>'
             '<script type="application/json" id="{}_data">{}</script>'
@@ -254,4 +257,3 @@ class UpstreamProviderChoiceField(forms.ModelMultipleChoiceField):
                 )
             result.append({"provider": provider, "is_public": is_public})
         return result
-
