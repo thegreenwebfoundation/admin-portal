@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% load i18n static waffle_tags %}
 {% block head %}
-
+{% flag 'link_disclosures_to_regions' %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+{% endflag %}
 {% endblock %}
 
 {% block content %}
@@ -28,7 +30,73 @@
 	[hidden] {
 		display: none !important;
 	}
+	@media (prefers-reduced-motion: reduce) {
+		.ts-dropdown {
+			animation: none !important;
+			transition: none !important;
+		}
+	}
 </style>
+
+{% flag 'link_disclosures_to_regions' %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+	// This script is the init script for disclosure region selection, loading
+	// after Tom Select. It initializes the radio toggle (all/specific regions)
+	// and Tom Select multi-select for each evidence formset row, including
+	// rows dynamically added via ConvenientFormset.
+	function initDisclosureRow(row) {
+		// --- Radio toggle: "all regions" vs "specific regions" ---
+		var radios = row.querySelectorAll('input[type="radio"][name*="region_scope"]');
+		var locationsWrapper = row.querySelector('.disclosure-regions-field');
+
+		function updateRegionsVisibility() {
+			var selected = row.querySelector('input[type="radio"][name*="region_scope"]:checked');
+			if (!selected) return;
+			if (selected.value === 'all') {
+				if (locationsWrapper) locationsWrapper.setAttribute('hidden', '');
+			} else {
+				if (locationsWrapper) locationsWrapper.removeAttribute('hidden');
+			}
+		}
+
+		radios.forEach(function(radio) {
+			radio.addEventListener('change', updateRegionsVisibility);
+		});
+		updateRegionsVisibility();
+
+		// --- Tom Select: multi-select for regions (checkboxes) ---
+		row.querySelectorAll('select.disclosure-regions-select').forEach(function(el) {
+			if (el.tomselect) return;
+			new TomSelect(el, {
+				plugins: ['checkbox_options', 'remove_button'],
+				maxItems: null,
+				placeholder: 'Select regions this disclosure applies to',
+				hideSelected: false,
+			});
+		});
+	}
+
+	window.addEventListener('load', function() {
+		// Initialize all existing rows
+		document.querySelectorAll('.convenient-form').forEach(initDisclosureRow);
+
+		// Re-init when formset adds rows
+		var formsetContainer = document.getElementById('convenient-formset');
+		if (formsetContainer) {
+			new MutationObserver(function(mutations) {
+				mutations.forEach(function(m) {
+					m.addedNodes.forEach(function(node) {
+						if (node.nodeType === 1 && node.classList.contains('convenient-form')) {
+							initDisclosureRow(node);
+						}
+					});
+				});
+			}).observe(formsetContainer, { childList: true, subtree: true });
+		}
+	});
+</script>
+{% endflag %}
 
 <div class="prose mx-auto">
 
@@ -90,22 +158,34 @@
 			"public", "description"]
 			{% endcomment %}
 
-			{% for field in form %}
+		{% for field in form %}
 
-			    {% comment %}
-				We do not want to show the claim_coverage_percentage unless the flag
-				'verification_basis_v2_claimed_percentage' is active
-				{% endcomment %}
+		    {% comment %}
+			We do not want to show the claim_coverage_percentage unless the flag
+			'verification_basis_v2_claimed_percentage' is active.
+			We also wrap the locations field in a .disclosure-regions-field
+			container so the JS can show/hide it based on the region_scope
+			radio toggle, and render region_scope as a fieldset.
+			{% endcomment %}
 
-                {% if field.name == "claim_coverage_percentage" %}
-                    {% flag "verification_basis_v2_claimed_percentage" %}
-                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                    {% endflag %}
-                {% else %}
+            {% if field.name == "claim_coverage_percentage" %}
+                {% flag "verification_basis_v2_claimed_percentage" %}
                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                {% endif %}
+                {% endflag %}
+            {% elif field.name == "locations" %}
+                <div class="disclosure-regions-field" {% if form.region_scope.value == "all" or form.region_scope.value|default_if_none:"all" == "all" %}hidden{% endif %}>
+                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                </div>
+            {% elif field.name == "region_scope" %}
+                <fieldset class="disclosure-region-scope-field">
+                    <legend class="block text-sm font-medium mb-1">{{ field.label }}</legend>
+                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                </fieldset>
+            {% else %}
+                {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+            {% endif %}
 
-			{% endfor %}
+		{% endfor %}
 
 			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this disclosure">
 
@@ -123,6 +203,15 @@
                     {% flag "verification_basis_v2_claimed_percentage" %}
                         {% include "provider_registration/partials/_evidence_field.html" with field=field %}
                     {% endflag %}
+                {% elif field.name == "locations" %}
+                    <div class="disclosure-regions-field" hidden>
+                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                    </div>
+                {% elif field.name == "region_scope" %}
+                    <fieldset class="disclosure-region-scope-field">
+                        <legend class="block text-sm font-medium mb-1">{{ field.label }}</legend>
+                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                    </fieldset>
                 {% else %}
                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
                 {% endif %}
