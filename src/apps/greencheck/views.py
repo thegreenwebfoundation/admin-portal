@@ -3,6 +3,7 @@ from datetime import date, timedelta
 import django_filters
 from django.db.models import Prefetch
 from django.views.generic.base import TemplateView
+from waffle import flag_is_active
 
 from apps.accounts.models.hosting import Hostingprovider
 from apps.accounts.models.hosting.provider import UpstreamProvider
@@ -88,13 +89,17 @@ class DirectoryView(TemplateView):
             "carbon_txt"
         ).prefetch_related(
             "services", "supporting_documents",
-            Prefetch(
-                "upstream_connections",
-                queryset=UpstreamProvider.objects.filter(
-                    is_public=True
-                ).select_related("upstream"),
-            ),
         )
+
+        if flag_is_active(self.request, "upstream_providers_directory"):
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    "upstream_connections",
+                    queryset=UpstreamProvider.objects.filter(
+                        is_public=True
+                    ).select_related("upstream"),
+                ),
+            )
 
         ctx = super().get_context_data(**kwargs)
 

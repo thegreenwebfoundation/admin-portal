@@ -122,7 +122,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
                 '<fieldset class="upstream-visibility-list mt-3" '
                 'id="{}" hidden>'
                 '<legend class="text-sm font-medium mb-1">'
-                "Selected providers — show in public directory?"
+                "Providers in your upstream supply chain. Providers with checked checkboxes count as 'public'."
                 "</legend>"
                 '<div class="upstream-visibility-rows"></div>'
                 '<div class="sr-only" aria-live="polite" '
@@ -170,7 +170,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         return format_html(
             '<fieldset class="upstream-visibility-list mt-3" id="{}">'
             '<legend class="text-sm font-medium mb-1">'
-            "Providers in your upstream supply chain. Providers with unchecked checkboxes count as hidden."
+            "Providers in your upstream supply chain. Providers with checked checkboxes count as 'public'."
             "</legend>"
             '<div class="upstream-visibility-rows">{}</div>'
             '<script type="application/json" id="{}_data">{}</script>'
