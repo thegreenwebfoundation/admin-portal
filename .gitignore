@@ -163,3 +163,4 @@ RELEASE
 
 # do not track generated docs
 _build
+.playwright-cli/

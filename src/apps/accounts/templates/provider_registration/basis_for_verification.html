@@ -15,10 +15,7 @@
     <div class="alert__warning mt-0 mb-0" id="upstream-providers-disclosure" hidden>
         <p class="mb-0">
             Upstream provider relationships may be publicly displayed and shared
-            by the Green Web Foundation through our online platforms and tools.
-            You can choose to hide individual upstream providers from the public
-            directory by unchecking the "show in public directory" option next to
-            each selected provider.
+            by the Green Web Foundation through our online platforms and tools. Mark providers as hidden if you do not want them to be public.
         </p>
     </div>
     {% endif %}
@@ -88,6 +85,12 @@
 </script>
 
 <style>
+/* Ensure the HTML hidden attribute actually hides elements,
+   even when .gwf-form > div sets display:flex with higher specificity. */
+.gwf-form > div[hidden] {
+    display: none !important;
+}
+
 .select2-selection__rendered {
   height: 100%  !important;
   display: flex !important;
