@@ -34,6 +34,7 @@ from ...models import (
     HostingCommunication,
     Hostingprovider,
     HostingproviderCertificate,
+    HostingProviderLocation,
     HostingProviderNote,
     HostingProviderSupportingDocument,
     Label,
@@ -54,10 +55,20 @@ class HostingCertificateInline(admin.StackedInline):
     # classes = ["collapse"]
 
 
+class HostingProviderLocationInline(admin.TabularInline):
+    """Inline for managing live locations on a hosting provider."""
+
+    model = HostingProviderLocation
+    extra = 0
+    fields = ("name", "city", "country", "is_primary")
+    ordering = ("-is_primary", "city")
+
+
 class HostingProviderSupportingDocumentInline(admin.StackedInline):
     extra = 0
     model = HostingProviderSupportingDocument
     form = forms.InlineSupportingDocumentForm
+    filter_horizontal = ["locations"]
 
 
 class UpstreamProviderInlineForm(dj_forms.ModelForm):
@@ -143,6 +154,7 @@ class HostingAdmin(
         filters.CountryFilter,
     ]
     inlines = [
+        HostingProviderLocationInline,
         HostingProviderSupportingDocumentInline,
         GreencheckIpInline,
         GreencheckIpApproveInline,
