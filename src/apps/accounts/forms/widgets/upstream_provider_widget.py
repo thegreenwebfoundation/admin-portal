@@ -151,7 +151,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
                     item["provider"],
                     field_id,
                     item["provider"],
-                    "" if item.get("is_public", True) else "",
+                    "checked" if item.get("is_public", True) else "",
                     field_id,
                     item["provider"],
                     item.get("provider_name", f"Provider #{item['provider']}"),
@@ -170,7 +170,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         return format_html(
             '<fieldset class="upstream-visibility-list mt-3" id="{}">'
             '<legend class="text-sm font-medium mb-1">'
-            "The following providers will be shown publicly as 'upstream' suppliers in your supply chain:"
+            "The following providers are listed as your 'upstream' suppliers. 'Checked' suppliers will be displayed publicly."
             "</legend>"
             '<div class="upstream-visibility-rows">{}</div>'
             '<script type="application/json" id="{}_data">{}</script>'
