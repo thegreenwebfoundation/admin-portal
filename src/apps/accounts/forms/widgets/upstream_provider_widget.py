@@ -1,6 +1,8 @@
 import json
+from typing import Any
 
 from django import forms
+from django.forms import Media
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
@@ -25,19 +27,19 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
     of provider IDs (for backwards compatibility).
     """
 
-    def build_attrs(self, base_attrs, extra_attrs=None):
+    def build_attrs(self, base_attrs, extra_attrs=None) -> dict:
         """Add data attribute so JS can find this widget."""
         attrs = super().build_attrs(base_attrs, extra_attrs)
         attrs["data-upstream-visibility-widget"] = ""
         return attrs
 
     @property
-    def media(self):
-        return super().media + type(super().media)(
+    def media(self) -> Media:
+        return super().media + Media(
             js=("accounts/js/upstream_provider_visibility.js",),
         )
 
-    def _normalize_initial(self, value):
+    def _normalize_initial(self, value) -> list[dict[str, Any]]:
         """
         Normalize initial value to a list of {"provider": id, "is_public": bool}.
         Accepts:
@@ -75,7 +77,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
                 result.append({"provider": str(item), "is_public": True})
         return result
 
-    def render(self, name, value, attrs=None, renderer=None, **kwargs):
+    def render(self, name, value, attrs=None, renderer=None, **kwargs) -> str:
         """
         Render the Select2 multi-select, then append the visibility
         checkbox fieldset below it.
@@ -93,7 +95,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
 
         return mark_safe(select_html + visibility_html)
 
-    def _render_visibility_list(self, name, field_id, items):
+    def _render_visibility_list(self, name, field_id, items) -> str:
         """Render the fieldset of per-provider visibility checkboxes."""
         # Look up provider names for any items missing one
         missing_pks = [
@@ -157,8 +159,10 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
             ),
         )
 
-        # JSON data for JS: provider IDs + names for dynamic row management
-        js_data = json.dumps(items)
+        # JSON data for JS: provider IDs + names for dynamic row management.
+        # Escape < and > to prevent XSS via provider names breaking out of
+        # the <script> tag.
+        js_data = json.dumps(items).replace("<", "\\u003c").replace(">", "\\u003e")
 
         return format_html(
             '<fieldset class="upstream-visibility-list mt-3" id="{}">'
@@ -176,7 +180,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
             field_id,
         )
 
-    def value_from_datadict(self, data, files, name):
+    def value_from_datadict(self, data, files, name) -> list[dict[str, Any]]:
         """
         Read both the provider IDs from the Select2 multi-select and the
         per-provider visibility checkboxes, returning a list of dicts:
@@ -193,7 +197,7 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
             result.append({"provider": str(pid), "is_public": is_public})
         return result
 
-    def format_value(self, value):
+    def format_value(self, value) -> list[str]:
         """
         Convert the list-of-dicts value into the format that the
         underlying SelectMultiple expects (a list of PKs as strings).
@@ -222,7 +226,7 @@ class UpstreamProviderChoiceField(forms.ModelMultipleChoiceField):
         [{"provider": <Hostingprovider instance>, "is_public": True}, ...]
     """
 
-    def clean(self, value):
+    def clean(self, value) -> list[dict[str, Any]]:
         """
         Override clean to prevent the parent from converting the widget's
         list-of-dicts into a queryset. We validate the provider IDs against

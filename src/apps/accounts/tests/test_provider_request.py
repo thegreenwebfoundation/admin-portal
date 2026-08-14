@@ -2613,6 +2613,7 @@ def test_wizard_basis_step_shows_upstream_providers_when_flag_is_on(
 
 
 @override_flag("verification_basis_v2", active=True)
+@override_flag("private_upstream_linking", active=True)
 @pytest.mark.django_db
 def test_wizard_basis_step_hides_upstream_section_initially_under_v2(
     user,
@@ -2786,6 +2787,173 @@ def test_request_detail_shows_upstream_providers_when_flag_is_on(
     content = response.content.decode()
     assert "Linked providers" in content
     assert "Upstream Provider" in content
+
+
+# ---------- private_upstream_linking feature-flag tests ----------
+
+
+@override_flag("upstream_providers", active=True)
+@pytest.mark.django_db
+def test_wizard_hides_visibility_checkboxes_when_private_flag_off(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+):
+    """
+    Given: upstream_providers flag is ON but private_upstream_linking flag is OFF
+    When: the basis-for-verification step is rendered
+    Then: the upstream_providers field is present but the visibility checkboxes
+          and disclosure warning are not.
+    """
+    client.force_login(user)
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_org_location_data,
+        follow=True,
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_services_data, follow=True
+    )
+    assert response.status_code == 200
+
+    assert response.context_data["wizard"]["steps"].current == "3"
+    form = response.context_data["form"]
+    assert "upstream_providers" in form.fields
+
+    content = response.content.decode()
+    # The visibility disclosure div should NOT be present (the JS may
+    # still reference the element ID as a string literal).
+    assert 'id="upstream-providers-disclosure"' not in content
+    # The visibility checkbox fieldset should NOT be present
+    assert "upstream-visibility-list" not in content
+
+
+@override_flag("upstream_providers", active=True)
+@override_flag("private_upstream_linking", active=True)
+@pytest.mark.django_db
+def test_wizard_shows_visibility_checkboxes_when_private_flag_on(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+):
+    """
+    Given: both upstream_providers and private_upstream_linking flags are ON
+    When: the basis-for-verification step is rendered
+    Then: the visibility disclosure and checkbox fieldset are present.
+    """
+    client.force_login(user)
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_org_location_data,
+        follow=True,
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_services_data, follow=True
+    )
+    assert response.status_code == 200
+
+    assert response.context_data["wizard"]["steps"].current == "3"
+    content = response.content.decode()
+    assert 'id="upstream-providers-disclosure"' in content
+    assert "upstream-visibility-list" in content
+
+
+@override_flag("upstream_providers", active=True)
+@pytest.mark.django_db
+def test_request_detail_hides_visibility_labels_when_private_flag_off(user, client):
+    """
+    Given: a ProviderRequest has upstream connections but the private_upstream_linking
+           flag is OFF
+    When: the detail page is viewed
+    Then: the provider names are shown WITHOUT (public)/(hidden) labels.
+    """
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Provider",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://example.com",
+    )
+    pr = models.ProviderRequest.objects.create(
+        name="Test Provider",
+        website="https://test.com",
+        description="Test",
+        created_by=user,
+        status="PENDING_REVIEW",
+        authorised_by_org=True,
+    )
+    from apps.accounts.models import ProviderRequestUpstreamProvider
+    ProviderRequestUpstreamProvider.objects.create(
+        request=pr, upstream=upstream, is_public=True
+    )
+
+    client.force_login(user)
+    detail_url = urls.reverse("provider_request_detail", args=[pr.id])
+    response = client.get(detail_url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Upstream Provider" in content
+    assert "(public)" not in content
+    assert "(hidden)" not in content
+
+
+@override_flag("upstream_providers", active=True)
+@override_flag("private_upstream_linking", active=True)
+@pytest.mark.django_db
+def test_request_detail_shows_visibility_labels_when_private_flag_on(user, client):
+    """
+    Given: a ProviderRequest has upstream connections and the private_upstream_linking
+           flag is ON
+    When: the detail page is viewed
+    Then: the provider names are shown WITH (public)/(hidden) labels.
+    """
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Provider",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://example.com",
+    )
+    pr = models.ProviderRequest.objects.create(
+        name="Test Provider",
+        website="https://test.com",
+        description="Test",
+        created_by=user,
+        status="PENDING_REVIEW",
+        authorised_by_org=True,
+    )
+    from apps.accounts.models import ProviderRequestUpstreamProvider
+    ProviderRequestUpstreamProvider.objects.create(
+        request=pr, upstream=upstream, is_public=True
+    )
+
+    client.force_login(user)
+    detail_url = urls.reverse("provider_request_detail", args=[pr.id])
+    response = client.get(detail_url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Upstream Provider" in content
+    assert "(public)" in content
 
 
 @pytest.mark.django_db
@@ -3099,6 +3267,8 @@ def test_basis_form_keeps_upstream_providers_when_resell_selected(user):
             f"upstream_providers_visibility_{provider.id}": "on",
         },
         request=request,
+        enable_upstream_providers=True,
+        enable_private_upstream_linking=True,
     )
 
     assert form.is_valid(), form.errors

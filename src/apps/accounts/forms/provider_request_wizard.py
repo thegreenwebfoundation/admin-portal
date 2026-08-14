@@ -22,6 +22,7 @@ from ..models import (
     ProviderRequestLocation,
 )
 from .widgets import UpstreamProviderChoiceField, UpstreamProviderSelectWidget
+from dal_select2.widgets import ModelSelect2Multiple
 
 
 class AlwaysChangedModelFormMixin:
@@ -203,10 +204,35 @@ class BasisForVerificationForm(forms.ModelForm):
         from waffle import flag_is_active
 
         enable_upstream_providers = kwargs.pop("enable_upstream_providers", False)
+        enable_private_upstream_linking = kwargs.pop(
+            "enable_private_upstream_linking", False
+        )
         request = kwargs.pop("request", None)
         # store request so we can refer to it later in form life cycle validation
         self.request = request
+        self.enable_private_upstream_linking = enable_private_upstream_linking
+
         super().__init__(*args, **kwargs)
+
+        # When the private_upstream_linking flag is off, replace the
+        # visibility-aware field/widget with the plain DAL equivalents so
+        # submitters get a standard multi-select without per-item checkboxes.
+        if not enable_private_upstream_linking and "upstream_providers" in self.fields:
+            original_field = self.fields["upstream_providers"]
+            self.fields["upstream_providers"] = forms.ModelMultipleChoiceField(
+                queryset=Hostingprovider.objects.filter(
+                    archived=False, is_listed=True
+                ),
+                required=False,
+                label=original_field.label,
+                help_text=original_field.help_text,
+                widget=ModelSelect2Multiple(
+                    url="linked-provider-autocomplete",
+                    attrs={
+                        "data-placeholder": "Search for a verified provider..."
+                    },
+                ),
+            )
 
 
         # scope the available choices to the active version for this request
@@ -221,14 +247,20 @@ class BasisForVerificationForm(forms.ModelForm):
                 b for b in instance.verification_bases.slugs()
             ]
             if "upstream_providers" in self.fields:
-                self.initial["upstream_providers"] = [
-                    {
-                        "provider": c.upstream_id,
-                        "is_public": c.is_public,
-                        "provider_name": c.upstream.name,
-                    }
-                    for c in instance.upstream_connections.select_related("upstream")
-                ]
+                if self.enable_private_upstream_linking:
+                    self.initial["upstream_providers"] = [
+                        {
+                            "provider": c.upstream_id,
+                            "is_public": c.is_public,
+                            "provider_name": c.upstream.name,
+                        }
+                        for c in instance.upstream_connections.select_related("upstream")
+                    ]
+                else:
+                    self.initial["upstream_providers"] = [
+                        c.upstream_id
+                        for c in instance.upstream_connections.all()
+                    ]
         # Drop any initial slugs that are not in the active version's choices
         # (e.g. a provider/request that had a legacy June 2026 basis opened
         # under the October 2026 regime). This prevents stale checkboxes and
@@ -251,6 +283,16 @@ class BasisForVerificationForm(forms.ModelForm):
         is_v2 = request is not None and flag_is_active(request, "verification_basis_v2")
         if not is_v2 and not enable_upstream_providers:
             self.fields.pop("upstream_providers", None)
+        elif "upstream_providers" in self.fields and not self.enable_private_upstream_linking:
+            # Normalize any list-of-dicts initial data (from get_initial_dict)
+            # to plain PKs for the standard ModelMultipleChoiceField.
+            raw = self.initial.get("upstream_providers")
+            if raw and isinstance(raw, list) and raw and isinstance(raw[0], dict):
+                self.initial["upstream_providers"] = [
+                    item["provider"] if hasattr(item, "get")
+                    else item
+                    for item in raw
+                ]
 
     def _convert_legacy_reseller_slug(self):
         """

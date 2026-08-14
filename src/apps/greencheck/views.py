@@ -1,9 +1,11 @@
 from datetime import date, timedelta
 
 import django_filters
+from django.db.models import Prefetch
 from django.views.generic.base import TemplateView
 
 from apps.accounts.models.hosting import Hostingprovider
+from apps.accounts.models.hosting.provider import UpstreamProvider
 
 from ..accounts import models as ac_models
 from . import object_storage
@@ -85,7 +87,13 @@ class DirectoryView(TemplateView):
         ).select_related(
             "carbon_txt"
         ).prefetch_related(
-            "services", "supporting_documents"
+            "services", "supporting_documents",
+            Prefetch(
+                "upstream_connections",
+                queryset=UpstreamProvider.objects.filter(
+                    is_public=True
+                ).select_related("upstream"),
+            ),
         )
 
         ctx = super().get_context_data(**kwargs)

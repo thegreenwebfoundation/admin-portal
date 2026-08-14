@@ -9,7 +9,9 @@
 
 {% block footer_section %}
 {% upstream_section_enabled as show_upstream %}
+{% private_upstream_linking_enabled as show_visibility %}
 {% if show_upstream %}
+    {% if show_visibility %}
     <div class="alert__warning mt-0 mb-0" id="upstream-providers-disclosure" hidden>
         <p class="mb-0">
             Upstream provider relationships may be publicly displayed and shared
@@ -19,11 +21,13 @@
             each selected provider.
         </p>
     </div>
+    {% endif %}
 {% endif %}
 {% endblock %}
 
 {% block extra_js %}
 {% upstream_section_enabled as show_upstream %}
+{% private_upstream_linking_enabled as show_visibility %}
 {% if show_upstream %}
 <script>
     {% comment %}
@@ -55,17 +59,17 @@
         // No resell checkbox in this regime – there is no selected basis to
         // justify showing the upstream provider picker, so hide it.
         linkedProviderSelectionBox.setAttribute("hidden", "");
-        disclosureWarning.setAttribute("hidden", "");
+        if (disclosureWarning) { disclosureWarning.setAttribute("hidden", ""); }
         return;
       }
 
       if (isReseller.checked) {
         // Remove the hidden attribute to make the widget visible
         linkedProviderSelectionBox.removeAttribute("hidden");
-        disclosureWarning.removeAttribute("hidden");
+        if (disclosureWarning) { disclosureWarning.removeAttribute("hidden"); }
       } else {
         linkedProviderSelectionBox.setAttribute("hidden", "");
-        disclosureWarning.setAttribute("hidden", "");
+        if (disclosureWarning) { disclosureWarning.setAttribute("hidden", ""); }
       }
     }
 

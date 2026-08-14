@@ -5,6 +5,7 @@ from django.contrib.admin.models import CHANGE
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest
 from django.urls import reverse
+from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 from logentry_admin.admin import (
     LogEntry,
@@ -87,7 +88,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
 
     @mark_safe
     @admin.display(description="Upstream providers")
-    def display_upstream_providers(self, obj):
+    def display_upstream_providers(self, obj) -> str:
         """
         Read-only display of upstream providers selected in this request,
         showing the visibility state of each connection.
@@ -95,9 +96,14 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         connections = obj.upstream_connections.select_related("upstream").all()
         if not connections:
             return "None"
-        return "<br>".join(
-            f"{conn.upstream.name} ({'public' if conn.is_public else 'hidden'})"
-            for conn in connections
+        return format_html_join(
+            "",
+            "{} ({})<br>",
+            (
+                (conn.upstream.name,
+                 "public" if conn.is_public else "hidden")
+                for conn in connections
+            ),
         )
 
     def send_approval_email(

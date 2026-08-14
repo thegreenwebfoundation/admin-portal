@@ -19,3 +19,16 @@ def upstream_section_enabled(context):
         flag_is_active(request, "verification_basis_v2")
         or flag_is_active(request, "upstream_providers")
     )
+
+
+@register.simple_tag(takes_context=True)
+def private_upstream_linking_enabled(context):
+    """
+    Return True when the per-provider visibility checkboxes (the
+    "show in public directory" controls) should be rendered in the
+    wizard and portal.
+
+    Controlled by the ``private_upstream_linking`` waffle flag.
+    """
+    request = context.get("request")
+    return flag_is_active(request, "private_upstream_linking")
