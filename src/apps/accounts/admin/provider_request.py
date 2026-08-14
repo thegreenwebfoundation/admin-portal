@@ -3,6 +3,7 @@ import typing
 from django.contrib import admin, messages
 from django.contrib.admin.models import CHANGE
 from django.contrib.contenttypes.models import ContentType
+from django import forms as dj_forms
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html_join
@@ -41,9 +42,31 @@ class ProviderRequestIPRangeInline(AdminOnlyTabularInline):
     fields = ["start", "end", "ip_range_size"]
 
 
+class ProviderRequestEvidenceInlineForm(dj_forms.ModelForm):
+    """Form for editing evidence in the provider request admin."""
+
+    class Meta:
+        model = ProviderRequestEvidence
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Limit the locations queryset to those belonging to this request.
+        # In a tabular inline, self.instance is the evidence instance and
+        # self.instance.request is the parent ProviderRequest.
+        if self.instance and self.instance.request_id:
+            self.fields["locations"].queryset = ProviderRequestLocation.objects.filter(
+                request=self.instance.request
+            )
+        else:
+            self.fields["locations"].queryset = ProviderRequestLocation.objects.none()
+
+
 class ProviderRequestEvidenceInline(AdminOnlyTabularInline):
     model = ProviderRequestEvidence
     extra = 0
+    form = ProviderRequestEvidenceInlineForm
+    filter_horizontal = ["locations"]
 
 
 class ProviderRequestLocationInline(AdminOnlyTabularInline):
