@@ -95,6 +95,17 @@
   overflow: auto !important;
 }
 
+/* Reduce contrast on unchecked (hidden) upstream provider rows */
+.upstream-visibility-row.is-hidden-upstream {
+    opacity: 0.6;
+}
+
+/* Also match via CSS :has() for server-rendered rows that haven't
+   received the JS class yet, and for non-JS scenarios. */
+.upstream-visibility-row:has(input:not(:checked)) {
+    opacity: 0.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .upstream-visibility-row {
         animation: none !important;

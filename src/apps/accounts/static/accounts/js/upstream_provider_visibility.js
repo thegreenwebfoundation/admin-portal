@@ -86,13 +86,46 @@
             nameSpan.className = "upstream-provider-name";
             nameSpan.textContent = getProviderName(providerId);
 
+            var publicSpan = document.createElement("span");
+            publicSpan.className = "visibility-label visibility-public";
+            publicSpan.textContent = " — show in public directory";
+            if (!isPublic) { publicSpan.setAttribute("hidden", ""); }
+
+            var hiddenSpan = document.createElement("span");
+            hiddenSpan.className = "visibility-label visibility-hidden";
+            hiddenSpan.textContent = " — will not be shown in public directory";
+            if (isPublic) { hiddenSpan.setAttribute("hidden", ""); }
+
             label.appendChild(nameSpan);
-            label.appendChild(
-                document.createTextNode(" — show in public directory")
-            );
+            label.appendChild(publicSpan);
+            label.appendChild(hiddenSpan);
 
             row.appendChild(checkbox);
             row.appendChild(label);
+
+            // Toggle visibility labels and row opacity on checkbox change
+            checkbox.addEventListener("change", function () {
+                if (this.checked) {
+                    publicSpan.removeAttribute("hidden");
+                    hiddenSpan.setAttribute("hidden", "");
+                    row.classList.remove("is-hidden-upstream");
+                } else {
+                    publicSpan.setAttribute("hidden", "");
+                    hiddenSpan.removeAttribute("hidden");
+                    row.classList.add("is-hidden-upstream");
+                }
+                announce(
+                    getProviderName(providerId) +
+                        (this.checked
+                            ? " will be shown in the public directory."
+                            : " will not be shown in the public directory.")
+                );
+            });
+
+            // Set initial row class
+            if (!isPublic) {
+                row.classList.add("is-hidden-upstream");
+            }
 
             return row;
         }
@@ -198,6 +231,45 @@
             hideFieldset();
             announce("All providers removed.");
         });
+
+        // --- Server-rendered row sync ---
+        // Attach change listeners to rows that were rendered server-side
+        // (dynamically created rows get their listener in createVisibilityRow).
+        var existingRows = rowsContainer.querySelectorAll(
+            ".upstream-visibility-row"
+        );
+        for (var i = 0; i < existingRows.length; i++) {
+            (function (row) {
+                var cb = row.querySelector("input[type=checkbox]");
+                if (!cb) return;
+                var publicLabel = row.querySelector(".visibility-public");
+                var hiddenLabel = row.querySelector(".visibility-hidden");
+                var providerId = row.getAttribute("data-provider-id");
+
+                // Set initial class for CSS opacity
+                if (!cb.checked) {
+                    row.classList.add("is-hidden-upstream");
+                }
+
+                cb.addEventListener("change", function () {
+                    if (this.checked) {
+                        if (publicLabel) publicLabel.removeAttribute("hidden");
+                        if (hiddenLabel) hiddenLabel.setAttribute("hidden", "");
+                        row.classList.remove("is-hidden-upstream");
+                    } else {
+                        if (publicLabel) publicLabel.setAttribute("hidden", "");
+                        if (hiddenLabel) hiddenLabel.removeAttribute("hidden");
+                        row.classList.add("is-hidden-upstream");
+                    }
+                    announce(
+                        getProviderName(providerId) +
+                            (this.checked
+                                ? " will be shown in the public directory."
+                                : " will not be shown in the public directory.")
+                    );
+                });
+            })(existingRows[i]);
+        }
 
         // Show/hide based on initial state
         if (rowsContainer.children.length > 0) {
