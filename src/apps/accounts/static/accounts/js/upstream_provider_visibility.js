@@ -65,6 +65,26 @@
             return option ? option.textContent : "Provider #" + id;
         }
 
+        function attachCheckboxHandler(checkbox, row, publicSpan, hiddenSpan, providerId) {
+            checkbox.addEventListener("change", function () {
+                if (this.checked) {
+                    if (publicSpan) publicSpan.removeAttribute("hidden");
+                    if (hiddenSpan) hiddenSpan.setAttribute("hidden", "");
+                    row.classList.remove("is-hidden-upstream");
+                } else {
+                    if (publicSpan) publicSpan.setAttribute("hidden", "");
+                    if (hiddenSpan) hiddenSpan.removeAttribute("hidden");
+                    row.classList.add("is-hidden-upstream");
+                }
+                announce(
+                    getProviderName(providerId) +
+                        (this.checked
+                            ? " will be shown in the public directory."
+                            : " will not be shown in the public directory.")
+                );
+            });
+        }
+
         function createVisibilityRow(providerId, isPublic) {
             var row = document.createElement("div");
             row.className =
@@ -103,24 +123,7 @@
             row.appendChild(checkbox);
             row.appendChild(label);
 
-            // Toggle visibility labels and row opacity on checkbox change
-            checkbox.addEventListener("change", function () {
-                if (this.checked) {
-                    publicSpan.removeAttribute("hidden");
-                    hiddenSpan.setAttribute("hidden", "");
-                    row.classList.remove("is-hidden-upstream");
-                } else {
-                    publicSpan.setAttribute("hidden", "");
-                    hiddenSpan.removeAttribute("hidden");
-                    row.classList.add("is-hidden-upstream");
-                }
-                announce(
-                    getProviderName(providerId) +
-                        (this.checked
-                            ? " will be shown in the public directory."
-                            : " will not be shown in the public directory.")
-                );
-            });
+            attachCheckboxHandler(checkbox, row, publicSpan, hiddenSpan, providerId);
 
             // Set initial row class
             if (!isPublic) {
@@ -251,23 +254,7 @@
                     row.classList.add("is-hidden-upstream");
                 }
 
-                cb.addEventListener("change", function () {
-                    if (this.checked) {
-                        if (publicLabel) publicLabel.removeAttribute("hidden");
-                        if (hiddenLabel) hiddenLabel.setAttribute("hidden", "");
-                        row.classList.remove("is-hidden-upstream");
-                    } else {
-                        if (publicLabel) publicLabel.setAttribute("hidden", "");
-                        if (hiddenLabel) hiddenLabel.removeAttribute("hidden");
-                        row.classList.add("is-hidden-upstream");
-                    }
-                    announce(
-                        getProviderName(providerId) +
-                            (this.checked
-                                ? " will be shown in the public directory."
-                                : " will not be shown in the public directory.")
-                    );
-                });
+                attachCheckboxHandler(cb, row, publicLabel, hiddenLabel, providerId);
             })(existingRows[i]);
         }
 
