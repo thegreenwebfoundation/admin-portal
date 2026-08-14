@@ -424,7 +424,40 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
     ``fossil_free_energy_matching`` and ``claim_coverage_percentage``
     fields. When the flag is off, both fields are popped so the flag-OFF
     rendering is byte-identical to the legacy form.
+
+    When the ``link_disclosures_to_regions`` waffle flag is on, the
+    ``region_scope`` (radio: all vs specific) and ``locations`` (multi-select)
+    fields are shown. When the flag is off, both fields are popped and
+    evidence is automatically given an "all regions" scope in ``done()``.
     """
+
+    REGION_ALL = "all"
+    REGION_SPECIFIC = "specific"
+    REGION_SCOPE_CHOICES = [
+        (REGION_ALL, "Apply to all my submitted regions"),
+        (REGION_SPECIFIC, "Apply to specific regions"),
+    ]
+
+    region_scope = forms.ChoiceField(
+        choices=REGION_SCOPE_CHOICES,
+        initial=REGION_ALL,
+        required=True,
+        label="Which regions does this disclosure apply to?",
+        help_text=(
+            "Choose whether this disclosure covers all your regions or only specific ones."
+        ),
+        widget=forms.RadioSelect(attrs={"class": "region-scope-radio"}),
+    )
+
+    locations = forms.MultipleChoiceField(
+        choices=[],  # populated in __init__ from wizard session
+        required=False,  # required=True only when region_scope == 'specific'
+        label="Select specific regions",
+        help_text=(
+            "Select one or more of your submitted regions that this disclosure covers."
+        ),
+        widget=forms.SelectMultiple(attrs={"class": "disclosure-regions-select"}),
+    )
 
     fossil_free_energy_matching = forms.ChoiceField(
         choices=FossilFreeEnergyMatching.choices,
@@ -459,6 +492,8 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             "file",
             "fossil_free_energy_matching",
             "claim_coverage_percentage",
+            "region_scope",
+            "locations",
             "description",
             "public",
         ]
@@ -486,7 +521,18 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
         from waffle import flag_is_active
 
         request = kwargs.pop("request", None)
+        # Pop location_choices injected by the wizard view
+        location_choices = kwargs.pop("location_choices", [])
+
         super().__init__(*args, **kwargs)
+
+        # Populate the locations choices from the wizard's earlier step data
+        self.fields["locations"].choices = location_choices
+
+        # If editing an existing evidence with linked locations, set
+        # region_scope to 'specific' so the multi-select is shown
+        if self.initial.get("locations"):
+            self.initial["region_scope"] = self.REGION_SPECIFIC
 
         show_matching_fields = request is not None and flag_is_active(
             request, "verification_basis_v2"
@@ -495,7 +541,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             self.fields.pop("fossil_free_energy_matching", None)
             self.fields.pop("claim_coverage_percentage", None)
         else:
-            # enforce ordering so both fields sit immediately before ``description``
+            # enforce ordering so both fields sit immediately before ``region_scope``
             desired_order = [
                 "type",
                 "title",
@@ -503,12 +549,24 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
                 "file",
                 "fossil_free_energy_matching",
                 "claim_coverage_percentage",
+                "region_scope",
+                "locations",
                 "description",
                 "public",
             ]
             self.fields = OrderedDict(
                 (k, self.fields[k]) for k in desired_order if k in self.fields
             )
+
+        show_link_disclosures_to_regions = request is not None and flag_is_active(
+            request, "link_disclosures_to_regions"
+        )
+        if not show_link_disclosures_to_regions:
+            # Pop the fields so the UI doesn't show them. The form's clean()
+            # will default region_scope to REGION_ALL and locations to [],
+            # so done() links evidence to all locations automatically.
+            self.fields.pop("region_scope", None)
+            self.fields.pop("locations", None)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -520,6 +578,26 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             and not cleaned_data.get("fossil_free_energy_matching")
         ):
             cleaned_data["fossil_free_energy_matching"] = FossilFreeEnergyMatching.ANNUAL
+
+        # If the link_disclosures_to_regions flag is off, the fields are
+        # popped. Set sensible defaults so done() can link evidence to all
+        # locations automatically.
+        if "region_scope" not in cleaned_data or not cleaned_data.get("region_scope"):
+            cleaned_data["region_scope"] = self.REGION_ALL
+            cleaned_data["locations"] = []
+            return cleaned_data
+
+        # Enforce locations only when region_scope == 'specific'
+        region_scope = cleaned_data.get("region_scope")
+        if region_scope == self.REGION_SPECIFIC:
+            if not cleaned_data.get("locations"):
+                self.add_error(
+                    "locations",
+                    "Select at least one region, or choose 'all regions' above.",
+                )
+        elif region_scope == self.REGION_ALL:
+            # Clear any locations — 'all' takes precedence
+            cleaned_data["locations"] = []
 
         return cleaned_data
 

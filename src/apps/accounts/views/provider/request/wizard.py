@@ -31,6 +31,7 @@ from ....models import (
     ProviderRequest,
     ProviderRequestASN,
     ProviderRequestEvidence,
+    ProviderRequestEvidenceLocation,
     ProviderRequestIPRange,
     ProviderRequestLocation,
     ProviderRequestStatus,
@@ -281,7 +282,46 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
 
         # process GREEN_EVIDENCE form: link evidence to ProviderRequest
         evidence_formset = form_dict[steps.GREEN_EVIDENCE.value]
-        _process_formset(evidence_formset, pr)
+
+        # Get the saved ProviderRequestLocation instances in order, so we can
+        # resolve the location indices submitted in the evidence form
+        pr_locations = list(pr.providerrequestlocation_set.all().order_by("id"))
+
+        # Save evidence instances manually so we can access cleaned_data
+        # for region_scope and locations, and create through-model rows
+        saved_evidence_instances = []
+        for form in evidence_formset.forms:
+            if form.cleaned_data.get("DELETE"):
+                continue
+            evidence = form.save(commit=False)
+            evidence.request = pr
+            evidence.save()
+            saved_evidence_instances.append((form, evidence))
+
+        # Delete evidence marked for deletion
+        for obj in evidence_formset.deleted_objects:
+            obj.delete()
+
+        # Link evidence to locations based on region_scope
+        for form, evidence in saved_evidence_instances:
+            region_scope = form.cleaned_data.get("region_scope")
+            if region_scope == "all":
+                # Link to ALL of the provider's locations
+                for location in pr_locations:
+                    ProviderRequestEvidenceLocation.objects.get_or_create(
+                        evidence=evidence,
+                        location=location,
+                    )
+            elif region_scope == "specific":
+                # Link to the selected locations (by index)
+                selected_location_indices = form.cleaned_data.get("locations", [])
+                for index_str in selected_location_indices:
+                    index = int(index_str)
+                    if 0 <= index < len(pr_locations):
+                        ProviderRequestEvidenceLocation.objects.get_or_create(
+                            evidence=evidence,
+                            location=pr_locations[index],
+                        )
 
         # process NETWORK_FOOTPRINT form: retrieve IP ranges
         ip_range_formset = form_dict[steps.NETWORK_FOOTPRINT.value].forms["ips"]
@@ -395,9 +435,13 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 kwargs["request"] = self.request
             # The green evidence formset rebuilds with ``form_kwargs`` so
             # each child ``CredentialForm`` knows whether to render the matching
-            # and coverage fields in the preview.
+            # and coverage fields in the preview, as well as the region scope
+            # and locations fields.
             if step == self.Steps.GREEN_EVIDENCE.value:
                 kwargs["form_kwargs"] = {"request": self.request}
+                location_choices = self._get_location_choices()
+                if location_choices:
+                    kwargs["form_kwargs"]["location_choices"] = location_choices
             preview_forms[step] = form(initial=cleaned_data, **kwargs)
         return preview_forms
 
@@ -406,6 +450,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         if self.steps.current == self.Steps.PREVIEW.value:
             # inject data from all previous steps for rendering
             context["preview_forms"] = self._get_data_for_preview()
+            # Pass location choices for the preview so region labels can be
+            # resolved from index strings.
+            context["location_choices"] = self._get_location_choices()
         return context
 
     def get_form_kwargs(self, step=None):
@@ -437,11 +484,44 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         # The green evidence step is a formset; ``form_kwargs`` is threaded
         # to each child ``CredentialForm.__init__`` so it can consult the
         # ``verification_basis_v2`` waffle flag to show/hide the matching
-        # and coverage fields.
+        # and coverage fields, and the ``link_disclosures_to_regions`` flag
+        # to show/hide the region scope and locations fields.
         if step == self.Steps.GREEN_EVIDENCE.value:
             kwargs["form_kwargs"] = {"request": self.request}
+            # Pass location choices from Step 1 (LOCATIONS)
+            location_choices = self._get_location_choices()
+            if location_choices:
+                kwargs["form_kwargs"]["location_choices"] = location_choices
 
         return kwargs
+
+    def _get_location_choices(self):
+        """
+        Build a list of (index, "City, Country") tuples from the LOCATIONS
+        step's cleaned data. The indices correspond to the order of locations
+        in the Step 1 formset, and are resolved to ProviderRequestLocation
+        instances in done() after locations are saved.
+        """
+        location_step_data = self.get_cleaned_data_for_step(
+            self.Steps.LOCATIONS.value
+        )
+        if not location_step_data:
+            return []
+        locations_formset = location_step_data.get("locations")
+        if not locations_formset:
+            return []
+        location_choices = []
+        for i, loc_form in enumerate(locations_formset):
+            if loc_form.cleaned_data.get("DELETE", False):
+                continue
+            city = loc_form.cleaned_data.get("city", "")
+            country = loc_form.cleaned_data.get("country", "")
+            country_name = str(country.name) if country else ""
+            label = (
+                f"{city}, {country_name}" if city else f"Location {i+1}"
+            )
+            location_choices.append((str(i), label))
+        return location_choices
 
     def get_form_initial(self, step):
         """
