@@ -257,6 +257,68 @@ class UpstreamProvider(TimeStampedModel):
         return f"{self.parent} → {self.upstream} ({'public' if self.is_public else 'hidden'})"
 
 
+class HostingProviderLocation(models.Model):
+    """
+    A live location for a hosting provider. Created from ProviderRequestLocation
+    data during approval. An admin can add/remove/edit these without
+    mutating the original submitted request data.
+
+    The ``is_primary`` flag marks the location that represents the provider's
+    main country/city in the directory. The flat ``Hostingprovider.country``
+    and ``.city`` fields are kept in sync with the primary location.
+    """
+
+    name = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=255)
+    country = CountryField()
+    hostingprovider = models.ForeignKey(
+        "Hostingprovider",
+        on_delete=models.CASCADE,
+        related_name="locations",
+    )
+    is_primary = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.city}, {self.country.name}"
+
+    class Meta:
+        verbose_name = "hosting provider location"
+        verbose_name_plural = "hosting provider locations"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.is_primary:
+            # Ensure only one primary location per provider
+            HostingProviderLocation.objects.filter(
+                hostingprovider=self.hostingprovider,
+                is_primary=True,
+            ).exclude(pk=self.pk).update(is_primary=False)
+            # Sync the flat fields on the provider
+            self.hostingprovider.country = self.country
+            self.hostingprovider.city = self.city
+            self.hostingprovider.save(update_fields=["country", "city"])
+
+
+class HostingProviderSupportingDocumentLocation(models.Model):
+    """Link between a live disclosure and a live region (location)."""
+
+    document = models.ForeignKey(
+        "HostingProviderSupportingDocument",
+        on_delete=models.CASCADE,
+        related_name="location_links",
+    )
+    location = models.ForeignKey(
+        HostingProviderLocation,
+        on_delete=models.CASCADE,
+        related_name="document_links",
+    )
+
+    class Meta:
+        unique_together = ("document", "location")
+        verbose_name = "disclosure region"
+        verbose_name_plural = "disclosure regions"
+
+
 class Hostingprovider(models.Model, DirtyFieldsMixin):
     archived = models.BooleanField(default=False)
     country = CountryField(db_column="countrydomain")
@@ -797,6 +859,13 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         db_column="id_hp",
         null=True,
         on_delete=models.CASCADE,
+        related_name="supporting_documents",
+    )
+
+    locations = models.ManyToManyField(
+        HostingProviderLocation,
+        through=HostingProviderSupportingDocumentLocation,
+        blank=True,
         related_name="supporting_documents",
     )
 

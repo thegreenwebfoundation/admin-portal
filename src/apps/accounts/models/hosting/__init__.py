@@ -14,8 +14,10 @@ from .datacenter import (
 from .provider import (
     Hostingprovider,
     HostingproviderCertificate,
+    HostingProviderLocation,
     HostingProviderNote,
     HostingProviderSupportingDocument,
+    HostingProviderSupportingDocumentLocation,
     HostingCommunication,
     Service,
     PartnerChoice,

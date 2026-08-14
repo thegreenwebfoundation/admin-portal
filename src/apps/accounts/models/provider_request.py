@@ -608,6 +608,13 @@ class ProviderRequestEvidence(models.Model):
         ),
     )
 
+    locations = models.ManyToManyField(
+        ProviderRequestLocation,
+        through="ProviderRequestEvidenceLocation",
+        blank=True,
+        related_name="evidence",
+    )
+
     def __str__(self) -> str:
         name = self.link or self.file.name
         long_name = f"{name}: {self.title}"
@@ -647,3 +654,23 @@ class ProviderRequestEvidence(models.Model):
             and self.public == other_doc.public
             and content_match
         )
+
+
+class ProviderRequestEvidenceLocation(models.Model):
+    """Link between a draft disclosure and a submitted location."""
+
+    evidence = models.ForeignKey(
+        ProviderRequestEvidence,
+        on_delete=models.CASCADE,
+        related_name="location_links",
+    )
+    location = models.ForeignKey(
+        ProviderRequestLocation,
+        on_delete=models.CASCADE,
+        related_name="evidence_links",
+    )
+
+    class Meta:
+        unique_together = ("evidence", "location")
+        verbose_name = "evidence region"
+        verbose_name_plural = "evidence regions"
