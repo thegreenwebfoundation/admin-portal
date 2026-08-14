@@ -58,7 +58,7 @@ class ProviderRequestEvidenceInlineForm(dj_forms.ModelForm):
             self.fields["locations"].queryset = ProviderRequestLocation.objects.filter(
                 request=self.instance.request
             )
-        else:
+        elif "locations" in self.fields:
             self.fields["locations"].queryset = ProviderRequestLocation.objects.none()
 
 
@@ -66,7 +66,6 @@ class ProviderRequestEvidenceInline(AdminOnlyTabularInline):
     model = ProviderRequestEvidence
     extra = 0
     form = ProviderRequestEvidenceInlineForm
-    filter_horizontal = ["locations"]
 
 
 class ProviderRequestLocationInline(AdminOnlyTabularInline):
