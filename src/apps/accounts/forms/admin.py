@@ -126,7 +126,7 @@ class HostingProviderSupportingDocumentInlineForm(forms.ModelForm):
             self.fields["locations"].queryset = HostingProviderLocation.objects.filter(
                 hostingprovider=hp
             )
-        else:
+        elif "locations" in self.fields:
             self.fields["locations"].queryset = HostingProviderLocation.objects.none()
 
 

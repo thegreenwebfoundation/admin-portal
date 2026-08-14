@@ -288,19 +288,19 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         pr_locations = list(pr.providerrequestlocation_set.all().order_by("id"))
 
         # Save evidence instances manually so we can access cleaned_data
-        # for region_scope and locations, and create through-model rows
+        # for region_scope and locations, and create through-model rows.
+        # We call save(commit=False) first so the formset tracks deletions.
         saved_evidence_instances = []
         for form in evidence_formset.forms:
             if form.cleaned_data.get("DELETE"):
+                # Handle deletion of existing evidence when editing
+                if form.instance and form.instance.pk:
+                    form.instance.delete()
                 continue
             evidence = form.save(commit=False)
             evidence.request = pr
             evidence.save()
             saved_evidence_instances.append((form, evidence))
-
-        # Delete evidence marked for deletion
-        for obj in evidence_formset.deleted_objects:
-            obj.delete()
 
         # Link evidence to locations based on region_scope
         for form, evidence in saved_evidence_instances:
@@ -511,12 +511,25 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         if not locations_formset:
             return []
         location_choices = []
-        for i, loc_form in enumerate(locations_formset):
-            if loc_form.cleaned_data.get("DELETE", False):
+        for i, loc_data in enumerate(locations_formset):
+            # loc_data may be a dict (cleaned data from wizard session)
+            # or a form instance (when called from _get_data_for_preview)
+            if hasattr(loc_data, "cleaned_data"):
+                cd = loc_data.cleaned_data
+            elif isinstance(loc_data, dict):
+                cd = loc_data
+            else:
                 continue
-            city = loc_form.cleaned_data.get("city", "")
-            country = loc_form.cleaned_data.get("country", "")
-            country_name = str(country.name) if country else ""
+            if cd.get("DELETE", False):
+                continue
+            city = cd.get("city", "")
+            country = cd.get("country", "")
+            # country may be a Country object (from form instance) or a
+            # string code (from wizard session cleaned data)
+            if hasattr(country, "name"):
+                country_name = str(country.name)
+            else:
+                country_name = str(country) if country else ""
             label = (
                 f"{city}, {country_name}" if city else f"Location {i+1}"
             )

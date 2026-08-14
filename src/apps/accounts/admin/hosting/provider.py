@@ -68,7 +68,6 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
     extra = 0
     model = HostingProviderSupportingDocument
     form = forms.InlineSupportingDocumentForm
-    filter_horizontal = ["locations"]
 
 
 class UpstreamProviderInlineForm(dj_forms.ModelForm):
