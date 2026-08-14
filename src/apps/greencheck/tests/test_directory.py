@@ -150,7 +150,7 @@ def test_directory_hides_upstream_providers_when_flag_is_off(
     assert "Relies on:" not in res.content.decode()
 
 
-@override_flag("upstream_providers", active=True)
+@override_flag("upstream_providers_directory", active=True)
 @pytest.mark.django_db
 def test_directory_shows_upstream_providers_when_flag_is_on(
     client, hosting_provider_factory
@@ -175,7 +175,7 @@ def test_directory_shows_upstream_providers_when_flag_is_on(
     assert "Upstream Green" in content
 
 
-@override_flag("upstream_providers", active=True)
+@override_flag("upstream_providers_directory", active=True)
 @pytest.mark.django_db
 def test_directory_hides_hidden_upstream_providers(
     client, hosting_provider_factory
