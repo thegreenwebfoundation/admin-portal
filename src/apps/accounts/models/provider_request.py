@@ -22,7 +22,9 @@ from .hosting import (
     EvidenceType,
     FossilFreeEnergyMatching,
     Hostingprovider,
+    HostingProviderLocation,
     HostingProviderSupportingDocument,
+    HostingProviderSupportingDocumentLocation,
     Service,
     VerificationBasis,
     get_active_version,
@@ -292,7 +294,8 @@ class ProviderRequest(TimeStampedModel):
             )
 
         # Temporarily use only the first location
-        # TODO: change this once Hostingprovider model has multiple locations attached
+        # (kept for backward compatibility — the flat country/city fields
+        # are now also synced via HostingProviderLocation.save() below)
         first_location = self.providerrequestlocation_set.first()
         if not first_location:
             raise ValueError(f"{failed_msg} because there are no locations provided")
@@ -374,6 +377,21 @@ class ProviderRequest(TimeStampedModel):
 
         hp.save()
 
+        # Create live locations from submitted locations, replacing any
+        # existing ones (re-approval of an updated request). The first
+        # location is marked as primary, and the flat country/city fields
+        # are kept in sync via HostingProviderLocation.save().
+        hp.locations.all().delete()
+        request_locations = list(self.providerrequestlocation_set.all())
+        for i, location in enumerate(request_locations):
+            HostingProviderLocation.objects.create(
+                hostingprovider=hp,
+                name=location.name,
+                city=location.city,
+                country=location.country,
+                is_primary=(i == 0),
+            )
+
         # set permissions
         assign_perm(manage_provider.codename, self.created_by, hp)
 
@@ -437,6 +455,15 @@ class ProviderRequest(TimeStampedModel):
             return None
 
         # create related objects: supporting documents
+        # Build a mapping of draft location PKs -> live locations by index,
+        # so we can carry across the disclosure-region links.
+        hp_locations = list(hp.locations.all().order_by("id"))
+        pr_locations = list(self.providerrequestlocation_set.all().order_by("id"))
+        loc_map = {}
+        for i, pr_loc in enumerate(pr_locations):
+            if i < len(hp_locations):
+                loc_map[pr_loc.pk] = hp_locations[i]
+
         for evidence in self.providerrequestevidence_set.all():
             logger.debug(f"checking for matching evidence for: {evidence}")
 
@@ -480,6 +507,17 @@ class ProviderRequest(TimeStampedModel):
             logger.debug(
                 f"Created supporting doc: {supporting_doc} for evidence: {evidence}"
             )
+
+            # Carry across disclosure-region links: map draft locations to
+            # live locations by order. Evidence linked to all draft locations
+            # gets linked to all live locations.
+            for evidence_location in evidence.locations.all():
+                live_location = loc_map.get(evidence_location.pk)
+                if live_location:
+                    HostingProviderSupportingDocumentLocation.objects.get_or_create(
+                        document=supporting_doc,
+                        location=live_location,
+                    )
 
         # At this point we have created new supporting documents for evidence we
         # haven't seen before.
