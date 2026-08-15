@@ -524,15 +524,30 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 continue
             city = cd.get("city", "")
             country = cd.get("country", "")
+            name = cd.get("name", "")
             # country may be a Country object (from form instance) or a
             # string code (from wizard session cleaned data)
             if hasattr(country, "name"):
                 country_name = str(country.name)
             else:
                 country_name = str(country) if country else ""
-            label = (
-                f"{city}, {country_name}" if city else f"Location {i+1}"
-            )
+
+            if name and city and country_name:
+                label = f"{name} ({city}, {country_name})"
+            elif name and city:
+                label = f"{name} ({city})"
+            elif name and country_name:
+                label = f"{name} ({country_name})"
+            elif city and country_name:
+                label = f"{city}, {country_name}"
+            elif city:
+                label = city
+            elif country_name:
+                label = country_name
+            elif name:
+                label = name
+            else:
+                label = f"Location {i+1}"
             location_choices.append((str(i), label))
         return location_choices
 
