@@ -119,6 +119,21 @@ class AdminOnlyTabularInline(admin.TabularInline):
         return request.user.is_admin
 
 
+class AdminOnlyStackedInline(admin.StackedInline):
+    """
+    Specifies a StackedInline admin with all permissions for the admin group
+    """
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_admin
+
+    def has_add_permission(self, request, obj=None):
+        return request.user.is_admin
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_admin
+
+
 class ActionInChangeFormMixin(object):
     """
     Adds custom admin actions

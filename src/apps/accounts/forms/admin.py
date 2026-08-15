@@ -120,8 +120,16 @@ class HostingProviderSupportingDocumentInlineForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Limit locations to the provider's live locations
-        if self.instance and self.instance.hostingprovider_id:
+        # Limit locations to the provider's live locations.
+        #
+        # Note: the admin inline derivation omits many-to-many fields with an
+        # explicit through model, so ``locations`` may not be present when the
+        # form is rendered as part of an inline formset.
+        if (
+            self.instance
+            and self.instance.hostingprovider_id
+            and "locations" in self.fields
+        ):
             hp = self.instance.hostingprovider
             self.fields["locations"].queryset = HostingProviderLocation.objects.filter(
                 hostingprovider=hp

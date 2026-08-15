@@ -38,6 +38,7 @@ from ...models import (
     HostingProviderNote,
     HostingProviderSupportingDocument,
     Label,
+    ProviderRequest,
     Service,
     SupportMessage,
     UpstreamProvider,
@@ -55,6 +56,18 @@ class HostingCertificateInline(admin.StackedInline):
     # classes = ["collapse"]
 
 
+class ProviderRequestInline(admin.TabularInline):
+    """Inline listing provider requests linked to this hosting provider."""
+
+    model = ProviderRequest
+    fk_name = "provider"
+    extra = 0
+    fields = ("name", "website", "status", "created", "modified")
+    readonly_fields = ("name", "website", "status", "created", "modified")
+    can_delete = False
+    show_change_link = True
+
+
 class HostingProviderLocationInline(admin.TabularInline):
     """Inline for managing live locations on a hosting provider."""
 
@@ -68,6 +81,20 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
     extra = 0
     model = HostingProviderSupportingDocument
     form = forms.InlineSupportingDocumentForm
+    fields = (
+        "title",
+        "description",
+        "type",
+        "url",
+        "attachment",
+        "public",
+        "region_scope_display",
+        "fossil_free_energy_matching",
+        "claim_coverage_percentage",
+        "valid_from",
+        "valid_to",
+    )
+    readonly_fields = ("region_scope_display",)
 
 
 class UpstreamProviderInlineForm(dj_forms.ModelForm):
@@ -159,6 +186,7 @@ class HostingAdmin(
         GreencheckIpApproveInline,
         GreencheckAsnInline,
         GreencheckAsnApproveInline,
+        ProviderRequestInline,
         HostingProviderNoteInline,
         UpstreamProviderInline,
     ]
@@ -681,6 +709,33 @@ class HostingAdmin(
 
     def services(self, obj):
         return ", ".join(o.name for o in obj.services.all())
+
+    @mark_safe
+    @admin.display(description="Provider requests")
+    def linked_provider_requests(self, obj):
+        """
+        Returns markup for a list of provider requests linked to this hosting
+        provider, showing each request's name, status and a link to its change
+        page.
+        """
+        requests = obj.providerrequest_set.order_by("-modified").all()
+        if not requests:
+            return "No provider requests are linked to this hosting provider."
+        return format_html_join(
+            "",
+            '<a href="{}">{}</a> — {}<br>',
+            (
+                (
+                    reverse(
+                        "greenweb_admin:accounts_providerrequest_change",
+                        args=[req.pk],
+                    ),
+                    req.name,
+                    req.status,
+                )
+                for req in requests
+            ),
+        )
 
     def get_readonly_fields(self, request, obj=None):
         read_only = super().get_readonly_fields(request, obj)

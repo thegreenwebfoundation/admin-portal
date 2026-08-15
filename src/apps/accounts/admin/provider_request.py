@@ -26,7 +26,11 @@ from ..models import (
     VerificationBasis,
 )
 from ..utils import send_email
-from .abstract import ActionInChangeFormMixin, AdminOnlyTabularInline
+from .abstract import (
+    ActionInChangeFormMixin,
+    AdminOnlyStackedInline,
+    AdminOnlyTabularInline,
+)
 
 
 class ProviderRequestASNInline(AdminOnlyTabularInline):
@@ -54,7 +58,15 @@ class ProviderRequestEvidenceInlineForm(dj_forms.ModelForm):
         # Limit the locations queryset to those belonging to this request.
         # In a tabular inline, self.instance is the evidence instance and
         # self.instance.request is the parent ProviderRequest.
-        if self.instance and self.instance.request_id:
+        #
+        # Note: the admin inline derivation omits many-to-many fields with an
+        # explicit through model, so ``locations`` may not be present when the
+        # form is rendered as part of an inline formset.
+        if (
+            self.instance
+            and self.instance.request_id
+            and "locations" in self.fields
+        ):
             self.fields["locations"].queryset = ProviderRequestLocation.objects.filter(
                 request=self.instance.request
             )
@@ -62,10 +74,22 @@ class ProviderRequestEvidenceInlineForm(dj_forms.ModelForm):
             self.fields["locations"].queryset = ProviderRequestLocation.objects.none()
 
 
-class ProviderRequestEvidenceInline(AdminOnlyTabularInline):
+class ProviderRequestEvidenceInline(AdminOnlyStackedInline):
     model = ProviderRequestEvidence
     extra = 0
     form = ProviderRequestEvidenceInlineForm
+    fields = (
+        "title",
+        "description",
+        "type",
+        "link",
+        "file",
+        "public",
+        "region_scope_display",
+        "fossil_free_energy_matching",
+        "claim_coverage_percentage",
+    )
+    readonly_fields = ("region_scope_display",)
 
 
 class ProviderRequestLocationInline(AdminOnlyTabularInline):

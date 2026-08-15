@@ -687,6 +687,18 @@ class ProviderRequestEvidence(models.Model):
         if self.link and bool(self.file):
             raise ValidationError(f"{reason}, you've attempted to submit both.")
 
+    @property
+    def region_scope_display(self) -> str:
+        """
+        Return a human-readable summary of whether this disclosure applies
+        globally or to a specific set of regions.
+        """
+        locations = self.locations.all()
+        if not locations:
+            return "Global"
+        location_labels = [str(loc) for loc in locations]
+        return f"Specific regions: {', '.join(location_labels)}"
+
     def has_content_match(self, other_doc: "HostingProviderSupportingDocument") -> bool:
         """
         Check if an evidence is functionally equivalent to an existing supporting document.
