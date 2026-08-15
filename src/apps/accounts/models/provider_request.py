@@ -464,7 +464,9 @@ class ProviderRequest(TimeStampedModel):
             if i < len(hp_locations):
                 loc_map[pr_loc.pk] = hp_locations[i]
 
-        for evidence in self.providerrequestevidence_set.all():
+        for evidence in self.providerrequestevidence_set.all().prefetch_related(
+            "locations"
+        ):
             logger.debug(f"checking for matching evidence for: {evidence}")
 
             # AbstractSupportingDocument does not accept null values for `url`
