@@ -203,6 +203,11 @@ ADMIN_PERMS= [
     "change_providerrequestupstreamprovider",
     "delete_providerrequestupstreamprovider",
     "view_providerrequestupstreamprovider",
+    # need to be able to manage hosting provider locations
+    "add_hostingproviderlocation",
+    "change_hostingproviderlocation",
+    "delete_hostingproviderlocation",
+    "view_hostingproviderlocation",
 ]
 
 PERMS = {

@@ -911,6 +911,18 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         return self.hostingprovider
 
     @property
+    def region_scope_display(self) -> str:
+        """
+        Return a human-readable summary of whether this disclosure applies
+        globally or to a specific set of regions.
+        """
+        locations = self.locations.all()
+        if not locations:
+            return "Global"
+        location_labels = [str(loc) for loc in locations]
+        return f"Specific regions: {', '.join(location_labels)}"
+
+    @property
     def has_attachment_in_object_store(self):
         """
         This indicates whether the disclosure's attachment is stored in the object store, which
