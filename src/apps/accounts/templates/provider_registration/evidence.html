@@ -1,15 +1,9 @@
 {% extends "base.html" %}
 {% load i18n static waffle_tags %}
-{% block extrahead %}
-{% flag 'link_disclosures_to_regions' %}
-<link rel="stylesheet" href="{% static 'css/vendor/tom-select.css' %}">
-{% endflag %}
-{% endblock %}
 
 {% block content %}
 
 {{ wizard.form.media }}
-<script src="{% static 'js/dist/app.bundle.js' %}"></script>
 <!-- Initialize a ConvenientFormset -->
 <script>
 	window.addEventListener('load', function (event) {

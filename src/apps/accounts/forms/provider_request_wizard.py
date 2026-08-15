@@ -22,7 +22,6 @@ from ..models import (
     ProviderRequestLocation,
 )
 from .widgets import UpstreamProviderChoiceField, UpstreamProviderSelectWidget
-from dal_select2.widgets import ModelSelect2Multiple
 
 
 class AlwaysChangedModelFormMixin:
@@ -214,26 +213,13 @@ class BasisForVerificationForm(forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-        # When the private_upstream_linking flag is off, replace the
-        # visibility-aware field/widget with the plain DAL equivalents so
-        # submitters get a standard multi-select without per-item checkboxes.
-        if not enable_private_upstream_linking and "upstream_providers" in self.fields:
-            original_field = self.fields["upstream_providers"]
-            self.fields["upstream_providers"] = forms.ModelMultipleChoiceField(
-                queryset=Hostingprovider.objects.filter(
-                    archived=False, is_listed=True
-                ),
-                required=False,
-                label=original_field.label,
-                help_text=original_field.help_text,
-                widget=ModelSelect2Multiple(
-                    url="linked-provider-autocomplete",
-                    attrs={
-                        "data-placeholder": "Search for a verified provider..."
-                    },
-                ),
-            )
-
+        # The upstream provider picker always uses the custom field/widget,
+        # but the visibility checkboxes are only shown when the
+        # private_upstream_linking flag is enabled.
+        if "upstream_providers" in self.fields:
+            self.fields[
+                "upstream_providers"
+            ].widget.show_visibility = enable_private_upstream_linking
 
         # scope the available choices to the active version for this request
         self.fields[
@@ -247,20 +233,14 @@ class BasisForVerificationForm(forms.ModelForm):
                 b for b in instance.verification_bases.slugs()
             ]
             if "upstream_providers" in self.fields:
-                if self.enable_private_upstream_linking:
-                    self.initial["upstream_providers"] = [
-                        {
-                            "provider": c.upstream_id,
-                            "is_public": c.is_public,
-                            "provider_name": c.upstream.name,
-                        }
-                        for c in instance.upstream_connections.select_related("upstream")
-                    ]
-                else:
-                    self.initial["upstream_providers"] = [
-                        c.upstream_id
-                        for c in instance.upstream_connections.all()
-                    ]
+                self.initial["upstream_providers"] = [
+                    {
+                        "provider": c.upstream_id,
+                        "is_public": c.is_public,
+                        "provider_name": c.upstream.name,
+                    }
+                    for c in instance.upstream_connections.select_related("upstream")
+                ]
         # Drop any initial slugs that are not in the active version's choices
         # (e.g. a provider/request that had a legacy June 2026 basis opened
         # under the October 2026 regime). This prevents stale checkboxes and

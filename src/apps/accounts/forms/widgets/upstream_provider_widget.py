@@ -3,21 +3,21 @@ from typing import Any
 
 from django import forms
 from django.forms import Media
+from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
-from dal_select2.widgets import ModelSelect2Multiple
 
-
-class UpstreamProviderSelectWidget(ModelSelect2Multiple):
+class UpstreamProviderSelectWidget(forms.SelectMultiple):
     """
-    Composite widget: Select2 autocomplete multi-select + per-item
+    Composite widget: TomSelect autocomplete multi-select + per-item
     visibility checkboxes.
 
-    Renders a standard DAL ModelSelect2Multiple (a ``<select multiple>``
-    enhanced by Select2) followed by a fieldset of checkboxes — one per
-    selected provider — letting the submitter choose whether each
-    upstream connection should be visible in the public directory.
+    Renders a plain ``<select multiple>`` enhanced by TomSelect
+    (bundled in ``js/dist/app.bundle.js``) followed by a fieldset of
+    checkboxes — one per selected provider — letting the submitter choose
+    whether each upstream connection should be visible in the public
+    directory.
 
     The widget's ``value_from_datadict`` returns a list of dicts::
 
@@ -25,18 +25,44 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
 
     Initial data can be passed in the same format, or as a plain list
     of provider IDs (for backwards compatibility).
+
+    When ``show_visibility`` is False, the visibility fieldset is omitted
+    and every selected provider is treated as public.
     """
 
-    def build_attrs(self, base_attrs, extra_attrs=None) -> dict:
-        """Add data attribute so JS can find this widget."""
+    def __init__(
+        self,
+        attrs: dict[str, Any] | None = None,
+        show_visibility: bool = True,
+        url: str | None = None,
+        **kwargs,
+    ):
+        self.show_visibility = show_visibility
+        self.url = url
+        super().__init__(attrs=attrs)
+
+    def build_attrs(
+        self,
+        base_attrs: dict[str, Any],
+        extra_attrs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         attrs = super().build_attrs(base_attrs, extra_attrs)
+        # The JS uses this attribute to identify upstream-provider selects and
+        # to decide whether to initialise a TomSelect instance on the page.
         attrs["data-upstream-visibility-widget"] = ""
+        if self.url:
+            # Make the autocomplete endpoint explicit in the markup so the
+            # client-side code does not have to hard-code a URL.
+            attrs["data-autocomplete-url"] = reverse(self.url)
         return attrs
 
     @property
     def media(self) -> Media:
-        return super().media + Media(
-            js=("accounts/js/upstream_provider_visibility.js",),
+        return Media(
+            js=(
+                "accounts/js/tomselect-widgets.js",
+                "accounts/js/upstream_provider_visibility.js",
+            ),
         )
 
     def _normalize_initial(self, value) -> list[dict[str, Any]]:
@@ -48,6 +74,10 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         - a single dict
         - a single ID
         - model instances
+
+        We need this because sometimes we are working iwth an existing model,
+        but sometimes we are working with a provider request submission
+        for a totally new provider
         """
         if value is None:
             return []
@@ -77,25 +107,77 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
                 result.append({"provider": str(item), "is_public": True})
         return result
 
-    def render(self, name, value, attrs=None, renderer=None, **kwargs) -> str:
+    def _load_provider_names(self, items: list[dict[str, Any]]) -> dict[str, str]:
+        """Return a {provider_id: name} map for items missing a provider_name."""
+        missing_pks = [
+            int(item["provider"])
+            for item in items
+            if not item.get("provider_name")
+        ]
+        if not missing_pks:
+            return {}
+
+        from apps.accounts.models import Hostingprovider
+
+        return {
+            str(p.pk): p.name
+            for p in Hostingprovider.objects.filter(pk__in=missing_pks)
+        }
+
+    def render(
+        self,
+        name: str,
+        value: Any,
+        attrs: dict[str, Any] | None = None,
+        renderer=None,
+        **kwargs,
+    ) -> str:
         """
-        Render the Select2 multi-select, then append the visibility
-        checkbox fieldset below it.
+        Render the TomSelect multi-select, then append the visibility
+        checkbox fieldset below it (when ``show_visibility`` is True).
         """
         # Normalize the value to a format the underlying SelectMultiple
         # understands (list of PK strings) before passing to super().
         items = self._normalize_initial(value)
+
+        # Make sure every selected provider has a display name before we render
+        # the <option> elements that TomSelect uses for its item labels.
+        name_map = self._load_provider_names(items)
+        for item in items:
+            if not item.get("provider_name"):
+                item["provider_name"] = name_map.get(
+                    item["provider"], f"Provider #{item['provider']}"
+                )
+
         pk_values = [item["provider"] for item in items]
 
-        select_html = super().render(name, pk_values, attrs, renderer, **kwargs)
+        # Only render <option> elements for the selected providers. This keeps
+        # the markup small; TomSelect will fetch labels for new selections via
+        # the autocomplete endpoint.
+        original_choices = list(self.choices)
+        self.choices = [
+            (item["provider"], item["provider_name"])
+            for item in items
+        ]
+        try:
+            select_html = super().render(
+                name, pk_values, attrs, renderer, **kwargs
+            )
+        finally:
+            self.choices = original_choices
 
         field_id = attrs.get("id", name) if attrs else name
+
+        if not self.show_visibility:
+            return mark_safe(select_html)
 
         visibility_html = self._render_visibility_list(name, field_id, items)
 
         return mark_safe(select_html + visibility_html)
 
-    def _render_visibility_list(self, name, field_id, items) -> str:
+    def _render_visibility_list(
+        self, name: str, field_id: str, items: list[dict[str, Any]]
+    ) -> str:
         """Render the fieldset of per-provider visibility checkboxes."""
         # Look up provider names for any items missing one
         missing_pks = [
@@ -120,18 +202,19 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         if not items:
             return format_html(
                 '<fieldset class="upstream-visibility-list mt-3" '
-                'id="{}" hidden>'
-                '<legend class="text-sm font-medium mb-1">'
-                "Providers in your upstream supply chain. Providers with checked checkboxes count as 'public'."
-                "</legend>"
-                '<div class="upstream-visibility-rows"></div>'
-                '<div class="sr-only" aria-live="polite" '
-                'id="{}_announcer"></div>'
+                    'id="{}" hidden>'
+                    '<legend class="text-sm font-medium mb-1">'
+                        "Providers in your upstream supply chain. Providers with checked checkboxes count as 'public'."
+                    "</legend>"
+                    '<div class="upstream-visibility-rows"></div>'
+                    '<div class="sr-only" aria-live="polite" '
+                    'id="{}_announcer"></div>'
                 "</fieldset>",
                 f"{field_id}_visibility",
                 field_id,
             )
 
+        # render our lis of checkboxes the chosen providers
         rows_html = format_html_join(
             "",
             '<div class="upstream-visibility-row flex items-center gap-2 mb-1" '
@@ -183,9 +266,11 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
             field_id,
         )
 
-    def value_from_datadict(self, data, files, name) -> list[dict[str, Any]]:
+    def value_from_datadict(
+        self, data: dict[str, Any], files: Any, name: str
+    ) -> list[dict[str, Any]]:
         """
-        Read both the provider IDs from the Select2 multi-select and the
+        Read both the provider IDs from the multi-select and the
         per-provider visibility checkboxes, returning a list of dicts:
         ``[{"provider": "42", "is_public": True}, ...]``
         """
@@ -196,11 +281,16 @@ class UpstreamProviderSelectWidget(ModelSelect2Multiple):
         result = []
         for pid in provider_ids:
             checkbox_name = f"{name}_visibility_{pid}"
-            is_public = data.get(checkbox_name) == "on"
+            if self.show_visibility:
+                is_public = data.get(checkbox_name) == "on"
+            else:
+                # When no visibility checkboxes are rendered, default to the
+                # model's default (public).
+                is_public = True
             result.append({"provider": str(pid), "is_public": is_public})
         return result
 
-    def format_value(self, value) -> list[str]:
+    def format_value(self, value: Any) -> list[str]:
         """
         Convert the list-of-dicts value into the format that the
         underlying SelectMultiple expects (a list of PKs as strings).
@@ -220,16 +310,12 @@ class UpstreamProviderChoiceField(forms.ModelMultipleChoiceField):
     Custom form field for selecting upstream providers with per-item
     visibility. Pairs with :class:`UpstreamProviderSelectWidget`.
 
-    Extends ``ModelMultipleChoiceField`` so that the DAL widget's
-    ``QuerySetSelectMixin`` can access ``self.choices.queryset`` for
-    rendering selected options.
-
     Unlike the parent, this field's ``clean()`` returns a list of dicts::
 
         [{"provider": <Hostingprovider instance>, "is_public": True}, ...]
     """
 
-    def clean(self, value) -> list[dict[str, Any]]:
+    def clean(self, value: Any) -> list[dict[str, Any]]:
         """
         Override clean to prevent the parent from converting the widget's
         list-of-dicts into a queryset. We validate the provider IDs against

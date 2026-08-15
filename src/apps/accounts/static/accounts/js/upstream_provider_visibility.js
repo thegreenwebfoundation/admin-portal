@@ -1,9 +1,13 @@
 /**
  * Upstream Provider Visibility Widget
  *
- * Syncs the Select2 multi-select (for choosing upstream providers) with
+ * Syncs the TomSelect multi-select (for choosing upstream providers) with
  * a list of visibility checkboxes, so each provider can be individually
  * marked as "show in public directory" or "hidden".
+ *
+ * When the private_upstream_linking flag is off, the visibility fieldset is
+ * not rendered; this script still initialises TomSelect on the plain
+ * <select multiple> so the search-as-you-type behaviour is consistent.
  *
  * Accessibility:
  * - All checkboxes are standard <input type="checkbox"> — natively focusable
@@ -23,21 +27,22 @@
         if (!selectElement) return;
 
         var fieldId = selectId;
+        var fieldName = selectElement.getAttribute("name") || fieldId;
         var visibilityFieldset = document.getElementById(fieldId + "_visibility");
         var announcer = document.getElementById(fieldId + "_announcer");
+        var rowsContainer = null;
+        var tom = null;
 
-        if (!visibilityFieldset) return;
-
-        var rowsContainer = visibilityFieldset.querySelector(
-            ".upstream-visibility-rows"
-        );
-        if (!rowsContainer) {
-            rowsContainer = document.createElement("div");
-            rowsContainer.className = "upstream-visibility-rows";
-            visibilityFieldset.appendChild(rowsContainer);
+        if (visibilityFieldset) {
+            rowsContainer = visibilityFieldset.querySelector(
+                ".upstream-visibility-rows"
+            );
+            if (!rowsContainer) {
+                rowsContainer = document.createElement("div");
+                rowsContainer.className = "upstream-visibility-rows";
+                visibilityFieldset.appendChild(rowsContainer);
+            }
         }
-
-        var fieldName = selectElement.getAttribute("name") || fieldId;
 
         // Load initial data (provider PKs + names) from the JSON script tag
         var dataSource = document.getElementById(fieldId + "_data");
@@ -58,7 +63,11 @@
             if (item && item.provider_name) {
                 return item.provider_name;
             }
-            // Fall back to reading the option text from the select element
+            // Try the live TomSelect options (useful for newly-added items)
+            if (tom && tom.options[id] && tom.options[id].text) {
+                return tom.options[id].text;
+            }
+            // Fall back to reading the option text from the original select element
             var option = selectElement.querySelector(
                 'option[value="' + id + '"]'
             );
@@ -134,6 +143,8 @@
         }
 
         function addRow(providerId) {
+            if (!rowsContainer) return;
+
             providerId = String(providerId);
             var existing = rowsContainer.querySelector(
                 '[data-provider-id="' + providerId + '"]'
@@ -157,6 +168,8 @@
         }
 
         function removeRow(providerId) {
+            if (!rowsContainer) return;
+
             providerId = String(providerId);
             var row = rowsContainer.querySelector(
                 '[data-provider-id="' + providerId + '"]'
@@ -184,17 +197,24 @@
                 if (nextCheckbox) {
                     nextCheckbox.focus();
                 } else {
-                    selectElement.focus();
+                    // Focus the TomSelect input if available, otherwise the
+                    // (now hidden) original select.
+                    var focusTarget = (tom && tom.control_input) || selectElement;
+                    focusTarget.focus();
                 }
             }
         }
 
         function showFieldset() {
-            visibilityFieldset.removeAttribute("hidden");
+            if (visibilityFieldset) {
+                visibilityFieldset.removeAttribute("hidden");
+            }
         }
 
         function hideFieldset() {
-            visibilityFieldset.setAttribute("hidden", "");
+            if (visibilityFieldset) {
+                visibilityFieldset.setAttribute("hidden", "");
+            }
         }
 
         function announce(message) {
@@ -202,38 +222,47 @@
             announcer.textContent = message;
         }
 
-        // --- Select2 event integration ---
+        // --- TomSelect event integration ---
         //
-        // Select2 fires `select2:select` / `select2:unselect` as jQuery
-        // events, so we listen via jQuery. The selected/unselected item's ID
-        // is in `e.params.data.id`.
+        // The reusable initialiser (in tomselect-widgets.js) creates the
+        // TomSelect instance and exposes it on selectElement.tomselect. We
+        // pass callbacks for the lifecycle events we care about and let it
+        // handle remote autocomplete loading.
 
-        var $select = (window.jQuery || window.jq)(selectElement);
-        $select.on("select2:select", function (e) {
-            var id = (e.params && e.params.data && e.params.data.id) || null;
-            if (id !== null) {
-                addRow(id);
-            }
+        if (typeof window.initTomSelectAutocomplete !== "function") {
+            return;
+        }
+
+        tom = window.initTomSelectAutocomplete(selectElement, {
+            onItemAdd: function (value) {
+                addRow(value);
+            },
+            onItemRemove: function (value) {
+                removeRow(value);
+            },
+            onClear: function () {
+                if (!rowsContainer) return;
+                var rows = rowsContainer.querySelectorAll(
+                    ".upstream-visibility-row"
+                );
+                for (var i = 0; i < rows.length; i++) {
+                    rows[i].remove();
+                }
+                hideFieldset();
+                announce("All providers removed.");
+            },
         });
-        $select.on("select2:unselect", function (e) {
-            var id = (e.params && e.params.data && e.params.data.id) || null;
-            if (id !== null) {
-                removeRow(id);
-            }
-        });
-        // Handle "clear all" — Select2 fires select2:clear which also
-        // fires select2:unselect per item, but in some versions only
-        // select2:clear is fired. Handle both to be safe.
-        $select.on("select2:clear", function () {
-            var rows = rowsContainer.querySelectorAll(
-                ".upstream-visibility-row"
-            );
-            for (var i = 0; i < rows.length; i++) {
-                rows[i].remove();
-            }
-            hideFieldset();
-            announce("All providers removed.");
-        });
+
+        if (!tom) {
+            // TomSelect or the initialiser is unavailable; leave the plain
+            // <select multiple> untouched.
+            return;
+        }
+
+        if (!visibilityFieldset) {
+            // Nothing more to do when the visibility fieldset is not rendered.
+            return;
+        }
 
         // --- Server-rendered row sync ---
         // Attach change listeners to rows that were rendered server-side
@@ -266,7 +295,7 @@
         }
     }
 
-    // Find all upstream provider Select2 widgets on the page
+    // Find all upstream provider TomSelect widgets on the page
     function initAll() {
         var widgets = document.querySelectorAll(
             "[data-upstream-visibility-widget]"

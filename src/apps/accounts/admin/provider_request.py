@@ -91,6 +91,11 @@ class ProviderRequestEvidenceInline(AdminOnlyStackedInline):
     )
     readonly_fields = ("region_scope_display",)
 
+    def get_queryset(self, request):
+        # Prefetch locations so ``region_scope_display`` does not issue a
+        # separate query for every evidence row.
+        return super().get_queryset(request).prefetch_related("locations")
+
 
 class ProviderRequestLocationInline(AdminOnlyTabularInline):
     model = ProviderRequestLocation
