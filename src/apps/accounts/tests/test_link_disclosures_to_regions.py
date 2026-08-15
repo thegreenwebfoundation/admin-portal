@@ -54,12 +54,26 @@ def wizard_form_org_location_data():
         "locations__1-INITIAL_FORMS": "0",
         "locations__1-0-country": faker.country_code(),
         "locations__1-0-city": faker.city(),
+        "locations__1-0-name": "Main HQ",
         "locations__1-1-country": faker.country_code(),
         "locations__1-1-city": faker.city(),
+        "locations__1-1-name": "eu-west datacentre",
         "locations__1-2-country": faker.country_code(),
         "locations__1-2-city": faker.city(),
+        "locations__1-2-name": "Regional office",
         "extra__1-location_import_required": "True",
     }
+
+
+@pytest.fixture()
+def location_labels_by_name():
+    """Indexed labels expected from _get_location_choices for the fixture data.
+
+    Because faker produces variable city/country values, the exact labels cannot
+    be hard-coded. Tests that need stable labels should use this map and the
+    `location_label_for` helper below.
+    """
+    return {0: "Main HQ", 1: "eu-west datacentre", 2: "Regional office"}
 
 
 @pytest.fixture()
