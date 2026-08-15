@@ -302,13 +302,16 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             evidence.save()
             saved_evidence_instances.append((form, evidence))
 
-        # Link evidence to locations based on region_scope
+        # Link evidence to locations based on region_scope.
+        # Clear any stale links first so re-edits don't leave behind rows from
+        # a previous submission (e.g. switching from "specific" to "all").
         for form, evidence in saved_evidence_instances:
+            ProviderRequestEvidenceLocation.objects.filter(evidence=evidence).delete()
             region_scope = form.cleaned_data.get("region_scope")
             if region_scope == "all":
                 # Link to ALL of the provider's locations
                 for location in pr_locations:
-                    ProviderRequestEvidenceLocation.objects.get_or_create(
+                    ProviderRequestEvidenceLocation.objects.create(
                         evidence=evidence,
                         location=location,
                     )
@@ -318,7 +321,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 for index_str in selected_location_indices:
                     index = int(index_str)
                     if 0 <= index < len(pr_locations):
-                        ProviderRequestEvidenceLocation.objects.get_or_create(
+                        ProviderRequestEvidenceLocation.objects.create(
                             evidence=evidence,
                             location=pr_locations[index],
                         )
@@ -523,13 +526,24 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             if cd.get("DELETE", False):
                 continue
             city = cd.get("city", "")
-            country = cd.get("country", "")
+            country = cd.get("country")
             name = cd.get("name", "")
+            # Use the country name to match ProviderRequestLocation.display_label.
+            # ``country`` may be a Country object (from a form) or a plain
+            # country-code string (from the wizard's session storage).
+            if hasattr(country, "name"):
+                country_name = country.name
+            elif country:
+                from django_countries import countries
+
+                country_name = countries.name(country)
+            else:
+                country_name = ""
             # Build the label in the canonical order name, city, country,
             # mirroring ProviderRequestLocation.display_label. Because the
             # location has not been saved yet, we only have the form index
             # available as a discriminator for the empty fallback.
-            parts = [part for part in (name, city, country) if part]
+            parts = [part for part in (name, city, country_name) if part]
             label = ", ".join(parts) if parts else f"Location {i + 1}"
             location_choices.append((str(i), label))
         return location_choices
