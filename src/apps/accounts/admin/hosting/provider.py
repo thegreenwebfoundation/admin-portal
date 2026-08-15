@@ -96,6 +96,11 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
     )
     readonly_fields = ("region_scope_display",)
 
+    def get_queryset(self, request):
+        # Prefetch locations so ``region_scope_display`` does not issue a
+        # separate query for every supporting-document row.
+        return super().get_queryset(request).prefetch_related("locations")
+
 
 class UpstreamProviderInlineForm(dj_forms.ModelForm):
     """Form for UpstreamProvider inline — defaults new rows to is_public=False."""
@@ -107,6 +112,11 @@ class UpstreamProviderInlineForm(dj_forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.is_bound and not self.initial:
+            # The wizard nudges submitters to make upstream connections public
+            # by default, but in the admin we default to hidden. Staff edits
+            # here could unexpectedly expose a provider's upstream
+            # relationships, so we require a conscious choice to make them
+            # public.
             self.initial["is_public"] = False
 
 

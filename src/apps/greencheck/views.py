@@ -92,6 +92,10 @@ class DirectoryView(TemplateView):
         )
 
         if flag_is_active(self.request, "upstream_providers_directory"):
+            # The directory only ever shows public upstream connections.
+            # Prefetch exactly that subset (with the upstream provider already
+            # loaded), and rely on ``Hostingprovider.public_upstream_providers``
+            # to expose them safely in the template.
             queryset = queryset.prefetch_related(
                 Prefetch(
                     "upstream_connections",
