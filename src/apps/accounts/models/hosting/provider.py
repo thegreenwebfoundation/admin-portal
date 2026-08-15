@@ -559,11 +559,16 @@ class Hostingprovider(models.Model, DirtyFieldsMixin):
         """
         Return only upstream providers whose connection is marked as public.
         Used by the public directory to exclude hidden connections.
+
+        If ``upstream_connections`` has been prefetched (e.g. by DirectoryView),
+        this iterates the cached relation. The Python filter remains a final
+        safeguard regardless of how the data was loaded.
         """
-        return self.upstream_providers.filter(
-            downstream_connections__is_public=True,
-            downstream_connections__parent=self,
-        )
+        return [
+            conn.upstream
+            for conn in self.upstream_connections.all()
+            if conn.is_public
+        ]
 
     # Mutators
     def refresh_shared_secret(self) -> str:
