@@ -2667,6 +2667,100 @@ def test_wizard_basis_step_hides_upstream_section_initially_under_v2(
 
 
 @override_flag("upstream_providers", active=True)
+@override_flag("private_upstream_linking", active=True)
+@pytest.mark.django_db
+def test_wizard_basis_step_uses_tomselect_when_private_flag_on(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+):
+    """
+    Given: upstream_providers and private_upstream_linking flags are ON
+    When: the basis-for-verification step is rendered
+    Then: the page loads TomSelect assets and no Select2/DAL assets.
+    """
+    client.force_login(user)
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_org_location_data,
+        follow=True,
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_services_data, follow=True
+    )
+    assert response.status_code == 200
+
+    assert response.context_data["wizard"]["steps"].current == "3"
+    content = response.content.decode()
+
+    assert "js/dist/app.bundle.js" in content
+    assert "css/vendor/tom-select.css" in content
+    assert "accounts/js/tomselect-widgets.js" in content
+    assert "accounts/js/upstream_provider_visibility.js" in content
+    assert "admin/js/vendor/select2/select2" not in content
+    assert "autocomplete_light/select2.js" not in content
+    assert "data-autocomplete-url=" in content
+    assert "upstream-visibility-list" in content
+
+
+@override_flag("upstream_providers", active=True)
+@pytest.mark.django_db
+def test_wizard_basis_step_uses_tomselect_when_private_flag_off(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+):
+    """
+    Given: upstream_providers flag is ON but private_upstream_linking flag is OFF
+    When: the basis-for-verification step is rendered
+    Then: the page still loads TomSelect assets (and no Select2/DAL assets),
+          but the visibility checkbox fieldset is omitted.
+    """
+    client.force_login(user)
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_org_details_data, follow=True
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"),
+        wizard_form_org_location_data,
+        follow=True,
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        urls.reverse("provider_registration"), wizard_form_services_data, follow=True
+    )
+    assert response.status_code == 200
+
+    assert response.context_data["wizard"]["steps"].current == "3"
+    content = response.content.decode()
+
+    assert "js/dist/app.bundle.js" in content
+    assert "css/vendor/tom-select.css" in content
+    assert "accounts/js/tomselect-widgets.js" in content
+    assert "accounts/js/upstream_provider_visibility.js" in content
+    assert "admin/js/vendor/select2/select2" not in content
+    assert "autocomplete_light/select2.js" not in content
+    assert "data-autocomplete-url=" in content
+    assert "upstream-visibility-list" not in content
+
+
+@override_flag("upstream_providers", active=True)
 @override_flag("verification_basis_v2", active=True)
 @pytest.mark.django_db
 def test_wizard_preview_shows_upstream_providers(
@@ -2787,6 +2881,36 @@ def test_request_detail_shows_upstream_providers_when_flag_is_on(
     content = response.content.decode()
     assert "Linked providers" in content
     assert "Upstream Provider" in content
+
+
+@override_flag("upstream_providers", active=True)
+@override_flag("private_upstream_linking", active=True)
+@pytest.mark.django_db
+def test_upstream_provider_widget_renders_provider_names_in_select():
+    """
+    Regression: preselected upstream providers should display their names in
+    the TomSelect input, not a generic "Provider #<id>" label.
+    """
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Green Provider",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://example.com",
+    )
+
+    request_factory = RequestFactory()
+    form = account_forms.BasisForVerificationForm(
+        request=request_factory.get("/"),
+        initial={"upstream_providers": [{"provider": upstream.id, "is_public": True}]},
+        enable_upstream_providers=True,
+        enable_private_upstream_linking=True,
+    )
+
+    html = form["upstream_providers"].as_widget()
+    assert f'value="{upstream.id}"' in html
+    assert "Upstream Green Provider" in html
+    assert f"Provider #{upstream.id}" not in html
 
 
 # ---------- private_upstream_linking feature-flag tests ----------

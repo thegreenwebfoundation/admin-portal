@@ -91,11 +91,10 @@
     display: none !important;
 }
 
-.select2-selection__rendered {
-  height: 100%  !important;
-  display: flex !important;
-  align-items: center !important;
-  overflow: auto !important;
+/* TomSelect control styling: keep the input looking like a regular form
+   field inside the Tailwind layout. */
+.ts-control {
+    min-height: 2.5rem;
 }
 
 /* Reduce contrast on unchecked (hidden) upstream provider rows */
@@ -110,7 +109,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .upstream-visibility-row {
+    .upstream-visibility-row,
+    .ts-dropdown {
         animation: none !important;
         transition: none !important;
     }

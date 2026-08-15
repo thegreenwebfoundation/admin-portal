@@ -44,6 +44,14 @@
 
 
         {% tailwind_css %}
+        {% comment %}
+        TomSelect is used for autocomplete multi-selects across the provider
+        wizard (e.g. upstream providers on the basis-for-verification step,
+        disclosure regions on the evidence step). Load it early so child
+        templates and form media can rely on window.TomSelect.
+        {% endcomment %}
+        <link rel="stylesheet" href="{% static 'css/vendor/tom-select.css' %}">
+        <script src="{% static 'js/dist/app.bundle.js' %}"></script>
         {% block extrahead %}{% endblock %}
     </head>
 
