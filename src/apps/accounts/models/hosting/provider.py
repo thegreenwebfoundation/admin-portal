@@ -278,8 +278,28 @@ class HostingProviderLocation(models.Model):
     )
     is_primary = models.BooleanField(default=False)
 
+    @property
+    def display_label(self):
+        """Human-friendly label used when listing this location as a region.
+
+        Order is always name, city, country. Missing values are omitted so the
+        label never contains empty sections. Falls back to ``Location {id}``
+        only when all three fields are empty, so multiple unnamed locations can
+        still be distinguished.
+        """
+        parts = [
+            part
+            for part in (self.name, self.city, self.country.name)
+            if part
+        ]
+        if parts:
+            return ", ".join(parts)
+        # Use the instance's primary key if it has been saved, otherwise a
+        # generic placeholder. This is only expected in edge cases.
+        return f"Location {self.pk}" if self.pk else "Location"
+
     def __str__(self):
-        return f"{self.city}, {self.country.name}"
+        return self.display_label
 
     class Meta:
         verbose_name = "hosting provider location"

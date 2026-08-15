@@ -549,8 +549,28 @@ class ProviderRequestLocation(models.Model):
     country = CountryField()
     request = models.ForeignKey(ProviderRequest, on_delete=models.CASCADE)
 
+    @property
+    def display_label(self) -> str:
+        """Human-friendly label used when listing this location as a region.
+
+        Order is always name, city, country. Missing values are omitted so the
+        label never contains empty sections. Falls back to ``Location {id}``
+        only when all three fields are empty, so multiple unnamed locations can
+        still be distinguished.
+        """
+        parts = [
+            part
+            for part in (self.name, self.city, self.country.name)
+            if part
+        ]
+        if parts:
+            return ", ".join(parts)
+        # Use the instance's primary key if it has been saved, otherwise a
+        # generic placeholder. This is only expected in edge cases.
+        return f"Location {self.pk}" if self.pk else "Location"
+
     def __str__(self) -> str:
-        return f"{self.request.name} | {self.name} {self.country.name}/{self.city}"
+        return f"{self.request.name} | {self.display_label}"
 
 
 class ProviderRequestASN(models.Model):

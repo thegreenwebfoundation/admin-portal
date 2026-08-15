@@ -525,29 +525,12 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             city = cd.get("city", "")
             country = cd.get("country", "")
             name = cd.get("name", "")
-            # country may be a Country object (from form instance) or a
-            # string code (from wizard session cleaned data)
-            if hasattr(country, "name"):
-                country_name = str(country.name)
-            else:
-                country_name = str(country) if country else ""
-
-            if name and city and country_name:
-                label = f"{name} ({city}, {country_name})"
-            elif name and city:
-                label = f"{name} ({city})"
-            elif name and country_name:
-                label = f"{name} ({country_name})"
-            elif city and country_name:
-                label = f"{city}, {country_name}"
-            elif city:
-                label = city
-            elif country_name:
-                label = country_name
-            elif name:
-                label = name
-            else:
-                label = f"Location {i+1}"
+            # Build the label in the canonical order name, city, country,
+            # mirroring ProviderRequestLocation.display_label. Because the
+            # location has not been saved yet, we only have the form index
+            # available as a discriminator for the empty fallback.
+            parts = [part for part in (name, city, country) if part]
+            label = ", ".join(parts) if parts else f"Location {i + 1}"
             location_choices.append((str(i), label))
         return location_choices
 

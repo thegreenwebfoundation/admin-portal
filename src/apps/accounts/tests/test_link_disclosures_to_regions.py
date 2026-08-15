@@ -66,14 +66,24 @@ def wizard_form_org_location_data():
 
 
 @pytest.fixture()
-def location_labels_by_name():
+def location_labels_by_name(wizard_form_org_location_data):
     """Indexed labels expected from _get_location_choices for the fixture data.
 
-    Because faker produces variable city/country values, the exact labels cannot
-    be hard-coded. Tests that need stable labels should use this map and the
-    `location_label_for` helper below.
+    The labels are computed in the canonical order name, city, country, matching
+    ``ProviderRequestLocation.display_label`` (which resolves country codes to
+    full country names).
     """
-    return {0: "Main HQ", 1: "eu-west datacentre", 2: "Regional office"}
+    from django_countries import countries
+
+    labels = {}
+    for i in range(3):
+        name = wizard_form_org_location_data.get(f"locations__1-{i}-name", "")
+        city = wizard_form_org_location_data.get(f"locations__1-{i}-city", "")
+        country_code = wizard_form_org_location_data.get(f"locations__1-{i}-country", "")
+        country_name = dict(countries).get(country_code, country_code)
+        parts = [part for part in (name, city, country_name) if part]
+        labels[str(i)] = ", ".join(parts) if parts else f"Location {i + 1}"
+    return labels
 
 
 @pytest.fixture()
@@ -437,6 +447,7 @@ class TestWizardSubmissionWithRegions:
         wizard_form_network_data,
         wizard_form_consent,
         wizard_form_preview,
+        location_labels_by_name,
     ):
         """When region_scope='specific', only selected locations are linked."""
         from django.urls import reverse as urls_reverse
@@ -465,6 +476,41 @@ class TestWizardSubmissionWithRegions:
         # Only location index 1 should be linked
         assert evidence.locations.count() == 1
         assert evidence.locations.first() == locations[1]
+        # The linked location's display_label uses the canonical name, city, country order
+        assert locations[1].display_label == location_labels_by_name["1"]
+
+    def test_location_display_label_order(self):
+        """display_label renders name, city, country and omits empty parts."""
+        from apps.accounts.models import ProviderRequestLocation
+
+        pr = ProviderRequestFactory.create()
+        loc = ProviderRequestLocation(
+            request=pr,
+            name="Main HQ",
+            city="Amsterdam",
+            country="NL",
+        )
+        assert loc.display_label == "Main HQ, Amsterdam, Netherlands"
+
+        loc.city = ""
+        assert loc.display_label == "Main HQ, Netherlands"
+
+        loc.name = ""
+        loc.city = "Amsterdam"
+        assert loc.display_label == "Amsterdam, Netherlands"
+
+        loc.name = "Main HQ"
+        loc.city = "Amsterdam"
+        loc.country = ""
+        assert loc.display_label == "Main HQ, Amsterdam"
+
+    def test_location_display_label_fallback(self):
+        """display_label falls back to 'Location {pk}' when all fields are empty."""
+        from apps.accounts.models import ProviderRequestLocation
+
+        pr = ProviderRequestFactory.create()
+        loc = ProviderRequestLocation.objects.create(request=pr)
+        assert loc.display_label == f"Location {loc.pk}"
 
     def test_wizard_flag_off_auto_all_regions(
         self,
