@@ -104,6 +104,22 @@
 		var radios = row.querySelectorAll('input[type="radio"][name*="region_scope"]');
 		var locationsWrapper = row.querySelector('.disclosure-regions-field');
 
+		function ensureTomSelect() {
+			// Lazily initialise Tom Select only when the locations field is
+			// visible. This avoids layout issues from initialising inside a
+			// hidden container and provides a fallback if the CDN script is
+			// slow to load.
+			if (typeof TomSelect === 'undefined') return;
+			var select = locationsWrapper ? locationsWrapper.querySelector('select.disclosure-regions-select') : null;
+			if (!select || select.tomselect) return;
+			new TomSelect(select, {
+				plugins: ['checkbox_options', 'remove_button'],
+				maxItems: null,
+				placeholder: 'Select regions this disclosure applies to',
+				hideSelected: false,
+			});
+		}
+
 		function updateRegionsVisibility() {
 			var selected = row.querySelector('input[type="radio"][name*="region_scope"]:checked');
 			if (!selected) return;
@@ -111,6 +127,7 @@
 				if (locationsWrapper) locationsWrapper.setAttribute('hidden', '');
 			} else {
 				if (locationsWrapper) locationsWrapper.removeAttribute('hidden');
+				ensureTomSelect();
 			}
 		}
 
@@ -118,17 +135,6 @@
 			radio.addEventListener('change', updateRegionsVisibility);
 		});
 		updateRegionsVisibility();
-
-		// --- Tom Select: multi-select for regions (checkboxes) ---
-		row.querySelectorAll('select.disclosure-regions-select').forEach(function(el) {
-			if (el.tomselect) return;
-			new TomSelect(el, {
-				plugins: ['checkbox_options', 'remove_button'],
-				maxItems: null,
-				placeholder: 'Select regions this disclosure applies to',
-				hideSelected: false,
-			});
-		});
 	}
 
 	window.addEventListener('load', function() {
