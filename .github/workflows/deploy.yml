@@ -84,7 +84,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL_READ_ONLY_PUBLIC }}
 
       - name: Run playbook
-        uses: dawidd6/action-ansible-playbook@v2
+        uses: dawidd6/action-ansible-playbook@v9
         with:
           playbook: ./ansible/deploy.yml
           directory: ./
@@ -93,7 +93,7 @@ jobs:
             --inventory "./ansible/inventories/${{ inputs.environment }}.yml"
 
       - name: Run playbook
-        uses: dawidd6/action-ansible-playbook@v2
+        uses: dawidd6/action-ansible-playbook@v9
         with:
           playbook: ./ansible/deploy-workers.yml
           directory: ./
@@ -115,4 +115,3 @@ jobs:
           pr-comment: true
           send-data: true
         continue-on-error: true
-
