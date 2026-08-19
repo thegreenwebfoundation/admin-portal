@@ -10,6 +10,7 @@ from taggit_labels.widgets import LabelWidget
 from ..models import (
     Datacenter,
     DatacenterNote,
+    DisclosureClaim,
     Hostingprovider,
     HostingProviderLocation,
     HostingProviderNote,
@@ -157,6 +158,36 @@ class InlineSupportingDocumentForm(HostingProviderSupportingDocumentInlineForm):
             self.initial["valid_from"] = datetime.date.today()
             self.initial["valid_to"] = datetime.date.today() + datetime.timedelta(
                 days=365
+            )
+
+
+class EditDisclosureClaimsForm(forms.Form):
+    """
+    A form for editing which claims each disclosure (supporting document)
+    backs, used by the dedicated ``edit_disclosure_claims`` admin view on
+    both the Hostingprovider and ProviderRequest admins.
+
+    ``documents`` is a list of disclosure instances (live or draft). For
+    each document, a ``ModelMultipleChoiceField`` named ``doc_<pk>`` is
+    created, pre-populated from ``doc.claims.all()``.
+
+    This exists because Django's admin inline formsets cannot render M2M
+    fields with explicit through models as editable fields — the same
+    limitation documented for the disclosure-region links in ADR 3.
+    """
+
+    def __init__(self, *args, documents=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        documents = documents or []
+        claim_qs = DisclosureClaim.objects.all().order_by("sort_order", "id")
+        for doc in documents:
+            field_name = f"doc_{doc.pk}"
+            self.fields[field_name] = forms.ModelMultipleChoiceField(
+                queryset=claim_qs,
+                required=False,
+                widget=forms.CheckboxSelectMultiple,
+                label=str(doc),
+                initial=[c.pk for c in doc.claims.all()],
             )
 
 
