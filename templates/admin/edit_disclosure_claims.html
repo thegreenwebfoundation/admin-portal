@@ -1,0 +1,49 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans "Home" %}</a> &rsaquo;
+  {% if provider %}
+  <a href="{% url 'admin:accounts_hostingprovider_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a> &rsaquo;
+  <a href="{% url 'admin:accounts_hostingprovider_change' provider.pk %}">{{ provider }}</a> &rsaquo;
+  {% else %}
+  <a href="{% url 'admin:accounts_providerrequest_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a> &rsaquo;
+  <a href="{% url 'admin:accounts_providerrequest_change' provider_request.pk %}">{{ provider_request }}</a> &rsaquo;
+  {% endif %}
+  {% trans "Edit disclosure claims" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1>Edit disclosure claims for {% if provider %}{{ provider }}{% else %}{{ provider_request }}{% endif %}</h1>
+  <p class="help">
+    For each disclosure below, tick the claims it supports.
+    Changes are saved when you click "Save".
+  </p>
+
+  <form method="post" action="">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="errornote">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    {% for field in form %}
+    <fieldset class="module aligned">
+      <h2>{{ field.label }}</h2>
+      <div class="form-row">
+        {{ field.errors }}
+        <div>{{ field }}</div>
+      </div>
+    </fieldset>
+    {% endfor %}
+
+    <div class="submit-row">
+      <input type="submit" value="{% trans 'Save' %}" class="default" name="_save" />
+      <a href="{{ cancel_link }}" class="cancel-link">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

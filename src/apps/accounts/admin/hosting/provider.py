@@ -31,12 +31,14 @@ from ...forms import (
     HostingProviderNoteForm,
 )
 from ...models import (
+    DisclosureClaim,
     HostingCommunication,
     Hostingprovider,
     HostingproviderCertificate,
     HostingProviderLocation,
     HostingProviderNote,
     HostingProviderSupportingDocument,
+    HostingProviderSupportingDocumentClaim,
     Label,
     ProviderRequest,
     Service,
@@ -89,17 +91,23 @@ class HostingProviderSupportingDocumentInline(admin.StackedInline):
         "attachment",
         "public",
         "region_scope_display",
+        "claims_display",
         "fossil_free_energy_matching",
         "claim_coverage_percentage",
         "valid_from",
         "valid_to",
     )
-    readonly_fields = ("region_scope_display",)
+    readonly_fields = ("region_scope_display", "claims_display")
 
     def get_queryset(self, request):
-        # Prefetch locations so ``region_scope_display`` does not issue a
-        # separate query for every supporting-document row.
-        return super().get_queryset(request).prefetch_related("locations")
+        # Prefetch locations and claims so ``region_scope_display`` and
+        # ``claims_display`` do not issue a separate query for every
+        # supporting-document row.
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("locations", "claims")
+        )
 
 
 class UpstreamProviderInlineForm(dj_forms.ModelForm):
@@ -156,6 +164,17 @@ class VerificationBasisAdmin(admin.ModelAdmin):
 
     class Meta:
         verbose_name = "Bases for Verification"
+
+
+@admin.register(DisclosureClaim, site=greenweb_admin)
+class DisclosureClaimAdmin(admin.ModelAdmin):
+    model = DisclosureClaim
+    list_display = ("label", "category", "version", "sort_order")
+    list_filter = ("category", "version")
+    search_fields = ("label", "slug")
+
+    class Meta:
+        verbose_name = "Disclosure Claims"
 
 
 @admin.register(Label, site=greenweb_admin)
@@ -241,6 +260,7 @@ class HostingAdmin(
         "display_downstream_providers",
         "preview_email_button",
         "start_csv_import_button",
+        "edit_disclosure_claims_button",
     ]
     ordering = ("name",)
 
@@ -389,6 +409,58 @@ class HostingAdmin(
             )
 
         return redirect("greenweb_admin:accounts_hostingprovider_change", provider.id)
+
+    def edit_disclosure_claims(self, request, *args, **kwargs):
+        """
+        Render a dedicated page for editing which claims each disclosure
+        (supporting document) backs, for a given hosting provider.
+
+        Because the claims M2M uses an explicit through model
+        (HostingProviderSupportingDocumentClaim), Django's admin inline
+        formsets cannot render it as an editable field. This view provides
+        an alternative editing surface: one row per supporting document,
+        each with a ModelMultipleChoiceField of DisclosureClaim objects
+        (checkboxes), pre-populated from doc.claims.all().
+        """
+        from ...forms import EditDisclosureClaimsForm
+
+        provider = Hostingprovider.objects.get(pk=kwargs["provider"])
+        documents = list(
+            provider.supporting_documents.all().prefetch_related("claims")
+        )
+
+        if request.method == "POST":
+            form = EditDisclosureClaimsForm(request.POST, documents=documents)
+            if form.is_valid():
+                for doc in documents:
+                    selected = form.cleaned_data.get(f"doc_{doc.pk}", [])
+                    # Clear stale links then recreate from the selection.
+                    HostingProviderSupportingDocumentClaim.objects.filter(
+                        document=doc
+                    ).delete()
+                    for claim in selected:
+                        HostingProviderSupportingDocumentClaim.objects.create(
+                            document=doc, claim=claim,
+                        )
+                messages.add_message(
+                    request, messages.SUCCESS, "Disclosure claims updated."
+                )
+                return redirect(
+                    "greenweb_admin:accounts_hostingprovider_change", provider.id
+                )
+        else:
+            form = EditDisclosureClaimsForm(documents=documents)
+
+        cancel_link = reverse(
+            "admin:" + get_admin_name(self.model, "change"), args=[provider.pk]
+        )
+        context = {
+            "form": form,
+            "provider": provider,
+            "cancel_link": cancel_link,
+            "opts": self.model._meta,
+        }
+        return render(request, "admin/edit_disclosure_claims.html", context)
 
     def send_email(self, request, *args, **kwargs):
         """
@@ -575,6 +647,11 @@ class HostingAdmin(
                 self.preview_email,
                 name=get_admin_name(self.model, "preview_email"),
             ),
+            path(
+                "<provider>/edit_disclosure_claims",
+                self.edit_disclosure_claims,
+                name=get_admin_name(self.model, "edit_disclosure_claims"),
+            ),
         ]
         # order is important !!
         return added + urls
@@ -660,6 +737,7 @@ class HostingAdmin(
                     ("staff_labels",),
                     ("email_template", "preview_email_button"),
                     "start_csv_import_button",
+                    "edit_disclosure_claims_button",
                 )
             },
         )
@@ -855,6 +933,24 @@ class HostingAdmin(
             kwargs={"provider": obj.pk},
         )
         link = f'<a href="{url}" class="start_csv_import">Import IP Ranges from CSV</a>'
+        return link
+
+    @admin.display(description="Edit disclosure claims")
+    @mark_safe
+    def edit_disclosure_claims_button(self, obj):
+        """
+        Link to the dedicated page for editing which claims each
+        disclosure (supporting document) backs.
+        """
+        url = reverse_admin_name(
+            Hostingprovider,
+            name="edit_disclosure_claims",
+            kwargs={"provider": obj.pk},
+        )
+        link = (
+            f'<a href="{url}" class="editDisclosureClaims">'
+            "Edit disclosure claims</a>"
+        )
         return link
 
     @admin.display(description="website")
