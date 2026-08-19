@@ -81,41 +81,34 @@
 	}
 	/* Make the per-disclosure claim checkboxes visible.
 	   The form's .form__evidence--field label rule applies sr-only to
-	   all labels, which would hide the CheckboxSelectMultiple labels
-	   (which contain the checkbox input AND the text). Override so the
-	   checkbox labels display normally, using the same default browser
-	   checkbox style as the 'public' checkbox elsewhere in the form. */
+	   ALL labels, which hides the CheckboxSelectMultiple labels (which
+	   contain the checkbox input AND the text). We must override sr-only
+	   for every label inside .disclosure-claims-field, not just the field
+	   label, because the checkbox labels are nested several levels deep
+	   (div.disclosure-claims-select > div > label). */
+	.disclosure-claims-field label {
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+		overflow: visible !important;
+		clip: auto !important;
+	}
+	/* The field label ("Which of your claims…") should be bold and block. */
 	.disclosure-claims-field .form__evidence--field > label {
-		position: static;
-		width: auto;
-		height: auto;
-		overflow: visible;
-		clip: auto;
 		margin: 0 0 0.5rem 0;
 		font-size: 1rem;
 		font-weight: 600;
 		display: block;
 	}
-	.disclosure-claims-field ul label,
-	.disclosure-claims-field > div > label {
-		position: static;
-		width: auto;
-		height: auto;
-		overflow: visible;
-		clip: auto;
+	/* The checkbox labels should sit inline with their checkboxes. */
+	.disclosure-claims-field .form__evidence--field label[for],
+	.disclosure-claims-field .disclosure-claims-select label {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
 		margin-right: 1.5rem;
-		font-weight: normal;
-	}
-	.disclosure-claims-field ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-	}
-	.disclosure-claims-field ul li {
 		margin-bottom: 0.5rem;
+		font-weight: normal;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.ts-dropdown {
