@@ -23,6 +23,17 @@ class VerificationBasisFactory(dj_factory.DjangoModelFactory):
         django_get_or_create = ("name",)
 
 
+class DisclosureClaimFactory(dj_factory.DjangoModelFactory):
+    label = factory.Faker("sentence", nb_words=4)
+    category = ac_models.DisclosureClaimType.ORGANISATION_BASIS
+    slug = factory.LazyAttribute(lambda o: o.label.lower().replace(" ", "-"))
+    sort_order = factory.Sequence(lambda n: n)
+
+    class Meta:
+        model = ac_models.DisclosureClaim
+        django_get_or_create = ("slug",)
+
+
 class SupportingEvidenceFactory(dj_factory.DjangoModelFactory):
     """
     A piece of supporting evidence, at a remote url, rather than uploaded
