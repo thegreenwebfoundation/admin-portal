@@ -523,8 +523,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             # Pass claim choices from Step 3 (BASIS_FOR_VERIFICATION) + the
             # two always-on claims.
             claim_choices = self._get_disclosure_claim_choices()
-            if claim_choices:
-                kwargs["form_kwargs"]["claim_choices"] = claim_choices
+            kwargs["form_kwargs"]["claim_choices"] = claim_choices
 
         return kwargs
 

@@ -79,6 +79,58 @@
 		outline: 2px solid #166534;
 		outline-offset: 2px;
 	}
+	/* Make the per-disclosure claim checkboxes visible.
+	   The form's .form__evidence--field label rule applies sr-only to
+	   all labels, which would hide the CheckboxSelectMultiple labels
+	   (which contain the checkbox input AND the text). Override so the
+	   checkbox labels display normally. */
+	.disclosure-claims-field .form__evidence--field > label {
+		position: static;
+		width: auto;
+		height: auto;
+		overflow: visible;
+		clip: auto;
+		margin: 0 0 0.5rem 0;
+		font-size: 1rem;
+		font-weight: 600;
+		display: block;
+	}
+	.disclosure-claims-field label[for*="claim_choices"],
+	.disclosure-claims-field ul label,
+	.disclosure-claims-field > div > label {
+		position: static;
+		width: auto;
+		height: auto;
+		overflow: visible;
+		clip: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-right: 1.5rem;
+		font-weight: normal;
+	}
+	.disclosure-claims-field input[type="checkbox"] {
+		width: 1.5rem;
+		height: 1.5rem;
+		border: 2px solid #6b7280;
+		background-color: #fff;
+		border-radius: 4px;
+		appearance: none;
+		-webkit-appearance: none;
+		flex-shrink: 0;
+	}
+	.disclosure-claims-field input[type="checkbox"]:checked {
+		border-color: #166534;
+		background-color: #166534;
+	}
+	.disclosure-claims-field ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.disclosure-claims-field ul li {
+		margin-bottom: 0.5rem;
+	}
 	@media (prefers-reduced-motion: reduce) {
 		.ts-dropdown {
 			animation: none !important;
