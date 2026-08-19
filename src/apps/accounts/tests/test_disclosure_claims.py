@@ -54,7 +54,7 @@ class TestDisclosureClaim:
             version=basis.version,
         )
         assert claim.basis == basis
-        assert claim.category == "organisation_basis"
+        assert claim.category == ac_models.DisclosureClaimType.ORGANISATION_BASIS.value
 
     def test_create_third_party_assurance_claim(self):
         claim, _ = ac_models.DisclosureClaim.objects.get_or_create(
@@ -66,7 +66,7 @@ class TestDisclosureClaim:
         )
         assert claim.basis is None
         assert claim.version is None
-        assert claim.category == "third_party_assurance"
+        assert claim.category == ac_models.DisclosureClaimType.THIRD_PARTY_ASSURANCE.value
 
     def test_create_needs_help_claim(self):
         claim, _ = ac_models.DisclosureClaim.objects.get_or_create(
@@ -76,7 +76,7 @@ class TestDisclosureClaim:
                 "category": ac_models.DisclosureClaimType.NEEDS_HELP,
             },
         )
-        assert claim.category == "needs_help"
+        assert claim.category == ac_models.DisclosureClaimType.NEEDS_HELP.value
 
     def test_str_returns_label(self):
         claim = DisclosureClaimFactory.create(label="My Claim")
@@ -415,14 +415,16 @@ class TestRenderAsClaimsFilter:
         claim1 = DisclosureClaimFactory.create(label="Claim One")
         claim2 = DisclosureClaimFactory.create(label="Claim Two")
         result = render_as_claims([claim1.slug, claim2.slug])
-        assert "Claim One" in result
-        assert "Claim Two" in result
+        assert "<ul>" in result
+        assert "<li>Claim One</li>" in result
+        assert "<li>Claim Two</li>" in result
 
     def test_renders_labels_from_choices_map(self):
         choices = [("a", "Alpha"), ("b", "Beta")]
         result = render_as_claims(["a", "b"], choices)
-        assert "Alpha" in result
-        assert "Beta" in result
+        assert "<ul>" in result
+        assert "<li>Alpha</li>" in result
+        assert "<li>Beta</li>" in result
 
     def test_empty_returns_none(self):
         assert render_as_claims([]) is None
