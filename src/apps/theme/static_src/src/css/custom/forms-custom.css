@@ -138,6 +138,7 @@ ul.errorlist {
   height: auto;
   overflow: visible;
   clip: auto;
+  white-space: normal;
   flex: 1 1 0%;
   min-width: 0;
   @apply mb-0;
