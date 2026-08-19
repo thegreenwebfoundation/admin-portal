@@ -762,7 +762,7 @@ class TestAdminEditDisclosureClaimsView:
         )
         response = client.post(
             url,
-            {f"doc_{doc.pk}": [claim2.pk]},
+            {f"doc_{doc.pk}": [str(claim2.pk)]},
             follow=True,
         )
         assert response.status_code == 200
@@ -814,7 +814,7 @@ class TestAdminEditDisclosureClaimsView:
         )
         response = client.post(
             url,
-            {f"doc_{evidence.pk}": [claim2.pk]},
+            {f"doc_{evidence.pk}": [str(claim2.pk)]},
             follow=True,
         )
         assert response.status_code == 200

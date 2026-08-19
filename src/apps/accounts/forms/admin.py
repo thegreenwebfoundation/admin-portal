@@ -174,20 +174,62 @@ class EditDisclosureClaimsForm(forms.Form):
     This exists because Django's admin inline formsets cannot render M2M
     fields with explicit through models as editable fields — the same
     limitation documented for the disclosure-region links in ADR 3.
+
+    A regular ``formset_factory`` would be the more idiomatic Django
+    pattern for "one form per document", but each per-document "form"
+    here is a single ``ModelMultipleChoiceField`` (the claims for that
+    one disclosure), which doesn't map cleanly onto a standard
+    model-formset row. The custom ``doc_<pk>`` field-naming scheme keeps
+    the matching between the submitted selection and the source
+    document simple and explicit, at the cost of bypassing formset
+    management-form machinery. Acceptable for a staff-only admin surface
+    with a handful of documents per provider.
     """
 
     def __init__(self, *args, documents=None, **kwargs):
         super().__init__(*args, **kwargs)
         documents = documents or []
-        claim_qs = DisclosureClaim.objects.all().order_by("sort_order", "id")
+
+        # Build grouped choices so claims are visually separated by
+        # version (June 2026 / October 2026 / Always available) in the
+        # checkbox list. Django's CheckboxSelectMultiple renders optgroup
+        # labels as group headings.
+        from ..models import VerificationBasisVersion
+
+        all_claims = list(
+            DisclosureClaim.objects.all().order_by("sort_order", "id")
+        )
+
+        grouped = []
+        # Organisation-basis claims grouped by version.
+        for version_value, version_label in VerificationBasisVersion.choices:
+            version_claims = [
+                (str(c.pk), c.label)
+                for c in all_claims
+                if c.category == "organisation_basis"
+                and c.version == version_value
+            ]
+            if version_claims:
+                grouped.append((version_label, version_claims))
+
+        # Always-on claims (third-party assurance + needs help) in their
+        # own group, regardless of version.
+        always_on = [
+            (str(c.pk), c.label)
+            for c in all_claims
+            if c.category in ("third_party_assurance", "needs_help")
+        ]
+        if always_on:
+            grouped.append(("Always available", always_on))
+
         for doc in documents:
             field_name = f"doc_{doc.pk}"
-            self.fields[field_name] = forms.ModelMultipleChoiceField(
-                queryset=claim_qs,
+            self.fields[field_name] = forms.MultipleChoiceField(
+                choices=grouped,
                 required=False,
                 widget=forms.CheckboxSelectMultiple,
                 label=str(doc),
-                initial=[c.pk for c in doc.claims.all()],
+                initial=[str(c.pk) for c in doc.claims.all()],
             )
 
 

@@ -7,7 +7,7 @@ from django import forms as dj_forms
 from django.http import HttpRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils.html import format_html_join
+from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from logentry_admin.admin import (
     LogEntry,
@@ -16,6 +16,7 @@ from taggit_labels.widgets import LabelWidget
 
 from ..admin_site import greenweb_admin
 from ..models import (
+    DisclosureClaim,
     Hostingprovider,
     ProviderRequest,
     ProviderRequestASN,
@@ -166,7 +167,6 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             ),
         )
 
-    @mark_safe
     @admin.display(description="Edit disclosure claims")
     def edit_disclosure_claims_button(self, obj) -> str:
         """
@@ -180,11 +180,11 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             name="edit_disclosure_claims",
             kwargs={"request_id": obj.pk},
         )
-        link = (
-            f'<a href="{url}" class="editDisclosureClaims">'
-            "Edit disclosure claims</a>"
+        return format_html(
+            '<a href="{}" class="editDisclosureClaims">'
+            "Edit disclosure claims</a>",
+            url,
         )
-        return link
 
     def edit_disclosure_claims(self, request, *args, **kwargs):
         """
@@ -214,12 +214,12 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             form = EditDisclosureClaimsForm(request.POST, documents=evidence_qs)
             if form.is_valid():
                 for evidence in evidence_qs:
-                    selected = form.cleaned_data.get(f"doc_{evidence.pk}", [])
+                    selected_pks = form.cleaned_data.get(f"doc_{evidence.pk}", [])
                     # Clear stale links then recreate from the selection.
                     ProviderRequestEvidenceClaim.objects.filter(
                         evidence=evidence
                     ).delete()
-                    for claim in selected:
+                    for claim in DisclosureClaim.objects.filter(pk__in=selected_pks):
                         ProviderRequestEvidenceClaim.objects.create(
                             evidence=evidence, claim=claim,
                         )
