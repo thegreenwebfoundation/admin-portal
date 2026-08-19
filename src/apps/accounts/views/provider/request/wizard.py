@@ -26,16 +26,19 @@ from ....forms import (
     ServicesForm,
 )
 from ....models import (
+    DisclosureClaim,
     Hostingprovider,
     HostingproviderCertificate,
     ProviderRequest,
     ProviderRequestASN,
     ProviderRequestEvidence,
+    ProviderRequestEvidenceClaim,
     ProviderRequestEvidenceLocation,
     ProviderRequestIPRange,
     ProviderRequestLocation,
     ProviderRequestStatus,
     ProviderRequestUpstreamProvider,
+    VerificationBasis,
 )
 from ....permissions import manage_provider
 from ....tasks import process_newsletter_registration
@@ -326,6 +329,19 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                             location=pr_locations[index],
                         )
 
+        # Link evidence to claims (DisclosureClaim) based on claim_choices.
+        # Clear any stale links first so re-edits don't leave behind rows
+        # from a previous submission.
+        for form, evidence in saved_evidence_instances:
+            ProviderRequestEvidenceClaim.objects.filter(evidence=evidence).delete()
+            for claim_slug in form.cleaned_data.get("claim_choices", []):
+                claim = DisclosureClaim.objects.filter(slug=claim_slug).first()
+                if claim:
+                    ProviderRequestEvidenceClaim.objects.create(
+                        evidence=evidence,
+                        claim=claim,
+                    )
+
         # process NETWORK_FOOTPRINT form: retrieve IP ranges
         ip_range_formset = form_dict[steps.NETWORK_FOOTPRINT.value].forms["ips"]
         _process_formset(ip_range_formset, pr)
@@ -439,12 +455,15 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             # The green evidence formset rebuilds with ``form_kwargs`` so
             # each child ``CredentialForm`` knows whether to render the matching
             # and coverage fields in the preview, as well as the region scope
-            # and locations fields.
+            # and locations fields, and the per-disclosure claim picker.
             if step == self.Steps.GREEN_EVIDENCE.value:
                 kwargs["form_kwargs"] = {"request": self.request}
                 location_choices = self._get_location_choices()
                 if location_choices:
                     kwargs["form_kwargs"]["location_choices"] = location_choices
+                claim_choices = self._get_disclosure_claim_choices()
+                if claim_choices:
+                    kwargs["form_kwargs"]["claim_choices"] = claim_choices
             preview_forms[step] = form(initial=cleaned_data, **kwargs)
         return preview_forms
 
@@ -456,6 +475,9 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             # Pass location choices for the preview so region labels can be
             # resolved from index strings.
             context["location_choices"] = self._get_location_choices()
+            # Pass claim choices for the preview so claim labels can be
+            # resolved from slugs.
+            context["claim_choices"] = self._get_disclosure_claim_choices()
         return context
 
     def get_form_kwargs(self, step=None):
@@ -487,14 +509,21 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         # The green evidence step is a formset; ``form_kwargs`` is threaded
         # to each child ``CredentialForm.__init__`` so it can consult the
         # ``verification_basis_v2`` waffle flag to show/hide the matching
-        # and coverage fields, and the ``link_disclosures_to_regions`` flag
-        # to show/hide the region scope and locations fields.
+        # and coverage fields, the ``link_disclosures_to_regions`` flag
+        # to show/hide the region scope and locations fields, and the
+        # ``disclosure_claims`` flag to show/hide the per-disclosure claim
+        # picker.
         if step == self.Steps.GREEN_EVIDENCE.value:
             kwargs["form_kwargs"] = {"request": self.request}
             # Pass location choices from Step 1 (LOCATIONS)
             location_choices = self._get_location_choices()
             if location_choices:
                 kwargs["form_kwargs"]["location_choices"] = location_choices
+            # Pass claim choices from Step 3 (BASIS_FOR_VERIFICATION) + the
+            # two always-on claims.
+            claim_choices = self._get_disclosure_claim_choices()
+            if claim_choices:
+                kwargs["form_kwargs"]["claim_choices"] = claim_choices
 
         return kwargs
 
@@ -547,6 +576,55 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             label = ", ".join(parts) if parts else f"Location {i + 1}"
             location_choices.append((str(i), label))
         return location_choices
+
+    def _get_disclosure_claim_choices(self):
+        """
+        Build the list of claims to show on each disclosure row.
+
+        Returns a list of (claim_slug, label) tuples:
+        - the organisation-level bases the provider ticked in Step 3
+        - the two always-on claims (third-party assurance, needs help)
+
+        Organisation bases are resolved from Step 3's cleaned data (slugs),
+        not from the DB, because the ProviderRequest may not be saved yet
+        when Step 4 is first rendered. If a ``DisclosureClaim`` doesn't
+        exist yet for a basis (e.g. a newly added admin-created basis), it
+        is created lazily here so the wizard stays in sync with the bases
+        offered in Step 3.
+        """
+        basis_step = self.get_cleaned_data_for_step(
+            self.Steps.BASIS_FOR_VERIFICATION.value
+        )
+        selected_slugs = set((basis_step or {}).get("verification_bases") or [])
+
+        # Map the selected basis slugs to their DisclosureClaim counterparts.
+        claims = []
+        for slug in selected_slugs:
+            try:
+                basis = VerificationBasis.objects.get(slug=slug)
+            except VerificationBasis.DoesNotExist:
+                continue
+            claim, _ = DisclosureClaim.objects.get_or_create(
+                slug=f"basis--{basis.slug}",
+                defaults={
+                    "label": basis.name,
+                    "category": "organisation_basis",
+                    "basis": basis,
+                    "version": basis.version,
+                },
+            )
+            claims.append((claim.slug, claim.label))
+
+        # Append the two always-on claims.
+        for slug in (
+            "third-party-independent-assurance",
+            "i-would-like-help-confirming-this",
+        ):
+            claim = DisclosureClaim.objects.filter(slug=slug).first()
+            if claim:
+                claims.append((claim.slug, claim.label))
+
+        return claims
 
     def get_form_initial(self, step):
         """
@@ -664,6 +742,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "file": evidence.attachment,
                 "type": evidence.type,
                 "public": evidence.public,
+                "claim_choices": [c.slug for c in evidence.claims.all()],
             }
 
         def _location_initial_data(hosting_provider: Hostingprovider):

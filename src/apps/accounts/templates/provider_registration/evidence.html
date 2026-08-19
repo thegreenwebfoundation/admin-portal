@@ -221,12 +221,19 @@
 			We also wrap the locations field in a .disclosure-regions-field
 			container so the JS can show/hide it based on the region_scope
 			radio toggle, and render region_scope as a fieldset.
+            The claim_choices field (per-disclosure claim picker) is gated by
+            the 'disclosure_claims' waffle flag in the form's __init__; when
+            off, the field is popped and never rendered here.
 			{% endcomment %}
 
             {% if field.name == "claim_coverage_percentage" %}
                 {% flag "verification_basis_v2_claimed_percentage" %}
                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
                 {% endflag %}
+            {% elif field.name == "claim_choices" %}
+                <fieldset class="disclosure-claims-field">
+                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                </fieldset>
             {% elif field.name == "locations" %}
                 <div class="disclosure-regions-field" {% if form.region_scope.value == "all" or form.region_scope.value|default_if_none:"all" == "all" %}hidden{% endif %}>
                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
@@ -257,6 +264,10 @@
                     {% flag "verification_basis_v2_claimed_percentage" %}
                         {% include "provider_registration/partials/_evidence_field.html" with field=field %}
                     {% endflag %}
+                {% elif field.name == "claim_choices" %}
+                    <fieldset class="disclosure-claims-field">
+                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                    </fieldset>
                 {% elif field.name == "locations" %}
                     <div class="disclosure-regions-field" hidden>
                         {% include "provider_registration/partials/_evidence_field.html" with field=field %}

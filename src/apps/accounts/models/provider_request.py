@@ -25,6 +25,7 @@ from .hosting import (
     Hostingprovider,
     HostingProviderLocation,
     HostingProviderSupportingDocument,
+    HostingProviderSupportingDocumentClaim,
     HostingProviderSupportingDocumentLocation,
     Service,
     VerificationBasis,
@@ -466,7 +467,7 @@ class ProviderRequest(TimeStampedModel):
                 loc_map[pr_loc.pk] = hp_locations[i]
 
         for evidence in self.providerrequestevidence_set.all().prefetch_related(
-            "locations"
+            "locations", "claims"
         ):
             logger.debug(f"checking for matching evidence for: {evidence}")
 
@@ -521,6 +522,16 @@ class ProviderRequest(TimeStampedModel):
                         document=supporting_doc,
                         location=live_location,
                     )
+
+            # Carry across disclosure-claim links. DisclosureClaim is shared
+            # reference data (not draft/live split), so the same claim FK is
+            # valid on both sides — no remapping needed. Uses get_or_create
+            # so re-approval does not duplicate rows.
+            for claim in evidence.claims.all():
+                HostingProviderSupportingDocumentClaim.objects.get_or_create(
+                    document=supporting_doc,
+                    claim=claim,
+                )
 
         # At this point we have created new supporting documents for evidence we
         # haven't seen before.

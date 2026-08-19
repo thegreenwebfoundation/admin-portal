@@ -2,7 +2,12 @@ from django import template
 from django.template.defaultfilters import mark_safe, yesno
 from django.utils.html import format_html, format_html_join
 
-from apps.accounts.models import Hostingprovider, Service, VerificationBasis
+from apps.accounts.models import (
+    DisclosureClaim,
+    Hostingprovider,
+    Service,
+    VerificationBasis,
+)
 
 register = template.Library()
 
@@ -141,6 +146,29 @@ def render_as_regions(value, location_choices=None):
         labels = [choice_map.get(str(v), str(v)) for v in value]
     else:
         labels = [str(v) for v in value]
+    return mark_safe(", ".join(labels))
+
+
+@register.filter
+def render_as_claims(value, claim_choices=None):
+    """
+    Render claim slugs as human-readable labels.
+
+    The value is a list of DisclosureClaim slugs (e.g.
+    ["basis--direct-procurement", "i-would-like-help-confirming-this"]).
+    ``claim_choices`` is an optional list of (slug, label) tuples from the
+    wizard view; when provided, labels are resolved from it without an extra
+    DB hit. Otherwise, claims are looked up in the DB.
+    """
+    if not value:
+        return None
+    if claim_choices:
+        choice_map = dict(claim_choices)
+        labels = [choice_map.get(str(v), str(v)) for v in value]
+    else:
+        claims = DisclosureClaim.objects.filter(slug__in=list(value))
+        choice_map = {c.slug: c.label for c in claims}
+        labels = [choice_map.get(str(v), str(v)) for v in value]
     return mark_safe(", ".join(labels))
 
 
