@@ -214,7 +214,7 @@ class UpstreamProviderSelectWidget(forms.SelectMultiple):
                 field_id,
             )
 
-        # render our lis of checkboxes the chosen providers
+        # render our list of checkboxes the chosen providers
         rows_html = format_html_join(
             "",
             '<div class="upstream-visibility-row flex items-center gap-2 mb-1" '
