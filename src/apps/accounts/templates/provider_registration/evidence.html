@@ -62,6 +62,9 @@
 		margin-right: 1.5rem;
 		font-weight: normal;
 	}
+	.disclosure-region-scope-field .region-scope-radio {
+		margin: 0;
+	}
 	/* Make the per-disclosure claim checkboxes visible.
 	   The form's .form__evidence--field label rule applies sr-only to
 	   ALL labels, which hides the CheckboxSelectMultiple labels (which
@@ -96,6 +99,7 @@
 		margin-right: 1.5rem;
 		margin-bottom: 0.5rem;
 		font-weight: normal;
+		white-space: normal;
 	}
 	.disclosure-claims-field .disclosure-claims-select > div > div {
 		margin-bottom: 0.25rem;
@@ -242,30 +246,30 @@
 			We also wrap the locations field in a .disclosure-regions-field
 			container so the JS can show/hide it based on the region_scope
 			radio toggle, and render region_scope as a fieldset.
-            The claim_choices field (per-disclosure claim picker) is gated by
-            the 'disclosure_claims' waffle flag in the form's __init__; when
-            off, the field is popped and never rendered here.
+             The claim_choices field (per-disclosure claim picker) is gated by
+             the 'disclosure_claims' waffle flag in the form's __init__; when
+             off, the field is popped and never rendered here.
 			{% endcomment %}
 
-            {% if field.name == "claim_coverage_percentage" %}
-                {% flag "verification_basis_v2_claimed_percentage" %}
-                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                {% endflag %}
-            {% elif field.name == "claim_choices" %}
-                <fieldset class="disclosure-claims-field">
-                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                </fieldset>
-            {% elif field.name == "locations" %}
-                <div class="disclosure-regions-field" {% if form.region_scope.value == "all" or form.region_scope.value|default_if_none:"all" == "all" %}hidden{% endif %}>
-                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                </div>
-            {% elif field.name == "region_scope" %}
-                <fieldset class="disclosure-region-scope-field">
-                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                </fieldset>
-            {% else %}
-                {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-            {% endif %}
+             {% if field.name == "claim_coverage_percentage" %}
+                 {% flag "verification_basis_v2_claimed_percentage" %}
+                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                 {% endflag %}
+             {% elif field.name == "claim_choices" %}
+                 <fieldset class="disclosure-claims-field">
+                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                 </fieldset>
+             {% elif field.name == "locations" %}
+                 <div class="disclosure-regions-field" {% if form.region_scope.value == "all" or form.region_scope.value|default_if_none:"all" == "all" %}hidden{% endif %}>
+                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                 </div>
+             {% elif field.name == "region_scope" %}
+                 <fieldset class="disclosure-region-scope-field">
+                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                 </fieldset>
+             {% else %}
+                 {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+             {% endif %}
 
 		{% endfor %}
 
@@ -281,26 +285,26 @@
 			{{ wizard.form.empty_form.non_field_errors }}
 			{% for field in wizard.form.empty_form %}
 
-    			{% if field.name == "claim_coverage_percentage" %}
-                    {% flag "verification_basis_v2_claimed_percentage" %}
-                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                    {% endflag %}
-                {% elif field.name == "claim_choices" %}
-                    <fieldset class="disclosure-claims-field">
-                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                    </fieldset>
-                {% elif field.name == "locations" %}
-                    <div class="disclosure-regions-field" hidden>
-                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                    </div>
-                {% elif field.name == "region_scope" %}
-                    <fieldset class="disclosure-region-scope-field">
-                        <legend class="block text-sm font-medium mb-1">{{ field.label }}</legend>
-                        {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                    </fieldset>
-                {% else %}
-                    {% include "provider_registration/partials/_evidence_field.html" with field=field %}
-                {% endif %}
+				{% if field.name == "claim_coverage_percentage" %}
+                     {% flag "verification_basis_v2_claimed_percentage" %}
+                         {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                     {% endflag %}
+                 {% elif field.name == "claim_choices" %}
+                     <fieldset class="disclosure-claims-field">
+                         {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                     </fieldset>
+                 {% elif field.name == "locations" %}
+                     <div class="disclosure-regions-field" hidden>
+                         {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                     </div>
+                 {% elif field.name == "region_scope" %}
+                     <fieldset class="disclosure-region-scope-field">
+                         <legend class="block text-sm font-medium mb-1">{{ field.label }}</legend>
+                         {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                     </fieldset>
+                 {% else %}
+                     {% include "provider_registration/partials/_evidence_field.html" with field=field %}
+                 {% endif %}
 
 			{% endfor %}
 			<input class="text-sm hover:text-base" type="button" id="delete-form-button" value="&#x274C; Delete this evidence">
@@ -318,12 +322,12 @@
 			<input class="btn" type="submit" value="{% trans " next" %}" />
 		</div>
 
-        {% if wizard.steps.prev %}
+         {% if wizard.steps.prev %}
 		<div class="nav-buttons">
-       		<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
-        	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+			<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+         	<button class="btn btn-sm btn-black" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
 		</div>
-        {% endif %}
+         {% endif %}
 	</div>
 
 </form>
