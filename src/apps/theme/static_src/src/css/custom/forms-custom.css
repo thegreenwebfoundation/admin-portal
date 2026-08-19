@@ -136,9 +136,10 @@ ul.errorlist {
   position: static;
   width: auto;
   height: auto;
-  overflow: visible;
+  overflow: hidden;
   clip: auto;
   flex: 1 1 0%;
+  min-width: 0;
   @apply mb-0;
 }
 .form__evidence--field-public input[type="checkbox"] {
