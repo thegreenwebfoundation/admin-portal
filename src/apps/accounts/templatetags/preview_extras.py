@@ -138,6 +138,9 @@ def render_as_regions(value, location_choices=None):
     Render location index values as 'City, Country' strings.
     The value is a list of index strings (e.g. ["0", "2"]).
     location_choices is a list of (index, label) tuples.
+
+    Returns a plain string; Django auto-escapes filter output in
+    templates, so user-derived label values are safe by default.
     """
     if not value:
         return None
@@ -146,7 +149,7 @@ def render_as_regions(value, location_choices=None):
         labels = [choice_map.get(str(v), str(v)) for v in value]
     else:
         labels = [str(v) for v in value]
-    return mark_safe(", ".join(labels))
+    return ", ".join(labels)
 
 
 @register.filter
@@ -159,6 +162,9 @@ def render_as_claims(value, claim_choices=None):
     ``claim_choices`` is an optional list of (slug, label) tuples from the
     wizard view; when provided, labels are resolved from it without an extra
     DB hit. Otherwise, claims are looked up in the DB.
+
+    Returns a plain string; Django auto-escapes filter output in
+    templates, so admin-editable label values are safe by default.
     """
     if not value:
         return None
@@ -169,7 +175,10 @@ def render_as_claims(value, claim_choices=None):
         claims = DisclosureClaim.objects.filter(slug__in=list(value))
         choice_map = {c.slug: c.label for c in claims}
         labels = [choice_map.get(str(v), str(v)) for v in value]
-    return mark_safe(", ".join(labels))
+    list_items = format_html_join(
+        "", "<li>{}</li>", ((label,) for label in labels)
+    )
+    return format_html("<ul>{}</ul>", list_items)
 
 
 @register.filter

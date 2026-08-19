@@ -83,7 +83,8 @@
 	   The form's .form__evidence--field label rule applies sr-only to
 	   all labels, which would hide the CheckboxSelectMultiple labels
 	   (which contain the checkbox input AND the text). Override so the
-	   checkbox labels display normally. */
+	   checkbox labels display normally, using the same default browser
+	   checkbox style as the 'public' checkbox elsewhere in the form. */
 	.disclosure-claims-field .form__evidence--field > label {
 		position: static;
 		width: auto;
@@ -95,7 +96,6 @@
 		font-weight: 600;
 		display: block;
 	}
-	.disclosure-claims-field label[for*="claim_choices"],
 	.disclosure-claims-field ul label,
 	.disclosure-claims-field > div > label {
 		position: static;
@@ -108,20 +108,6 @@
 		gap: 0.5rem;
 		margin-right: 1.5rem;
 		font-weight: normal;
-	}
-	.disclosure-claims-field input[type="checkbox"] {
-		width: 1.5rem;
-		height: 1.5rem;
-		border: 2px solid #6b7280;
-		background-color: #fff;
-		border-radius: 4px;
-		appearance: none;
-		-webkit-appearance: none;
-		flex-shrink: 0;
-	}
-	.disclosure-claims-field input[type="checkbox"]:checked {
-		border-color: #166534;
-		background-color: #166534;
 	}
 	.disclosure-claims-field ul {
 		list-style: none;
