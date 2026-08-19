@@ -60,6 +60,26 @@ class FossilFreeEnergyMatching(models.TextChoices):
     HOURLY = "Hourly matched", "Hourly matched fossil-free energy"
 
 
+class DisclosureClaimType(models.TextChoices):
+    """
+    The category of a :class:`DisclosureClaim`.
+
+    - ``ORGANISATION_BASIS``: a per-disclosure view of a
+      :class:`VerificationBasis` chosen at the organisation level (Step 3).
+      The link is via the claim's ``basis`` FK.
+    - ``THIRD_PARTY_ASSURANCE``: the always-on "this disclosure contains a
+      third-party independent assurance statement" option.
+    - ``NEEDS_HELP``: the always-on "I'd like help confirming this" fallback.
+    """
+
+    ORGANISATION_BASIS = "organisation_basis", "Organisation basis for verification"
+    THIRD_PARTY_ASSURANCE = (
+        "third_party_assurance",
+        "Third-party independent assurance",
+    )
+    NEEDS_HELP = "needs_help", "I'd like help confirming this"
+
+
 class AbstractSupportingDocument(models.Model):
     """
     When a hosting provider makes claims about running on green energy,

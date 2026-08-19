@@ -19,6 +19,7 @@ from apps.greencheck.models import GreencheckASN, GreencheckIp, IpAddressField
 from apps.greencheck.validators import validate_ip_range
 
 from .hosting import (
+    DisclosureClaim,
     EvidenceType,
     FossilFreeEnergyMatching,
     Hostingprovider,
@@ -675,6 +676,13 @@ class ProviderRequestEvidence(models.Model):
         related_name="evidence",
     )
 
+    claims = models.ManyToManyField(
+        DisclosureClaim,
+        through="ProviderRequestEvidenceClaim",
+        blank=True,
+        related_name="evidence_draft",
+    )
+
     def __str__(self) -> str:
         name = self.link or self.file.name
         long_name = f"{name}: {self.title}"
@@ -700,6 +708,14 @@ class ProviderRequestEvidence(models.Model):
             return "Global"
         location_labels = [str(loc) for loc in locations]
         return f"Specific regions: {', '.join(location_labels)}"
+
+    @property
+    def claims_display(self) -> str:
+        """Return a human-readable, comma-separated list of claim labels."""
+        claims = self.claims.all()
+        if not claims:
+            return "None"
+        return ", ".join(c.label for c in claims)
 
     def has_content_match(self, other_doc: "HostingProviderSupportingDocument") -> bool:
         """
@@ -746,3 +762,23 @@ class ProviderRequestEvidenceLocation(models.Model):
         unique_together = ("evidence", "location")
         verbose_name = "evidence region"
         verbose_name_plural = "evidence regions"
+
+
+class ProviderRequestEvidenceClaim(models.Model):
+    """Link between a draft disclosure and a DisclosureClaim."""
+
+    evidence = models.ForeignKey(
+        ProviderRequestEvidence,
+        on_delete=models.CASCADE,
+        related_name="claim_links",
+    )
+    claim = models.ForeignKey(
+        DisclosureClaim,
+        on_delete=models.CASCADE,
+        related_name="evidence_links_draft",
+    )
+
+    class Meta:
+        unique_together = ("evidence", "claim")
+        verbose_name = "disclosure claim"
+        verbose_name_plural = "disclosure claims"

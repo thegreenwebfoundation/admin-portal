@@ -34,6 +34,7 @@ from .abstract import (
     AbstractNote,
     AbstractSupportingDocument,
     Certificate,
+    DisclosureClaimType,
     EvidenceType,
     Label,
 )
@@ -187,6 +188,65 @@ class VerificationBasis(tag_models.TagBase):
         return mark_safe(label)
 
 
+class DisclosureClaim(models.Model):
+    """
+    A claim that a disclosure can be said to support.
+
+    This is the reference model used by the per-disclosure claim picker
+    (wizard Step 4). Categories:
+
+    - ``ORGANISATION_BASIS``: a per-disclosure view of a
+      :class:`VerificationBasis` chosen at the organisation level (Step 3).
+      Linked via the ``basis`` FK.
+    - ``THIRD_PARTY_ASSURANCE``: the always-on "this disclosure contains a
+      third-party independent assurance statement" option.
+    - ``NEEDS_HELP``: the always-on "I'd like help confirming this" fallback.
+
+    ``ORGANISATION_BASIS`` claims are seeded per active verification-basis
+    version so the label tracks the chosen basis.
+    ``THIRD_PARTY_ASSURANCE`` and ``NEEDS_HELP`` are seeded once and are
+    version-agnostic. When staff add a new ``VerificationBasis`` via the
+    admin, a corresponding ``DisclosureClaim`` is created lazily by the
+    wizard when building the per-disclosure choices.
+    """
+
+    slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
+    label = models.CharField(max_length=255)
+    category = models.CharField(
+        max_length=64, choices=DisclosureClaimType.choices
+    )
+    basis = models.ForeignKey(
+        VerificationBasis,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="disclosure_claims",
+        help_text=(
+            "Set only for ORGANISATION_BASIS claims; links to the "
+            "VerificationBasis this claim represents."
+        ),
+    )
+    version = models.CharField(
+        max_length=128,
+        choices=VerificationBasisVersion.choices,
+        null=True,
+        blank=True,
+        help_text=(
+            "For ORGANISATION_BASIS claims, which verification-basis version "
+            "this tracks. Null for version-agnostic claims."
+        ),
+    )
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "disclosure claim"
+        verbose_name_plural = "disclosure claims"
+        ordering = ("sort_order", "id")
+
+    def __str__(self) -> str:
+        return self.label
+
+
 class ProviderService(tag_models.TaggedItemBase):
     """
     The corresponding through model for linking a Provider to
@@ -337,6 +397,26 @@ class HostingProviderSupportingDocumentLocation(models.Model):
         unique_together = ("document", "location")
         verbose_name = "disclosure region"
         verbose_name_plural = "disclosure regions"
+
+
+class HostingProviderSupportingDocumentClaim(models.Model):
+    """Link between a live disclosure and a DisclosureClaim."""
+
+    document = models.ForeignKey(
+        "HostingProviderSupportingDocument",
+        on_delete=models.CASCADE,
+        related_name="claim_links",
+    )
+    claim = models.ForeignKey(
+        DisclosureClaim,
+        on_delete=models.CASCADE,
+        related_name="document_links_live",
+    )
+
+    class Meta:
+        unique_together = ("document", "claim")
+        verbose_name = "disclosure claim"
+        verbose_name_plural = "disclosure claims"
 
 
 class Hostingprovider(models.Model, DirtyFieldsMixin):
@@ -894,6 +974,13 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
         related_name="supporting_documents",
     )
 
+    claims = models.ManyToManyField(
+        DisclosureClaim,
+        through=HostingProviderSupportingDocumentClaim,
+        blank=True,
+        related_name="supporting_documents",
+    )
+
     CARBON_TXT_DOC_TYPES = {
         EvidenceType.ANNUAL_REPORT: "annual-report",
         EvidenceType.WEB_PAGE: "web-page",
@@ -926,6 +1013,14 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
             return "Global"
         location_labels = [str(loc) for loc in locations]
         return f"Specific regions: {', '.join(location_labels)}"
+
+    @property
+    def claims_display(self) -> str:
+        """Return a human-readable, comma-separated list of claim labels."""
+        claims = self.claims.all()
+        if not claims:
+            return "None"
+        return ", ".join(c.label for c in claims)
 
     @property
     def has_attachment_in_object_store(self):

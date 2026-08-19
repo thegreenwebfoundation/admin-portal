@@ -1,7 +1,12 @@
 from django.db import models
 from model_utils.models import TimeStampedModel
 
-from .abstract import EvidenceType, FossilFreeEnergyMatching, Label
+from .abstract import (
+    DisclosureClaimType,
+    EvidenceType,
+    FossilFreeEnergyMatching,
+    Label,
+)
 from .datacenter import (
     Datacenter,
     DatacenterCertificate,
@@ -12,22 +17,24 @@ from .datacenter import (
     DatacenterSupportingDocument,
 )
 from .provider import (
+    DisclosureClaim,
+    DOMAIN_HASH_ISSUER_ID,
+    GREEN_VIA_CARBON_TXT,
     Hostingprovider,
     HostingproviderCertificate,
     HostingProviderLocation,
     HostingProviderNote,
     HostingProviderSupportingDocument,
+    HostingProviderSupportingDocumentClaim,
     HostingProviderSupportingDocumentLocation,
     HostingCommunication,
-    Service,
     PartnerChoice,
     ProviderSharedSecret,
+    Service,
     UpstreamProvider,
     VerificationBasis,
     VerificationBasisVersion,
     get_active_version,
-    DOMAIN_HASH_ISSUER_ID,
-    GREEN_VIA_CARBON_TXT,
 )
 from .carbon_txt import (
     CarbonTxtMotivation,
