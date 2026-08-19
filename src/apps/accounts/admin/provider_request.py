@@ -173,10 +173,10 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         Link to the dedicated page for editing which claims each
         disclosure (evidence) backs.
         """
-        from ...utils import reverse_admin_name
+        from ..utils import reverse_admin_name
 
         url = reverse_admin_name(
-            ProviderRequest,
+            self.model,
             name="edit_disclosure_claims",
             kwargs={"request_id": obj.pk},
         )
@@ -198,9 +198,12 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         with a ModelMultipleChoiceField of DisclosureClaim objects
         (checkboxes), pre-populated from evidence.claims.all().
         """
-        from ...forms import EditDisclosureClaimsForm
+        from ..forms import EditDisclosureClaimsForm
 
-        provider_request = ProviderRequest.objects.get(pk=kwargs["request_id"])
+        # Use self.model instead of the ProviderRequest name, because the
+        # admin class below also named ProviderRequest shadows the model
+        # import after the class definition.
+        provider_request = self.model.objects.get(pk=kwargs["request_id"])
         evidence_qs = list(
             provider_request.providerrequestevidence_set.all().prefetch_related(
                 "claims"
@@ -247,7 +250,7 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
     def get_urls(self):
         from django.urls import path
 
-        from ...utils import get_admin_name
+        from ..utils import get_admin_name
 
         urls = super().get_urls()
         added = [
