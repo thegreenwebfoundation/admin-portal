@@ -83,8 +83,12 @@
 		font-weight: 600;
 		display: block;
 	}
-	/* The checkbox labels should sit inline with their checkboxes. */
+	/* The checkbox labels should sit inline with their checkboxes and
+	   wrap to stay within the bounding box. */
 	.disclosure-claims-field .form__evidence--field label[for],
+	.disclosure-claims-field .disclosure-claims-select > div {
+		overflow: hidden;
+	}
 	.disclosure-claims-field .disclosure-claims-select label {
 		display: inline-flex;
 		align-items: center;
@@ -92,6 +96,9 @@
 		margin-right: 1.5rem;
 		margin-bottom: 0.5rem;
 		font-weight: normal;
+	}
+	.disclosure-claims-field .disclosure-claims-select > div > div {
+		margin-bottom: 0.25rem;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.ts-dropdown {
