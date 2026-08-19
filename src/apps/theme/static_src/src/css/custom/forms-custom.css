@@ -123,25 +123,29 @@ ul.errorlist {
 }
 .form__evidence--field-public {
   @apply flex;
-  @apply items-center;
+  @apply items-start;
 }
 .form__evidence--field-public .helptext {
   @apply mb-0;
 }
 /* The public field's help text is rendered as a <label> so clicking the
    text toggles the checkbox. Override the sr-only rule from
-   .form__evidence--field label so this label is visible. */
+   .form__evidence--field label so this label is visible. Let the label
+   take the remaining width after the checkbox and wrap normally. */
 .form__evidence--field-public label.helptext {
   position: static;
   width: auto;
   height: auto;
   overflow: visible;
   clip: auto;
+  flex: 1 1 0%;
   @apply mb-0;
 }
 .form__evidence--field-public input[type="checkbox"] {
   @apply order-first;
   @apply mb-0;
+  @apply mt-1;
+  flex-shrink: 0;
 }
 .form__evidence--field-id,
 .form__evidence--field-DELETE {
