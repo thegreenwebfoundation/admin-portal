@@ -210,7 +210,7 @@ class EditDisclosureClaimsForm(forms.Form):
                 and c.version == version_value
             ]
             if version_claims:
-                grouped.append((version_label, version_claims))
+                grouped.append((f"Version: {version_label}", version_claims))
 
         # Always-on claims (third-party assurance + needs help) in their
         # own group, regardless of version.
