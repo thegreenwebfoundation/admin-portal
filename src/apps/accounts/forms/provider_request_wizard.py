@@ -439,6 +439,19 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
         widget=forms.SelectMultiple(attrs={"class": "disclosure-regions-select"}),
     )
 
+    claim_choices = forms.MultipleChoiceField(
+        choices=[],
+        required=False,
+        label="Which of your claims does this disclosure support?",
+        help_text=(
+            "Select all the claims that this disclosure provides evidence for. "
+            "If you're not sure, tick 'I'd like help confirming this'."
+        ),
+        widget=forms.CheckboxSelectMultiple(
+            attrs={"class": "disclosure-claims-select"}
+        ),
+    )
+
     fossil_free_energy_matching = forms.ChoiceField(
         choices=FossilFreeEnergyMatching.choices,
         initial=FossilFreeEnergyMatching.ANNUAL,
@@ -470,6 +483,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             "title",
             "link",
             "file",
+            "claim_choices",
             "fossil_free_energy_matching",
             "claim_coverage_percentage",
             "region_scope",
@@ -503,6 +517,8 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
         request = kwargs.pop("request", None)
         # Pop location_choices injected by the wizard view
         location_choices = kwargs.pop("location_choices", [])
+        # Pop claim_choices injected by the wizard view (per-disclosure claims)
+        claim_choices = kwargs.pop("claim_choices", [])
 
         super().__init__(*args, **kwargs)
 
@@ -513,6 +529,17 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
         # region_scope to 'specific' so the multi-select is shown
         if self.initial.get("locations"):
             self.initial["region_scope"] = self.REGION_SPECIFIC
+
+        # Populate the claim choices from the wizard's earlier step data
+        # (Step 3 selected bases + the two always-on claims). When editing
+        # an existing evidence with linked claims, pre-populate the initial
+        # selection from the instance.
+        if "claim_choices" in self.fields:
+            self.fields["claim_choices"].choices = claim_choices
+            if self.instance and self.instance.pk:
+                self.initial["claim_choices"] = [
+                    c.slug for c in self.instance.claims.all()
+                ]
 
         show_matching_fields = request is not None and flag_is_active(
             request, "verification_basis_v2"
@@ -527,6 +554,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
                 "title",
                 "link",
                 "file",
+                "claim_choices",
                 "fossil_free_energy_matching",
                 "claim_coverage_percentage",
                 "region_scope",
@@ -548,6 +576,14 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             self.fields.pop("region_scope", None)
             self.fields.pop("locations", None)
 
+        show_disclosure_claims = request is not None and flag_is_active(
+            request, "disclosure_claims"
+        )
+        if not show_disclosure_claims:
+            # Pop the field so the UI doesn't show it. The form's clean()
+            # will default claim_choices to [] so done() creates no through rows.
+            self.fields.pop("claim_choices", None)
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -558,6 +594,11 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             and not cleaned_data.get("fossil_free_energy_matching")
         ):
             cleaned_data["fossil_free_energy_matching"] = FossilFreeEnergyMatching.ANNUAL
+
+        # If the disclosure_claims flag is off, the field is popped.
+        # Set a sensible default so done() creates no through rows.
+        if "claim_choices" not in cleaned_data:
+            cleaned_data["claim_choices"] = []
 
         # If the link_disclosures_to_regions flag is off, the fields are
         # popped. Set sensible defaults so done() can link evidence to all
