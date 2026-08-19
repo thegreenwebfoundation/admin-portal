@@ -51,13 +51,18 @@
   /* Style the optgroup headings in the checkbox lists. */
   .disclosure-claims-group > div > div > label {
     font-weight: bold;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #666;
-    margin-top: 0.75rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+    color: #333;
+    margin: 1.25rem 0 0.5rem 0;
     display: block;
+    border-top: 1px solid #ddd;
+    padding-top: 0.75rem;
+  }
+  /* The first group label doesn't need a top border. */
+  .disclosure-claims-group > div > div:first-child > label {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
   }
   .disclosure-claims-group > div > div > div {
     margin-left: 1rem;
