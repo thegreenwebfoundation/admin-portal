@@ -136,7 +136,7 @@ ul.errorlist {
   position: static;
   width: auto;
   height: auto;
-  overflow: hidden;
+  overflow: visible;
   clip: auto;
   flex: 1 1 0%;
   min-width: 0;
