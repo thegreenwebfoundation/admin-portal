@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 from django.db import models
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils.html import format_html_join
+from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
 from apps.greencheck.admin import (
@@ -172,9 +172,6 @@ class DisclosureClaimAdmin(admin.ModelAdmin):
     list_display = ("label", "category", "version", "sort_order")
     list_filter = ("category", "version")
     search_fields = ("label", "slug")
-
-    class Meta:
-        verbose_name = "Disclosure Claims"
 
 
 @admin.register(Label, site=greenweb_admin)
@@ -433,12 +430,12 @@ class HostingAdmin(
             form = EditDisclosureClaimsForm(request.POST, documents=documents)
             if form.is_valid():
                 for doc in documents:
-                    selected = form.cleaned_data.get(f"doc_{doc.pk}", [])
+                    selected_pks = form.cleaned_data.get(f"doc_{doc.pk}", [])
                     # Clear stale links then recreate from the selection.
                     HostingProviderSupportingDocumentClaim.objects.filter(
                         document=doc
                     ).delete()
-                    for claim in selected:
+                    for claim in DisclosureClaim.objects.filter(pk__in=selected_pks):
                         HostingProviderSupportingDocumentClaim.objects.create(
                             document=doc, claim=claim,
                         )
@@ -936,7 +933,6 @@ class HostingAdmin(
         return link
 
     @admin.display(description="Edit disclosure claims")
-    @mark_safe
     def edit_disclosure_claims_button(self, obj):
         """
         Link to the dedicated page for editing which claims each
@@ -947,11 +943,11 @@ class HostingAdmin(
             name="edit_disclosure_claims",
             kwargs={"provider": obj.pk},
         )
-        link = (
-            f'<a href="{url}" class="editDisclosureClaims">'
-            "Edit disclosure claims</a>"
+        return format_html(
+            '<a href="{}" class="editDisclosureClaims">'
+            "Edit disclosure claims</a>",
+            url,
         )
-        return link
 
     @admin.display(description="website")
     @mark_safe

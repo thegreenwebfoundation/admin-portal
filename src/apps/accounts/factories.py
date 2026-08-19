@@ -26,6 +26,7 @@ class VerificationBasisFactory(dj_factory.DjangoModelFactory):
 class DisclosureClaimFactory(dj_factory.DjangoModelFactory):
     label = factory.Faker("sentence", nb_words=4)
     category = ac_models.DisclosureClaimType.ORGANISATION_BASIS
+    version = ac_models.VerificationBasisVersion.JUNE_2026
     slug = factory.LazyAttribute(lambda o: o.label.lower().replace(" ", "-"))
     sort_order = factory.Sequence(lambda n: n)
 

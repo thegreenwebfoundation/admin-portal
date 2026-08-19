@@ -35,7 +35,7 @@
       <h2>{{ field.label }}</h2>
       <div class="form-row">
         {{ field.errors }}
-        <div>{{ field }}</div>
+        <div class="disclosure-claims-group">{{ field }}</div>
       </div>
     </fieldset>
     {% endfor %}
@@ -46,4 +46,32 @@
     </div>
   </form>
 </div>
+
+<style>
+  /* Style the optgroup headings in the checkbox lists. */
+  .disclosure-claims-group > div > div > label {
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666;
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+  .disclosure-claims-group > div > div > div {
+    margin-left: 1rem;
+  }
+  .disclosure-claims-group ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .disclosure-claims-group ul li {
+    margin-bottom: 0.25rem;
+  }
+  .disclosure-claims-group label {
+    cursor: pointer;
+  }
+</style>
 {% endblock %}
