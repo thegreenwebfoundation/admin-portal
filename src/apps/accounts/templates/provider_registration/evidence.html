@@ -28,8 +28,9 @@
 	/* Make region scope radio buttons and labels visible.
 	   Tailwind's forms plugin renders radios as tiny black squares, and
 	   .form__evidence--field hides labels with screen-reader-only styling.
-	   Override both for the region scope radio group so it displays
-	   as a normal labelled choice. */
+	   Override sr-only for the labels so they display normally. The radios
+	   use the default browser styling (same as the checkboxes elsewhere
+	   in the form). */
 	.disclosure-region-scope-field {
 		margin-bottom: 1rem;
 	}
@@ -39,45 +40,27 @@
 	}
 	.disclosure-region-scope-field .form__evidence--field > label,
 	.disclosure-region-scope-field .form__evidence--field-region_scope > label {
-		position: static;
-		width: auto;
-		height: auto;
-		overflow: visible;
-		clip: auto;
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+		overflow: visible !important;
+		clip: auto !important;
 		margin: 0 0 0.5rem 0;
 		font-size: 1rem;
 		font-weight: 600;
 		display: block;
 	}
 	.disclosure-region-scope-field label[for*="region_scope"] {
-		position: static;
-		width: auto;
-		height: auto;
-		overflow: visible;
-		clip: auto;
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+		overflow: visible !important;
+		clip: auto !important;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
 		margin-right: 1.5rem;
 		font-weight: normal;
-	}
-	.disclosure-region-scope-field input[type="radio"] {
-		width: 1.5rem;
-		height: 1.5rem;
-		border: 2px solid #6b7280;
-		background-color: #fff;
-		border-radius: 50%;
-		appearance: none;
-		-webkit-appearance: none;
-		flex-shrink: 0;
-	}
-	.disclosure-region-scope-field input[type="radio"]:checked {
-		border-color: #166534;
-		background-color: #166534;
-	}
-	.disclosure-region-scope-field input[type="radio"]:focus {
-		outline: 2px solid #166534;
-		outline-offset: 2px;
 	}
 	/* Make the per-disclosure claim checkboxes visible.
 	   The form's .form__evidence--field label rule applies sr-only to

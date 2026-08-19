@@ -7,7 +7,14 @@ when we use flags to decide whether to expose form elements in our form wizard
     {{ field.label_tag }}
 
     {% if field.help_text %}
-        <p class="helptext">{{ field.help_text | safe }}</p>
+        {% if field.name == "public" %}
+            {% comment %}Wrap the help text in a label so clicking the text
+            toggles the checkbox. The sr-only label above is not visible;
+            this label is the one the user sees and clicks.{% endcomment %}
+            <label for="{{ field.id_for_label }}" class="helptext">{{ field.help_text | safe }}</label>
+        {% else %}
+            <p class="helptext">{{ field.help_text | safe }}</p>
+        {% endif %}
     {% endif %}
 
     {{ field }}
