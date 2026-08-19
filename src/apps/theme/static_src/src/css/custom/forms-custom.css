@@ -128,6 +128,17 @@ ul.errorlist {
 .form__evidence--field-public .helptext {
   @apply mb-0;
 }
+/* The public field's help text is rendered as a <label> so clicking the
+   text toggles the checkbox. Override the sr-only rule from
+   .form__evidence--field label so this label is visible. */
+.form__evidence--field-public label.helptext {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  @apply mb-0;
+}
 .form__evidence--field-public input[type="checkbox"] {
   @apply order-first;
   @apply mb-0;
