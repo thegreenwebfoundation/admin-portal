@@ -27,8 +27,9 @@ from ....forms import (
 )
 from ....models import (
     DisclosureClaim,
+    DisclosureClaimType,
     Hostingprovider,
-    HostingproviderCertificate,
+    HostingProviderSupportingDocument,
     ProviderRequest,
     ProviderRequestASN,
     ProviderRequestEvidence,
@@ -577,7 +578,48 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
             location_choices.append((str(i), label))
         return location_choices
 
-    def _get_disclosure_claim_choices(self):
+    def _ensure_disclosure_claims_for_bases(self, selected_slugs: set) -> None:
+        """
+        Lazily create ``DisclosureClaim`` rows for any selected Step-3
+        ``VerificationBasis`` slugs that don't yet have a corresponding
+        claim. This is the only write path for the per-disclosure claim
+        picker — the read path (``_get_disclosure_claim_choices``) is
+        strictly read-only.
+
+        Uses a single ``bulk_create`` for any missing claims, so the
+        cost is O(1) queries regardless of how many bases are selected.
+        """
+        if not selected_slugs:
+            return
+
+        bases = list(
+            VerificationBasis.objects.filter(slug__in=selected_slugs)
+        )
+        if not bases:
+            return
+
+        expected_slugs = {f"basis--{b.slug}" for b in bases}
+        existing_slugs = set(
+            DisclosureClaim.objects.filter(
+                slug__in=expected_slugs
+            ).values_list("slug", flat=True)
+        )
+
+        to_create = [
+            DisclosureClaim(
+                slug=f"basis--{b.slug}",
+                label=b.name,
+                category=DisclosureClaimType.ORGANISATION_BASIS.value,
+                basis=b,
+                version=b.version,
+            )
+            for b in bases
+            if f"basis--{b.slug}" not in existing_slugs
+        ]
+        if to_create:
+            DisclosureClaim.objects.bulk_create(to_create)
+
+    def _get_disclosure_claim_choices(self) -> list[tuple[str, str]]:
         """
         Build the list of claims to show on each disclosure row.
 
@@ -588,43 +630,69 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         Organisation bases are resolved from Step 3's cleaned data (slugs),
         not from the DB, because the ProviderRequest may not be saved yet
         when Step 4 is first rendered. If a ``DisclosureClaim`` doesn't
-        exist yet for a basis (e.g. a newly added admin-created basis), it
-        is created lazily here so the wizard stays in sync with the bases
-        offered in Step 3.
+        exist yet for a basis (e.g. a newly added admin-created basis),
+        ``_ensure_disclosure_claims_for_bases`` creates it lazily (in a
+        single ``bulk_create``) before reading, so the wizard stays in
+        sync with the bases offered in Step 3.
+
+        This method is read-only after the lazy seed: the result is
+        memoised on the instance so the multiple calls per request
+        (``get_form_kwargs``, ``_get_data_for_preview``,
+        ``get_context_data``) don't re-issue the seed or the lookup
+        queries.
         """
+        cached = getattr(self, "_disclosure_claim_choices_cache", None)
+        if cached is not None:
+            return cached
+
         basis_step = self.get_cleaned_data_for_step(
             self.Steps.BASIS_FOR_VERIFICATION.value
         )
         selected_slugs = set((basis_step or {}).get("verification_bases") or [])
 
-        # Map the selected basis slugs to their DisclosureClaim counterparts.
-        claims = []
-        for slug in selected_slugs:
-            try:
-                basis = VerificationBasis.objects.get(slug=slug)
-            except VerificationBasis.DoesNotExist:
-                continue
-            claim, _ = DisclosureClaim.objects.get_or_create(
-                slug=f"basis--{basis.slug}",
-                defaults={
-                    "label": basis.name,
-                    "category": "organisation_basis",
-                    "basis": basis,
-                    "version": basis.version,
-                },
-            )
-            claims.append((claim.slug, claim.label))
+        # When editing an existing provider (via /providers/<id>/edit/),
+        # the wizard session has no Step 3 data on first load. Fall back to
+        # reading the verification bases from the live Hostingprovider so
+        # the per-disclosure claim picker is populated before the user
+        # navigates through the wizard.
+        if not selected_slugs:
+            provider_id = self.kwargs.get("provider_id")
+            if provider_id:
+                try:
+                    hp = Hostingprovider.objects.get(id=provider_id)
+                    selected_slugs = set(hp.verification_bases.slugs())
+                except Hostingprovider.DoesNotExist:
+                    pass
 
-        # Append the two always-on claims.
-        for slug in (
+        # Lazily create any missing organisation-basis DisclosureClaim rows
+        # before reading. This is the only write performed by this method;
+        # subsequent calls hit the cache above and skip both the seed and
+        # the lookup queries.
+        self._ensure_disclosure_claims_for_bases(selected_slugs)
+
+        # Read the organisation-basis claims for the selected bases in a
+        # single query, preserving order of selection for a stable UI.
+        org_claim_slugs = [f"basis--{s}" for s in selected_slugs]
+        org_claims = list(
+            DisclosureClaim.objects.filter(slug__in=org_claim_slugs).values_list(
+                "slug", "label"
+            )
+        )
+
+        # Append the two always-on claims in a single query.
+        always_on_slugs = (
             "third-party-independent-assurance",
             "i-would-like-help-confirming-this",
-        ):
-            claim = DisclosureClaim.objects.filter(slug=slug).first()
-            if claim:
-                claims.append((claim.slug, claim.label))
+        )
+        always_on_claims = list(
+            DisclosureClaim.objects.filter(slug__in=always_on_slugs).values_list(
+                "slug", "label"
+            )
+        )
 
-        return claims
+        choices = org_claims + always_on_claims
+        self._disclosure_claim_choices_cache = choices
+        return choices
 
     def get_form_initial(self, step):
         """
@@ -734,7 +802,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         in a format expected by the consecutive forms of WizardView
         """
 
-        def _evidence_initial_data(evidence: HostingproviderCertificate):
+        def _evidence_initial_data(evidence: HostingProviderSupportingDocument):
             return {
                 "title": evidence.title,
                 "description": evidence.description,
