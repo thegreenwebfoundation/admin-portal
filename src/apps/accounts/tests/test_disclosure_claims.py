@@ -12,7 +12,7 @@ Covers:
 - CredentialForm clean() defaults claim_choices to [] when flag off
 - Preview render_as_claims template filter
 - Approval flow: approve() carries claim links to live documents
-- Admin edit_disclosure_claims view (Hostingprovider + ProviderRequest)
+- Admin edit_disclosure view (Hostingprovider + ProviderRequest)
 """
 
 import random
@@ -695,13 +695,13 @@ class TestApprovalFlowClaims:
 # ---------------------------------------------------------------------------
 
 
-class TestAdminEditDisclosureClaimsView:
-    """Tests for the dedicated edit_disclosure_claims admin views."""
+class TestAdminEditDisclosureView:
+    """Tests for the per-disclosure edit admin views."""
 
-    def test_hosting_provider_edit_disclosure_claims_get(
+    def test_hosting_provider_edit_disclosure_get(
         self, greenweb_staff_user, client
     ):
-        """The edit_disclosure_claims view loads for a hosting provider."""
+        """The edit_disclosure view loads for a hosting provider."""
         from django.urls import reverse as urls_reverse
 
         hp = ac_models.Hostingprovider.objects.create(
@@ -725,17 +725,17 @@ class TestAdminEditDisclosureClaimsView:
 
         client.force_login(greenweb_staff_user)
         url = urls_reverse(
-            "greenweb_admin:accounts_hostingprovider_edit_disclosure_claims",
-            kwargs={"provider": hp.pk},
+            "greenweb_admin:accounts_hostingprovider_edit_disclosure",
+            kwargs={"provider": hp.pk, "doc_id": doc.pk},
         )
         response = client.get(url)
         assert response.status_code == 200
         assert b"Test Doc" in response.content
 
-    def test_hosting_provider_edit_disclosure_claims_post(
+    def test_hosting_provider_edit_disclosure_post(
         self, greenweb_staff_user, client
     ):
-        """POSTing updates the claim links for a hosting provider's docs."""
+        """POSTing updates the details and claim links for a hosting provider doc."""
         from django.urls import reverse as urls_reverse
 
         hp = ac_models.Hostingprovider.objects.create(
@@ -757,24 +757,33 @@ class TestAdminEditDisclosureClaimsView:
 
         client.force_login(greenweb_staff_user)
         url = urls_reverse(
-            "greenweb_admin:accounts_hostingprovider_edit_disclosure_claims",
-            kwargs={"provider": hp.pk},
+            "greenweb_admin:accounts_hostingprovider_edit_disclosure",
+            kwargs={"provider": hp.pk, "doc_id": doc.pk},
         )
         response = client.post(
             url,
-            {f"doc_{doc.pk}": [str(claim2.pk)]},
+            {
+                "title": "Updated Title",
+                "type": ac_models.EvidenceType.ANNUAL_REPORT,
+                "description": "",
+                "public": False,
+                "valid_from": "2026-01-01",
+                "valid_to": "2026-12-31",
+                "claims": [str(claim2.pk)],
+            },
             follow=True,
         )
         assert response.status_code == 200
 
         doc.refresh_from_db()
+        assert doc.title == "Updated Title"
         assert doc.claims.count() == 1
         assert doc.claims.first() == claim2
 
-    def test_provider_request_edit_disclosure_claims_get(
+    def test_provider_request_edit_disclosure_get(
         self, greenweb_staff_user, client
     ):
-        """The edit_disclosure_claims view loads for a provider request."""
+        """The edit_disclosure view loads for a provider request."""
         from django.urls import reverse as urls_reverse
 
         pr = ProviderRequestFactory.create(
@@ -788,37 +797,44 @@ class TestAdminEditDisclosureClaimsView:
 
         client.force_login(greenweb_staff_user)
         url = urls_reverse(
-            "greenweb_admin:accounts_providerrequest_edit_disclosure_claims",
-            kwargs={"request_id": pr.pk},
+            "greenweb_admin:accounts_providerrequest_edit_disclosure",
+            kwargs={"request_id": pr.pk, "evidence_id": evidence.pk},
         )
         response = client.get(url)
         assert response.status_code == 200
 
-    def test_provider_request_edit_disclosure_claims_post(
+    def test_provider_request_edit_disclosure_post(
         self, greenweb_staff_user, client
     ):
-        """POSTing updates the claim links for a provider request's evidence."""
+        """POSTing updates the details and claim links for a provider request's evidence."""
         from django.urls import reverse as urls_reverse
 
         pr = ProviderRequestFactory.create(
             status=ac_models.ProviderRequestStatus.PENDING_REVIEW
         )
         evidence = ProviderRequestEvidenceFactory.create(request=pr)
-        claim1 = DisclosureClaimFactory.create(label="Claim 1")
         claim2 = DisclosureClaimFactory.create(label="Claim 2")
 
         client.force_login(greenweb_staff_user)
         url = urls_reverse(
-            "greenweb_admin:accounts_providerrequest_edit_disclosure_claims",
-            kwargs={"request_id": pr.pk},
+            "greenweb_admin:accounts_providerrequest_edit_disclosure",
+            kwargs={"request_id": pr.pk, "evidence_id": evidence.pk},
         )
         response = client.post(
             url,
-            {f"doc_{evidence.pk}": [str(claim2.pk)]},
+            {
+                "title": "Updated Evidence",
+                "type": ac_models.EvidenceType.ANNUAL_REPORT,
+                "description": "",
+                "link": "https://example.com/updated",
+                "public": False,
+                "claims": [str(claim2.pk)],
+            },
             follow=True,
         )
         assert response.status_code == 200
 
         evidence.refresh_from_db()
+        assert evidence.title == "Updated Evidence"
         assert evidence.claims.count() == 1
         assert evidence.claims.first() == claim2

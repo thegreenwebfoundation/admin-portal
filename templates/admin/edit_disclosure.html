@@ -1,0 +1,144 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans "Home" %}</a> &rsaquo;
+  {% if provider %}
+  <a href="{% url 'admin:accounts_hostingprovider_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a> &rsaquo;
+  <a href="{% url 'admin:accounts_hostingprovider_change' provider.pk %}">{{ provider }}</a> &rsaquo;
+  {% else %}
+  <a href="{% url 'admin:accounts_providerrequest_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a> &rsaquo;
+  <a href="{% url 'admin:accounts_providerrequest_change' provider_request.pk %}">{{ provider_request }}</a> &rsaquo;
+  {% endif %}
+  {% trans "Edit disclosure" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1 class="header">
+    Edit Disclosure for {% if provider %}{{ provider }}{% else %}{{ provider_request }}{% endif %}
+  </h1>
+  
+  <form method="post" action="">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="errornote">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="module aligned">
+      <h2>Details</h2>
+      {% for field in form %}
+        {% if field.name != "locations" and field.name != "claims" %}
+          <div class="form-row">
+            <div>
+              {{ field.label_tag }}
+              {{ field }}
+              {{ field.errors }}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="module aligned">
+      <h2>Region Scope</h2>
+      <div class="form-row">
+        <div class="disclosure-checkbox-group">
+          {{ form.locations.label_tag }}
+          <div class="disclosure-checkbox-list">{{ form.locations }}</div>
+          <p class="help">{{ form.locations.help_text }}</p>
+          {{ form.locations.errors }}
+        </div>
+      </div>
+    </div>
+
+    <div class="module aligned">
+      <h2>Claims</h2>
+      <div class="form-row">
+        <div class="disclosure-checkbox-group">
+          {{ form.claims.label_tag }}
+          <div class="disclosure-checkbox-list">{{ form.claims }}</div>
+          {{ form.claims.errors }}
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <input type="submit" value="{% trans 'Save' %}" class="default" name="_save" />
+      <a href="{{ cancel_link }}" class="cancel-link">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  /* Use the full width of the content area. */
+  #content-main { max-width: 100%; }
+  .module.aligned .form-row > div {
+    width: 100% !important;
+    max-width: 100%;
+  }
+  .module.aligned .form-row label {
+    width: auto;
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+  .module.aligned .form-row input[type="text"],
+  .module.aligned .form-row input[type="url"],
+  .module.aligned .form-row input[type="file"],
+  .module.aligned .form-row select,
+  .module.aligned .form-row textarea {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Breathing room between the disclosure sections. */
+  .module.aligned { margin-bottom: 1.5rem; }
+  .disclosure-checkbox-group { margin-top: 0.25rem; }
+  .disclosure-checkbox-group label {
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .disclosure-checkbox-group .help,
+  .disclosure-checkbox-group .helptext {
+    color: #666;
+    font-style: italic;
+    margin: 0.25rem 0 0;
+  }
+
+  /* Region scope checkboxes: a flat list laid out in a responsive grid. */
+  #id_locations {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.25rem 2rem;
+  }
+
+  /* Claim checkboxes: grouped by version. Each group is a full-width block. */
+  #id_claims { margin: 0; padding: 0; }
+  #id_claims > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.25rem 2rem;
+    align-items: start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e3e3e3;
+  }
+  /* Group heading spans the whole width of its grid block. */
+  #id_claims > div > label:first-child {
+    grid-column: 1 / -1;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #333;
+    margin: 0 0 0.5rem;
+    padding-top: 0.5rem;
+  }
+  #id_claims > div:first-child > label:first-child {
+    padding-top: 0;
+  }
+</style>
+{% endblock %}
