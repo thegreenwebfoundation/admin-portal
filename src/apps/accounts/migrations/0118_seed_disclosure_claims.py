@@ -8,8 +8,7 @@ ALWAYS_ON_CLAIMS = [
     {
         "slug": "third-party-independent-assurance",
         "label": (
-            "This contains a third-party independent assurance statement "
-            "confirming the above claims"
+            "This contains a third-party independent assurance statement."
         ),
         "category": "third_party_assurance",
     },

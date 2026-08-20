@@ -21,7 +21,11 @@ from ..models import (
     ProviderRequestIPRange,
     ProviderRequestLocation,
 )
-from .widgets import UpstreamProviderChoiceField, UpstreamProviderSelectWidget
+from .widgets import (
+    DisclosureClaimCheckboxSelectMultiple,
+    UpstreamProviderChoiceField,
+    UpstreamProviderSelectWidget,
+)
 
 
 class AlwaysChangedModelFormMixin:
@@ -447,7 +451,7 @@ class CredentialForm(AlwaysChangedModelFormMixin, forms.ModelForm):
             "Select all the claims that this disclosure provides evidence for. "
             "If you're not sure, tick 'I'd like help confirming this'."
         ),
-        widget=forms.CheckboxSelectMultiple(
+        widget=DisclosureClaimCheckboxSelectMultiple(
             attrs={"class": "disclosure-claims-select"}
         ),
     )
