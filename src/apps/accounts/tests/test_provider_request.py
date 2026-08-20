@@ -3961,6 +3961,7 @@ def test_wizard_evidence_step_hides_new_fields_when_flag_off(
 
 @pytest.mark.django_db
 @override_flag("verification_basis_v2", active=True)
+@override_flag("verification_basis_v2_claimed_percentage", active=True)
 def test_wizard_preview_renders_new_fields_when_flag_on(
     user,
     client,
@@ -4004,13 +4005,72 @@ def test_wizard_preview_renders_new_fields_when_flag_on(
     # the final POST above should have rendered the preview step
     assert response.context_data["wizard"]["steps"].current == "7"
 
-    content = response.content.decode()
+    output = response.content.decode()
     # the selected matching value is echoed back as an option on the preview form
     assert (
-        models.FossilFreeEnergyMatching.ANNUAL.label in content
-        or "Annually matched" in content
+        models.FossilFreeEnergyMatching.ANNUAL.label in output
+        or "Annually matched" in output
     )
-    assert "75" in content
+    assert "75" in output
+
+
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_wizard_preview_hides_coverage_percentage_when_claimed_percentage_flag_off(
+    user,
+    client,
+    wizard_form_org_details_data,
+    wizard_form_org_location_data,
+    wizard_form_services_data,
+    wizard_form_evidence_data_with_matching,
+    wizard_form_network_explanation_only,
+    wizard_form_consent,
+):
+    """
+    With verification_basis_v2 ON but verification_basis_v2_claimed_percentage
+    OFF, the preview must NOT leak the coverage percentage share — matching
+    the evidence editing form, which gates that field behind the
+    claimed_percentage flag. The annual/hourly matching choice is still shown.
+    """
+    client.force_login(user)
+    # When the flag is ON, the basis form validates against October 2026
+    # verification bases; the default fixture draws June slugs which would
+    # fail validation. Build the basis payload from the flag-active choices.
+    request = RequestFactory().get("/")
+    request.user = user
+    october_choices = models.ProviderRequest.get_verification_bases_choices(request)
+    october_slugs = [slug for slug, _label in october_choices]
+    bases_data = {
+        "provider_request_wizard_view-current_step": "3",
+        "3-verification_bases": october_slugs[:1],
+    }
+    steps = [
+        wizard_form_org_details_data,
+        wizard_form_org_location_data,
+        wizard_form_services_data,
+        bases_data,
+        wizard_form_evidence_data_with_matching,
+        wizard_form_network_explanation_only,
+        wizard_form_consent,
+    ]
+    for data in steps:
+        response = client.post(
+            urls.reverse("provider_registration"), data, follow=True
+        )
+        assert response.status_code == 200
+
+    assert response.context_data["wizard"]["steps"].current == "7"
+
+    output = response.content.decode()
+    # Matching summary still shown (gated only by verification_basis_v2)...
+    assert (
+        models.FossilFreeEnergyMatching.ANNUAL.label in output
+        or "Annually matched" in output
+    )
+    # ...but the coverage percentage label/value must be hidden when the
+    # claimed_percentage flag is off.
+    assert "What percentage of your claims are met by this disclosure?" not in output
+    assert "What percent of your claims are met" not in output
 
 
 @pytest.fixture()
