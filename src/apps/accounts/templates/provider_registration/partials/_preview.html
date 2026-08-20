@@ -19,7 +19,16 @@
 		{% endflag %}
 	{% else %}
 	<div class="mb-4 last-of-type:mb-0">
-		<p class="font-bold m-0">{{ field.label }}</p>
+		{% if field.name|lower == "locations" %}
+			{% comment %}
+			   Skip the locations field's own label ("Select specific regions").
+			   The "Which regions does this disclosure apply to?" question is
+			   provided by the region_scope field's label above, so showing it
+			   here again would duplicate the heading. The value is still shown.
+			{% endcomment %}
+		{% else %}
+			<p class="font-bold m-0">{{ field.label }}</p>
+		{% endif %}
 		{% if field.label|lower == "which services does your organisation offer?" %}
 			{% comment %}
 				Expand services slugs to their full names (e.g. "paas" -> "Platform as a service")
@@ -27,7 +36,8 @@
 			{% endcomment %}
 			<p class="m-0">{{ field.value|render_as_services|conditional_yesno:"Yes,No,-" }}</p>
 		{% elif field.label|lower == "on what basis are you seeking verification?" %}
-			{% comment %}
+
+		    {% comment %}
 				Expand verification slugs to their full names using custom template tag
 			{% endcomment %}
 			<p class="m-0">{{ field.value|render_as_verification_bases|conditional_yesno:"Yes,No,-" }}</p>
@@ -36,7 +46,7 @@
 				Expand selected upstream providers to their names
 				using custom template tag
 			{% endcomment %}
-		
+
 			<p class="m-0">{{ field.value|render_as_upstream_providers|default:"None selected" }}</p>
 		{% elif field.name|lower == "region_scope" %}
 			{# Skip — rendered as part of the 'locations' field below #}
@@ -49,9 +59,13 @@
 				{% endif %}
 			{% endwith %}
 		{% elif field.name|lower == "locations" %}
+		    {% comment %}
+                if scope is regional, we defer to render_as_regions to generate
+                the markup same list-item based markup as we add manually for the 'all' case
+			{% endcomment %}
 			{% with scope=form.initial.region_scope %}
 				{% if scope == "all" or not scope %}
-					<p class="m-0">All regions</p>
+					<p class="m-0"><ul><li>All regions</li></li></p>
 				{% else %}
 					<p class="m-0">{{ field.value|render_as_regions:location_choices|default:"None selected" }}</p>
 				{% endif %}

@@ -135,12 +135,12 @@ def exclude_preview_fields(form):
 @register.filter
 def render_as_regions(value, location_choices=None):
     """
-    Render location index values as 'City, Country' strings.
+    Render location index values as an unordered list of 'City, Country'
+    strings, matching how claims are listed in the preview.
     The value is a list of index strings (e.g. ["0", "2"]).
     location_choices is a list of (index, label) tuples.
 
-    Returns a plain string; Django auto-escapes filter output in
-    templates, so user-derived label values are safe by default.
+    Auto-escapes label values, so user-derived labels are safe by default.
     """
     if not value:
         return None
@@ -149,7 +149,10 @@ def render_as_regions(value, location_choices=None):
         labels = [choice_map.get(str(v), str(v)) for v in value]
     else:
         labels = [str(v) for v in value]
-    return ", ".join(labels)
+    list_items = format_html_join(
+        "", "<li>{}</li>", ((label,) for label in labels)
+    )
+    return format_html("<ul>{}</ul>", list_items)
 
 
 @register.filter

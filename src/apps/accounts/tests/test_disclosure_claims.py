@@ -30,7 +30,10 @@ from apps.accounts.factories import (
     VerificationBasisFactory,
 )
 from apps.accounts.forms.provider_request_wizard import CredentialForm
-from apps.accounts.templatetags.preview_extras import render_as_claims
+from apps.accounts.templatetags.preview_extras import (
+    render_as_claims,
+    render_as_regions,
+)
 from apps.greencheck.factories import ServiceFactory
 
 pytestmark = pytest.mark.django_db
@@ -429,6 +432,27 @@ class TestRenderAsClaimsFilter:
     def test_empty_returns_none(self):
         assert render_as_claims([]) is None
         assert render_as_claims(None) is None
+
+
+class TestRenderAsRegionsFilter:
+    """Tests for the render_as_regions template filter."""
+
+    def test_renders_labels_from_choices_map(self):
+        choices = [("0", "French DC, Paris, France"), ("2", "HEL-1, Helsinki, Finland")]
+        result = render_as_regions(["0", "2"], choices)
+        assert "<ul>" in result
+        assert "<li>French DC, Paris, France</li>" in result
+        assert "<li>HEL-1, Helsinki, Finland</li>" in result
+
+    def test_renders_plain_values_without_choices(self):
+        result = render_as_regions(["0", "2"])
+        assert "<ul>" in result
+        assert "<li>0</li>" in result
+        assert "<li>2</li>" in result
+
+    def test_empty_returns_none(self):
+        assert render_as_regions([]) is None
+        assert render_as_regions(None) is None
 
 
 # ---------------------------------------------------------------------------
