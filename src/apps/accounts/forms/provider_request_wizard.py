@@ -924,7 +924,7 @@ class OrgDetailsForm(forms.ModelForm):
         help_text=(
             "If your organisation has publicly committed to running on 100% "
             "fossil-free power on an hourly basis by 2030, link to your public "
-            "statement. Optional."
+            "statement. Optional. <a href='https://www.thegreenwebfoundation.org/template-2030-fossil-free-statement/'>See our statement</a>"
         ),
         widget=forms.URLInput(attrs={"placeholder": "https://"}),
         max_length=500,

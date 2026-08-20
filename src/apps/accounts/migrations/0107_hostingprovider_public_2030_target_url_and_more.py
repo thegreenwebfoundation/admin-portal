@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             name="public_2030_target_url",
             field=models.URLField(
                 blank=True,
-                help_text="If your organisation has publicly committed to running on 100% fossil-free power on an hourly basis by 2030, link to your public statement. Optional.",
+                help_text="If your organisation has publicly committed to running on 100% fossil-free power on an hourly basis by 2030, link to your public statement. Optional. <a href=''>see our statement</a>",
                 max_length=500,
                 null=True,
                 verbose_name="Public 2030 target for running on fossil-free power",
