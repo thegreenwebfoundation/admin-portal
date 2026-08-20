@@ -595,6 +595,112 @@ class TestWizardSubmissionWithClaims:
 class TestApprovalFlowClaims:
     """Tests for ProviderRequest.approve() with claim links."""
 
+    def test_admin_edited_regions_and_claims_survive_approval(
+        self, sample_hoster_user, greenweb_staff_user, client
+    ):
+        """
+        Regression test for a bug where region (scope) and claim changes made
+        by staff on a disclosure were lost when the request was approved.
+
+        Workflow under test:
+        1. A provider already exists with a live disclosure (e.g. from a prior
+           approval). The provider goes through the wizard again to update
+           their details, and the submitted disclosure content is unchanged
+           from the existing one (same link/title/type/public).
+        2. Before the update is approved, staff edit the disclosure in the
+           admin using the special ``edit_disclosure`` form, changing its
+           region scope (locations) and the claims it supports -*without*
+           touching the underlying content.
+        3. Staff approve the request from the admin (the actions dropdown =
+           ``ProviderRequest.approve()``).
+
+        Expected: the (updated) live supporting document carries the staff's
+        region and claim edits.
+
+        Actual (bug): the approval logic treats the disclosure as an unchanged
+        "content match" for the previously-archived document and short-circuits,
+        never carrying across the staff-changed region/claim links - so the live
+        provider keeps the old regions and claims (and drops its region links
+        entirely when the live locations are rebuilt).
+        """
+        from django.urls import reverse as urls_reverse
+
+        # --- Set up an existing provider that already has a live disclosure. ---
+        original_claim = DisclosureClaimFactory.create(label="Original claim")
+        pr1 = ProviderRequestFactory.create(
+            created_by=sample_hoster_user,
+            status=ac_models.ProviderRequestStatus.PENDING_REVIEW,
+            provider=None,
+        )
+        loc_a = ProviderRequestLocationFactory.create(
+            request=pr1, city="Amsterdam", country="NL"
+        )
+        ev1 = ProviderRequestEvidenceFactory.create(
+            request=pr1, link="https://example.com/evidence.pdf", file=None
+        )
+        ac_models.ProviderRequestEvidenceClaim.objects.create(
+            evidence=ev1, claim=original_claim
+        )
+        ac_models.ProviderRequestEvidenceLocation.objects.create(
+            evidence=ev1, location=loc_a
+        )
+        hp = pr1.approve()
+        hp.refresh_from_db()
+        live_doc = hp.supporting_documents.first()
+
+        # --- An update request for that provider, content unchanged. ---
+        pr2 = ProviderRequestFactory.create(
+            created_by=sample_hoster_user,
+            provider=hp,
+            status=ac_models.ProviderRequestStatus.PENDING_REVIEW,
+        )
+        loc_b = ProviderRequestLocationFactory.create(
+            request=pr2, city="Berlin", country="DE"
+        )
+        ev2 = ProviderRequestEvidenceFactory.create(
+            request=pr2,
+            title=live_doc.title,
+            type=live_doc.type,
+            public=live_doc.public,
+            link=live_doc.url,
+            file=None,
+        )
+
+        # --- Staff edit scope + claims on the request via the special form. ---
+        edited_claim = DisclosureClaimFactory.create(label="Edited claim")
+        client.force_login(greenweb_staff_user)
+        url = urls_reverse(
+            "greenweb_admin:accounts_providerrequest_edit_disclosure",
+            kwargs={"request_id": pr2.pk, "evidence_id": ev2.pk},
+        )
+        response = client.post(
+            url,
+            {
+                "title": ev2.title,
+                "description": ev2.description,
+                "type": ev2.type,
+                "link": ev2.link,
+                "public": ev2.public,
+                "locations": [str(loc_b.pk)],
+                "claims": [str(edited_claim.pk)],
+            },
+            follow=True,
+        )
+        assert response.status_code == 200
+        # The edits are recorded on the request's disclosure.
+        ev2.refresh_from_db()
+        assert ev2.claims.first() == edited_claim
+        assert set(ev2.locations.all()) == {loc_b}
+
+        # --- Staff approve the request. ---
+        pr2.approve()
+
+        # --- The live disclosure must carry the staff's edits. ---
+        hp.refresh_from_db()
+        updated_doc = hp.supporting_documents.get(title=live_doc.title)
+        assert updated_doc.claims.first() == edited_claim
+        assert [loc.city for loc in updated_doc.locations.all()] == ["Berlin"]
+
     def test_approve_carries_across_claim_links(
         self, hosting_provider, sample_hoster_user
     ):

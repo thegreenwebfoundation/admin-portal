@@ -262,6 +262,52 @@ class ProviderRequest(TimeStampedModel):
         bases = VerificationBasis.objects.filter(version=version)
         return [(tag.slug, tag.label) for tag in bases]
 
+    @staticmethod
+    def _sync_disclosure_links(
+        evidence: "ProviderRequestEvidence",
+        doc: "HostingProviderSupportingDocument",
+        loc_map: dict,
+    ) -> None:
+        """
+        Reconcile a live supporting document's region (location) and claim
+        links with the submitted evidence's current region scope and claims.
+
+        Used during approval on the "content match" short-circuit, so staff
+        edits to a disclosure's region scope and claims are preserved even when
+        the underlying content (link/title/type/public) is unchanged.
+
+        ``loc_map`` maps draft :class:`ProviderRequestLocation` PKs to their
+        corresponding live :class:`HostingProviderLocation`.
+        """
+        # -- Claims: DisclosureClaim is shared reference data, so the same
+        # claim FK is valid on both the draft and the live side. --
+        wanted_claims = set(evidence.claims.values_list("id", flat=True))
+        current_claims = set(doc.claims.values_list("id", flat=True))
+        for claim_id in wanted_claims - current_claims:
+            HostingProviderSupportingDocumentClaim.objects.get_or_create(
+                document=doc, claim_id=claim_id
+            )
+        for claim_id in current_claims - wanted_claims:
+            HostingProviderSupportingDocumentClaim.objects.filter(
+                document=doc, claim_id=claim_id
+            ).delete()
+
+        # -- Locations / region scope: map draft locations to live locations. --
+        wanted_locations = set()
+        for evidence_location in evidence.locations.all():
+            live_location = loc_map.get(evidence_location.pk)
+            if live_location:
+                wanted_locations.add(live_location.pk)
+        current_locations = set(doc.locations.values_list("id", flat=True))
+        for location_id in wanted_locations - current_locations:
+            HostingProviderSupportingDocumentLocation.objects.get_or_create(
+                document=doc, location_id=location_id
+            )
+        for location_id in current_locations - wanted_locations:
+            HostingProviderSupportingDocumentLocation.objects.filter(
+                document=doc, location_id=location_id
+            ).delete()
+
     @transaction.atomic
     def approve(self) -> Hostingprovider:
         """
@@ -484,6 +530,27 @@ class ProviderRequest(TimeStampedModel):
                     )
                 )
                 archived_doc_ids.append(archived_document_match)
+
+                # This disclosure's content already exists on the provider, so we
+                # re-use the archived document instead of creating a duplicate.
+                #
+                # However, staff may have corrected the disclosure's region scope
+                # (locations) and claims on the *request* via the admin
+                # edit_disclosure form without changing its underlying content.
+                # Carry those edits across to the document being re-activated so
+                # the live provider reflects them on approval.
+                matching_archived_doc = next(
+                    (
+                        doc
+                        for doc in archived_documents
+                        if doc.id == archived_document_match
+                    ),
+                    None,
+                )
+                if matching_archived_doc is not None:
+                    self._sync_disclosure_links(
+                        evidence, matching_archived_doc, loc_map
+                    )
 
                 # exit the loop early - this was a duplicate of content
                 # that will be made visible again when we unarchive it,
