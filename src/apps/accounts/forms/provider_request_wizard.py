@@ -388,7 +388,7 @@ class ConsentForm(forms.ModelForm):
         label="Sign me up to the newsletter",
         label_suffix="",
         help_text=(
-            "We run a newsletter, Greening Digital, where we share actionable news"
+            "We run a monthly newsletter, <a href='https://www.thegreenwebfoundation.org/newsletter/'>the Green Web Newsletter</a>, where we share actionable news"
             " about greening the web and a sustainable digital transition. You can"
             " unsubscribe at any time."
         ),
