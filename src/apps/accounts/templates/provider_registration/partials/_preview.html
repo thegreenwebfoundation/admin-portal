@@ -1,8 +1,23 @@
 {% load preview_extras %}
 {% load countries %}
+{% load waffle_tags %}
 
 <div class="bg-neutral-50 rounded-xl my-6 p-4">
 	{% for field in form|exclude_preview_fields %}
+	{% if field.name == "claim_coverage_percentage" %}
+		{% comment %}
+		Mirror the evidence editing form, which only shows the percentage
+		share when the "verification_basis_v2_claimed_percentage" flag is on.
+		Otherwise the preview would leak the field whenever
+		"verification_basis_v2" is enabled but that flag is off.
+		{% endcomment %}
+		{% flag "verification_basis_v2_claimed_percentage" %}
+		<div class="mb-4 last-of-type:mb-0">
+			<p class="font-bold m-0">{{ field.label }}</p>
+			<p class="m-0">{{ field.value|default_if_none:"-" }}</p>
+		</div>
+		{% endflag %}
+	{% else %}
 	<div class="mb-4 last-of-type:mb-0">
 		<p class="font-bold m-0">{{ field.label }}</p>
 		{% if field.label|lower == "which services does your organisation offer?" %}
@@ -59,5 +74,6 @@
 			<p class="m-0">{{ field.value|conditional_yesno:"Yes,No,-" }}</p>
 		{% endif %}
 	</div>
+	{% endif %}
 	{% endfor %}
 </div>
