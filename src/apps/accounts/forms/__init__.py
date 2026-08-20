@@ -3,11 +3,12 @@ from django import forms
 from .admin import (
     DatacenterAdminForm,
     DatacenterNoteNoteForm,
-    EditDisclosureClaimsForm,
     HostingAdminForm,
     HostingProviderNoteForm,
+    HostingProviderSupportingDocumentEditForm,
     InlineSupportingDocumentForm,
     PreviewEmailForm,
+    ProviderRequestEvidenceEditForm,
 )
 
 from .api_keys import (

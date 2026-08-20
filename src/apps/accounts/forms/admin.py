@@ -15,6 +15,7 @@ from ..models import (
     HostingProviderLocation,
     HostingProviderNote,
     HostingProviderSupportingDocument,
+    ProviderRequestEvidence,
     Service,
     SupportMessage,
     VerificationBasis,
@@ -161,75 +162,116 @@ class InlineSupportingDocumentForm(HostingProviderSupportingDocumentInlineForm):
             )
 
 
-class EditDisclosureClaimsForm(forms.Form):
+class DisclosureEditFormMixin:
     """
-    A form for editing which claims each disclosure (supporting document)
-    backs, used by the dedicated ``edit_disclosure_claims`` admin view on
-    both the Hostingprovider and ProviderRequest admins.
+    Shared logic for editing a single disclosure (draft or live) in one go:
+    its details, region scope (locations) and claims.
 
-    ``documents`` is a list of disclosure instances (live or draft). For
-    each document, a ``ModelMultipleChoiceField`` named ``doc_<pk>`` is
-    created, pre-populated from ``doc.claims.all()``.
-
-    This exists because Django's admin inline formsets cannot render M2M
-    fields with explicit through models as editable fields — the same
-    limitation documented for the disclosure-region links in ADR 3.
-
-    A regular ``formset_factory`` would be the more idiomatic Django
-    pattern for "one form per document", but each per-document "form"
-    here is a single ``ModelMultipleChoiceField`` (the claims for that
-    one disclosure), which doesn't map cleanly onto a standard
-    model-formset row. The custom ``doc_<pk>`` field-naming scheme keeps
-    the matching between the submitted selection and the source
-    document simple and explicit, at the cost of bypassing formset
-    management-form machinery. Acceptable for a staff-only admin surface
-    with a handful of documents per provider.
+    Because the ``locations`` and ``claims`` relations use explicit through
+    models, Django's default M2M widgets cannot edit them directly. These
+    fields are added as checkboxes here, and the admin view persists the
+    through-model rows after the form is saved.
     """
 
-    def __init__(self, *args, documents=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        locations_qs = kwargs.pop("locations_qs", [])
+        claims_qs = kwargs.pop("claims_qs", [])
         super().__init__(*args, **kwargs)
-        documents = documents or []
 
-        # Build grouped choices so claims are visually separated by
-        # version (June 2026 / October 2026 / Always available) in the
-        # checkbox list. Django's CheckboxSelectMultiple renders optgroup
-        # labels as group headings.
-        from ..models import VerificationBasisVersion
-
-        all_claims = list(
-            DisclosureClaim.objects.all().order_by("sort_order", "id")
+        instance = self.instance
+        self.fields["locations"] = forms.MultipleChoiceField(
+            choices=[(str(loc.pk), str(loc)) for loc in locations_qs],
+            required=False,
+            widget=forms.CheckboxSelectMultiple,
+            help_text="Leave empty for Global scope.",
+            initial=(
+                [str(loc.pk) for loc in instance.locations.all()]
+                if instance and instance.pk
+                else []
+            ),
+        )
+        self.fields["claims"] = forms.MultipleChoiceField(
+            choices=self._build_claim_choices(claims_qs),
+            required=False,
+            widget=forms.CheckboxSelectMultiple,
+            initial=(
+                [str(c.pk) for c in instance.claims.all()]
+                if instance and instance.pk
+                else []
+            ),
         )
 
+    @staticmethod
+    def _build_claim_choices(claims_qs):
+        """
+        Return grouped choices for the disclosure claims so they render with
+        version headings in the admin checkbox list, mirroring the grouping
+        used by the historical bulk edit surface:
+
+        - organisation-basis claims grouped by verification-basis version
+        - always-on claims (third-party assurance / needs help) in one group
+        """
+        from ..models import VerificationBasisVersion
+
+        claims_by_id = {c.pk: c for c in claims_qs}
+
         grouped = []
-        # Organisation-basis claims grouped by version.
         for version_value, version_label in VerificationBasisVersion.choices:
             version_claims = [
                 (str(c.pk), c.label)
-                for c in all_claims
+                for c in claims_by_id.values()
                 if c.category == "organisation_basis"
                 and c.version == version_value
             ]
             if version_claims:
                 grouped.append((f"Version: {version_label}", version_claims))
 
-        # Always-on claims (third-party assurance + needs help) in their
-        # own group, regardless of version.
         always_on = [
             (str(c.pk), c.label)
-            for c in all_claims
+            for c in claims_by_id.values()
             if c.category in ("third_party_assurance", "needs_help")
         ]
         if always_on:
             grouped.append(("Always available", always_on))
 
-        for doc in documents:
-            field_name = f"doc_{doc.pk}"
-            self.fields[field_name] = forms.MultipleChoiceField(
-                choices=grouped,
-                required=False,
-                widget=forms.CheckboxSelectMultiple,
-                label=str(doc),
-                initial=[str(c.pk) for c in doc.claims.all()],
-            )
+        return grouped
+
+
+class ProviderRequestEvidenceEditForm(DisclosureEditFormMixin, forms.ModelForm):
+    """Edit form for a single draft provider-request disclosure."""
+
+    class Meta:
+        model = ProviderRequestEvidence
+        fields = (
+            "title",
+            "description",
+            "type",
+            "link",
+            "file",
+            "public",
+            "fossil_free_energy_matching",
+            "claim_coverage_percentage",
+        )
+
+
+class HostingProviderSupportingDocumentEditForm(
+    DisclosureEditFormMixin, forms.ModelForm
+):
+    """Edit form for a single live hosting-provider disclosure."""
+
+    class Meta:
+        model = HostingProviderSupportingDocument
+        fields = (
+            "title",
+            "description",
+            "type",
+            "url",
+            "attachment",
+            "public",
+            "fossil_free_energy_matching",
+            "claim_coverage_percentage",
+            "valid_from",
+            "valid_to",
+        )
 
 

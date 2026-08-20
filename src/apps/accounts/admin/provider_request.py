@@ -22,6 +22,7 @@ from ..models import (
     ProviderRequestASN,
     ProviderRequestEvidence,
     ProviderRequestEvidenceClaim,
+    ProviderRequestEvidenceLocation,
     ProviderRequestIPRange,
     ProviderRequestLocation,
     ProviderRequestStatus,
@@ -92,8 +93,30 @@ class ProviderRequestEvidenceInline(AdminOnlyStackedInline):
         "claims_display",
         "fossil_free_energy_matching",
         "claim_coverage_percentage",
+        "edit_link",
     )
-    readonly_fields = ("region_scope_display", "claims_display")
+    readonly_fields = ("region_scope_display", "claims_display", "edit_link")
+
+    @admin.display(description="")
+    def edit_link(self, obj):
+        """
+        Return a hyperlink to the dedicated page for editing this disclosure
+        in full (details, region scope and claims).
+        """
+        if not obj.pk:
+            return ""
+        # NOTE: ``ProviderRequest`` here is shadowed by the admin class at the
+        # bottom of this module, so import the model under an explicit name to
+        # build the correct admin URL (see utils.reverse_admin_name).
+        from ..models import ProviderRequest as ProviderRequestModel
+        from ..utils import reverse_admin_name
+
+        url = reverse_admin_name(
+            ProviderRequestModel,
+            "edit_disclosure",
+            kwargs={"request_id": obj.request_id, "evidence_id": obj.pk},
+        )
+        return format_html('<a href="{}">Edit this disclosure</a>', url)
 
     def get_queryset(self, request):
         # Prefetch locations and claims so ``region_scope_display`` and
@@ -135,7 +158,6 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         "provider",
         "display_upstream_providers",
         "public_2030_target_url",
-        "edit_disclosure_claims_button",
     )
     actions = ["mark_approved", "mark_open", "mark_rejected", "mark_removed"]
     change_form_template = "admin/provider_request/change_form.html"
@@ -167,71 +189,63 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
             ),
         )
 
-    @admin.display(description="Edit disclosure claims")
-    def edit_disclosure_claims_button(self, obj) -> str:
+    def edit_disclosure(self, request, *args, **kwargs):
         """
-        Link to the dedicated page for editing which claims each
-        disclosure (evidence) backs.
+        Render a dedicated page for editing a specific disclosure's details,
+        locations, and claims.
         """
-        from ..utils import reverse_admin_name
+        from ..forms import ProviderRequestEvidenceEditForm
 
-        url = reverse_admin_name(
-            self.model,
-            name="edit_disclosure_claims",
-            kwargs={"request_id": obj.pk},
-        )
-        return format_html(
-            '<a href="{}" class="editDisclosureClaims">'
-            "Edit disclosure claims</a>",
-            url,
-        )
-
-    def edit_disclosure_claims(self, request, *args, **kwargs):
-        """
-        Render a dedicated page for editing which claims each disclosure
-        (evidence) backs, for a given provider request.
-
-        Because the claims M2M uses an explicit through model
-        (ProviderRequestEvidenceClaim), Django's admin inline formsets
-        cannot render it as an editable field. This view provides an
-        alternative editing surface: one row per evidence instance, each
-        with a ModelMultipleChoiceField of DisclosureClaim objects
-        (checkboxes), pre-populated from evidence.claims.all().
-        """
-        from ..forms import EditDisclosureClaimsForm
-
-        # Use self.model instead of the ProviderRequest name, because the
-        # admin class below also named ProviderRequest shadows the model
-        # import after the class definition.
         provider_request = self.model.objects.get(pk=kwargs["request_id"])
-        evidence_qs = list(
-            provider_request.providerrequestevidence_set.all().prefetch_related(
-                "claims"
-            )
-        )
+        evidence = ProviderRequestEvidence.objects.get(pk=kwargs["evidence_id"])
+        locations_qs = provider_request.providerrequestlocation_set.all()
+        claims_qs = DisclosureClaim.objects.all().order_by("sort_order", "id")
 
         if request.method == "POST":
-            form = EditDisclosureClaimsForm(request.POST, documents=evidence_qs)
+            form = ProviderRequestEvidenceEditForm(
+                request.POST,
+                instance=evidence,
+                locations_qs=locations_qs,
+                claims_qs=claims_qs,
+            )
             if form.is_valid():
-                for evidence in evidence_qs:
-                    selected_pks = form.cleaned_data.get(f"doc_{evidence.pk}", [])
-                    # Clear stale links then recreate from the selection.
-                    ProviderRequestEvidenceClaim.objects.filter(
-                        evidence=evidence
-                    ).delete()
-                    for claim in DisclosureClaim.objects.filter(pk__in=selected_pks):
-                        ProviderRequestEvidenceClaim.objects.create(
-                            evidence=evidence, claim=claim,
-                        )
+                updated_evidence = form.save(commit=False)
+                updated_evidence.save()
+
+                # Handle the through models for locations and claims
+                selected_location_pks = form.cleaned_data.get("locations", [])
+                ProviderRequestEvidenceLocation.objects.filter(
+                    evidence=updated_evidence
+                ).delete()
+                for pk in selected_location_pks:
+                    ProviderRequestEvidenceLocation.objects.create(
+                        evidence=updated_evidence,
+                        location_id=pk,
+                    )
+
+                selected_claim_pks = form.cleaned_data.get("claims", [])
+                ProviderRequestEvidenceClaim.objects.filter(
+                    evidence=updated_evidence
+                ).delete()
+                for pk in selected_claim_pks:
+                    ProviderRequestEvidenceClaim.objects.create(
+                        evidence=updated_evidence,
+                        claim_id=pk,
+                    )
+
                 messages.add_message(
-                    request, messages.SUCCESS, "Disclosure claims updated."
+                    request, messages.SUCCESS, "Disclosure updated."
                 )
                 return redirect(
                     "greenweb_admin:accounts_providerrequest_change",
                     provider_request.pk,
                 )
         else:
-            form = EditDisclosureClaimsForm(documents=evidence_qs)
+            form = ProviderRequestEvidenceEditForm(
+                instance=evidence,
+                locations_qs=locations_qs,
+                claims_qs=claims_qs,
+            )
 
         cancel_link = reverse(
             "greenweb_admin:accounts_providerrequest_change",
@@ -240,11 +254,12 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         context = {
             "form": form,
             "provider_request": provider_request,
+            "evidence": evidence,
             "cancel_link": cancel_link,
             "opts": self.model._meta,
         }
         return render(
-            request, "admin/edit_disclosure_claims.html", context
+            request, "admin/edit_disclosure.html", context
         )
 
     def get_urls(self):
@@ -255,9 +270,9 @@ class ProviderRequest(ActionInChangeFormMixin, admin.ModelAdmin):
         urls = super().get_urls()
         added = [
             path(
-                "<request_id>/edit_disclosure_claims",
-                self.edit_disclosure_claims,
-                name=get_admin_name(self.model, "edit_disclosure_claims"),
+                "<request_id>/evidence/<evidence_id>/edit",
+                self.edit_disclosure,
+                name=get_admin_name(self.model, "edit_disclosure"),
             ),
         ]
         return added + urls
