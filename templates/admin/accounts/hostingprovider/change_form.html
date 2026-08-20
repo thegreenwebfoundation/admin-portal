@@ -11,8 +11,24 @@
             {% include "admin/includes/fieldset.html" %}
         {% elif fieldset.name == "Hostingprovider info" %}
             {% include "admin/accounts/hostingprovider/hosting_provider_fieldset.html" %}
+            {% comment %}
+            Render the locations inline immediately after the main provider info, so
+            "Hosting provider locations" appears high up the page, mirroring how
+            "Provider request locations" does on the provider request admin.
+            It is skipped in the inline_field_sets block below to avoid duplication.
+            {% endcomment %}
+            {% for inline_admin_formset in inline_admin_formsets %}
+                {% if inline_admin_formset.opts.verbose_name_plural == "hosting provider locations" %}
+                    {% include inline_admin_formset.opts.template %}
+                {% endif %}
+            {% endfor %}
         {% elif fieldset.name == "Datacenter info" %}
             {% include "admin/accounts/hostingprovider/data_center_fieldset.html" %}
+        {% elif fieldset.name == "Admin only" %}
+            {% comment %}
+            Deferred: the "Admin only" fieldset is rendered in the
+            inline_field_sets block, just above the "Hosting provider notes".
+            {% endcomment %}
         {% else %}
             {% include "admin/includes/fieldset.html" %}
         {% endif %}
@@ -43,6 +59,21 @@
         skip it here to avoid rendering it twice.
         {% endcomment %}
         {% if inline_admin_formset.opts.verbose_name_plural == "Upstream providers" %}
+        {% elif inline_admin_formset.opts.verbose_name_plural == "hosting provider locations" %}
+            {% comment %}
+            Already rendered in the field_sets block, right after the main
+            "Hostingprovider info" fieldset, so skip it here.
+            {% endcomment %}
+        {% elif inline_admin_formset.opts.verbose_name_plural == "hosting provider notes" %}
+            {% comment %}
+            Render the "Admin only" fieldset just above the notes.
+            {% endcomment %}
+            {% for fieldset in adminform %}
+                {% if fieldset.name == "Admin only" %}
+                    {% include "admin/includes/fieldset.html" %}
+                {% endif %}
+            {% endfor %}
+            {% include inline_admin_formset.opts.template %}
         {% elif inline_admin_formset.opts.verbose_name_plural == "IP approvals" %}
             {% if ip_range_count > 500 %}
                 <fieldset class="module">

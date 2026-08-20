@@ -75,6 +75,14 @@ div.breadcrumbs, .module h2, .module caption, .inline-group h2 {
   background: #555;
 }
 
+/* Django's stock admin CSS forces these to uppercase (text-transform:
+   uppercase), which clashes with the sentence-case labels that sit next
+   to them. Reset them to their natural case. */
+.module h2, .module caption, .inline-group h2,
+thead th, h5, #user-tools, #logout-form button {
+  text-transform: none;
+}
+
 
 
 
