@@ -186,6 +186,7 @@ ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy-workers.yml
 ```
 
 **Deployment with migrations:**
+
 ```bash
 # Production
 just release_migrate
@@ -199,7 +200,7 @@ ansible-playbook -i ansible/inventories/prod.yml ./ansible/migrate.yml
 ansible-playbook -i ansible/inventories/prod.yml ./ansible/deploy-workers.yml
 ```
 
-**Important:** The GitHub Actions workflow includes a migration check that will prevent deployment if migrations are pending. This is a safety feature - always run migrations explicitly using `just release_migrate` or the migrate playbook.
+**Important:** The GitHub Actions workflow includes a migration check that will prevent deployment if migrations are pending. This is a safety feature - always run migrations explicitly using `just release_migrate` or the migrate playbook. Also, when running migrations the `just migrate` and `just release_migrate` automatically include the `setup_group_permissions` command, to make sure all users have the correct permissions. Without this certain panels and features will not show up in the admin for staff.
 
 ### If you need to make changes to how Github actions are set up
 
