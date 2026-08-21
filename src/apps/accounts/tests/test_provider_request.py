@@ -2527,6 +2527,159 @@ def test_wizard_submission_without_upstream_providers(
     assert pr_from_db.upstream_providers.count() == 0
 
 
+@pytest.mark.django_db
+@override_flag("verification_basis_v2", active=True)
+def test_creating_request_from_provider_preserves_upstream_providers(
+    client,
+    sample_hoster_user,
+    wizard_form_services_data,
+    wizard_form_evidence_data,
+    wizard_form_network_data,
+    wizard_form_consent,
+    wizard_form_preview,
+):
+    """
+    Regression test for losing upstream providers when creating a new provider
+    request based on an existing hosting provider via the wizard.
+
+    A provider that relies on upstream providers must keep declaring them when a
+    new request is created from it. ``get_initial_dict`` must also carry the
+    resell basis across, otherwise the pre-selected upstream providers are
+    dropped during submission.
+    """
+    reseller_slug = account_forms.BasisForVerificationForm.RESELLER_SLUG
+    models.VerificationBasis.objects.get_or_create(
+        slug=reseller_slug,
+        defaults={
+            "name": "We resell/use an existing verified green provider",
+            "version": models.VerificationBasisVersion.OCTOBER_2026,
+        },
+    )
+    upstream = models.Hostingprovider.objects.create(
+        name="Upstream Green Provider",
+        country="GB",
+        archived=False,
+        is_listed=True,
+        website="https://upstream.example.com",
+    )
+    hp = models.Hostingprovider.objects.create(
+        name="Downstream Reseller",
+        country="NL",
+        city="Amsterdam",
+        archived=False,
+        is_listed=True,
+        website="https://downstream.example.com",
+    )
+    hp.save()
+    models.HostingProviderLocation.objects.create(
+        hostingprovider=hp, city="Amsterdam", country="NL"
+    )
+    models.UpstreamProvider.objects.create(
+        parent=hp, upstream=upstream, is_public=True
+    )
+    # give the provider a prior approved request with a location so the wizard
+    # carries the location over
+    approved_req = models.ProviderRequest.objects.create(
+        name=hp.name,
+        website=hp.website,
+        description="desc",
+        status=models.ProviderRequestStatus.APPROVED,
+        authorised_by_org=True,
+        created_by=sample_hoster_user,
+    )
+    models.ProviderRequestLocation.objects.create(
+        request=approved_req, city="Amsterdam", country="NL", name="HQ"
+    )
+    hp.request = approved_req
+    hp.save()
+
+    from apps.accounts.views.provider.request.wizard import ProviderRequestWizardView
+
+    initial = ProviderRequestWizardView.get_initial_dict(hp.id)
+    basis_initial = initial["3"]
+
+    # The provider declares upstream providers, so the resell basis must be
+    # pre-selected (not just the upstream connections), otherwise the basis form
+    # silently drops them.
+    assert reseller_slug in basis_initial["verification_bases"]
+    assert [item["provider"] for item in basis_initial["upstream_providers"]] == [
+        upstream.id
+    ]
+
+    from guardian.shortcuts import assign_perm
+
+    from apps.accounts.permissions import manage_provider
+
+    assign_perm(manage_provider.codename, sample_hoster_user, hp)
+
+    edit_url = urls.reverse("provider_edit", args=[str(hp.id)])
+    client.force_login(sample_hoster_user)
+    response = client.get(edit_url)
+    assert response.status_code == 200
+
+    response = client.post(
+        edit_url,
+        {
+            "provider_request_wizard_view-current_step": "0",
+            "0-name": "New Name",
+            "0-website": "https://example.org",
+            "0-description": "desc",
+            "0-authorised_by_org": "True",
+        },
+        follow=True,
+    )
+    # LOCATIONS: delete the carried location, add 2 new ones
+    response = client.post(
+        edit_url,
+        {
+            "provider_request_wizard_view-current_step": "1",
+            "locations__1-TOTAL_FORMS": "3",
+            "locations__1-INITIAL_FORMS": "1",
+            "locations__1-0-country": "NL",
+            "locations__1-0-city": "Amsterdam",
+            "locations__1-0-name": "HQ",
+            "locations__1-0-id": str(
+                approved_req.providerrequestlocation_set.first().id
+            ),
+            "locations__1-0-DELETE": "on",
+            "locations__1-1-country": "NL",
+            "locations__1-1-city": "Amsterdam",
+            "locations__1-1-name": "",
+            "locations__1-2-country": "DE",
+            "locations__1-2-city": "Berlin",
+            "locations__1-2-name": "",
+            "extra__1-location_import_required": "False",
+        },
+        follow=True,
+    )
+    response = client.post(edit_url, wizard_form_services_data, follow=True)
+    # BASIS: submit exactly what get_initial_dict pre-selected (the resell basis
+    # plus the upstream connections), as a user proceeding straight through would.
+    response = client.post(
+        edit_url,
+        {
+            "provider_request_wizard_view-current_step": "3",
+            "3-verification_bases": basis_initial["verification_bases"],
+            "3-upstream_providers": [str(upstream.id)],
+            f"3-upstream_providers_visibility_{upstream.id}": "on",
+        },
+        follow=True,
+    )
+    response = client.post(edit_url, wizard_form_evidence_data, follow=True)
+    response = client.post(edit_url, wizard_form_network_data, follow=True)
+    response = client.post(edit_url, wizard_form_consent, follow=True)
+    response = client.post(edit_url, wizard_form_preview, follow=True)
+
+    assert (
+        "providerrequest" in response.context_data
+    ), f"wizard did not complete; view={response.resolver_match}"
+    pr = models.ProviderRequest.objects.get(
+        id=response.context_data["providerrequest"].id
+    )
+    assert pr.provider_id == hp.id
+    assert pr.upstream_connections.count() == 1
+
+
 # ---------- upstream_providers feature-flag tests ----------
 
 

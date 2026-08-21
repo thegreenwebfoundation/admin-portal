@@ -758,3 +758,204 @@ class TestCredentialFormClean:
         )
         assert form.is_valid()
         assert form.cleaned_data["locations"] == []
+
+
+class TestCreateRequestFromProviderCarriesRegionScope:
+    """
+    Regression tests for bug found in manual testing: changes made
+    in the admin to a hosting provider's disclosure region scope were not
+    carried over when a new provider request based on that hosting provider
+    is created via the wizard.
+    """
+
+    def _approve_provider_with_disclosure(self, sample_hoster_user) -> "ac_models.Hostingprovider":
+        """
+        Build a hosted provider with an approved request (so the wizard carries
+        its locations across) and a live disclosure whose region scope is set
+        to a specific set of live locations.
+        """
+        pr = ProviderRequestFactory.create(
+            status=ac_models.ProviderRequestStatus.APPROVED,
+            created_by=sample_hoster_user,
+        )
+        ProviderRequestLocationFactory.create(
+            request=pr, name="HQ", city="Amsterdam", country="NL"
+        )
+        ProviderRequestLocationFactory.create(
+            request=pr, name="DC", city="Berlin", country="DE"
+        )
+
+        hp = ac_models.Hostingprovider.objects.create(
+            name="Example Hosting",
+            country="NL",
+            city="Amsterdam",
+            archived=False,
+            is_listed=True,
+            website="https://example.com",
+            request=pr,
+            created_by=sample_hoster_user,
+        )
+        ac_models.HostingProviderLocation.objects.create(
+            hostingprovider=hp, name="HQ", city="Amsterdam", country="NL"
+        )
+        live_loc_b = ac_models.HostingProviderLocation.objects.create(
+            hostingprovider=hp, name="DC", city="Berlin", country="DE"
+        )
+
+        doc = ac_models.HostingProviderSupportingDocument.objects.create(
+            hostingprovider=hp,
+            title="V2 disclosure",
+            type=ac_models.EvidenceType.WEB_PAGE.value,
+            url="https://example.com/disclosure.pdf",
+            public=True,
+            valid_from="2026-01-01",
+            valid_to="2026-12-31",
+        )
+        # Staff have set this disclosure's region scope to ONLY "Berlin"
+        ac_models.HostingProviderSupportingDocumentLocation.objects.create(
+            document=doc, location=live_loc_b
+        )
+        return hp
+
+    def test_get_initial_dict_carries_evidence_region_scope(
+        self, sample_hoster_user
+    ):
+        """
+        When creating a new provider request based on an existing hosting
+        provider, the evidence (disclosure) initial data must carry over the
+        disclosure's region scope (the locations it applies to), so the changes
+        made in the admin are visible when going through the wizard.
+        """
+        from apps.accounts.views.provider.request.wizard import (
+            ProviderRequestWizardView,
+        )
+
+        hp = self._approve_provider_with_disclosure(sample_hoster_user)
+
+        initial = ProviderRequestWizardView.get_initial_dict(hp.id)
+
+        evidence_initial = initial["4"]
+        assert len(evidence_initial) == 1
+
+        ev = evidence_initial[0]
+        # The wizard's credential form links evidence to regions using the
+        # index of the location within the LOCATIONS step (matching the order
+        # get_initial_dict exposes them). The disclosure applies only to the
+        # second location (Berlin), so only that index should be carried.
+        assert ev.get("locations") == ["1"], (
+            "The disclosure's region scope (locations) was not carried over "
+            "into the new provider request when it was created based on the "
+            "hosting provider"
+        )
+
+    @override_flag("link_disclosures_to_regions", active=True)
+    @override_flag("verification_basis_v2", active=True)
+    def test_provider_to_request_wizard_roundtrip_preserves_region_scope(
+        self,
+        client,
+        sample_hoster_user,
+        wizard_form_services_data,
+        wizard_form_network_data,
+        wizard_form_consent,
+        wizard_form_preview,
+    ):
+        """
+        Round-trip guard: a hosting provider's disclosure region scope must
+        survive when a new provider request is created from it via the full
+        wizard (provider -> request). The evidence carried over by
+        ``get_initial_dict`` (which reflects the admin's region-scope changes)
+        must end up scoped to the same regions on the new request.
+        """
+        from django.urls import reverse as urls_reverse
+        from guardian.shortcuts import assign_perm
+
+        from apps.accounts.permissions import manage_provider
+        from apps.accounts.views.provider.request.wizard import (
+            ProviderRequestWizardView,
+        )
+
+        hp = self._approve_provider_with_disclosure(sample_hoster_user)
+
+        basis = VerificationBasisFactory.create(
+            version=ac_models.VerificationBasisVersion.OCTOBER_2026,
+        )
+
+        initial = ProviderRequestWizardView.get_initial_dict(hp.id)
+        evidence_initial = initial["4"][0]
+        # sanity: the carried-over disclosure is scoped to Berlin (index 1)
+        assert evidence_initial["locations"] == ["1"]
+
+        assign_perm(manage_provider.codename, sample_hoster_user, hp)
+        edit_url = urls_reverse("provider_edit", args=[str(hp.id)])
+        client.force_login(sample_hoster_user)
+
+        client.get(edit_url)
+        client.post(
+            edit_url,
+            {
+                "provider_request_wizard_view-current_step": "0",
+                "0-name": "Round Trip Name",
+                "0-website": "https://roundtrip.example.org",
+                "0-description": "desc",
+                "0-authorised_by_org": "True",
+            },
+            follow=True,
+        )
+        # LOCATIONS - carry the two existing locations (Amsterdam, Berlin)
+        client.post(
+            edit_url,
+            {
+                "provider_request_wizard_view-current_step": "1",
+                "locations__1-TOTAL_FORMS": "2",
+                "locations__1-INITIAL_FORMS": "0",
+                "locations__1-0-country": "NL",
+                "locations__1-0-city": "Amsterdam",
+                "locations__1-0-name": "HQ",
+                "locations__1-1-country": "DE",
+                "locations__1-1-city": "Berlin",
+                "locations__1-1-name": "DC",
+                "extra__1-location_import_required": "False",
+            },
+            follow=True,
+        )
+        client.post(edit_url, wizard_form_services_data, follow=True)
+        client.post(
+            edit_url,
+            {
+                "provider_request_wizard_view-current_step": "3",
+                "3-verification_bases": [basis.slug],
+            },
+            follow=True,
+        )
+        # EVIDENCE - submit the disclosure exactly as get_initial_dict carried
+        # it over (including its region scope), as a user proceeding straight
+        # through the wizard would.
+        client.post(
+            edit_url,
+            {
+                "provider_request_wizard_view-current_step": "4",
+                "4-TOTAL_FORMS": "1",
+                "4-INITIAL_FORMS": "0",
+                "4-0-title": evidence_initial["title"],
+                "4-0-link": evidence_initial["link"],
+                "4-0-file": "",
+                "4-0-type": evidence_initial["type"],
+                "4-0-public": "on",
+                "4-0-region_scope": "specific",
+                "4-0-locations": evidence_initial["locations"],
+            },
+            follow=True,
+        )
+        client.post(edit_url, wizard_form_network_data, follow=True)
+        client.post(edit_url, wizard_form_consent, follow=True)
+        final = client.post(edit_url, wizard_form_preview, follow=True)
+
+        assert "providerrequest" in final.context_data, final.resolver_match
+        pr = ac_models.ProviderRequest.objects.get(
+            id=final.context_data["providerrequest"].id
+        )
+        evidence = pr.providerrequestevidence_set.get()
+        locations = list(pr.providerrequestlocation_set.all().order_by("id"))
+        assert len(locations) == 2
+        # the disclosure is still scoped to Berlin (the second location)
+        assert list(evidence.locations.all()) == [locations[1]]

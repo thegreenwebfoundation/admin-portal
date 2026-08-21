@@ -801,8 +801,20 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         in a format expected by the consecutive forms of WizardView
         """
 
-        def _evidence_initial_data(evidence: HostingProviderSupportingDocument):
-            return {
+        def _evidence_initial_data(
+            evidence: HostingProviderSupportingDocument,
+            live_location_index: dict,
+        ):
+            """
+            Build the initial data for a single disclosure (evidence).
+
+            As well as the disclosure's own fields, carry across its region
+            scope: each live location the disclosure is linked to is mapped back
+            to its index within the LOCATIONS step (matching ``_location_initial_data``
+            order), so admin changes to a disclosure's region scope are visible
+            when creating a new request based on the hosting provider.
+            """
+            result = {
                 "title": evidence.title,
                 "description": evidence.description,
                 "link": evidence.url,
@@ -811,6 +823,22 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "public": evidence.public,
                 "claim_choices": [c.slug for c in evidence.claims.all()],
             }
+
+            linked_location_ids = set(
+                evidence.location_links.values_list("location_id", flat=True)
+            )
+            all_location_ids = set(live_location_index.keys())
+            # A disclosure that applies to exactly the set of locations matches
+            # the "global / all regions" scope, so leave it as the default (no
+            # explicit locations) rather than turning it into a "specific" scope.
+            if linked_location_ids and linked_location_ids != all_location_ids:
+                result["locations"] = [
+                    str(live_location_index[loc_id])
+                    for loc_id in sorted(linked_location_ids)
+                    if loc_id in live_location_index
+                ]
+
+            return result
 
         def _location_initial_data(hosting_provider: Hostingprovider):
             """
@@ -840,6 +868,30 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                     "country": hosting_provider.country,
                 }
             ]
+
+        def _verification_bases_initial_data(hosting_provider: Hostingprovider):
+            """
+            Return the verification bases to pre-select when creating a request
+            based on an existing hosting provider.
+
+            A provider that relies on upstream providers must also declare the
+            resell basis, otherwise ``BasisForVerificationForm.clean()`` drops
+            the upstream providers during submission (they're only collected
+            when a resell basis is selected). Ensure that basis is present so
+            the pre-selected upstream connections survive the round trip.
+            """
+            bases = [b for b in hosting_provider.verification_bases.slugs()]
+
+            if hosting_provider.upstream_connections.exists():
+                resell_slugs = list(BasisForVerificationForm.UPSTREAM_BASIS_SLUGS)
+                if not any(slug in bases for slug in resell_slugs):
+                    for resell_basis in VerificationBasis.objects.filter(
+                        slug__in=resell_slugs
+                    ):
+                        if resell_basis.slug not in bases:
+                            bases.append(resell_basis.slug)
+
+            return bases
 
         def _org_details_initial_data(hosting_provider: Hostingprovider):
             initial_org_dict = {
@@ -892,6 +944,14 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
         except Hostingprovider.DoesNotExist:
             return {}
 
+        # Ordered list of the provider's live locations, in the same order the
+        # LOCATIONS step exposes them, so a disclosure's region scope can be
+        # carried across by referencing location indices.
+        live_locations = list(hp_instance.locations.order_by("id"))
+        live_location_index = {
+            loc.pk: i for i, loc in enumerate(live_locations)
+        }
+
         initial_dict = {
             cls.Steps.ORG_DETAILS.value: _org_details_initial_data(hp_instance),
             cls.Steps.LOCATIONS.value: {
@@ -903,9 +963,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "services": [s for s in hp_instance.services.slugs()]
             },
             cls.Steps.BASIS_FOR_VERIFICATION.value: {
-                "verification_bases": [
-                    b for b in hp_instance.verification_bases.slugs()
-                ],
+                "verification_bases": _verification_bases_initial_data(hp_instance),
                 "upstream_providers": [
                     {
                         "provider": c.upstream_id,
@@ -919,7 +977,7 @@ class ProviderRequestWizardView(LoginRequiredMixin, SessionWizardView):
                 "country": str(hp_instance.country),
             },
             cls.Steps.GREEN_EVIDENCE.value: [
-                _evidence_initial_data(ev)
+                _evidence_initial_data(ev, live_location_index)
                 for ev in hp_instance.supporting_documents.all()
             ],
             cls.Steps.NETWORK_FOOTPRINT.value: _network_footprint_initial_data(
