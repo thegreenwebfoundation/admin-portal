@@ -135,13 +135,13 @@ class UpstreamProviderInlineForm(dj_forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.is_bound and not self.initial:
+        if not self.instance.pk:
             # The wizard nudges submitters to make upstream connections public
             # by default, but in the admin we default to hidden. Staff edits
             # here could unexpectedly expose a provider's upstream
             # relationships, so we require a conscious choice to make them
             # public.
-            self.initial["is_public"] = False
+            self.fields["is_public"].initial = False
 
 
 class UpstreamProviderInline(admin.TabularInline):
@@ -868,35 +868,26 @@ class HostingAdmin(
         A dynamic check for inlines so we only show some inlines
         to groups with the correct permissions.
         """
-        inlines = self.inlines
+        inlines = list(self.inlines) # We need list() to make a  copy here, otherwise the GreencheckIpInline is removed for all providers!
 
         logger.info(f"{request.user}, is_admin: {request.user.is_admin}")
 
+        # If the user is not an admin, we ensure that they do not see admin-only inlines
         if not request.user.is_admin:
-            # they're not an admin, return a
-            # from the list filtered to remove the 'admin'
-            # inlines.
-            # We return a filtered list, because changing the state of
-            # `inlines` sometimes returns a list to admin users with the
-            # admin inlines removed.
             admin_inlines = (
                 # GreencheckAsnApproveInline,
                 # GreencheckIpApproveInline,
                 HostingProviderNoteInline,
             )
-            filtered_inlines = []
-            for inline in inlines:
-                if inline not in admin_inlines:
-                    filtered_inlines.append(inline)
-            return filtered_inlines
+            return [i for i in inlines if i not in admin_inlines]
 
         # when we have too many IPs to realistically show on the page
         # we top trying to show the GreencheckIPs inline, and instead
         # use a link to the relvevant change list in the template.
         # see admin/accounts/hostingprovider/change_form.html
         if obj and obj.ip_range_count > 500:
-            if GreencheckIpInline in inlines:
-                inlines.remove(GreencheckIpInline)
+            return [i for i in inlines if i is not GreencheckIpInline]
+
 
         return inlines
 
