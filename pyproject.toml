@@ -21,7 +21,7 @@ dependencies = [
     "django-unixdatetimefield==1.0.3",
     "django[bcrypt]~=5.2.0",
     "djangorestframework-csv>=3.0.2",
-    "djangorestframework>=3.15.2",
+    "djangorestframework>=3.17.2",
     "dramatiq[rabbitmq]>=1.17.1",
     "drf-yasg>=1.21.8",
     "gunicorn>=23.0.0",
