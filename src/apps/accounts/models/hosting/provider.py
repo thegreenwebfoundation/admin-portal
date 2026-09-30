@@ -1057,6 +1057,7 @@ class HostingProviderSupportingDocument(AbstractSupportingDocument):
             "url": self.link,
             "doc_type": doc_type,
             "title": self.title,
+            "description": self.description,
             "valid_until": self.valid_to,
         }
 
