@@ -135,13 +135,13 @@ class UpstreamProviderInlineForm(dj_forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.is_bound and not self.initial:
+        if not self.instance.pk:
             # The wizard nudges submitters to make upstream connections public
             # by default, but in the admin we default to hidden. Staff edits
             # here could unexpectedly expose a provider's upstream
             # relationships, so we require a conscious choice to make them
             # public.
-            self.initial["is_public"] = False
+            self.fields["is_public"].initial = False
 
 
 class UpstreamProviderInline(admin.TabularInline):
