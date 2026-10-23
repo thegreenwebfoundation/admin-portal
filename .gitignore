@@ -143,9 +143,9 @@ static/*.*
 deploy.retry
 data
 
-.env.staging
-.env.local
-*.prod
+# do not track local env files
+.env.*local
+
 *.prod.json
 .DS_Store
 cloud-auth.json
