@@ -751,7 +751,7 @@ wheels = [
 
 [[package]]
 name = "carbon-txt"
-version = "0.0.29"
+version = "0.0.31"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dnspython" },
@@ -764,9 +764,9 @@ dependencies = [
     { name = "tomlkit" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0f/60/2f6cea089f7308da5c52541c7b2c2dd6ccda113f3defaac8bbd70641ccd6/carbon_txt-0.0.29.tar.gz", hash = "sha256:207b364f54da0e51db81c2fd7d1fd12a2f05ccaf744b633d7f4eaadefe73b58c", size = 3063507, upload-time = "2026-09-30T06:01:52.751Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b3/4a/d26025b0b9d9d67219bc0684909c213506a692526847f7f1972186b80ec6/carbon_txt-0.0.31.tar.gz", hash = "sha256:8fc265f6c3099e0002ac16973367dffabb66904d1e60b5b42e9587bc92e9f42d", size = 3082061, upload-time = "2026-11-02T09:25:39.559Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/da/12/f7ce5f88647941cbd173cbb80c68b117e12705464d285ba33e6ab5257728/carbon_txt-0.0.29-py3-none-any.whl", hash = "sha256:7778ebc7c7802527c2e79b2845cbac641d156df0803be6d00c6cdc25e905920a", size = 63384, upload-time = "2026-09-30T06:01:51.193Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/9e/0d156a85764a9b7fac2f6dd1cd73c5ef22f512b526f9e133623a3336a6f7/carbon_txt-0.0.31-py3-none-any.whl", hash = "sha256:22d5fee66c2fa065547f7b0e7867ad922575b8738c2ca10aa62c928bb2212fae", size = 63615, upload-time = "2026-11-02T09:25:37.574Z" },
 ]
 
 [package.optional-dependencies]
@@ -2372,7 +2372,7 @@ requires-dist = [
     { name = "awscli-plugin-endpoint", specifier = ">=0.4" },
     { name = "boto3", specifier = ">=1.35.54" },
     { name = "brevo-python", specifier = ">=1.2.0" },
-    { name = "carbon-txt", extras = ["all"], specifier = "==0.0.29" },
+    { name = "carbon-txt", extras = ["all"], specifier = "==0.0.31" },
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "dateutils", specifier = ">=0.6.12" },
     { name = "db-to-sqlite", specifier = ">=1.5" },
