@@ -39,7 +39,7 @@ dependencies = [
     "django-cors-headers>=4.6.0",
     "djangorestframework-jsonp>=1.0.2",
     "djangorestframework-api-key>=3.1.0",
-    "pillow>=11.0.0",
+    "pillow>=13.0.0",
     "django-taggit-labels>=0.7.0",
     "django-taggit>=6.1.0",
     "django-waffle>=4.1.0",
@@ -79,6 +79,7 @@ dependencies = [
     "brevo-python>=1.2.0",
     "altair>=6.0.0",
     "django-http-compression[brotli]>=1.4.0",
+    "setuptools<81",
 ]
 
 [dependency-groups]
